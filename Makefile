@@ -17,24 +17,24 @@ floppy_image: $(BUILD_DIR)/main_floppy.img
 $(BUILD_DIR)/main_floppy.img: boot_loader kernel
 	dd if=/dev/zero of=$(BUILD_DIR)/main_floppy.img bs=512 count=2880
 	newfs_msdos -F 12 -f 2880 $(BUILD_DIR)/main_floppy.img
-	dd if=$(BUILD_DIR)/first_stage.bin of=$(BUILD_DIR)/main_floppy.img conv=notrunc
+	dd if=$(BUILD_DIR)/fst_stg.bin of=$(BUILD_DIR)/main_floppy.img conv=notrunc
 
-	mcopy -i $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/second_stage.bin "::second_stage.bin"
+	mcopy -i $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/sec_stg.bin "::sec_stg.bin"
 	mcopy -i $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/kernel.bin "::kernel.bin"
 	mcopy -i $(BUILD_DIR)/main_floppy.img test.txt "::test.txt"
 
 #
 # Bootloader
 #
-boot_loader: first_stage second_stage
+boot_loader: fst_stg sec_stg
 
-first_stage: $(BUILD_DIR)/first_stage.bin
-$(BUILD_DIR)/first_stage.bin: always
-	$(MAKE) -C $(SRC_DIR)/boot_loader/first_stage BUILD_DIR=$(abspath $(BUILD_DIR))
+fst_stg: $(BUILD_DIR)/fst_stg.bin
+$(BUILD_DIR)/fst_stg.bin: always
+	$(MAKE) -C $(SRC_DIR)/boot_loader/fst_stg BUILD_DIR=$(abspath $(BUILD_DIR))
 
-second_stage: $(BUILD_DIR)/second_stage.bin
-$(BUILD_DIR)/second_stage.bin: always
-	$(MAKE) -C $(SRC_DIR)/boot_loader/second_stage BUILD_DIR=$(abspath $(BUILD_DIR))
+sec_stg: $(BUILD_DIR)/sec_stg.bin
+$(BUILD_DIR)/sec_stg.bin: always
+	$(MAKE) -C $(SRC_DIR)/boot_loader/sec_stg BUILD_DIR=$(abspath $(BUILD_DIR))
 
 #
 # Kernel
@@ -62,8 +62,8 @@ always:
 # Clean
 #
 clean:
-	$(MAKE) -C $(SRC_DIR)/boot_loader/first_stage BUILD_DIR=$(abspath $(BUILD_DIR)) clean
-	$(MAKE) -C $(SRC_DIR)/boot_loader/second_stage BUILD_DIR=$(abspath $(BUILD_DIR)) clean
+	$(MAKE) -C $(SRC_DIR)/boot_loader/fst_stg BUILD_DIR=$(abspath $(BUILD_DIR)) clean
+	$(MAKE) -C $(SRC_DIR)/boot_loader/sec_stg BUILD_DIR=$(abspath $(BUILD_DIR)) clean
 	$(MAKE) -C $(SRC_DIR)/boot_loader/kernel BUILD_DIR=$(abspath $(BUILD_DIR)) clean
 
 	rm -rf $(BUILD_DIR)/*

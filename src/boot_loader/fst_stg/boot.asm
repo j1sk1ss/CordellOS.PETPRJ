@@ -1,4 +1,9 @@
-org 0x7C00 ; Cordell SO base code
+;
+;   Cordell OS base code
+;   Cordell OS is simple example of Operation system from scratch
+;
+
+org 0x7C00 
 bits 16
 
 %define ENDL 0x0D, 0x0A ; Macross for printing text
@@ -356,12 +361,12 @@ bits 16
 msg_loading: 			db 'Loading...', ENDL, 0
 msg_reading_fail: 		db 'Read was failed', ENDL, 0
 msg_kernel_not_found:	db 'Second stage not found!', ENDL, 0	
-file_kernel_bin:		db 'STAGE2  BIN' ; Don't foget 11 bytes name	
+file_kernel_bin:		db 'SEC_STG BIN' ; Don't foget 11 bytes name	
 
 kernel_cluster:			dw 0
 
 KERNEL_LOAD_SEGMENT		equ 0x0
-KERNEL_LOAD_OFFSET		equ 500
+KERNEL_LOAD_OFFSET		equ 0x500
 
 times 510-($-$$) db 0
 dw 0AA55h	
