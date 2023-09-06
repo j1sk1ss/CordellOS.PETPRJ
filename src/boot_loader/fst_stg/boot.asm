@@ -137,9 +137,9 @@ bits 16
 		call read_disk_data
 
 		; read kernel and process FAT chain
-		mov bx, KERNEL_LOAD_SEGMENT
+		mov bx, SEC_STAGE_LOAD_SEGMENT
 		mov es, bx
-		mov bx, KERNEL_LOAD_OFFSET
+		mov bx, SEC_STAGE_LOAD_OFFSET
 
 	.load_kernel_loop:
 		mov ax, [kernel_cluster]
@@ -183,11 +183,11 @@ bits 16
 					mov dl, [ebr_drive_number]
 
 					; set segment registers
-					mov ax, KERNEL_LOAD_SEGMENT
+					mov ax, SEC_STAGE_LOAD_SEGMENT
 					mov ds, ax
 					mov es, ax
 
-					jmp KERNEL_LOAD_SEGMENT:KERNEL_LOAD_OFFSET
+					jmp SEC_STAGE_LOAD_SEGMENT:SEC_STAGE_LOAD_OFFSET
 					jmp wait_key_end_reboot 
 
 
@@ -365,8 +365,8 @@ file_kernel_bin:		db 'SEC_STG BIN' ; Don't foget 11 bytes name
 
 kernel_cluster:			dw 0
 
-KERNEL_LOAD_SEGMENT		equ 0x0
-KERNEL_LOAD_OFFSET		equ 0x500
+SEC_STAGE_LOAD_SEGMENT		equ 0x0
+SEC_STAGE_LOAD_OFFSET		equ 0x500
 
 times 510-($-$$) db 0
 dw 0AA55h	

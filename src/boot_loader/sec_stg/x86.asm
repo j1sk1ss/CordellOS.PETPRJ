@@ -6,7 +6,7 @@
 ;
 ; Enter protected mode
 ;
-%macro x86_EnterProtectedMode 0
+%macro x86_enter_protected_mode 0
     [bits 16]                                               ; x86-64 processors in Real mode act exactly like 16
                                                             ; bit chips, and x86-64 chips in protected mode act exactly
                                                             ; like 32-bit processors. To unlock the 64-bit capabilities
@@ -34,7 +34,7 @@
 
 %endmacro
 
-%macro x86_EnterRealMode 0
+%macro x86_enter_real_mode 0
     [bits 32]
     cli
 
@@ -75,13 +75,13 @@
 ; Result: segment:offset is in 2:4 (e.g. es:ax)
 ;
 
-%macro LinearToSegOffset 4
-
+%macro linear_to_seg_offset 4 
+                    ; %X is parameter
     mov %3, %1      ; eax = linear address
-    mov %4, 0       ;  ax = 0
     shr %3, 4       ; eax >> 4 to get segment
     mov %2, %4      ;  es = segment
     mov %3, %1      ; eax = linear address
+    and %3, 0xf
 
 %endmacro
 
@@ -118,7 +118,167 @@ x86_inb:
     [bits 32]
     
     mov dx, [esp + 4]
-    xor aex, aex
+    xor eax, eax
     in al, dx
 
+    ret
+
+
+global x86_disk_getDeriveParams
+x86_disk_getDeriveParams:
+    [bits 32]
+
+    ; make new call frame
+    push ebp                ; save old call frame
+    mov ebp, esp            ; initialize new call frame
+
+    x86_enter_real_mode
+    [bits 16]
+
+    ; save regs
+    push es
+    push bx
+    push esi
+    push di
+
+    ; call int13h
+    mov dl, [bp + 8]        ; dl - disk drive
+    mov ah, 08h
+    mov di, 0               ; es:di - 0000:0000
+    mov es, di
+    stc
+    int 13h
+
+    ; out params
+    mov eax, 1
+    sbb eax, 0
+
+    ; drive type from bl
+    linear_to_seg_offset [bp + 12], es, esi, si 
+    mov es:[si], bl
+
+    ; cylinders info
+    mov bl, ch              ; cylinders - lower bits in ch
+    mov bh, cl              ; cylinders - upper bits in cl (6-7)
+    shr bh, 6
+    inc bx
+
+    linear_to_seg_offset [bp + 16], es, esi, si 
+    mov [es:si], bx
+
+    ; number of sectors
+    xor ch, ch              ; sectors - lower 5 bits in cl
+    and cl, 3Fh
+
+    linear_to_seg_offset [bp + 20], es, esi, si 
+    mov [es:si], cx
+
+    ; head info
+    mov cl, dh              ; heads - dh
+    inc cx
+    
+    linear_to_seg_offset [bp + 24], es, esi, si 
+    mov [es:si], cx
+
+    ; restore regs
+    pop di
+    pop esi
+    pop bx
+    pop es
+
+    ; return
+    push eax
+
+    x86_enter_protected_mode
+
+    pop eax
+
+    ; restore old call frame
+    mov esp, ebp
+    pop ebp
+    ret
+
+
+global x86_diskRead
+x86_diskRead:
+
+    ; make new call frame
+    push ebp                    ; save old call frame
+    mov ebp, esp                ; initialize new call frame
+
+    x86_enter_real_mode
+
+    ; save modified regs
+    push ebx
+    push es
+
+    ; setup args
+    mov dl, [bp + 8]            ; dl - drive
+
+    mov ch, [bp + 12]           ; ch - cylinder (lower 8 bits)
+    mov cl, [bp + 13]           ; cl - cylinder to bits 6-7
+    shl cl, 6
+    
+    mov al, [bp + 16]           ; cl - sector to bits 0-5
+    and al, 3Fh
+    or cl, al
+
+    mov dh, [bp + 20]           ; dh - head
+
+    mov al, [bp + 24]           ; al - count
+
+    linear_to_seg_offset [bp + 28], es, ebx, bx
+
+    ; call int13h
+    mov ah, 02h
+    stc
+    int 13h
+
+    ; set return value
+    mov eax, 1
+    sbb eax, 0              ; 1 on success, 0 on fail   
+
+    ; restore regs
+    pop es
+    pop ebx
+
+    push eax                 ; Save eax return
+
+    x86_enter_protected_mode
+
+    pop eax                  ; Restore eax return
+
+    ; restore old call frame
+    mov esp, ebp
+    pop ebp
+    ret
+
+
+global x86_diskReset
+x86_diskReset:
+    [bits 32]
+
+    ; make new call frame
+    push ebp                ; save old call frame
+    mov ebp, esp            ; initialize new call frame
+
+    x86_enter_real_mode
+
+    mov ah, 0
+    mov dl, [bp + 8]        ; dl - drive
+    stc
+    int 13h
+
+    mov eax, 1
+    sbb eax, 0              ; 1 on success, 0 on fail   
+
+    push eax                ; save eax return
+
+    x86_enter_protected_mode
+
+    pop eax                 ; restore eax retuen
+
+    ; restore old call frame
+    mov esp, ebp
+    pop ebp
     ret

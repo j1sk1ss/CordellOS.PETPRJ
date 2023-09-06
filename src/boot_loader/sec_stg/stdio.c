@@ -70,21 +70,21 @@ void clrscr() {
 }
 
 //
-//  Backspace function
+//  Scroll all screen down
 //
-void scrollback() {
-    for (int y = 1; y < SCREEN_HEIGHT; y++)
+void scrollback(int lines) {
+    for (int y = lines; y < SCREEN_HEIGHT; y++)
         for (int x = 0; x < SCREEN_WIDTH; x++){
-            putchr(x, y - 1, getchr(x, y));
-            putcolor(x, y - 1, getcolor(x, y));
+            putchr(x, y - lines, getchr(x, y));
+            putcolor(x, y - lines, getcolor(x, y));
         }
 
     for (int x = 0; x < SCREEN_WIDTH; x++){
-        putchr(x, SCREEN_HEIGHT - 1, 0);
-        putcolor(x, SCREEN_HEIGHT - 1, DEFAULT_COLOR);
+        putchr(x, SCREEN_HEIGHT - lines, 0);
+        putcolor(x, SCREEN_HEIGHT - lines, DEFAULT_COLOR);
     }
 
-    _screenY -= 1;
+    _screenY -= lines;
 }
 
 //
@@ -120,7 +120,7 @@ void putc(char c) {
     }
 
     if (_screenY >= SCREEN_HEIGHT)
-        scrollback();
+        scrollback(1);
 
     setcursor(_screenX , _screenY);
 }
@@ -193,11 +193,11 @@ void printf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
-    int state = PRINTF_STATE_NORMAL;
-    int length = PRINTF_LENGTH_DEFAULT;
+    int state   = PRINTF_STATE_NORMAL;
+    int length  = PRINTF_LENGTH_DEFAULT;
     bool number = false;
-    bool sign = false;
-    int radix = 10;
+    bool sign   = false;
+    int radix   = 10;
 
     while (*fmt) {
         switch (state) {
