@@ -153,8 +153,6 @@ entry:
         lgdt [gdt_desc]
         ret
 
-
-
         KbdControllerDataPort               equ 0x60
         KbdControllerCommandPort            equ 0x64
         KbdControllerDisableKeyboard        equ 0xAD
