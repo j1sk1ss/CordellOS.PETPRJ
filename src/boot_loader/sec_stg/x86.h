@@ -3,17 +3,33 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+//
+//  Output data from address
+//
 void __attribute__((cdecl)) x86_outb(uint16_t port, uint8_t data);
+
+//
+//  Input data to address
+//
 uint8_t __attribute__((cdecl)) x86_inb(uint16_t port);
 
-bool __attribute__((cdecl)) x86_disk_getDeriveParams(uint8_t drive,
+//
+//  Get parameters of disk
+//
+bool __attribute__((cdecl)) x86_disk_getDriveParams(uint8_t drive,
                                                     uint8_t* driveTypeOut,
                                                     uint16_t* cylindersOut,
                                                     uint16_t* sectorsOut,
                                                     uint16_t* headersOut);
 
+//
+//  Reset disk
+//
 bool __attribute__((cdecl)) x86_diskReset(uint8_t drive);
 
+//
+//  Read disk
+//
 bool __attribute__((cdecl)) x86_diskRead(uint8_t drive,
                                         uint16_t cylinder,
                                         uint16_t sector,

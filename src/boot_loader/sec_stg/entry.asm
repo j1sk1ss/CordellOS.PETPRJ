@@ -8,7 +8,7 @@ bits 16
 
 section .entry
 
-extern _start        ; c start
+extern start        ; c start
 
 extern __bss_start  ; sections
 extern __end
@@ -89,7 +89,7 @@ entry:
 
         ; call C
         push dword[boot_drive]
-        call _start
+        call start
 
         cli                             ; Clear interrupt flags
         hlt                             ; halt the CPU until the next external interrupt is fired

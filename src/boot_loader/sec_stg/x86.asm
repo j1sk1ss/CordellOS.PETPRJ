@@ -22,15 +22,13 @@
     jmp dword 08h:.pmode
 
     .pmode:
+        ; we are now in protected mode!
         [bits 32]
         
-        ; load segments
-        mov ax, 10h
-        mov ss, ax
+        ; 6 - setup segment registers
+        mov ax, 0x10
         mov ds, ax
-        mov es, ax
-        mov fs, ax
-        mov gs, ax
+        mov ss, ax
 
 %endmacro
 
@@ -54,14 +52,13 @@
 
         .rmode:
 
-            mov ax, 0
-            mov ss, ax
-            mov ds, ax
-            mov es, ax
-            mov fs, ax
-            mov gs, ax
+        ; 4 - setup segments
+        mov ax, 0
+        mov ds, ax
+        mov ss, ax
 
-            sti
+        ; 5 - enable interrupts
+        sti
 
 %endmacro
 
@@ -124,8 +121,8 @@ x86_inb:
     ret
 
 
-global x86_disk_getDeriveParams
-x86_disk_getDeriveParams:
+global x86_disk_getDriveParams
+x86_disk_getDriveParams:
     [bits 32]
 
     ; make new call frame
@@ -133,6 +130,7 @@ x86_disk_getDeriveParams:
     mov ebp, esp            ; initialize new call frame
 
     x86_enter_real_mode
+    
     [bits 16]
 
     ; save regs

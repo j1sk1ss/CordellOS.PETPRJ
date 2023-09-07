@@ -23,6 +23,9 @@ $(BUILD_DIR)/main_floppy.img: boot_loader kernel
 	mcopy -i $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/kernel.bin "::kernel.bin"
 	mcopy -i $(BUILD_DIR)/main_floppy.img test.txt "::test.txt"
 
+	mmd -i $(BUILD_DIR)/main_floppy.img "::mydir"
+	mcopy -i $(BUILD_DIR)/main_floppy.img test.txt "::mydir/test.txt"
+
 #
 # Bootloader
 #
@@ -42,7 +45,7 @@ $(BUILD_DIR)/sec_stg.bin: always
 kernel: $(BUILD_DIR)/kernel.bin
 
 $(BUILD_DIR)/kernel.bin: always
-	$(ASM) $(SRC_DIR)/kernel -f bin -o $(BUILD_DIR)/kernel.bin
+	$(MAKE) -C src/kernel BUILD_DIR=$(abspath $(BUILD_DIR))
 
 #
 # Tools
