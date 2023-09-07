@@ -1,6 +1,6 @@
 [bits 32]
 
-extern i686_ISR_handler
+extern i686_isr_handler
 
 %macro ISR_NOERRORCODE 1
 
@@ -37,7 +37,7 @@ isr_common:
     mov gs, ax
 
     push esp                 ; pass pointer stack to C
-    call i686_ISR_handler
+    call i686_isr_handler
     add esp, 4
 
     pop eax                  ; restore old segment

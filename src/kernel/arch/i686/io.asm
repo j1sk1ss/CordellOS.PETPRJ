@@ -44,8 +44,12 @@ i686_panic:
     cli
     hlt
 
-global crash
-crash:
-    mov eax, 0
-    div eax
+global i686_enableInterrupts
+i686_enableInterrupts:
+    sti
+    ret
+
+global i686_disableInterrupts
+i686_disableInterrupts:
+    cli
     ret
