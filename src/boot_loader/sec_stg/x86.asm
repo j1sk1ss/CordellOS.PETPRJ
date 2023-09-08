@@ -3,6 +3,8 @@
 ;   Cordell OS is simple example of Operation system from scratch
 ;
 
+extern load_gdt
+
 ;
 ; Enter protected mode
 ;
@@ -12,7 +14,8 @@
                                                             ; like 32-bit processors. To unlock the 64-bit capabilities
                                                             ; of the chip, the chip must be switched into Long Mode.
     cli
-    
+    call load_gdt
+
     ; set "protection enable" flag in control register 0
     mov eax, cr0
     or al, 1
@@ -275,6 +278,167 @@ x86_diskReset:
     x86_enter_protected_mode
 
     pop eax                 ; restore eax retuen
+
+    ; restore old call frame
+    mov esp, ebp
+    pop ebp
+    ret
+
+;
+;
+;   Video part
+;   VBE part
+;
+
+global x86_video_getVbeInfo
+x86_video_getVbeInfo:
+
+    ; make new call frame
+    push ebp                ; save old call frame
+    mov ebp, esp            ; initialize new call frame
+
+    x86_enter_real_mode
+
+    ; save modified regs
+    push edi
+    push es
+    push ebp                ; bochs vbe changes ebp
+    push ecx
+
+    ; call interrupt
+    mov ax, 0x4f00
+    linear_to_seg_offset [bp + 8], es, edi, di
+    int 10h
+
+    ; check return
+    cmp al, 4fh
+    jne .error
+    
+    ; put status in eax
+    mov al, ah
+    and eax, 0xFF
+    jmp .cont
+
+.error:
+    mov eax, -1
+
+.cont:
+    ; restore regs
+    pop ecx
+    pop ebp                ; bochs vbe changes ebp
+    pop es
+    pop ebx
+
+    push eax
+
+    x86_enter_protected_mode
+
+    pop eax
+
+    ; restore old call frame
+    mov esp, ebp
+    pop ebp
+    ret
+
+
+global x86_video_getVbeModeInfo
+x86_video_getVbeModeInfo:
+
+    ; make new call frame
+    push ebp                ; save old call frame
+    mov ebp, esp            ; initialize new call frame
+
+    x86_enter_real_mode
+
+    ; save modified regs
+    push edi
+    push es
+    push ebp                ; bochs vbe changes ebp
+
+    ; call interrupt
+    mov ax, 0x4f01
+    mov ecx, [bp + 8]
+    linear_to_seg_offset [bp + 12], es, edi, di
+    int 10h
+
+    ; check return
+    cmp al, 4fh
+    jne .error
+    
+    ; put status in eax
+    mov al, ah
+    and eax, 0xFF
+    jmp .cont
+
+.error:
+    mov eax, -1
+
+.cont:
+    ; restore regs
+    pop ebp                ; bochs vbe changes ebp
+    pop es
+    pop ebx
+
+    push eax
+
+    x86_enter_protected_mode
+
+    pop eax
+
+    ; restore old call frame
+    mov esp, ebp
+    pop ebp
+    ret
+
+
+global x86_video_setVbeMode
+x86_video_setVbeMode:
+
+    ; make new call frame
+    push ebp                ; save old call frame
+    mov ebp, esp            ; initialize new call frame
+
+    x86_enter_real_mode
+
+    ; save modified regs
+    push edi
+    push es
+    push ebp                ; bochs vbe changes ebp
+    push ebx
+
+    ; call interrupt
+    mov ax, 0
+    mov es, ax
+    mov edi, 0
+
+    mov ax, 0x4f02
+    mov bx, [bp + 8]
+    int 10h
+
+    ; check return
+    cmp al, 4fh
+    jne .error
+    
+    ; put status in eax
+    mov al, ah
+    and eax, 0xFF
+    jmp .cont
+
+.error:
+    mov eax, -1
+
+.cont:
+    ; restore regs
+    pop ebx
+    pop ebp                ; bochs vbe changes ebp
+    pop es
+    pop ebx
+
+    push eax
+
+    x86_enter_protected_mode
+
+    pop eax
 
     ; restore old call frame
     mov esp, ebp

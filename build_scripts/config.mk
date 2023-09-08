@@ -1,3 +1,5 @@
+MAKE_DISK_SIZE = 16777216
+
 # Flag for compiler
 export CFLAGS 		= -std=c99 -g
 export ASMFLAGS 	=
@@ -22,8 +24,8 @@ export TARGET_LIBS 		=
 export GLOBAL_SRC_DIR 	= $(abspath .)
 export BUILD_DIR 		= $(abspath build)
 
-BINUTILS_VERSION = 2.37
-BINUTILS_URL = https://ftp.gnu.org/gnu/binutils/binutils-$(BINUTILS_VERSION).tar.gz
+BINUTILS_VERSION 	= 2.37
+BINUTILS_URL 		= https://ftp.gnu.org/gnu/binutils/binutils-$(BINUTILS_VERSION).tar.gz
 
-GCC_VERSION = 11.2.0
-GCC_URL = https://ftp.gnu.org/gnu/gcc/gcc-$(GCC_VERSION)/gcc-$(GCC_VERSION).tar.gz
+GCC_VERSION 		= 11.2.0
+GCC_URL 			= https://ftp.gnu.org/gnu/gcc/gcc-$(GCC_VERSION)/gcc-$(GCC_VERSION).tar.gz

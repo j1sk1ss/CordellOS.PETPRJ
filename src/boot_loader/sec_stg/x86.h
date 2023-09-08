@@ -36,3 +36,18 @@ bool __attribute__((cdecl)) x86_diskRead(uint8_t drive,
                                         uint16_t head,
                                         uint8_t count,
                                         void* dataOut);
+
+//
+//  Get bios VBE info
+//
+int __attribute__((cdecl)) x86_video_getVbeInfo(void* infoOut);
+
+//
+//  Get bios VBE mode info
+//
+int __attribute__((cdecl)) x86_video_getVbeModeInfo(uint16_t mode, void* infoOut);
+
+//
+//  Set bios VBE mode info
+//
+int __attribute__((cdecl)) x86_video_setVbeMode(uint16_t mode);

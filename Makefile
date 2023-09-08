@@ -13,18 +13,16 @@ include build_scripts/tool_chain.mk
 # Floppy Image
 #
 floppy_image: $(BUILD_DIR)/main_floppy.img 
-
 $(BUILD_DIR)/main_floppy.img: boot_loader kernel
-	dd if=/dev/zero of=$(BUILD_DIR)/main_floppy.img bs=512 count=2880
-	newfs_msdos -F 12 -f 2880 $(BUILD_DIR)/main_floppy.img
-	dd if=$(BUILD_DIR)/fst_stg.bin of=$(BUILD_DIR)/main_floppy.img conv=notrunc
+	./build_scripts/make_floppy_another.sh $@
 
-	mcopy -i $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/sec_stg.bin "::sec_stg.bin"
-	mcopy -i $(BUILD_DIR)/main_floppy.img $(BUILD_DIR)/kernel.bin "::kernel.bin"
-	mcopy -i $(BUILD_DIR)/main_floppy.img test.txt "::test.txt"
+#
+# Disk Image
+#
+disk_image: $(BUILD_DIR)/main_disk.raw 
+$(BUILD_DIR)/main_disk.raw: boot_loader kernel
+	./build_scripts/make_disk.sh $@ $(MAKE_DISK_SIZE)
 
-	mmd -i $(BUILD_DIR)/main_floppy.img "::mydir"
-	mcopy -i $(BUILD_DIR)/main_floppy.img test.txt "::mydir/test.txt"
 
 #
 # Bootloader
@@ -43,7 +41,6 @@ $(BUILD_DIR)/sec_stg.bin: always
 # Kernel
 #
 kernel: $(BUILD_DIR)/kernel.bin
-
 $(BUILD_DIR)/kernel.bin: always
 	$(MAKE) -C src/kernel BUILD_DIR=$(abspath $(BUILD_DIR))
 

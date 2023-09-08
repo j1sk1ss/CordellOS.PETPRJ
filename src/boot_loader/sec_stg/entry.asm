@@ -147,7 +147,7 @@ entry:
         jz wait_output_a20
         ret
 
-
+    global load_gdt
     load_gdt:
         [bits 16]
         lgdt [gdt_desc]

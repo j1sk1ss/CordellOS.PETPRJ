@@ -1,0 +1,10 @@
+{
+    "dotnet.defaultSolution": "disable",
+    "files.associations": {
+        "ctype.h": "c",
+        "memory.h": "c",
+        "string.h": "c",
+        "stdio.h": "c"
+    },
+    "git.ignoreLimitWarning": true
+}

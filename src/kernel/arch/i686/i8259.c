@@ -1,7 +1,8 @@
-#include "pic.h"
+#include "i8259.h"
 #include "io.h"
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define PIC1_COMMAND_PORT           0x20
 #define PIC1_DATA_PORT              0x21
@@ -51,7 +52,26 @@ enum {
     PIC_CMD_READ_ISR            = 0x0B,
 } PIC_CMD;
 
-void i686_pic_configure(uint8_t offsetPic1, uint8_t offsetPic2) {
+static uint16_t picMask = 0xFFFF;
+static bool _autoEoi    = false;
+
+void i8259_setMask(uint16_t newMask) {
+    picMask = newMask;
+
+    i686_outb(PIC1_DATA_PORT, picMask & 0xFF);                              // Lower 8 bits to PIC1                                       
+    i686_io_wait();
+    i686_outb(PIC2_DATA_PORT, picMask >> 8);                                // Upper 8 bits to PIC2
+    i686_io_wait();
+}
+
+uint16_t i8259_getMask() {
+    return i686_inb(PIC1_DATA_PORT) | (i686_inb(PIC2_DATA_PORT) << 8);
+}
+
+void i8259_configure(uint8_t offsetPic1, uint8_t offsetPic2, bool autoEoi) {
+    // Mask everything
+    i8259_setMask(0xFFFF);
+
     // initialization control word 1
     i686_outb(PIC1_COMMAND_PORT, PIC_ICW1_ICW4 | PIC_ICW1_INITIALIZE);  // Send to PIC1 port init command
     i686_io_wait();                                                     // Wait for PC respond
@@ -71,70 +91,71 @@ void i686_pic_configure(uint8_t offsetPic1, uint8_t offsetPic2) {
     i686_io_wait();
 
     // initialization control word 4
-    i686_outb(PIC1_DATA_PORT, PIC_ICW4_8086);
+    uint8_t icw4 = PIC_ICW4_8086;
+    if (autoEoi) {
+        icw4 |= PIC_ICW4_AUTO_EOI;
+    }
+
+    i686_outb(PIC1_DATA_PORT, icw4);
     i686_io_wait();
-    i686_outb(PIC2_DATA_PORT, PIC_ICW4_8086);
+    i686_outb(PIC2_DATA_PORT, icw4);
     i686_io_wait();
 
     // clear data registers
-    i686_outb(PIC1_DATA_PORT, 0);
-    i686_io_wait();
-    i686_outb(PIC2_DATA_PORT, 0);
-    i686_io_wait();
+    i8259_setMask(0xFFFF);
 }
 
-void i686_sendEndOfInterrupt(int irq) {
+void i8259_sendEndOfInterrupt(int irq) {
      if (irq >= 8)
         i686_outb(PIC2_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT);
 
     i686_outb(PIC1_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT);
 }
 
-void i686_pic_disable() {
-    i686_outb(PIC1_DATA_PORT, 0xFF);                                         
-    i686_io_wait();
-    i686_outb(PIC2_DATA_PORT, 0xFF);                                         
-    i686_io_wait();
+void i8259_disable() {
+    i8259_setMask(0xFFFF);
 }
 
-void i686_pic_mask(int irq) {                                               // irq = interrupt request number
-    uint8_t port;
-
-    if (irq < 8) 
-        port = PIC1_DATA_PORT;
-    else {
-        irq -= 8;
-        port = PIC2_DATA_PORT;
-    }
-
-    uint8_t mask = i686_inb(port);
-    i686_outb(port, mask | (1 << irq));
+void i8259_mask(int irq) {                                               // irq = interrupt request number
+    i8259_setMask(picMask | (1 << irq));
 }
 
-void i686_pic_unmask(int irq) {                                             // irq = interrupt request number
-    uint8_t port;
-
-    if (irq < 8) 
-        port = PIC1_DATA_PORT;
-    else {
-        irq -= 8;
-        port = PIC2_DATA_PORT;
-    }
-
-    uint8_t mask = i686_inb(port);
-    i686_outb(port, mask & ~(1 << irq));
+void i8259_unmask(int irq) {                                             // irq = interrupt request number
+     i8259_setMask(picMask & ~(1 << irq));
 }
 
-uint16_t i686_pic_readIRQRequestRegisters() {
+uint16_t i8259_readIRQRequestRegisters() {
     i686_outb(PIC1_COMMAND_PORT, PIC_CMD_READ_IRR);
     i686_outb(PIC2_COMMAND_PORT, PIC_CMD_READ_IRR);
 
     return (i686_inb(PIC2_DATA_PORT) | (i686_inb(PIC2_DATA_PORT) << 8));
 }
 
-uint16_t i686_pic_readIRQInServiceRegisters() {
+uint16_t i8259_readIRQInServiceRegisters() {
     i686_outb(PIC1_COMMAND_PORT, PIC_CMD_READ_ISR);
     i686_outb(PIC2_COMMAND_PORT, PIC_CMD_READ_ISR);
 
     return (i686_inb(PIC2_DATA_PORT) | (i686_inb(PIC2_DATA_PORT) << 8));
+}
+
+bool i8259_probe() {
+    i8259_disable();
+    i8259_setMask(0x1488);
+
+    return i8259_getMask() == 0x1488;
+    
+}
+
+static const PICDriver _PICDriver = {
+    .Name                   = "8259 PIC",
+    .Probe                  = &i8259_probe,
+    .Initialize             = &i8259_configure,
+    .Disable                = &i686_disableInterrupts,
+    .SendEndOfInterrupt     = &i8259_sendEndOfInterrupt,
+    .Mask                   = &i8259_mask,
+    .Unmask                 = &i8259_unmask
+};
+
+const PICDriver* i8259_getDriver() {
+    return &_PICDriver;
 }
