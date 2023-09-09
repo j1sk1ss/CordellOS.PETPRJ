@@ -18,7 +18,7 @@ set -e
 TARGET=$1
 SIZE=$2
 
-DISK_SECTOR_COUNT=$(( (${SIZE} + 511) / 512 ))
+DISK_SECTOR_COUNT=$(( (${SIZE} + 511 ) / 512 ))
 FST_STG_SEC_STG_LOCATION_OFFSET=480
 
 DISK_FST_PART_BEGIN=2048
@@ -53,14 +53,14 @@ if [ ${SEC_STG_SECTORS} \< $(( ${DISK_FST_PART_BEGIN} - 1 )) ]; then
 fi
 # determine how many reserved sectors
 
+# create .raw
+dd if=${BUILD_DIR}/sec_stg.bin of=$TARGET conv=notrunc bs=512 seek=1 >/dev/null
+# create .raw
+
 # Create loopback device
 DEVICE=$(losetup -fP --show ${TARGET})
 TARGET_PARTITION="${DEVICE}p1"
 # Create loopback device
-
-# create .raw
-dd if=${BUILD_DIR}/sec_stg.bin of=$TARGET_PARTITION conv=notrunc bs=512 seek=1 >/dev/null
-# create .raw
 
 # create file system
 mkfs.fat -n "CLOS" $TARGET_PARTITION >/dev/null

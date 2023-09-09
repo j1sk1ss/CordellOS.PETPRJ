@@ -31,6 +31,7 @@ bits 16
 	bdb_large_sector_count:     dd 0
 
 	; extended boot record
+	
 	ebr_drive_number:           db 0                    ; 0x00 floppy, 0x80 hdd, useless
 								db 0                    ; reserved
 	ebr_signature:              db 29h
@@ -86,7 +87,7 @@ times 90-($-$$) db 0
     	mov byte [have_extension], 0
 
 	.after_disk_extensions_check:
-		; load sce_stg
+		; load sec_stg
 		mov si, sec_stg_location
 
 		mov ax, SEC_STAGE_LOAD_SEGMENT         ; set segment registers
@@ -118,7 +119,7 @@ times 90-($-$$) db 0
 		; jump to our kernel
 		mov dl, [ebr_drive_number]          ; boot device in dl
 
-		mov ax, SEC_STAGE_LOAD_SEGMENT         ; set segment registers
+		mov ax, SEC_STAGE_LOAD_SEGMENT      ; set segment registers
 		mov ds, ax
 		mov es, ax
 
@@ -175,7 +176,7 @@ times 90-($-$$) db 0
 
 		jmp .loop
 
-		.done: 				;	Loop done and we 
+		.done: 				;	Loop done
 			pop bx
 			pop ax
 			pop si
@@ -233,6 +234,7 @@ times 90-($-$$) db 0
 	;
 
 	read_disk_data:
+
 		push eax							; Save register that will be modify
 		push bx
 		push cx
@@ -244,10 +246,10 @@ times 90-($-$$) db 0
 		jne .no_disk_extention
 
 		; with extention
-		mov [extension_struct.lba], eax
-		mov [extension_struct.segment], es
-		mov [extension_struct.offset], bx
-		mov [extension_struct.count], cl
+		mov [extension_struct.lba], 		eax		;
+		mov [extension_struct.segment], 	es		; Fill structure
+		mov [extension_struct.offset], 		bx		;
+		mov [extension_struct.count], 		cl		;
 
 		mov ah, 0x42
 		mov si, extension_struct
@@ -310,6 +312,10 @@ times 90-($-$$) db 0
 
 		ret
 
+
+;
+; Variables
+;
 
 msg_loading: 			db 'Loading...', ENDL, 0
 msg_reading_fail: 		db 'Read was failed', ENDL, 0

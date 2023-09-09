@@ -1,5 +1,7 @@
+# Output hardcoded disk size
 MAKE_DISK_SIZE = 16777216
 
+# Targets for in-build compiler
 export CFLAGS 		= -std=c99 -g
 export ASMFLAGS 	=
 export CC 			= gcc
@@ -9,6 +11,7 @@ export ASM 			= nasm
 export LINKFLAGS 	=
 export LIBS 		=
 
+# Targets for OS compilers
 export TARGET 			= i686-elf
 export TARGET_ASM 		= nasm
 export TARGET_ASMFLAGS 	=
@@ -19,8 +22,10 @@ export TARGET_LD 		= $(TARGET)-gcc
 export TARGET_LINKFLAGS =
 export TARGET_LIBS 		=
 
+# Build dir for OS building
 export BUILD_DIR = $(abspath build)
 
+# Tool chain stuff
 BINUTILS_VERSION = 2.39
 BINUTILS_URL = https://ftp.gnu.org/gnu/binutils/binutils-$(BINUTILS_VERSION).tar.xz
 

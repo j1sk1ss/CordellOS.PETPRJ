@@ -22,16 +22,11 @@ global entry
 entry:
     cli                             ; Disable interrupts
 
-    mov ax, 0                       ; setup segments
+    ; setup stack
+    mov ax, ds
     mov ss, ax
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
-    mov esp, 0xFFF0
-    mov ebp, esp                    ; Setup stack at 0xFFF0
-    sti
+    mov sp, 0xFFF0
+    mov bp, sp
 
     mov [boot_drive], dl            ; save boot drive
 
