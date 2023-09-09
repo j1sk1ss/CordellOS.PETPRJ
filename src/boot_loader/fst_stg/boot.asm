@@ -1,10 +1,10 @@
-org 0x7C00 
-bits 16
-
 ;
 ;   Cordell OS base code
 ;   Cordell OS is simple example of Operation system from scratch
 ;
+
+org 0x7C00 
+bits 16
 
 %define ENDL 0x0D, 0x0A
 
@@ -264,9 +264,9 @@ times 90-($-$$) db 0
 			mov di, 3							; retry count
 
 		.retry:
-			pusha							; save all registers, cuz we don't know what bios modify
-			stc								; set carry flag (Some bios'es don't set him)
-			int 13h							; if flag cleared -> success
+			pusha								; save all registers, cuz we don't know what bios modify
+			stc									; set carry flag (Some bios'es don't set him)
+			int 13h								; if flag cleared -> success
 			jnc .done
 
 			; reading failed

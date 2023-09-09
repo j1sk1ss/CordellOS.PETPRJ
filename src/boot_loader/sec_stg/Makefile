@@ -16,17 +16,18 @@ all: sec_stg
 sec_stg: $(BUILD_DIR)/sec_stg.bin
 
 $(BUILD_DIR)/sec_stg.bin: $(OBJECTS_ASM) $(OBJECTS_C)
-	$(TARGET_LD) $(TARGET_LINKFLAGS) -Wl,-Map=$(BUILD_DIR)/sec_stg.map -o $@ $^
+	@$(TARGET_LD) $(TARGET_LINKFLAGS) -Wl,-Map=$(BUILD_DIR)/sec_stg.map -o $@ $^ $(TARGET_LIBS)
+	@echo "--> Created  sec_stg.bin"
 
-$(BUILD_DIR)/sec_stg/c/%.obj: %.c always
-	$(TARGET_CC) $(TARGET_CFLAGS) -c -o $@ $<
+$(BUILD_DIR)/sec_stg/c/%.obj: %.c
+	@mkdir -p $(@D)
+	@$(TARGET_CC) $(TARGET_CFLAGS) -c -o $@ $<
+	@echo "--> Compiled: " $<
 
-$(BUILD_DIR)/sec_stg/asm/%.obj: %.asm always
-	$(TARGET_ASM) $(TARGET_ASMFLAGS) -o $@ $<
-
-always:
-	mkdir -p $(BUILD_DIR)/sec_stg/c
-	mkdir -p $(BUILD_DIR)/sec_stg/asm
+$(BUILD_DIR)/sec_stg/asm/%.obj: %.asm
+	@mkdir -p $(@D)
+	@$(TARGET_ASM) $(TARGET_ASMFLAGS) -o $@ $<
+	@echo "--> Compiled: " $<
 
 clean:
-	rm -f $(BUILD_DIR)/sec_stg.bin
+	@rm -f $(BUILD_DIR)/sec_stg.bin

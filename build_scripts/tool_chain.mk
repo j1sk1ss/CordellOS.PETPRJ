@@ -14,8 +14,8 @@ tool_chain_binutils: $(TOOLCHAIN_PREFIX)/bin/i686-elf-ld
 #
 #	Binutils loading
 #
-$(TOOLCHAIN_PREFIX)/bin/i686-elf-ld: $(BINUTILS_SRC).tar.gz
-	cd tool_chain && tar -xf binutils-$(BINUTILS_VERSION).tar.gz
+$(TOOLCHAIN_PREFIX)/bin/i686-elf-ld: $(BINUTILS_SRC).tar.xz
+	cd tool_chain && tar -xf binutils-$(BINUTILS_VERSION).tar.xz
 	mkdir $(BINUTILS_BUILD)
 	cd $(BINUTILS_BUILD) && ../binutils-$(BINUTILS_VERSION)/configure \
 		--prefix="$(TOOLCHAIN_PREFIX)"	\
@@ -27,7 +27,7 @@ $(TOOLCHAIN_PREFIX)/bin/i686-elf-ld: $(BINUTILS_SRC).tar.gz
 	$(MAKE) -j8 -C $(BINUTILS_BUILD)
 	$(MAKE) -C $(BINUTILS_BUILD) install
 
-$(BINUTILS_SRC).tar.gz:
+$(BINUTILS_SRC).tar.xz:
 	mkdir -p tool_chain 
 	cd tool_chain && wget $(BINUTILS_URL)
 
@@ -42,8 +42,8 @@ tool_chain_gcc: $(TOOLCHAIN_PREFIX)/bin/i686-elf-gcc
 #
 #	Gcc compiler loading
 #
-$(TOOLCHAIN_PREFIX)/bin/i686-elf-gcc: $(TOOLCHAIN_PREFIX)/bin/i686-elf-ld $(GCC_SRC).tar.gz
-	cd tool_chain && tar -xf gcc-$(GCC_VERSION).tar.gz
+$(TOOLCHAIN_PREFIX)/bin/i686-elf-gcc: $(TOOLCHAIN_PREFIX)/bin/i686-elf-ld $(GCC_SRC).tar.xz
+	cd tool_chain && tar -xf gcc-$(GCC_VERSION).tar.xz
 	mkdir $(GCC_BUILD)
 	cd $(GCC_BUILD) && ../gcc-$(GCC_VERSION)/configure \
 		--prefix="$(TOOLCHAIN_PREFIX)" 	\
@@ -55,7 +55,7 @@ $(TOOLCHAIN_PREFIX)/bin/i686-elf-gcc: $(TOOLCHAIN_PREFIX)/bin/i686-elf-ld $(GCC_
 	$(MAKE) -j8 -C $(GCC_BUILD) all-gcc all-target-libgcc
 	$(MAKE) -C $(GCC_BUILD) install-gcc install-target-libgcc
 	
-$(GCC_SRC).tar.gz:
+$(GCC_SRC).tar.xz:
 	mkdir -p tool_chain
 	cd tool_chain && wget $(GCC_URL)
 
