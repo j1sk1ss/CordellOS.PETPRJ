@@ -1,0 +1,288 @@
+import os
+import re
+import time
+
+from decimal import Decimal
+from io import SEEK_CUR, SEEK_SET
+from pathlib import Path
+from shutil import copy2
+
+import parted
+import sh
+
+from SCons.Action import Action
+from SCons.Builder import Builder
+from SCons.Environment import Environment
+
+from build_scripts.utility import find_index, glob_recursive, is_file_name
+
+Import('fst_stg')
+Import('sec_stg')
+Import('kernel')
+
+Import('TARGET_ENVIRONMENT')
+TARGET_ENVIRONMENT: Environment
+env:Environment = TARGET_ENVIRONMENT
+
+
+def generate_image_file(target: str, size_sectors: int):
+    with open(target, 'wb') as fout:
+        fout.write(bytes(size_sectors * SECTOR_SIZE))
+        fout.close()
+
+
+def create_filesystem(target: str, filesystem, reserved_sectors=0, offset=0):
+    if filesystem in ['fat12', 'fat16', 'fat32']:
+        reserved_sectors += 1
+        if filesystem == 'fat32':
+            reserved_sectors += 1
+
+        mkfs_fat = sh.Command('mkfs.fat')
+        mkfs_fat(target,
+                 F=filesystem[3:],              # fat size
+                 n='CLOS',                      # label
+                 R=reserved_sectors,            # reserved sectors
+                 offset=offset
+        )
+    elif filesystem == 'ext2':
+        mkfs_ext2 = sh.Command('mkfs.ext2')
+        mkfs_ext2(target,
+                  L='CLOS',                     # label
+                  E=f'offset={offset * SECTOR_SIZE}'
+        )
+    else:
+        raise ValueError('Unsupported filesystem ' + filesystem)
+
+
+def find_symbol_in_map_file(map_file: str, symbol: str):
+    with map_file.open('r') as fmap:
+        for line in fmap:
+            if symbol in line:
+                match = re.search('0x([0-9a-fA-F]+)', line)
+                if match is not None:
+                    return int(match.group(1), base=16)
+    return None
+
+
+def install_fst_stg(target: str, fst_stg: str, sec_stg_offset, sec_stg_size, offset=0):
+    # find fst_stg map file
+    map_file = Path(fst_stg).with_suffix('.map')
+    if not map_file.exists():
+        raise ValueError("Can't find " + map_file)
+    
+    entry_offset = find_symbol_in_map_file(map_file, '__entry_start')
+    if entry_offset is None:
+        raise ValueError("Can't find __entry_start symbol in map file " + str(map_file))
+    entry_offset -= 0x7c00
+
+    sec_stg_start = find_symbol_in_map_file(map_file, 'sec_stg_location')
+    if sec_stg_start is None:
+        raise ValueError("Can't find sec_stg_location symbol in map file " + str(map_file))
+    sec_stg_start -= 0x7c00
+
+    with open(fst_stg, 'rb') as ffst_stg:
+        with os.fdopen(os.open(target, os.O_WRONLY | os.O_CREAT), 'wb+') as ftarget:
+            ftarget.seek(offset * SECTOR_SIZE, SEEK_SET)
+
+            # write first 3 bytes jump instruction
+            ftarget.write(ffst_stg.read(3))
+
+            # write starting at entry_offset (end of header)
+            ffst_stg.seek(entry_offset - 3, SEEK_CUR)
+            ftarget.seek(entry_offset - 3, SEEK_CUR)
+            ftarget.write(ffst_stg.read())
+
+            # write location of sec_stg
+            ftarget.seek(offset * SECTOR_SIZE + sec_stg_start, SEEK_SET)
+            ftarget.write(sec_stg_offset.to_bytes(4, byteorder='little'))
+            ftarget.write(sec_stg_size.to_bytes(1, byteorder='little'))
+
+
+def install_sec_stg(target: str, sec_stg: str, offset=0, limit=None):
+    with open(sec_stg, 'rb') as fsec_stg:
+        with os.fdopen(os.open(target, os.O_WRONLY | os.O_CREAT), 'wb+') as ftarget:
+            ftarget.seek(offset * SECTOR_SIZE, SEEK_SET)
+            ftarget.write(fsec_stg.read())
+            
+
+# Secot size
+SECTOR_SIZE = 512
+
+                                            # FLOPPY IMAGE CREATION
+
+                                ################################################
+                                ##               ##                ##
+                                ##  FIRST_STAGE  ##  SECOND_STAGE  ##   REST OS STUFF
+                                ##               ##   *reserved*   ##
+                                ##########################################################
+
+                                            # FLOPPY IMAGE CREATION
+
+# building floppy file system
+def build_floppy(image, fst_stg, sec_stg, kernel, files, env):
+    size_sectors    = 2880
+    sec_stg_size    = os.stat(sec_stg).st_size
+    sec_stg_sectors = (sec_stg_size + SECTOR_SIZE - 1) // SECTOR_SIZE
+    
+    generate_image_file(image, size_sectors)
+
+    print(f"> formatting cordell file using fat12...")
+    create_filesystem(image, 'fat12', sec_stg_sectors)
+
+    print(f"> installing cordell fst_stg...")
+    install_fst_stg(image, fst_stg, sec_stg_offset=1, sec_stg_size=sec_stg_sectors)
+
+    print(f"> installing cordell sec_stg...")
+    install_sec_stg(image, sec_stg, offset=1)
+
+    print(f"> copying cordell files...")
+    print('    ... copying', kernel)
+    sh.mmd('-i', image, "::boot")
+    sh.mcopy('-i', image, kernel, "::boot/")
+
+    # copy rest of files
+    src_root = env['BASEDIR']
+    for file in files:
+        file_src = file.srcnode().path
+        file_rel = os.path.relpath(file_src, src_root)
+        file_dst = '::' + file_rel
+
+        if os.path.isdir(file_src):
+            print('    ... creating cordell directory', file_rel)
+            sh.mmd('-i', image, file_dst)
+        else:
+            print('    ... copying', file_rel)
+            sh.mcopy('-i', image, file_src, file_dst)
+
+
+                                                    # DISK IMAGE CREATION
+
+                ################################################        (...)   #########################
+                ##                            |##                       (...)   ##                 |
+                ##  MBR (Master Boot Sector)  |##   SECOND_STAGE        (...)   ##   FIRST_STAGE   |    PARTITION (1)
+                ##         *partition table*->|##                       (...)   ##                 |
+                ####################################################    (...)   ##########################################
+
+                                                    # DISK IMAGE CREATION
+
+
+def create_partition_table(target: str, align_start: int):
+    device  = parted.getDevice(target)
+    disk    = parted.freshDisk(device, 'msdos')
+
+    freeSpace           = disk.getFreeSpaceRegions()
+    partitionGeometry   = parted.Geometry(device, align_start, end=freeSpace[-1].end)
+    partition           = parted.Partition(disk=disk, type=parted.PARTITION_NORMAL, geometry=partitionGeometry)
+
+    partition.setFlag(parted.PARTITION_BOOT)
+    disk.addPartition(partition, constraint=device.optimalAlignedConstraint)
+    disk.commit()
+
+
+def mount_fs(image: str, mount_dir: str):
+    sh.guestmount(mount_dir, add=image, mount='/dev/sda1')
+
+
+def unmount_fs(mount_dir: str):
+    time.sleep(3)
+    sh.fusermount(u=mount_dir)
+
+
+def build_disk(image, fst_stg, sec_stg, kernel, files, env):
+    size_sectors        = (env['image_size'] + SECTOR_SIZE - 1) // SECTOR_SIZE
+    file_system         = env['image_file_system']
+    partition_offset    = 2048
+
+    fst_stg_size = os.stat(fst_stg).st_size
+    sec_stg_size = os.stat(sec_stg).st_size
+    sec_stg_sectors = (sec_stg_size + SECTOR_SIZE - 1) // SECTOR_SIZE
+
+    generate_image_file(image, size_sectors)
+
+    # create partition table
+    print(f"> creating cordell partition table...")
+    create_partition_table(image, partition_offset)
+
+    # create file system
+    print(f"> formatting cordell file using {file_system}...")
+    create_filesystem(image, file_system, offset=partition_offset)
+
+    # install fst_stg
+    print(f"> installing cordell fst_stg...")
+    install_fst_stg(image, fst_stg, offset=partition_offset, sec_stg_offset=1, sec_stg_size=sec_stg_sectors)
+ 
+    # install sec_stg
+    print(f"> installing cordell sec_stg...")
+    install_sec_stg(image, sec_stg, offset=1, limit=partition_offset)
+
+    tempdir_name = 'tmp_mount_{0}'.format(int(time.time()))
+    tempdir = os.path.join(os.path.dirname(image), tempdir_name)
+    try:
+        # mount
+        os.mkdir(tempdir)
+
+        print(f"> mounting cordell image to {tempdir}...")
+        mount_fs(image, tempdir)
+
+        # copy kernel
+        print(f"> copying cordell kernel...")
+        bootdir = os.path.join(tempdir, 'boot')
+        os.makedirs(bootdir)
+        copy2(kernel, bootdir)
+
+        # copy rest of files
+        src_root = env['BASEDIR']
+        print(f"> copying cordell files...")
+        for file in files:
+            file_src = file.srcnode().path
+            file_rel = os.path.relpath(file_src, src_root)
+            file_dst = os.path.join(tempdir, file_rel)
+
+            if os.path.isdir(file_src):
+                print('    ... creating cordell directory', file_rel)
+                os.makedirs(file_dst)
+            else:
+                print('    ... copying', file_rel)
+                copy2(file_src, file_dst)
+
+    finally:
+        print("> cordell cleaning up...")
+        try:
+            unmount_fs(tempdir)
+        except:
+            pass
+        os.rmdir(tempdir)
+
+
+# Image build function
+def build_image(target, source, env):
+    fst_stg = str(source[0])
+    sec_stg = str(source[1])
+    kernel = str(source[2])
+    files = source[3:]
+
+    image = str(target[0])
+    if env['image_type'] == 'floppy':
+        build_floppy(image, fst_stg, sec_stg, kernel, files, env)
+    elif env['image_type'] == 'disk':
+        build_disk(image, fst_stg, sec_stg, kernel, files, env)
+    else:
+        raise ValueError('Unknown image type ' + env['imageType'])
+
+
+# Setup image target
+root = env.Dir('root')
+root_content = glob_recursive(env, '*', root)
+inputs = [fst_stg, sec_stg, kernel] + root_content
+
+output_fmt = 'img'
+# if env['image_type'] == 'qcow3':
+#     output_fmt = 'qcow3'
+
+output = f'image.{output_fmt}'
+
+image = env.Command(output, inputs,
+                    action=Action(build_image, 'Creating disk image...'), 
+                    BASEDIR=root.srcnode().path)
+
+Export('image')

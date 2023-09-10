@@ -15,7 +15,7 @@ include build_scripts/tool_chain.mk
 
 floppy_image: $(BUILD_DIR)/main_floppy.img 
 $(BUILD_DIR)/main_floppy.img: boot_loader kernel
-	./build_scripts/make_floppy_another.sh $@
+	./build_scripts/make_floppy.sh $@
 
 #
 # Floppy Image

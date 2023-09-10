@@ -3,7 +3,6 @@
 ;   Cordell OS is simple example of Operation system from scratch
 ;
 
-org 0x7C00 
 bits 16
 
 %define ENDL 0x0D, 0x0A
@@ -13,10 +12,14 @@ bits 16
 ; FAT12 header
 ;
 
+section .fsjump
+
 	jmp short boot
 	nop
 
-	bdb_oem:                    db 'MSWIN4.1'           ; 8 bytes
+section .fsheaders
+
+	bdb_oem:                    db 'CORDELL!'           ; 8 bytes
 	bdb_bytes_per_sector:       dw 512
 	bdb_sectors_per_cluster:    db 1
 	bdb_reserved_sectors:       dw 1
@@ -40,12 +43,11 @@ bits 16
 	ebr_system_id:              db 'FAT12   '           ; 8 bytes
 
 
-times 90-($-$$) db 0
-
-
 ;
 ;	Code goes here
 ;
+
+section .entry
 
 	boot:
 		mov ax, 0				; setup data
@@ -134,6 +136,8 @@ times 90-($-$$) db 0
 	;
 	;	Error handlers
 	;
+
+section .text
 
 	floppy_error:
 		mov si, msg_reading_fail
@@ -313,28 +317,36 @@ times 90-($-$$) db 0
 		ret
 
 
+
+
 ;
 ; Variables
 ;
 
-msg_loading: 			db 'Loading...', ENDL, 0
-msg_reading_fail: 		db 'Read was failed', ENDL, 0
-msg_sec_stg_not_found:	db 'Sec stage not found!', ENDL, 0	
-file_sec_stg_bin:		db 'SEC_STG BIN' 								; Don't foget 11 bytes name	
-have_extension:			db 0
+section .rodata
 
-extension_struct:
-	.size:				db 10h											; Reserved struct of extention 
-						db 0
-	.count:				dw 0
-	.offset:			dw 0
-	.segment:			dw 0
-	.lba:				dq 0
+	msg_loading: 			db 'Loading...', ENDL, 0
+	msg_reading_fail: 		db 'Read was failed', ENDL, 0
+	msg_sec_stg_not_found:	db 'Sec stage not found!', ENDL, 0	
+	file_sec_stg_bin:		db 'SEC_STG BIN' 								; Don't foget 11 bytes name	
+	have_extension:			db 0
 
-SEC_STAGE_LOAD_SEGMENT	equ 0x0
-SEC_STAGE_LOAD_OFFSET	equ 0x500
+section .data
 
-times 510-30-($-$$) 	db 0
-sec_stg_location:		times 30 db 0									; Generate 30 bytes with 0
-						dw 0AA55h	
-buffer:
+	extension_struct:
+		.size:				db 10h											; Reserved struct of extention 
+							db 0
+		.count:				dw 0
+		.offset:			dw 0
+		.segment:			dw 0
+		.lba:				dq 0
+
+	SEC_STAGE_LOAD_SEGMENT	equ 0x0
+	SEC_STAGE_LOAD_OFFSET	equ 0x500
+
+; bios footer may be?
+section .data
+	sec_stg_location:		times 30 db 0									; Generate 30 bytes with 0
+
+section .bss
+	buffer:					resb 512

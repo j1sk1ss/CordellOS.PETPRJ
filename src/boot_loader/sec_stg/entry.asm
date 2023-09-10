@@ -9,6 +9,7 @@ bits 16
 section .entry
 
 extern start        ; c start
+extern _init        ; cpp init
 
 extern __bss_start  ; sections
 extern __end
@@ -76,6 +77,9 @@ entry:
         cld
         rep stosb                       ; repeats instruction decrementing ECX until zero
                                         ; and stores value from AL incrementing ES:EDI
+
+        ; call global constructors
+        call _init
 
         ;
         ; Part where expected boot drive

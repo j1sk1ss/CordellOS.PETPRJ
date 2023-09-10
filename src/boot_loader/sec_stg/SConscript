@@ -1,0 +1,43 @@
+import os
+
+from SCons.Environment import Environment
+from build_scripts.utility import glob_recursive, find_index, is_file_name
+
+Import('TARGET_ENVIRONMENT')
+TARGET_ENVIRONMENT: Environment
+
+env = TARGET_ENVIRONMENT.Clone()
+env.Append(
+    LINKFLAGS = [
+        '-T', 'linker.ld', '$@ $^',
+        '-Wl,-Map=' + env.File('sec_stg.map').path
+    ],
+
+    CPPPATH = [ 
+        env.Dir('.').srcnode()
+    ],
+
+    ASFLAGS = [ 
+        '-I', env.Dir('.').srcnode(),
+    ]
+)
+
+sources = glob_recursive(env, '*.c') + \
+          glob_recursive(env, '*.cpp') + \
+          glob_recursive(env, '*.asm')
+
+objects = env.Object(sources)
+obj_crti = objects.pop(find_index(objects, lambda item: is_file_name(item, 'crti.o')))
+obj_crtn = objects.pop(find_index(objects, lambda item: is_file_name(item, 'crtn.o')))
+
+objects = [
+    obj_crti,
+    os.path.join(env["TOOLCHAIN_LIBGCC"], 'crtbegin.o'),
+    *objects,
+    os.path.join(env["TOOLCHAIN_LIBGCC"], 'crtend.o'),
+    obj_crtn
+]
+
+sec_stg = env.Program('sec_stg.bin', objects)
+
+Export('sec_stg')
