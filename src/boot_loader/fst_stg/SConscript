@@ -10,7 +10,6 @@ env.Append(
     ASFLAGS = [
         f'-DFILESYSTEM={TARGET_ENVIRONMENT["image_file_system"]}',
     ],
-
     LINKFLAGS = [
         '-Wl,-T', env.File('linker.ld').srcnode().path,
         '-Wl,-Map=' + env.File('fst_stg.map').path

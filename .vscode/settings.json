@@ -4,7 +4,9 @@
         "ctype.h": "c",
         "memory.h": "c",
         "string.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "stdint.h": "c"
     },
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "C_Cpp.errorSquiggles": "disabled"
 }

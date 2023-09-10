@@ -81,6 +81,7 @@ mkdir -p /tmp/clos
 mount ${TARGET_PARTITION} /tmp/clos
 
 cp ${BUILD_DIR}/kernel.bin /tmp/clos
+echo "Test" > test.txt
 cp test.txt /tmp/clos
 mkdir /tmp/clos/mydir
 cp test.txt /tmp/clos/mydir
@@ -95,3 +96,13 @@ losetup -d ${DEVICE}
 #
 # Script body
 #
+
+                                                    # DISK IMAGE CREATION
+
+                ################################################        (...)   #########################
+                ##                            |##                       (...)   ##                 |
+                ##  MBR (Master Boot Sector)  |##   SECOND_STAGE        (...)   ##   FIRST_STAGE   |    PARTITION (1)
+                ##         *partition table*->|##                       (...)   ##                 |
+                ####################################################    (...)   ##########################################
+
+                                                    # DISK IMAGE CREATION
