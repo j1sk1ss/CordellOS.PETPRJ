@@ -1,9 +1,11 @@
 from pathlib import Path
+
 from SCons.Variables import *
 from SCons.Environment import *
 from SCons.Node import *
+
 from build_scripts.phony_targets import phony_targets
-from build_scripts.utility import parse_size, remove_suffix, find_index
+from build_scripts.utility import parse_size, remove_suffix
 
 VARS = Variables('build_scripts/config.py', ARGUMENTS)
 VARS.AddVariables(
@@ -27,19 +29,20 @@ VARS.AddVariables(
                  default="fat32",
                  allowed_values=("fat12", "fat16", "fat32", "ext2"))    
     )
-VARS.Add("image_size", 
+VARS.Add("imageSize", 
          help="The size of the image, will be rounded up to the nearest multiple of 512. " +
               "You can use suffixes (k/m/g). " +
               "For floppies, the size is fixed to 1.44MB.",
          default="250m",
          converter=parse_size)
+
 VARS.Add("tool_chain", 
          help="Path to tool_chain directory.",
          default="tool_chain")
 
 DEPS = {
-    'binutils': '2.39',
-    'gcc': '13.1.0'
+    'binutils': '2.37',
+    'gcc': '11.2.0'
 }
 
 
@@ -67,6 +70,19 @@ else:
 
 if HOST_ENVIRONMENT['image_type'] == 'floppy':
     HOST_ENVIRONMENT['image_file_system'] = 'fat12'
+
+HOST_ENVIRONMENT.Replace(ASCOMSTR        = "Assembling [$SOURCE]",
+                         CCCOMSTR        = "Compiling  [$SOURCE]",
+                         CXXCOMSTR       = "Compiling  [$SOURCE]",
+                         FORTRANPPCOMSTR = "Compiling  [$SOURCE]",
+                         FORTRANCOMSTR   = "Compiling  [$SOURCE]",
+                         SHCCCOMSTR      = "Compiling  [$SOURCE]",
+                         SHCXXCOMSTR     = "Compiling  [$SOURCE]",
+                         LINKCOMSTR      = "Linking    [$TARGET]",
+                         SHLINKCOMSTR    = "Linking    [$TARGET]",
+                         INSTALLSTR      = "Installing [$TARGET]",
+                         ARCOMSTR        = "Archiving  [$TARGET]",
+                         RANLIBCOMSTR    = "Ranlib     [$TARGET]")
 
 
 #
@@ -105,24 +121,23 @@ TARGET_ENVIRONMENT.Append(
 
     CCFLAGS = [
         '-ffreestanding',
-        '-nostdlib',
-        '-flto'
+        '-nostdlib'
     ],
 
     CXXFLAGS = [
         '-fno-exceptions',
-        '-fno-rtti'
+        '-fno-rtti',
     ],
 
     LINKFLAGS = [
         '-nostdlib'
     ],
-
+    
     LIBS = ['gcc'],
     LIBPATH = [ str(tool_chainGccLibs) ],
 )
-# tool_chain/i686-elf/libexec/gcc/i686-elf/13.1.0/
-TARGET_ENVIRONMENT['ENV']['PATH'] = os.pathsep + str('tool_chain/i686-elf/libexec/gcc/i686-elf/13.1.0/')
+
+TARGET_ENVIRONMENT['ENV']['PATH'] += os.pathsep + str(tool_chainBin)
 
 Help(VARS.GenerateHelpText(HOST_ENVIRONMENT))
 Export('HOST_ENVIRONMENT')

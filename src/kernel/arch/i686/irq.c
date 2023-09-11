@@ -18,14 +18,6 @@ void i686_irq_handler(Registers* regs) {
     uint8_t pic_isr = i8259_readIRQInServiceRegisters();
     uint8_t pic_irr = i8259_readIRQRequestRegisters();
 
-    if (_handler[irq] != NULL) {
-        // handle IRQ
-        _handler[irq](regs);
-    }
-    else {
-        printf("Unhandled IRQ %d  ISR=%x  IRR=%x...\n", irq, pic_isr, pic_irr);
-    }
-
     // send EOI
     _PICDriver->SendEndOfInterrupt(irq);
 }

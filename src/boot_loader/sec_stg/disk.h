@@ -10,5 +10,5 @@ typedef struct {
     uint16_t heads;
 } DISK;
 
-bool DISK_Initialize(DISK* disk, uint8_t driveNumber);
-bool DISK_ReadSectors(DISK* disk, uint32_t lba, uint8_t sectors, void* lowerDataOut);
+bool DISK_initialize(DISK* disk, uint8_t driveNumber);
+bool DISK_readSectors(DISK* disk, uint32_t lba, uint8_t sectors, void* lowerDataOut);

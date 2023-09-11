@@ -3,7 +3,6 @@
 ;   Cordell OS is simple example of Operation system from scratch
 ;
 
-org 0x7C00 
 bits 16
 
 %define ENDL 0x0D, 0x0A
@@ -13,12 +12,12 @@ bits 16
 ; FAT12 header
 ;
 
-
+section .fsjump
 
 	jmp short boot
 	nop
 
-
+section .fsheaders
 
 	bdb_oem:                    db 'CORDELL!'           ; 8 bytes
 	bdb_bytes_per_sector:       dw 512
@@ -43,12 +42,14 @@ bits 16
 	ebr_volume_label:           db 'CORDELL  OS'        ; 11 bytes, padded with spaces
 	ebr_system_id:              db 'FAT12   '           ; 8 bytes
 
-times 90-($-$$) db 0
 
 ;
 ;	Code goes here
 ;
 
+section .entry
+
+	global boot
 	boot:
 		mov ax, 0				; setup data
 		mov ds, ax
@@ -117,7 +118,6 @@ times 90-($-$$) db 0
 		jmp .loop
 
 	.read_finish:
-		
 		; jump to our kernel
 		mov dl, [ebr_drive_number]          ; boot device in dl
 
@@ -137,7 +137,7 @@ times 90-($-$$) db 0
 	;	Error handlers
 	;
 
-
+section .text
 
 	floppy_error:
 		mov si, msg_reading_fail
@@ -203,6 +203,7 @@ times 90-($-$$) db 0
 	;
 
 	convert_lba_to_chs:
+
 		push ax
 		push dx
 
@@ -307,6 +308,7 @@ times 90-($-$$) db 0
 	;
 
 	disk_reset:
+
 		pusha 			; push general registers to stack
 		mov ah, 0
 		stc
@@ -316,14 +318,11 @@ times 90-($-$$) db 0
 
 		ret
 
-
-
-
 ;
 ; Variables
 ;
 
-
+section .rodata
 
 	msg_loading: 			db 'Loading...', ENDL, 0
 	msg_reading_fail: 		db 'Read was failed', ENDL, 0
@@ -331,7 +330,7 @@ times 90-($-$$) db 0
 	file_sec_stg_bin:		db 'SEC_STG BIN' 								; Don't foget 11 bytes name	
 	have_extension:			db 0
 
-
+section .data
 
 	extension_struct:
 		.size:				db 10h											; Reserved struct of extention 
@@ -345,9 +344,11 @@ times 90-($-$$) db 0
 	SEC_STAGE_LOAD_OFFSET	equ 0x500
 
 ; bios footer may be?
+section .data
 
-	global sec_stg_location
+    global sec_stg_location
 	sec_stg_location:		times 30 db 0									; Generate 30 bytes with 0
 
+section .bss
 
-	buffer:					
+	buffer:					resb 512

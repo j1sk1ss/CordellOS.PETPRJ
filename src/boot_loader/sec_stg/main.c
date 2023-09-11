@@ -19,7 +19,7 @@ void __attribute__((cdecl)) start(uint16_t bootDrive) {
     clrscr();
 
     DISK disk;
-    if (!DISK_Initialize(&disk, bootDrive)) {
+    if (!DISK_initialize(&disk, bootDrive)) {
         printf("Disk init error\r\n");
         goto end;
     }
@@ -30,7 +30,7 @@ void __attribute__((cdecl)) start(uint16_t bootDrive) {
     }
 
     // load kernel
-    FAT_file* fatFile = FAT_open(&disk, "/kernel.bin");
+    FAT_file* fatFile = FAT_open(&disk, "/boot/kernel.elf");
     uint32_t read;
     uint8_t* kernelBuffer = Kernel;
 

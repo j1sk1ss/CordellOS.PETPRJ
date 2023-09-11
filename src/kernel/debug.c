@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <hal/vfs.h>
 
 static const char* const _logSeverityColors[] = {
     [LVL_DEBUG]     = "\033[2;37m",

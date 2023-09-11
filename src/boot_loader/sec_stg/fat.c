@@ -75,11 +75,11 @@ static uint32_t _dataSectionLba;
 
 
 bool FAT_readBootSector(DISK* disk) {
-    return DISK_ReadSectors(disk, 0, 1, _data->BS.BootSectorBytes);
+    return DISK_readSectors(disk, 0, 1, _data->BS.BootSectorBytes);
 }
 
 bool FAT_readFat(DISK* disk) {
-    return DISK_ReadSectors(disk, _data->BS.BootSector.ReservedSectors, _data->BS.BootSector.SectorsPerFat, _fat);
+    return DISK_readSectors(disk, _data->BS.BootSector.ReservedSectors, _data->BS.BootSector.SectorsPerFat, _fat);
 }
 
 bool FAT_initialize(DISK* disk) {
@@ -117,7 +117,7 @@ bool FAT_initialize(DISK* disk) {
     _data->RootDirectory.CurrentCluster         = rootDirLba;
     _data->RootDirectory.CurrentSectorInCluster = 0;
 
-    if (!DISK_ReadSectors(disk, rootDirLba, 1, _data->RootDirectory.Buffer)) {
+    if (!DISK_readSectors(disk, rootDirLba, 1, _data->RootDirectory.Buffer)) {
         printf("FAT: read root directory failed\r\n");
         return false;
     }
@@ -161,7 +161,7 @@ FAT_file* FAT_openEntry(DISK* disk, FAT_directoryEntry* entry) {
     fd->CurrentCluster         = fd->FirstCluster;
     fd->CurrentSectorInCluster = 0;
 
-    if (!DISK_ReadSectors(disk, FAT_clusterToLba(fd->CurrentCluster), 1, fd->Buffer)) {
+    if (!DISK_readSectors(disk, FAT_clusterToLba(fd->CurrentCluster), 1, fd->Buffer)) {
         printf("FAT: read error\r\n");
         return false;
     }
@@ -208,7 +208,7 @@ uint32_t FAT_read(DISK* disk, FAT_file* file, uint32_t byteCount, void* dataOut)
                 ++fd->CurrentCluster;
 
                 // read next sector
-                if (!DISK_ReadSectors(disk, fd->CurrentCluster, 1, fd->Buffer)) {
+                if (!DISK_readSectors(disk, fd->CurrentCluster, 1, fd->Buffer)) {
                     printf("FAT: read error!\r\n");
                     break;
                 }
@@ -227,7 +227,7 @@ uint32_t FAT_read(DISK* disk, FAT_file* file, uint32_t byteCount, void* dataOut)
                 }
 
                 // read next sector
-                if (!DISK_ReadSectors(disk, FAT_clusterToLba(fd->CurrentCluster) + fd->CurrentSectorInCluster, 1, fd->Buffer)) {
+                if (!DISK_readSectors(disk, FAT_clusterToLba(fd->CurrentCluster) + fd->CurrentSectorInCluster, 1, fd->Buffer)) {
                     printf("FAT: read error!\r\n");
                     break;
                 }

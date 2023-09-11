@@ -38,14 +38,14 @@ def create_filesystem(target: str, filesystem, reserved_sectors=0, offset=0):
         mkfs_fat = sh.Command('mkfs.fat')
         mkfs_fat(target,
                  F=filesystem[3:],            # fat size
-                 n='NBOS',                    # label
+                 n='CLOS',                    # label
                  R=reserved_sectors,      # reserved sectors
                  offset=offset
         )
     elif filesystem == 'ext2':
         mkfs_ext2 = sh.Command('mkfs.ext2')
         mkfs_ext2(target,
-                  L='NBOS',                   # label
+                  L='CLOS',                   # label
                   E=f'offset={offset * SECTOR_SIZE}'
         )
     else:
