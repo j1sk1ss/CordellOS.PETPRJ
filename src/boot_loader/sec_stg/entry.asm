@@ -21,7 +21,13 @@ global entry
 ;
 
 entry:
+
     cli                             ; Disable interrupts
+
+    mov [boot_drive], dl            ; save boot drive
+
+    mov [boot_partition_off], si
+    mov [boot_partition_seg], di
 
     ; setup stack
     mov ax, ds
@@ -29,12 +35,8 @@ entry:
     mov sp, 0xFFF0
     mov bp, sp
 
-    mov [boot_drive], dl            ; save boot drive
-
     ; switch to protected mode
     ; In protected mode operation, the x86 can address 4 GB of address space
-
-    cli
 
     call enable_a20                 ; Enable A20 gate for using more then 1 mb of memory
                                     ; The Intel 8086, Intel 8088, and Intel 80186 processors had 20 address lines,
@@ -55,14 +57,14 @@ entry:
     or al, 1
     mov cr0, eax
 
-    jmp dword 08h:.pmode            ; jmp to protected mode
+    jmp dword 08h:.protected_mode            ; jmp to protected mode
 
 
     ;
     ;   Protected mode part
     ;
 
-    .pmode:
+    .protected_mode:
         [bits 32]
         
         mov ax, 0x10                    ; 6 - setup segment registers
@@ -86,8 +88,17 @@ entry:
         ; Cuz we in 32 bits, used edx registers instead dx
         ;
 
-        ; call C
-        push dword[boot_drive]
+        mov dx, [boot_partition_seg]
+        shl edx, 16
+        mov dx, [boot_partition_off]
+        push edx
+
+        xor edx, edx
+        mov dl, [boot_drive]
+        push edx
+    
+
+        ; call C        
         call start
 
         cli                             ; Clear interrupt flags
@@ -161,42 +172,45 @@ entry:
 
         ScreenBuffer                        equ 0xB8000
 
-        gdt_function:      ; NULL descriptor
-                    dq 0
+        gdt_function:           ; NULL descriptor
+                                dq 0
 
-                    ; 32-bit code segment
-                    dw 0FFFFh                   ; limit (bits 0-15) = 0xFFFFF for full 32-bit range
-                    dw 0                        ; base (bits 0-15) = 0x0
-                    db 0                        ; base (bits 16-23)
-                    db 10011010b                ; access (present, ring 0, code segment, executable, direction 0, readable)
-                    db 11001111b                ; granularity (4k pages, 32-bit pmode) + limit (bits 16-19)
-                    db 0                        ; base high
+                            ; 32-bit code segment
+                                dw 0FFFFh                   ; limit (bits 0-15) = 0xFFFFF for full 32-bit range
+                                dw 0                        ; base (bits 0-15) = 0x0
+                                db 0                        ; base (bits 16-23)
+                                db 10011010b                ; access (present, ring 0, code segment, executable, direction 0, readable)
+                                db 11001111b                ; granularity (4k pages, 32-bit protected_mode) + limit (bits 16-19)
+                                db 0                        ; base high
 
-                    ; 32-bit data segment
-                    dw 0FFFFh                   ; limit (bits 0-15) = 0xFFFFF for full 32-bit range
-                    dw 0                        ; base (bits 0-15) = 0x0
-                    db 0                        ; base (bits 16-23)
-                    db 10010010b                ; access (present, ring 0, data segment, executable, direction 0, writable)
-                    db 11001111b                ; granularity (4k pages, 32-bit pmode) + limit (bits 16-19)
-                    db 0                        ; base high
+                            ; 32-bit data segment
+                                dw 0FFFFh                   ; limit (bits 0-15) = 0xFFFFF for full 32-bit range
+                                dw 0                        ; base (bits 0-15) = 0x0
+                                db 0                        ; base (bits 16-23)
+                                db 10010010b                ; access (present, ring 0, data segment, executable, direction 0, writable)
+                                db 11001111b                ; granularity (4k pages, 32-bit protected_mode) + limit (bits 16-19)
+                                db 0                        ; base high
 
-                    ; 16-bit code segment
-                    dw 0FFFFh                   ; limit (bits 0-15) = 0xFFFFF
-                    dw 0                        ; base (bits 0-15) = 0x0
-                    db 0                        ; base (bits 16-23)
-                    db 10011010b                ; access (present, ring 0, code segment, executable, direction 0, readable)
-                    db 00001111b                ; granularity (1b pages, 16-bit pmode) + limit (bits 16-19)
-                    db 0                        ; base high
+                            ; 16-bit code segment
+                                dw 0FFFFh                   ; limit (bits 0-15) = 0xFFFFF
+                                dw 0                        ; base (bits 0-15) = 0x0
+                                db 0                        ; base (bits 16-23)
+                                db 10011010b                ; access (present, ring 0, code segment, executable, direction 0, readable)
+                                db 00001111b                ; granularity (1b pages, 16-bit protected_mode) + limit (bits 16-19)
+                                db 0                        ; base high
 
-                    ; 16-bit data segment
-                    dw 0FFFFh                   ; limit (bits 0-15) = 0xFFFFF
-                    dw 0                        ; base (bits 0-15) = 0x0
-                    db 0                        ; base (bits 16-23)
-                    db 10010010b                ; access (present, ring 0, data segment, executable, direction 0, writable)
-                    db 00001111b                ; granularity (1b pages, 16-bit pmode) + limit (bits 16-19)
-                    db 0                        ; base high
+                            ; 16-bit data segment
+                                dw 0FFFFh                   ; limit (bits 0-15) = 0xFFFFF
+                                dw 0                        ; base (bits 0-15) = 0x0
+                                db 0                        ; base (bits 16-23)
+                                db 10010010b                ; access (present, ring 0, data segment, executable, direction 0, writable)
+                                db 00001111b                ; granularity (1b pages, 16-bit protected_mode) + limit (bits 16-19)
+                                db 0                        ; base high
 
-        gdt_desc:   dw gdt_desc - gdt_function - 1      ; limit = size of GDT
-                    dd gdt_function                     ; address of GDT
+        gdt_desc:               dw gdt_desc - gdt_function - 1      ; limit = size of GDT
+                                dd gdt_function                     ; address of GDT
 
-        boot_drive: db 0
+        boot_drive:             db 0
+
+        boot_partition_seg:     dw 0
+        boot_partition_off:     dw 0

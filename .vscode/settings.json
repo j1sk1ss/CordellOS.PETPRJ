@@ -5,7 +5,9 @@
         "memory.h": "c",
         "string.h": "c",
         "stdio.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "*.inc": "cpp",
+        "cstdint": "cpp"
     },
     "git.ignoreLimitWarning": true,
     "C_Cpp.errorSquiggles": "disabled"

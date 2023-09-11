@@ -29,7 +29,8 @@ VARS.AddVariables(
                  default="fat32",
                  allowed_values=("fat12", "fat16", "fat32", "ext2"))    
     )
-VARS.Add("imageSize", 
+
+VARS.Add("image_size", 
          help="The size of the image, will be rounded up to the nearest multiple of 512. " +
               "You can use suffixes (k/m/g). " +
               "For floppies, the size is fixed to 1.44MB.",
@@ -105,7 +106,7 @@ TARGET_ENVIRONMENT = HOST_ENVIRONMENT.Clone(
     RANLIB = f'{platform_prefix}ranlib',
     STRIP = f'{platform_prefix}strip',
 
-    # tool_chain
+    # toolchain
     TOOLCHAIN_PREFIX = str(tool_chainDir),
     TOOLCHAIN_LIBGCC = str(tool_chainGccLibs),
     BINUTILS_URL = f'https://ftp.gnu.org/gnu/binutils/binutils-{DEPS["binutils"]}.tar.xz',

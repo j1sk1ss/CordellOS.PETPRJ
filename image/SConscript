@@ -59,8 +59,19 @@ def find_symbol_in_map_file(map_file: str, symbol: str):
                 match = re.search('0x([0-9a-fA-F]+)', line)
                 if match is not None:
                     return int(match.group(1), base=16)
+                
     return None
 
+                                                # FINDING THE SECOND STAGE
+
+                        #####################################################################
+                        ##                      ##                          ##
+                        ##  JMP INSTRUCTION     ##  FILE SYSTEM HEADERS     ##  ENTRY POINT
+                        ##                      ##                          ##                  *AA55*
+                        #############################################################################
+                                                    #|
+                                                    #|
+                                                    # sector num -> lenght
 
 def install_fst_stg(target: str, fst_stg: str, sec_stg_offset, sec_stg_size, offset=0):
     # find fst_stg map file
@@ -100,6 +111,18 @@ def install_sec_stg(target: str, sec_stg: str, offset=0, limit=None):
         with os.fdopen(os.open(target, os.O_WRONLY | os.O_CREAT), 'wb+') as ftarget:
             ftarget.seek(offset * SECTOR_SIZE, SEEK_SET)
             ftarget.write(fsec_stg.read())
+
+
+                                            # FLOPPY IMAGE CREATION
+
+                                ################################################
+                                ##               ##                ##
+                                ##  FIRST_STAGE  ##  SECOND_STAGE  ##   REST OS STUFF
+                                ##               ##   *reserved*   ##
+                                ##########################################################
+
+                                            # FLOPPY IMAGE CREATION
+
 
 def build_floppy(image, fst_stg, sec_stg, kernel, files, env):
     size_sectors = 2880
@@ -155,6 +178,15 @@ def unmount_fs(mount_dir: str):
     time.sleep(3)
     sh.fusermount(u=mount_dir)
 
+                                                    # DISK IMAGE CREATION
+
+                ################################################        (...)   #########################
+                ##                            |##                       (...)   ##                 |
+                ##  MBR (Master Boot Sector)  |##   SECOND_STAGE        (...)   ##   FIRST_STAGE   |    PARTITION (1)
+                ##         *partition table*->|##                       (...)   ##                 |
+                ####################################################    (...)   ##########################################
+
+                                                    # DISK IMAGE CREATION
 
 def build_disk(image, fst_stg, sec_stg, kernel, files, env):
     size_sectors = (env['image_size'] + SECTOR_SIZE - 1) // SECTOR_SIZE

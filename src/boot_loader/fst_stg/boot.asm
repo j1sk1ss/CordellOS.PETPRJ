@@ -51,6 +51,14 @@ section .entry
 
 	global boot
 	boot:
+		; Save DS
+		mov ax, PARTITION_ENTRY_SEGMENT
+		mov es, ax
+		mov di, PARTITION_ENTRY_OFFSET
+		mov cx, 16
+		rep movsb				; The MOVSB (move string, byte) instruction fetches the byte at address SI, 
+								; stores it at address DI and then increments or decrements the SI and DI registers by one.
+
 		mov ax, 0				; setup data
 		mov ds, ax
 		mov es, ax
@@ -120,6 +128,9 @@ section .entry
 	.read_finish:
 		; jump to our kernel
 		mov dl, [ebr_drive_number]          ; boot device in dl
+
+		mov si, PARTITION_ENTRY_OFFSET
+		mov di, PARTITION_ENTRY_SEGMENT
 
 		mov ax, SEC_STAGE_LOAD_SEGMENT      ; set segment registers
 		mov ds, ax
@@ -342,6 +353,9 @@ section .data
 
 	SEC_STAGE_LOAD_SEGMENT	equ 0x0
 	SEC_STAGE_LOAD_OFFSET	equ 0x500
+
+	PARTITION_ENTRY_SEGMENT	equ 0x2000
+	PARTITION_ENTRY_OFFSET	equ 0x0
 
 ; bios footer may be?
 section .data

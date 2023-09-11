@@ -1,1 +1,1 @@
-qemu-system-i386 -hda build/main_disk.raw
+qemu-system-i386 -debugcon stdio -hda build/i686_debug/image.img
