@@ -7,7 +7,11 @@
         "stdio.h": "c",
         "stdint.h": "c",
         "*.inc": "cpp",
-        "cstdint": "cpp"
+        "cstdint": "cpp",
+        "stddef.h": "c",
+        "system_error": "c",
+        "string": "c",
+        "format": "c"
     },
     "git.ignoreLimitWarning": true,
     "C_Cpp.errorSquiggles": "disabled"

@@ -7,6 +7,23 @@ bits 16
 
 %define ENDL 0x0D, 0x0A
 
+%define fat12 1
+%define fat16 2
+%define fat32 3
+%define ext2  4
+
+;	Head 0 (0)
+;	Cylinder 0x10 (16)
+;	Sector 0x1 (1)
+
+;	CHS (16, 0, 1)
+;	LBA 0x800 (2048)
+
+; LBA formula:
+;
+; 	LBA = (C x HPC (Headers per Sector) x H (Header number)) x SPT (Sector per Track) + (S (Sector number) - 1)
+;	2048 = (16 * heads + 0) * sectors + (1 - 1) = 16 * heads * sectors =>
+;	128 = heads * sectors
 
 ;
 ; FAT12 header
@@ -18,6 +35,8 @@ section .fsjump
 	nop
 
 section .fsheaders
+
+%if (FILESYSTEM == fat12) || (FILESYSTEM == fat16) || (FILESYSTEM == fat32)
 
 	bdb_oem:                    db 'CORDELL!'           ; 8 bytes
 	bdb_bytes_per_sector:       dw 512
@@ -34,6 +53,18 @@ section .fsheaders
 	bdb_large_sector_count:     dd 0
 
 	; extended boot record
+
+	%if (FILESYSTEM == fat32)
+
+        fat32_sectors_per_fat:      dd 0
+        fat32_flags:                dw 0
+        fat32_fat_version_number:   dw 0
+        fat32_rootdir_cluster:      dd 0
+        fat32_fsinfo_sector:        dw 0
+        fat32_backup_boot_sector:   dw 0
+        fat32_reserved:             times 12 db 0
+
+	%endif
 	
 	ebr_drive_number:           db 0                    ; 0x00 floppy, 0x80 hdd, useless
 								db 0                    ; reserved
@@ -42,7 +73,7 @@ section .fsheaders
 	ebr_volume_label:           db 'CORDELL  OS'        ; 11 bytes, padded with spaces
 	ebr_system_id:              db 'FAT12   '           ; 8 bytes
 
-
+%endif
 ;
 ;	Code goes here
 ;
@@ -75,10 +106,6 @@ section .entry
 		; read something from floppy
 		; BIOS should set DL to drive number
 		mov [ebr_drive_number], dl
-
-		; show loading message
-		mov si, msg_loading
-		call print
 
 		; check instentions present
 		mov ah, 0x41
@@ -143,7 +170,6 @@ section .entry
 		cli                                 ; disable interrupts, this way CPU can't get out of "halt" state
 		hlt
 
-
 	;
 	;	Error handlers
 	;
@@ -197,7 +223,6 @@ section .text
 			pop si
 
 			ret
-
 
 	;
 	;	Disk functions
@@ -335,14 +360,13 @@ section .text
 
 section .rodata
 
-	msg_loading: 			db 'Loading...', ENDL, 0
 	msg_reading_fail: 		db 'Read was failed', ENDL, 0
 	msg_sec_stg_not_found:	db 'Sec stage not found!', ENDL, 0	
 	file_sec_stg_bin:		db 'SEC_STG BIN' 								; Don't foget 11 bytes name	
-	have_extension:			db 0
 
 section .data
 
+	have_extension:			db 0
 	extension_struct:
 		.size:				db 10h											; Reserved struct of extention 
 							db 0

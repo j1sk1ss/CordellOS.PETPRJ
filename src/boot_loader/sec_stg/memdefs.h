@@ -13,7 +13,7 @@
 #define MEMORY_LOAD_KERNEL  ((void*)0x30000)
 #define MEMORY_LOAD_SIZE    0x00010000
 
-// 0x00020000 - 0x00030000 - stage2
+// 0x00020000 - 0x00030000 - second stage
 
 #define MEMORY_VESA_INFO    0x30000
 #define MEMORY_MODE_INFO    0x40000

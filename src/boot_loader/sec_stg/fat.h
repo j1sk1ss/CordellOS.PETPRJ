@@ -22,6 +22,19 @@ typedef struct {
 #pragma pack(pop)
 
 typedef struct {
+    uint8_t Order;
+    int16_t CharsFirst[5];
+    uint8_t Attribute;
+    uint8_t LongEntryType;
+    uint8_t Checksum;
+    int16_t CharsSecond[6];
+    uint16_t AlwaysZero;
+    int16_t CharsThird[2];
+} __attribute__((packed)) FAT_longFileEntry;
+
+#define FAT_LFN_LAST        0x40
+
+typedef struct {
     int Handle;
     bool IsDirectory;
     uint32_t Position;

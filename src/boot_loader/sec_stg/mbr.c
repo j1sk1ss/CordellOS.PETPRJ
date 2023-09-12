@@ -13,6 +13,8 @@ typedef struct  {
 
 
 uint32_t MBR_detectPartition(Partition* part, DISK* disk, void* partition) {
+    part->Disk = disk;
+
     if (disk->id < 0x80) {
         part->PartitionOffset = 0;
 
