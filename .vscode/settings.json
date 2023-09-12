@@ -11,7 +11,8 @@
         "stddef.h": "c",
         "system_error": "c",
         "string": "c",
-        "format": "c"
+        "format": "c",
+        "random": "c"
     },
     "git.ignoreLimitWarning": true,
     "C_Cpp.errorSquiggles": "disabled"

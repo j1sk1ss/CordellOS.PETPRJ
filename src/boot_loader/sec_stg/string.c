@@ -56,12 +56,12 @@ int strcmp(const char* firstStr, const char* secondStr) {
     if (firstStr == NULL || secondStr == NULL)
         return -10;
 
-    while (*a && *b && *a == *b) {
-        ++a;
-        ++b;
+    while (*firstStr && *secondStr && *firstStr == *secondStr) {
+        ++firstStr;
+        ++secondStr;
     }
 
-    return (*a) - (*b);
+    return (*firstStr) - (*secondStr);
 }
 
 wchar_t* utf16_to_codepoint(wchar_t* string, int* codePoint) {
