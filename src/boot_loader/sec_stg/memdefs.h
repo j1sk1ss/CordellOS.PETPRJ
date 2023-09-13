@@ -10,13 +10,13 @@
 #define MEMORY_FAT_ADDR     ((void*)0x20000)
 #define MEMORY_FAT_SIZE     0x00010000
 
-#define MEMORY_LOAD_KERNEL  ((void*)0x30000)
+#define MEMORY_ELF_ADDR     ((void*)0x30000)
+#define MEMORY_ELF_SIZE     0x00010000
+
+#define MEMORY_LOAD_KERNEL  ((void*)0x40000)
 #define MEMORY_LOAD_SIZE    0x00010000
 
-// 0x00020000 - 0x00030000 - second stage
-
-#define MEMORY_VESA_INFO    0x30000
-#define MEMORY_MODE_INFO    0x40000
+// 0x00020000 - 0x00030000 - stage2
 
 // 0x00030000 - 0x00080000 - free
 

@@ -9,6 +9,7 @@
 #include "vbe.h"
 #include "mbr.h"
 #include "stdlib.h"
+#include "elf.h"
 
 uint8_t* KernelLoadBuffer   = (uint8_t*)MEMORY_LOAD_KERNEL;
 uint8_t* Kernel             = (uint8_t*)MEMORY_KERNEL_ADDR;
@@ -17,8 +18,6 @@ typedef void (*KernelStart)();
 
 void __attribute__((cdecl)) start(uint16_t bootDrive, void* partition) {
     clrscr();
-
-    printf("partition=%x\n", partition);
 
     DISK disk;
     if (!DISK_initialize(&disk, bootDrive)) {
@@ -29,27 +28,21 @@ void __attribute__((cdecl)) start(uint16_t bootDrive, void* partition) {
     Partition part;
     MBR_detectPartition(&part, &disk, partition);
 
-    if (!FAT_initialize(&part)) {
+    if (!FAT_init(&part)) {
         printf("Cordell-FAT init error\r\n");
         goto end;
     }
 
     // load kernel
-    FAT_file* fatFile = FAT_open(&part, "/boot/kernel.bin");
-    uint32_t read;
-    uint8_t* kernelBuffer = Kernel;
-
-    while ((read = FAT_read(&part, fatFile, MEMORY_LOAD_SIZE, KernelLoadBuffer))) {
-        memcpy(kernelBuffer, KernelLoadBuffer, read);
-        kernelBuffer += read;
+    KernelStart kernelEntry;
+    if (!ELF_Read(&part, "/boot/kernel.elf", (void**)&kernelEntry)) {
+        printf("ELF read failed, booting halted");
+        goto end;
     }
 
-    FAT_close(fatFile);
-
     // execute kernel
-    KernelStart kernelStart = (KernelStart)Kernel;
-    kernelStart();
+    kernelEntry();
 
-    end:
-        for(;;);
+end:
+    for(;;);
 }

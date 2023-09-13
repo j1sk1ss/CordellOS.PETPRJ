@@ -12,7 +12,12 @@
         "system_error": "c",
         "string": "c",
         "format": "c",
-        "random": "c"
+        "random": "c",
+        "istream": "c",
+        "strstream": "cpp",
+        "sstream": "cpp",
+        "regex": "cpp",
+        "limits": "cpp"
     },
     "git.ignoreLimitWarning": true,
     "C_Cpp.errorSquiggles": "disabled"

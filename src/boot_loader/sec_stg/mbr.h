@@ -14,4 +14,4 @@ typedef struct {
 
 
 uint32_t MBR_detectPartition(Partition* part, DISK* disk, void* partition);
-bool Partition_readSectors(Partition* partition, uint32_t lba, uint8_t sectors, void* lowerDataOut);
+bool Partition_ReadSectors(Partition* partition, uint32_t lba, uint8_t sectors, void* lowerDataOut);

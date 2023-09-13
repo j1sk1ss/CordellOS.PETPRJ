@@ -29,13 +29,25 @@ objects = env.Object(sources)
 obj_crti = objects.pop(find_index(objects, lambda item: is_file_name(item, 'crti.o')))
 obj_crtn = objects.pop(find_index(objects, lambda item: is_file_name(item, 'crtn.o')))
 
+Import('libcore')
+
+static_libs = [
+    libcore
+]
+
 objects = [
     obj_crti,
     os.path.join(env["TOOLCHAIN_LIBGCC"], 'crtbegin.o'),
     *objects,
+    *static_libs,
     os.path.join(env["TOOLCHAIN_LIBGCC"], 'crtend.o'),
     obj_crtn
 ]
 
-kernel = env.Program('kernel.bin', objects)
+kernel = env.Program('kernel.elf', objects)
+kernel_stripped = env.Command('kernel-stripped.elf', kernel, '$STRIP -o $TARGET $SOURCE')
+
+env.Default(kernel_stripped)
+
 Export('kernel')
+Export('kernel_stripped')

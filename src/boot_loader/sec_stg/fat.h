@@ -17,7 +17,7 @@ typedef struct {
     uint16_t ModifiedDate;
     uint16_t FirstClusterLow;
     uint32_t Size;
-} __attribute__((packed)) FAT_directoryEntry;
+} __attribute__((packed)) FAT_DirectoryEntry;
 
 #pragma pack(pop)
 
@@ -39,7 +39,7 @@ typedef struct {
     bool IsDirectory;
     uint32_t Position;
     uint32_t Size;
-} __attribute__((packed)) FAT_file;
+} __attribute__((packed)) FAT_File;
 
 enum FAT_Attributes {
     FAT_ATTRIBUTE_READ_ONLY         = 0x01,
@@ -51,8 +51,8 @@ enum FAT_Attributes {
     FAT_ATTRIBUTE_LFN               = FAT_ATTRIBUTE_READ_ONLY | FAT_ATTRIBUTE_HIDDEN | FAT_ATTRIBUTE_SYSTEM | FAT_ATTRIBUTE_VOLUME_ID
 };
 
-bool FAT_Initialize(Partition* disk);
-FAT_file* FAT_Open(Partition* disk, const char* path);
-uint32_t FAT_Read(Partition* disk, FAT_file* file, uint32_t byteCount, void* dataOut);
-bool FAT_ReadEntry(Partition* disk, FAT_file* file, FAT_directoryEntry* dirEntry);
-void FAT_Close(FAT_file* file);
+bool FAT_init(Partition* disk);
+FAT_File* FAT_open(Partition* disk, const char* path);
+uint32_t FAT_read(Partition* disk, FAT_File* file, uint32_t byteCount, void* dataOut);
+bool FAT_readEntry(Partition* disk, FAT_File* file, FAT_DirectoryEntry* dirEntry);
+void FAT_close(FAT_File* file);
