@@ -10,7 +10,8 @@ TARGET_ENVIRONMENT: Environment
 env = TARGET_ENVIRONMENT.Clone()
 env.Append(
     CPPPATH = [ 
-        env.Dir('.').srcnode()
+        env.Dir('.').srcnode(),
+        env['PROJECTDIR'].Dir('src/libs')
     ],
 
     ASFLAGS = [ '-I', env.Dir('.').srcnode(), '-f', 'elf' ]

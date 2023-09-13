@@ -8,7 +8,7 @@ bits 16
 
 section .entry
 
-extern Start        ; c start
+extern start        ; c start
 extern _init        ; cpp init
 
 extern __bss_start  ; sections
@@ -99,7 +99,7 @@ entry:
     
 
         ; call C        
-        call Start
+        call start
 
         cli                             ; Clear interrupt flags
         hlt                             ; halt the CPU until the next external interrupt is fired

@@ -36,6 +36,7 @@ enum {
 //  3   BUF     if set, controller operates in buffered mode
 //  4   SFNM    specially fully nested mode; used in systems with large number of cascaded controllers
 //  5-7         reserved, set to 0
+
 enum {
     PIC_ICW4_8086           = 0x1,
     PIC_ICW4_AUTO_EOI       = 0x2,

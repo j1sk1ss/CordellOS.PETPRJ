@@ -3,7 +3,7 @@
 #include "CharacterDevice.hpp"
 
 #include <stdarg.h>
-#include <cpp/TypeTraits.hpp>
+#include <core/cpp/TypeTraits.hpp>
 
 class TextDevice {
     public:
