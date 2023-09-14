@@ -15,6 +15,8 @@ FATFileSystem::FATFileSystem() :
     m_SectorsPerFat() {}
 
 bool FATFileSystem::Initialize(BlockDevice* device) {
+    Debug::Info(LOG_MODULE, "FAT: init starts");
+
     m_Device = device;
 
     if (!ReadBootSector()) {
@@ -35,6 +37,8 @@ bool FATFileSystem::Initialize(BlockDevice* device) {
         m_SectorsPerFat = m_Data->BS.BootSector.EBR32.SectorsPerFat;
     }
     
+    Debug::Info(LOG_MODULE, "FAT: Open root dir of file starts");
+
     // open root directory file
     uint32_t rootDirLba;
     uint32_t rootDirSize;
@@ -56,6 +60,8 @@ bool FATFileSystem::Initialize(BlockDevice* device) {
     DetectFatType();
 
     m_Data->LFNCount = 0;
+
+    Debug::Info(LOG_MODULE, "FAT: init ended");
 
     return true;
 }
@@ -82,7 +88,6 @@ File* FATFileSystem::RootDirectory() {
 
 bool FATFileSystem::ReadSector(uint32_t lba, uint8_t* buffer, size_t count) {
     m_Device->Seek(SeekPosition::StartPosition, lba * SectorSize);
-
     return (m_Device->Read(buffer, count * SectorSize) == count * SectorSize);
 }
 

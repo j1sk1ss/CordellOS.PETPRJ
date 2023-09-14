@@ -35,7 +35,17 @@
         "dynamic_bitset": "cpp",
         "initializer_list": "cpp",
         "stacktrace": "cpp",
-        "compare": "cpp"
+        "compare": "cpp",
+        "bootparams.h": "c",
+        "keyboard.h": "c",
+        "defs.hpp": "c",
+        "io.h": "c",
+        "irq.h": "c",
+        "debug.h": "c",
+        "hal.h": "c",
+        "*.def": "c",
+        "cstdio": "c",
+        "io_context": "c"
     },
     "git.ignoreLimitWarning": true,
     "C_Cpp.errorSquiggles": "disabled"

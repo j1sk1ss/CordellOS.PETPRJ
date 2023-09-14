@@ -54,7 +54,6 @@ void i686_isr_initialize() {
 void __attribute__((cdelc)) i686_isr_handler(Registers* regs) {
     if (_isrHandlers[regs->interrupt] != NULL)
         _isrHandlers[regs->interrupt](regs);
-
     else if (regs->interrupt >= 32)
         printf("Unhandled interrupt! Interrupt: %d\n", regs->interrupt);
     else  {

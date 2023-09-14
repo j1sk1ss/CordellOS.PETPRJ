@@ -42,12 +42,14 @@ EXPORT void ASMCALL Start(uint16_t bootDrive, uint32_t partition) {
         part = &partRange;
     }
 
+    Debug::Info("second stage", "Start FAT");
+
     // Read partition
     FATFileSystem fs;
     if (!fs.Initialize(part)) 
         Debug::Critical("second stage", "Failed to initialize FAT file system!");
 
-    File* kernel = fs.Open("kernel.bin", FileOpenMode::Read);
+    File* kernel = fs.Open("kernel.elf", FileOpenMode::Read);
 
     Debug::Info("second stage", "OK!");
 

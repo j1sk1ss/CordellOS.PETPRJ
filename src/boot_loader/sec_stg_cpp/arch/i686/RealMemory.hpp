@@ -12,13 +12,6 @@ uint32_t ToSegOffset(T address) {
     return (segment << 16) | offset;
 }
 
-//
-//     0x12345
-//  ____    |_
-//  segment | offset
-
-// issue -> 0xFFFF
-
 template <typename T>
 T ToLinear(uint32_t addr) {
     uint32_t offset     = (uint32_t)(addr) & 0xFFFF;

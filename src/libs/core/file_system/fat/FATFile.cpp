@@ -74,14 +74,12 @@ size_t FATFile::Read(uint8_t* data, size_t byteCount) {
         uint32_t take = Min(byteCount, leftInBuffer);
 
         Memory::Copy(data, m_Buffer + m_Position % SectorSize, take);
-        data += take;
-        m_Position += take;
-        byteCount -= take;
 
-        // printf("leftInBuffer=%lu take=%lu\r\n", leftInBuffer, take);
-        // See if we need to read more data
+        data        += take;
+        m_Position  += take;
+        byteCount   -= take;
+
         if (leftInBuffer == take) {
-            // Special handling for root directory
             if (m_IsRootDirectory) {
                 ++m_CurrentCluster;
 
@@ -147,16 +145,16 @@ bool FATFile::Seek(SeekPosition pos, int rel) {
 }
 
 bool FATFile::UpdateCurrentCluster() {
-    uint32_t clusterSize = m_FS->Data().BS.BootSector.SectorsPerCluster * SectorSize;
+    uint32_t clusterSize    = m_FS->Data().BS.BootSector.SectorsPerCluster * SectorSize;
     uint32_t desiredCluster = m_Position / clusterSize;
-    uint32_t desiredSector = (m_Position % clusterSize) / SectorSize;
+    uint32_t desiredSector  = (m_Position % clusterSize) / SectorSize;
     
     if (desiredCluster == m_CurrentClusterIndex && desiredSector == m_CurrentSectorInCluster)
         return true;
 
     if (desiredCluster < m_CurrentClusterIndex) {
-        m_CurrentClusterIndex = 0;
-        m_CurrentCluster = m_FirstCluster;
+        m_CurrentClusterIndex   = 0;
+        m_CurrentCluster        = m_FirstCluster;
     }
 
     while (desiredCluster > m_CurrentClusterIndex) {

@@ -10,6 +10,7 @@ class FATFileSystem : public FileSystem {
         FATFileSystem();
         
         virtual bool Initialize(BlockDevice* device) override;
+
         virtual File* RootDirectory() override;
 
         bool ReadSector(uint32_t lba, uint8_t* buffer, size_t count = 1);

@@ -1,6 +1,8 @@
 #include "FATFileEntry.hpp"
+
 #include <file_system/fat/FATFile.hpp>
 #include <file_system/FATFileSystem.hpp>
+#include <core/Debug.hpp>
 
 FATFileEntry::FATFileEntry() : m_FS(), m_DirEntry() {}
 
@@ -27,13 +29,13 @@ const FileType FATFileEntry::Type() {
 File* FATFileEntry::Open(FileOpenMode mode) {
     FATFile* file = m_FS->AllocateFile();
     if (file == nullptr) {
-        // todo: print error
+        Debug::Error("FAT File Entry: 32", "FAT Open error!");
         return nullptr;
     }
 
     // setup vars
-    uint32_t size = m_DirEntry.Size;
-    uint32_t firstCluster = m_DirEntry.FirstClusterLow + ((uint32_t)m_DirEntry.FirstClusterHigh << 16);
+    uint32_t size           = m_DirEntry.Size;
+    uint32_t firstCluster   = m_DirEntry.FirstClusterLow + ((uint32_t)m_DirEntry.FirstClusterHigh << 16);
 
     if (!file->Open(m_FS, firstCluster, Name(), size, m_DirEntry.Attributes & FAT_ATTRIBUTE_DIRECTORY)) {
         m_FS->ReleaseFile(file);
