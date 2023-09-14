@@ -2,7 +2,7 @@
 Simple OS based on .asm / .c double stage boot loader, and .c / .cpp based kernel with GCC .c / .cpp compiler. 
 
 **TODO:**
-- FAT32
+- 
 - Keyboard driver
 - RAM detection
 - CPP kernel
