@@ -5,6 +5,7 @@
 
 bool Assert_(const char* condition, const char* filename, int line, const char* function) {
     Debug::Critical("Assert", "Failed! %s", condition);
+    Debug::Critical("Assert", "In file %s line %d function %s", filename, line, function);
 
     arch::i686::Panic();
     return false;

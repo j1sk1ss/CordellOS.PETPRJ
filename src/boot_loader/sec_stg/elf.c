@@ -5,11 +5,11 @@
 #include "math.h"
 #include "stdio.h"
 
-bool ELF_Read(Partition* part, const char* path, void** entryPoint)
-{
-    uint8_t* headerBuffer = MEMORY_ELF_ADDR;
-    uint8_t* loadBuffer = MEMORY_LOAD_KERNEL;
-    uint32_t filePos = 0;
+bool ELF_Read(Partition* part, const char* path, void** entryPoint) {
+    uint8_t* headerBuffer   = MEMORY_ELF_ADDR;
+    uint8_t* loadBuffer     = MEMORY_LOAD_KERNEL;
+    uint32_t filePos        = 0;
+
     uint32_t read;
 
     // Read header
@@ -36,10 +36,10 @@ bool ELF_Read(Partition* part, const char* path, void** entryPoint)
     *entryPoint = (void*)header->ProgramEntryPosition;
 
     // load program header
-    uint32_t programHeaderOffset = header->ProgramHeaderTablePosition;
-    uint32_t programHeaderSize = header->ProgramHeaderTableEntrySize * header->ProgramHeaderTableEntryCount;
-    uint32_t programHeaderTableEntrySize = header->ProgramHeaderTableEntrySize;
-    uint32_t programHeaderTableEntryCount = header->ProgramHeaderTableEntryCount;
+    uint32_t programHeaderOffset            = header->ProgramHeaderTablePosition;
+    uint32_t programHeaderSize              = header->ProgramHeaderTableEntrySize * header->ProgramHeaderTableEntryCount;
+    uint32_t programHeaderTableEntrySize    = header->ProgramHeaderTableEntrySize;
+    uint32_t programHeaderTableEntryCount   = header->ProgramHeaderTableEntryCount;
 
     filePos += FAT_read(part, fd, programHeaderOffset - filePos, headerBuffer);
     if ((read = FAT_read(part, fd, programHeaderSize, headerBuffer)) != programHeaderSize) {

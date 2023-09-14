@@ -444,3 +444,68 @@ x86_video_setVbeMode:
     mov esp, ebp
     pop ebp
     ret
+
+
+E820Signature equ 0x534D4150
+
+global x86_e820GetNextBlock
+x86_e820GetNextBlock:
+    ; make new call frame
+    push ebp                ; save old call frame
+    mov ebp, esp            ; initialize new call frame
+
+    x86_enter_real_mode
+
+    ; save modified regs
+    push ebx
+    push ecx
+    push edx 
+    push esi
+    push ds
+    push es
+
+    ; setup args
+    linear_to_seg_offset [bp + 8], es, edx, di      ; es:di pointer to structure
+
+    linear_to_seg_offset [bp + 12], ds, esi, si     ; ebx - pointer to continuationID
+    mov ebx, ds:[si]
+
+    mov eax, 0xE820
+    mov edx, E820Signature
+    mov ecx, 24
+
+    ; call interrupt
+    int 15h
+
+    ; test results
+    cmp eax, E820Signature
+    jne .Error
+
+        .Success:
+            mov eax, ecx        ; return Size
+            mov ds:[si], ebx    ; fill cont param
+            jmp .EndIf
+
+        .Error:
+            mov eax, -1
+
+.EndIf:
+
+    ; restore regs
+    pop es
+    pop ds
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+
+    push eax                 ; Save eax return
+
+    x86_enter_protected_mode
+
+    pop eax                  ; Restore eax return
+
+    ; restore old call frame
+    mov esp, ebp
+    pop ebp
+    ret

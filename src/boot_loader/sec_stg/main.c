@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <boot/bootparams.h>
 
 #include "stdio.h"
 #include "x86.h"
@@ -10,11 +11,14 @@
 #include "mbr.h"
 #include "stdlib.h"
 #include "elf.h"
+#include "memdetect.h"
 
 uint8_t* KernelLoadBuffer   = (uint8_t*)MEMORY_LOAD_KERNEL;
 uint8_t* Kernel             = (uint8_t*)MEMORY_KERNEL_ADDR;
 
-typedef void (*KernelStart)();
+BootParams _bootParams;
+
+typedef void (*KernelStart)(BootParams* bootParams);
 
 void __attribute__((cdecl)) start(uint16_t bootDrive, void* partition) {
     clrscr();
@@ -33,6 +37,10 @@ void __attribute__((cdecl)) start(uint16_t bootDrive, void* partition) {
         goto end;
     }
 
+    // prepare boot params
+    _bootParams.BootDevice = bootDrive;
+    memory_detect(&_bootParams.Memory);
+
     // load kernel
     KernelStart kernelEntry;
     if (!ELF_Read(&part, "/boot/kernel.elf", (void**)&kernelEntry)) {
@@ -41,7 +49,7 @@ void __attribute__((cdecl)) start(uint16_t bootDrive, void* partition) {
     }
 
     // execute kernel
-    kernelEntry();
+    kernelEntry(&_bootParams);
 
 end:
     for(;;);

@@ -1,8 +1,12 @@
 #include "RangeBlockDevice.hpp"
-
 #include <core/cpp/Algorithm.hpp>
 
-RangeBlockDevice::RangeBlockDevice() : m_Device(nullptr), m_RangeBegin(0), m_RangeSize(0) {  } 
+RangeBlockDevice::RangeBlockDevice()
+    : m_Device(nullptr),
+      m_RangeBegin(0),
+      m_RangeSize(0)
+{
+}
 
 void RangeBlockDevice::Initialize(BlockDevice* device, size_t rangeBegin, size_t rangeSize) {
     m_Device        = device;
@@ -13,6 +17,9 @@ void RangeBlockDevice::Initialize(BlockDevice* device, size_t rangeBegin, size_t
 }
 
 size_t RangeBlockDevice::Read(uint8_t* data, size_t size) {
+    if (m_Device == nullptr)
+        return 0;
+
     size = Min(size, Size() - Position());
     return m_Device->Read(data, size);
 }
@@ -28,21 +35,19 @@ size_t RangeBlockDevice::Print(const uint8_t* data, size_t size) {
 bool RangeBlockDevice::Seek(SeekPosition pos, int rel) {
     if (m_Device == nullptr)
         return false;
-
+        
     switch (pos) {
         case SeekPosition::StartPosition:
-            m_Device->Seek(SeekPosition::StartPosition, m_RangeBegin + rel);
-            break;
+            return m_Device->Seek(SeekPosition::StartPosition, m_RangeBegin + rel);
         
         case SeekPosition::CurrentPosition:
-            m_Device->Seek(SeekPosition::CurrentPosition, rel);
-            break;
+            return m_Device->Seek(SeekPosition::CurrentPosition, rel);
 
         case SeekPosition::EndPosition:
-            m_Device->Seek(SeekPosition::CurrentPosition, m_RangeBegin + m_RangeSize);
+            return m_Device->Seek(SeekPosition::StartPosition, m_RangeBegin + m_RangeSize);
 
         default:
-            break;
+            return false;
     }
 }
 

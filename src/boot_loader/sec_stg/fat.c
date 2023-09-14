@@ -58,8 +58,6 @@ typedef struct  {
         FAT32_ExtendedBootRecord EBR32;
     };
 
-    // ... we don't care about code ...
-
 } __attribute__((packed)) FAT_BootSector;
 
 

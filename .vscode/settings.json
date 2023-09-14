@@ -34,7 +34,8 @@
         "valarray": "cpp",
         "dynamic_bitset": "cpp",
         "initializer_list": "cpp",
-        "stacktrace": "cpp"
+        "stacktrace": "cpp",
+        "compare": "cpp"
     },
     "git.ignoreLimitWarning": true,
     "C_Cpp.errorSquiggles": "disabled"

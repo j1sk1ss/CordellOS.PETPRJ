@@ -216,12 +216,12 @@ void printf(const char* fmt, ...) {
             case PRINTF_STATE_LENGTH:
                 switch (*fmt) {
                     case 'h':   
-                        length = PRINTF_LENGTH_SHORT;
-                        state = PRINTF_STATE_LENGTH_SHORT;
+                        length  = PRINTF_LENGTH_SHORT;
+                        state   = PRINTF_STATE_LENGTH_SHORT;
                     break;
                     case 'l':   
-                        length = PRINTF_LENGTH_LONG;
-                        state = PRINTF_STATE_LENGTH_LONG;
+                        length  = PRINTF_LENGTH_LONG;
+                        state   = PRINTF_STATE_LENGTH_LONG;
                     break;
                     default:    
                         goto PRINTF_STATE_SPEC_;
