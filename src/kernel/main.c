@@ -8,6 +8,8 @@
 #include <arch/i686/irq.h>
 #include <arch/i686/io.h>
 
+#include "Keyboard.h"
+#include "string.h"
 
 extern void _init();
 
@@ -16,17 +18,32 @@ void timer(Registers* regs) {
 }
 
 void start(BootParams* bootParams) {
-
     // global constructors
     _init();
 
     HAL_initialize();
 
-    printf("Cordell OS v0.a\n");
-    printf("This operating system is under construction.\n");
+    x86_init_keyboard();
+
+    printf("Cordell OS v0.a\r\n");
+    printf("This operating system is under construction.\r\n");
 
     log_debug("Main.c", "Boot device! %x", bootParams->BootDevice);
     log_cordell("Main.c", "This is a special message from OS!");
+
+
+    while (1) {
+        printf("\r\n[CORDELL OS]: ");
+        char command[30];
+
+        keyboard_read(command);    
+
+
+            if (strcmp(command, "help") == 0) 
+                printf("\r\n> Go fuck urself retard");
+            else  {
+            }
+    }
 
 end:
     for (;;);
