@@ -1,6 +1,8 @@
 #include "disk.h"
-#include "x86.h"
-#include "stdio.h"
+
+#include "x86/x86.h"
+
+#include "std/stdio.h"
 
 #include <stdbool.h>
 

@@ -1,7 +1,9 @@
 #include "vbe.h"
 #include "x86.h"
-#include "stdio.h"
-#include "memory.h"
+
+#include "std/stdio.h"
+
+#include "memory/memory.h"
 
 #include <stdbool.h>
 

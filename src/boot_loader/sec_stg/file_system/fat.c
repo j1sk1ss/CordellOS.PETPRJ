@@ -1,11 +1,13 @@
 #include "fat.h"
-#include "stdio.h"
-#include "memdefs.h"
-#include "string.h"
-#include "memory.h"
-#include "ctype.h"
-#include "math.h"
-#include "stdlib.h"
+
+#include "memory/memdefs.h"
+#include "memory/memory.h"
+
+#include "std/stdio.h"
+#include "std/string.h"
+#include "std/ctype.h"
+#include "std/math.h"
+#include "std/stdlib.h"
 
 #include <stddef.h>
 

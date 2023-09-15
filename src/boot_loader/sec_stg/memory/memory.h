@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stdint.h"
+#include <stdint.h>
 
 #define SEG(seg)         (seg >> 16)
 #define OFF(off)         (off & 0xFFFF)

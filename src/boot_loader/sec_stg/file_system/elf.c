@@ -1,9 +1,11 @@
 #include "elf.h"
 #include "fat.h"
-#include "memdefs.h"
-#include "memory.h"
-#include "math.h"
-#include "stdio.h"
+
+#include "memory/memdefs.h"
+#include "memory/memory.h"
+
+#include "std/math.h"
+#include "std/stdio.h"
 
 bool ELF_Read(Partition* part, const char* path, void** entryPoint) {
     uint8_t* headerBuffer   = MEMORY_ELF_ADDR;
