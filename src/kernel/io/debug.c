@@ -1,7 +1,6 @@
 #include "debug.h"
 
 #include <stdarg.h>
-#include <stdio.h>
 #include <hal/vfs.h>
 
 static const char* const _logSeverityColors[] = {

@@ -1,21 +1,17 @@
-#include "stdio.h"
-#include "memory.h"
+#include "io/stdio.h"
+#include "memory/memory.h"
 
 #include <stdint.h>
 #include <boot/bootparams.h>
-#include <debug.h>
+#include <io/debug.h>
 #include <hal/hal.h>
 #include <arch/i686/irq.h>
 #include <arch/i686/io.h>
 
 #include "Keyboard.h"
-#include "string.h"
+#include "io/string.h"
 
 extern void _init();
-
-void timer(Registers* regs) {
-    printf(".");
-}
 
 void start(BootParams* bootParams) {
     // global constructors
@@ -31,18 +27,18 @@ void start(BootParams* bootParams) {
     log_debug("Main.c", "Boot device! %x", bootParams->BootDevice);
     log_cordell("Main.c", "This is a special message from OS!");
 
+    char command[30];
 
     while (1) {
         printf("\r\n[CORDELL OS]: ");
-        char command[30];
+        
+        command[0] = '\0';
+        keyboard_read(command);
 
-        keyboard_read(command);    
-
-
-            if (strcmp(command, "help") == 0) 
-                printf("\r\n> Go fuck urself retard");
-            else  {
-            }
+        if (strcmp(command, "help") == 0)                   // Not correctly work
+            printf("\r\n> Go fuck urself retard");
+        else if (strcmp(command, "hello") == 0) 
+            printf("\r\n> Please, go fuck urself retard");
     }
 
 end:

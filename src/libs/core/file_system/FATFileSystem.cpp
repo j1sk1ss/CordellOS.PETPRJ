@@ -15,8 +15,6 @@ FATFileSystem::FATFileSystem() :
     m_SectorsPerFat() {}
 
 bool FATFileSystem::Initialize(BlockDevice* device) {
-    Debug::Info(LOG_MODULE, "FAT: init starts");
-
     m_Device = device;
 
     if (!ReadBootSector()) {

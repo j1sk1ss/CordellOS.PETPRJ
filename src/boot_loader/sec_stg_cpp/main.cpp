@@ -4,27 +4,32 @@
 #include <core/devices/TextDevice.hpp>
 #include <core/devices/RangeBlockDevice.hpp>
 #include <core/Debug.hpp>
+#include <core/file_system/FATFileSystem.hpp>
+
 #include <arch/i686/BIOSDisk.hpp>
 #include <arch/i686/RealMemory.hpp>
+
 #include <devices/MBR.hpp>
+
 #include <mem/SecStageAllocator.hpp>
+
 #include <cpp/NewDelete.hpp>
-#include <core/file_system/FATFileSystem.hpp>
+
 #include <stdint.h>
 #include <memdefs.h>
 
-arch::i686::VGATextDevice g_VGADevice;
-arch::i686::E9Device g_DebugDevice;
-SecStageAllocator g_Allocator(reinterpret_cast<void*>(MEMORY_MIN), MEMORY_MAX - MEMORY_MIN);
+arch::i686::VGATextDevice _VGADevice;
+arch::i686::E9Device _debugDevice;
+SecStageAllocator _allocator(reinterpret_cast<void*>(MEMORY_MIN), MEMORY_MAX - MEMORY_MIN);
 
 EXPORT void ASMCALL Start(uint16_t bootDrive, uint32_t partition) {
-    SetCppAllocator(&g_Allocator);
+    SetCppAllocator(&_allocator);
 
-    g_VGADevice.Clear();
+    _VGADevice.Clear();
     
-    TextDevice screen(&g_VGADevice);
+    TextDevice screen(&_VGADevice);
     Debug::AddOutputDevice(&screen, Debug::Level::Info, false);
-    TextDevice debug(&g_DebugDevice);
+    TextDevice debug(&_debugDevice);
     Debug::AddOutputDevice(&debug, Debug::Level::Debug, true);
 
     BIOSDisk disk(bootDrive);

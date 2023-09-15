@@ -2,7 +2,7 @@
 #include "pic.h"
 #include "i8259.h"
 #include "io.h"
-#include "stdio.h"
+#include "io/stdio.h"
 
 #include <util/arrays.h>
 #include <stddef.h>

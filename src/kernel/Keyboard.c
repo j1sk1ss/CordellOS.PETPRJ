@@ -1,7 +1,6 @@
-#include "stdio.h"
-
+#include "io/stdio.h"
 #include "Keyboard.h"
-#include "memory.h"
+#include "memory/memory.h"
 
 #include <arch/i686/io.h>
 
@@ -53,7 +52,7 @@ unsigned char kbdus[128] = {
 void keyboard_read(char* string) {
     int position = 0;
 
-    while (1) {
+    while (position < 29) {
         if (i686_inb(0x64) & 0x1) {
             char character = i686_inb(0x60);
 
@@ -70,8 +69,8 @@ void keyboard_read(char* string) {
                 else 
                     break;
             }
-        }
 
-        position++;
+            position++;
+        }
     }
 }

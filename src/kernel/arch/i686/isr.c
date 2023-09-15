@@ -4,7 +4,7 @@
 #include "io.h"
 
 #include<stddef.h>
-#include <stdio.h>
+#include <io/stdio.h>
 
 ISRHandler _isrHandlers[256];
 
