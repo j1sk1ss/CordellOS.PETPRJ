@@ -1,8 +1,11 @@
 #include "io/stdio.h"
-#include "Keyboard.h"
-#include "memory/memory.h"
+#include "io/string.h"
 
-#include "memory/allocators/string_alloc.h"
+#include "Keyboard.h"
+
+#include "memory/memory.h"
+#include "memory/allocator/string_allocator.h"
+#include "memory/allocator/allocator.h"
 
 #include <arch/i686/io.h>
 
@@ -52,41 +55,36 @@ unsigned char alphabet[128] = {
 
 
 char* keyboard_read() {
-    free_string();
+    char* input       = NULL;  // Start with an empty string
+    size_t input_size = 0;
 
-    char* input         = NULL;
-    size_t input_size   = 0;
-
-    while(1) {
+    while (1) {
         if (i686_inb(0x64) & 0x1) {
-        char character = i686_inb(0x60);
+            char character = i686_inb(0x60);
 
-            if (character & 0x80) {
-                character &= 0x7F;
-
+            if (!(character & 0x80)) {
                 char currentCharacter = alphabet[character];
                 if (currentCharacter != '\n') {
                     printf("%c", currentCharacter);
 
-                    // Reallocate memory to accommodate the new character
-                    char* temp = allocate_string(input, ++input_size + 1);
-                    if (temp == NULL) {
-                        printf("\r\nMemory allocation failed\n");
-                        free_string();
+                    // Allocate memory to accommodate the new character
+                    char* buffer = allocate_string(input, ++input_size + 1);
+                    if (buffer == NULL) {
+                        printf("\nMemory allocation failed\n");
+                        free_string(buffer);
 
                         return NULL;
                     }
 
-                    input = temp;
+                    input = buffer;
 
-                    input[input_size - 1]   = currentCharacter;
-                    input[input_size]       = '\0';
+                    input[input_size - 1] = currentCharacter;     // Set last character
+                    input[input_size]     = '\0';                 // Null-terminate the string
                 } 
-                else 
-                    break;
+                else break;
             }
         }
     }
-    
+
     return input;
 }

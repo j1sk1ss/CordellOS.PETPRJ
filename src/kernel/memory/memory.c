@@ -1,27 +1,27 @@
 #include "memory.h"
 
-void* memcpy(void* dst, const void* src, uint16_t num) {
-    uint8_t* u8Dst = (uint8_t *)dst;
-    const uint8_t* u8Src = (const uint8_t *)src;
+void* memcpy(void* destination, const void* source, uint16_t num) {
+    uint8_t* u8Dst = (uint8_t *)destination;
+    const uint8_t* u8Src = (const uint8_t *)source;
 
     for (uint16_t i = 0; i < num; i++)
         u8Dst[i] = u8Src[i];
 
-    return dst;
+    return destination;
 }
 
-void * memset(void * ptr, int value, uint16_t num) {
-    uint8_t* u8Ptr = (uint8_t *)ptr;
+void* memset(void* pointer, int value, uint16_t num) {
+    uint8_t* u8Ptr = (uint8_t *)pointer;
 
     for (uint16_t i = 0; i < num; i++)
         u8Ptr[i] = (uint8_t)value;
 
-    return ptr;
+    return pointer;
 }
 
-int memcmp(const void* ptr1, const void* ptr2, uint16_t num) {
-    const uint8_t* u8Ptr1 = (const uint8_t *)ptr1;
-    const uint8_t* u8Ptr2 = (const uint8_t *)ptr2;
+int memcmp(const void* firstPointer, const void* secondPointer, uint16_t num) {
+    const uint8_t* u8Ptr1 = (const uint8_t *)firstPointer;
+    const uint8_t* u8Ptr2 = (const uint8_t *)secondPointer;
 
     for (uint16_t i = 0; i < num; i++)
         if (u8Ptr1[i] != u8Ptr2[i])
