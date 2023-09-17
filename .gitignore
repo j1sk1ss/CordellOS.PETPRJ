@@ -5,3 +5,10 @@ bx_enh_dbg.ini
 .vscode/*.log
 .sconsign.dblite
 __pycache__/
+.idea/CordellOS.EXMPL.iml
+.gitignore
+.idea/modules.xml
+.gitignore
+cmake-build-debug/build.ninja
+cmake-build-debug/.cmake/api/v1/reply/cache-v2-9116f9365fd8fc786e9c.json
+.idea/misc.xml
