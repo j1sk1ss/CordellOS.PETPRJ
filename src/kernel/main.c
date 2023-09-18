@@ -84,7 +84,7 @@ void execute_command(char* command) {
 
         if (strstr(cordellCommand, "setpas") == 0) {
             char* newPassword = cordellCommand + strlen("setpas") + 1; 
-            free((void*)currentPassword);
+            free(currentPassword);
 
             char* buffer = (char*)malloc(strlen(newPassword) + 1);
             memset(buffer, 0, sizeof(buffer));
@@ -95,8 +95,6 @@ void execute_command(char* command) {
 
             currentPassword                             = buffer;
             currentPassword[strlen(currentPassword)]    = '\0';
-
-            free(buffer);
         }
     } else 
         printf("\r\nUnknown command. Maybe you forgot CORDELL?");
