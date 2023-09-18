@@ -18,10 +18,10 @@ const char* strchr(const char* str, char chr) {
 }
 
 int strstr(const char* haystack, const char* needle) {
-    if (*needle == '\0') // If the needle is an empty string, return 0 (position 0).
+    if (*needle == '\0')    // If the needle is an empty string, return 0 (position 0).
         return 0;
     
-    int position = 0;  // Initialize the position to 0.
+    int position = 0;       // Initialize the position to 0.
 
     while (*haystack) {
         const char* hay_ptr     = haystack;

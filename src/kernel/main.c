@@ -21,12 +21,18 @@ extern void _init();
 
 void start(BootParams* bootParams) {
     _init();                            // global constructors
-    mm_init(0x50000);                   // Gernel Load is 0x50000 and kernel size is 0x00010000. Malloc start in 0x50000
+    mm_init(0x50000);                   // Kernel Load is 0x50000 and kernel size is 0x00010000. Malloc start in 0x50000
     HAL_initialize();
     x86_init_keyboard();
 
-    printf("Cordell OS v0.a\r\n");
-    printf("Questo operato system e un sopra constructione.\r\n");
+    printf("  _____  ____  ____   ___    ___ ||    ||        ____    ____\r\n");
+    printf("_|      ||  || || ||  || || ||   ||    ||       ||  ||  |    \r\n");
+    printf("||      ||  || ||_||  || || ||   ||    ||       ||  || ||    \r\n");
+    printf("||      ||  || |||    || || ||__ ||    ||       ||  || ||    \r\n");
+    printf("||      ||  || || ||  || || ||   ||    ||       ||  || ||    \r\n");
+    printf(" |_____  |__|  ||  || ||_|| ||__ ||___ ||___     |__|   |____\r\n");
+
+    printf("\r\n Questo sistema operativo 'e in costruzione. \r\n");
 
     log_debug("Main.c", "Boot device: %x", bootParams->BootDevice);
     
@@ -48,7 +54,9 @@ void start(BootParams* bootParams) {
                 password = keyboard_read(0);
             }
 
-            if (strstr(cordellCommand, "hello") == 0)
+            free(password);
+
+            if (strstr(cordellCommand, "test") == 0)
                 shut_down_command();
         } else 
             printf("\r\nUnknown command. Maybe you forgot CORDELL?");
