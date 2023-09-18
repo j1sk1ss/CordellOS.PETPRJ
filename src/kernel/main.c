@@ -95,6 +95,8 @@ void execute_command(char* command) {
 
             currentPassword                             = buffer;
             currentPassword[strlen(currentPassword)]    = '\0';
+
+            free(buffer);
         }
     } else 
         printf("\r\nUnknown command. Maybe you forgot CORDELL?");
