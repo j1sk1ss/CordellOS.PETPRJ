@@ -70,18 +70,14 @@ char* keyboard_read(int visibility) {
                     // Allocate memory to accommodate the new character
                     char* buffer = (char*)malloc(++input_size + 1);
                     memset(buffer, 0, sizeof(buffer));
-                    if (buffer == NULL)
-                        return NULL;
-
-                    strcpy(buffer, input);
-
                     if (buffer == NULL) {
                         printf("\nMemory allocation failed\n");
                         free(buffer);
 
                         return NULL;
                     }
-
+                    
+                    strcpy(buffer, input);
                     input = buffer;
 
                     input[input_size - 1] = currentCharacter;     // Set last character

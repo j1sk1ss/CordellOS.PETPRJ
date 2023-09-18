@@ -21,7 +21,7 @@ void mm_init(uint32_t kernel_end) {
 	pheap_desc = (uint8_t *)malloc(MAX_PAGE_ALIGNED_ALLOCS);
 }
 
-void free(void *mem) {
+void free(void* mem) {
 	alloc_t* alloc = (mem - sizeof(alloc_t));
 	memory_used -= alloc->size + sizeof(alloc_t);
 	alloc->status = 0;
