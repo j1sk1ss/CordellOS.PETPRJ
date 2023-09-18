@@ -4,8 +4,7 @@
 #include "Keyboard.h"
 
 #include "memory/memory.h"
-#include "memory/allocator/string_allocator.h"
-#include "memory/allocator/allocator.h"
+#include "memory/allocator/malloc.h"
 
 #include <arch/i686/io.h>
 
@@ -54,7 +53,7 @@ unsigned char alphabet[128] = {
 };
 
 
-char* keyboard_read() {
+char* keyboard_read(int visibility) {
     char* input       = NULL;  // Start with an empty string
     size_t input_size = 0;
 
@@ -65,13 +64,20 @@ char* keyboard_read() {
             if (!(character & 0x80)) {
                 char currentCharacter = alphabet[character];
                 if (currentCharacter != '\n') {
-                    printf("%c", currentCharacter);
+                    if (visibility == 1)
+                        printf("%c", currentCharacter);
 
                     // Allocate memory to accommodate the new character
-                    char* buffer = allocate_string(input, ++input_size + 1);
+                    char* buffer = (char*)malloc(++input_size + 1);
+                    memset(buffer, 0, sizeof(buffer));
+                    if (buffer == NULL)
+                        return NULL;
+
+                    strcpy(buffer, input);
+
                     if (buffer == NULL) {
                         printf("\nMemory allocation failed\n");
-                        free_string(buffer);
+                        free(buffer);
 
                         return NULL;
                     }

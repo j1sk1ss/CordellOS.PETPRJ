@@ -3,8 +3,7 @@
 #include <boot/bootparams.h>
 
 #include "memory/memory.h"
-#include "memory/allocator/allocator.h"
-#include "memory/allocator/string_allocator.h"
+#include "memory/allocator/malloc.h"
 
 #include <io/debug.h>
 #include "io/string.h"
@@ -21,9 +20,8 @@
 extern void _init();
 
 void start(BootParams* bootParams) {
-    // global constructors
-    _init();
-    initializeMemoryPool();
+    _init();                            // global constructors
+    mm_init(0x50000);                   // Gernel Load is 0x50000 and kernel size is 0x00010000. Malloc start in 0x50000
     HAL_initialize();
     x86_init_keyboard();
 
@@ -35,13 +33,28 @@ void start(BootParams* bootParams) {
     while (1) {
         printf("\r\n[CORDELL OS]: ");
 
-        char* command = keyboard_read();
-        if (strcmp(command, "help") == 0)                   // Not correctly work
+        char* command = keyboard_read(1);
+        if (strstr(command, "help") == 0)              
             help_command();
-        else if (strcmp(command, "shut-down") == 0) 
-            shut_down_command();
+        else if (strstr(command, "cordell") == 0) {
+            char* cordellCommand = command + strlen("cordell") + 1; 
 
-        free_string(command);
+            printf("\r\n[PASSWORD]: ");
+            char* password = keyboard_read(0);
+            while (strcmp(password, "12345") != 0) {
+                printf("\r\nIncorrect password, try again.\r\n[PASSWORD]: ");
+                free(password);
+
+                password = keyboard_read(0);
+            }
+
+            if (strstr(cordellCommand, "hello") == 0)
+                shut_down_command();
+        } else 
+            printf("\r\nUnknown command. Maybe you forgot CORDELL?");
+            
+
+        free(command);
     }
 
 end:
@@ -59,5 +72,6 @@ void help_command() {
 
 // Shut down command
 void shut_down_command() {
-
+    printf("\r\n> Shut-down test");
+    printf("\r\n> Test line");
 }
