@@ -39,6 +39,15 @@ bool ASMCALL x86_diskRead(uint8_t drive,
                                         uint8_t count,
                                         void* dataOut);
 
+//
+//  Write disk
+//
+bool ASMCALL x86_diskWrite(uint8_t drive,
+                                        uint16_t cylinder,
+                                        uint16_t sector,
+                                        uint16_t head,
+                                        uint8_t count,
+                                        void* dataIn);
 
 typedef struct {
 

@@ -1,13 +1,13 @@
 #include "fat.h"
 
-#include "memory/memdefs.h"
-#include "memory/memory.h"
+#include "../memory/memdefs.h"
+#include "../memory/memory.h"
 
-#include "std/stdio.h"
-#include "std/string.h"
-#include "std/ctype.h"
-#include "std/math.h"
-#include "std/stdlib.h"
+#include "../std/stdio.h"
+#include "../std/string.h"
+#include "../std/ctype.h"
+#include "../std/math.h"
+#include "../std/stdlib.h"
 
 #include <stddef.h>
 
@@ -340,6 +340,78 @@ uint32_t FAT_read(Partition* disk, FAT_File* file, uint32_t byteCount, void* dat
     return u8DataOut - (uint8_t*)dataOut;
 }
 
+uint32_t FAT_write(Partition* disk, FAT_File* file, uint32_t byteCount, const void* dataIn) {
+    // Get file data
+    FAT_FileData* fd = (file->Handle == ROOT_DIRECTORY_HANDLE) 
+        ? &_data->RootDirectory 
+        : &_data->OpenedFiles[file->Handle];
+
+    const uint8_t* u8DataIn = (const uint8_t*)dataIn;
+
+    // Check if the file is open for writing
+    // if (!fd->Public.IsWritable) {
+    //     // Handle error: File is not writable
+    //     return 0;
+    // }
+
+    // Calculate the maximum number of bytes that can be written
+    uint32_t maxWritableBytes = SECTOR_SIZE - (fd->Public.Position % SECTOR_SIZE);
+
+    if (byteCount <= 0 || maxWritableBytes <= 0) {
+        // Nothing to write or no space left in the current sector
+        return 0;
+    }
+
+    // Calculate how many bytes to write in this iteration
+    uint32_t bytesToWrite = (byteCount < maxWritableBytes) ? byteCount : maxWritableBytes;
+
+    // Copy data from the input buffer to the file buffer
+    memcpy(fd->Buffer + fd->Public.Position % SECTOR_SIZE, u8DataIn, bytesToWrite);
+
+    // Update file position and byte count
+    fd->Public.Position += bytesToWrite;
+    byteCount -= bytesToWrite;
+
+    // If we filled the current sector, write it to the disk
+    if (fd->Public.Position % SECTOR_SIZE == 0) {
+        // Special handling for root directory
+        if (fd->Public.Handle == ROOT_DIRECTORY_HANDLE) {
+            ++fd->CurrentCluster;
+
+            // Write the sector to the disk
+            if (!Partition_WriteSectors(disk, fd->CurrentCluster, 1, fd->Buffer)) {
+                // Handle write error
+                return 0;
+            }
+        } else {
+            // Calculate next cluster & sector to write
+            if (++fd->CurrentSectorInCluster >= _data->BS.BootSector.SectorsPerCluster) {
+                fd->CurrentSectorInCluster = 0;
+                fd->CurrentCluster = FAT_nextCluster(disk, fd->CurrentCluster);
+            }
+
+            if (fd->CurrentCluster >= 0xFFFFFFF8) {
+                // Mark end of file
+                fd->Public.Size = fd->Public.Position;
+                return 0;
+            }
+
+            // Write the sector to the disk
+            if (!Partition_WriteSectors(disk, FAT_clusterToLba(fd->CurrentCluster) + fd->CurrentSectorInCluster, 1, fd->Buffer)) {
+                // Handle write error
+                return 0;
+            }
+        }
+    }
+
+    // If there are more bytes to write, recursively call FAT_write
+    if (byteCount > 0) {
+        return bytesToWrite + FAT_write(disk, file, byteCount, u8DataIn + bytesToWrite);
+    }
+
+    return bytesToWrite;
+}
+
 bool FAT_readEntry(Partition* disk, FAT_File* file, FAT_DirectoryEntry* dirEntry) {
     return FAT_read(disk, file, sizeof(FAT_DirectoryEntry), dirEntry) == sizeof(FAT_DirectoryEntry);
 }
@@ -430,12 +502,14 @@ FAT_File* FAT_open(Partition* disk, const char* path) {
         // extract next file name from path
         bool isLast = false;
         const char* delim = strchr(path, '/');
-        if (delim != NULL) {
+        if (delim != NULL)
+        {
             memcpy(name, path, delim - path);
             name[delim - path] = '\0';
             path = delim + 1;
         }
-        else {
+        else
+        {
             unsigned len = strlen(path);
             memcpy(name, path, len);
             name[len + 1] = '\0';

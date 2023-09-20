@@ -16,12 +16,16 @@
 
 #include "Keyboard.h"
 
+#include "../libs/core/shared/file_system/elf.h"
+#include "../libs/core/shared/file_system/mbr.h"
+#include "../libs/core/shared/file_system/disk.h"
+#include "../libs/core/shared/file_system/fat.h"
 
 extern void _init();
 
 char* currentPassword;
 
-void start(BootParams* bootParams) {
+void start(BootParams* bootParams, void* partition, DISK* disk) {
     _init();                            // global constructors
     mm_init(0x50000);                   // Kernel Load is 0x50000 and kernel size is 0x00010000. Malloc start in 0x50000
     HAL_initialize();
@@ -37,7 +41,8 @@ void start(BootParams* bootParams) {
     printf("\r\n Questo sistema operativo 'e in costruzione. \r\n");
 
     log_debug("Main.c", "Boot device: %x", bootParams->BootDevice);
-    
+
+
     currentPassword = (char*)malloc(6);
     strcpy(currentPassword, "12345\0");
 
@@ -99,4 +104,5 @@ void execute_command(char* command) {
     } else 
         printf("\r\nUnknown command. Maybe you forgot CORDELL?");
             
+    printf("\r\n");
 }
