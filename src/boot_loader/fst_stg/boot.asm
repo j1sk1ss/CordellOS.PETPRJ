@@ -5,6 +5,8 @@
 
 bits 16
 
+%include "config.inc"
+
 %define ENDL 0x0D, 0x0A
 
 %define fat12 1
@@ -78,97 +80,127 @@ section .fsheaders
 ;	Code goes here
 ;
 
+    ; the MBR will pass us the following information:
+    ; DL = drive number
+    ; DS:SI = partition table entry that we booted from
+
 section .entry
 
 	global boot
 	boot:
-		; Save DS
-		mov ax, PARTITION_ENTRY_SEGMENT
-		mov es, ax
-		mov di, PARTITION_ENTRY_OFFSET
-		mov cx, 16
-		rep movsb				; The MOVSB (move string, byte) instruction fetches the byte at address SI, 
-								; stores it at address DI and then increments or decrements the SI and DI registers by one.
+		;
+        ; copy partition entry to somewhere safe
+        ;
 
-		mov ax, 0				; setup data
-		mov ds, ax
-		mov es, ax
-								; setup stack
-		mov ss, ax
-		mov sp, 0x7C00 			; stack go down from place, where we load
+        mov ax, FST_STG_SEGMENT
+        mov es, ax
+        mov di, partition_entry
+        mov cx, 16
 
-								; Some BIOS'es can start on 07C0:0000
-		push es					;
-		push word .after		;
-		retf					; Long return
+        rep movsb
+        
+        ;
+        ; relocate self
+        ;
 
-	.after:
-		; read something from floppy
-		; BIOS should set DL to drive number
-		mov [ebr_drive_number], dl
+        mov ax, 0
+        mov ds, ax
+        mov si, 0x7C00
 
-		; check instentions present
-		mov ah, 0x41
-		mov bx, 0x55AA
-		stc
-		int 13h
+        mov di, FST_STG_OFFSET
+        mov cx, 512
 
-		jc .no_disk_extensions
-		cmp bx, 0xAA55
-		jne .no_disk_extensions
+        rep movsb
 
-		; extention present
-		mov byte [have_extension], 1
-		jmp .after_disk_extensions_check
+        jmp FST_STG_SEGMENT:.relocated           ; far jump to relocated code
 
-	.no_disk_extensions:
-    	mov byte [have_extension], 0
+    .relocated:
 
-	.after_disk_extensions_check:
-		; load sec_stg
-		mov si, sec_stg_location
+        ;
+        ; initialization
+        ;
 
-		mov ax, SEC_STAGE_LOAD_SEGMENT         ; set segment registers
-		mov es, ax
+        ; setup data segments
+        mov ax, FST_STG_SEGMENT                  ; can't set ds/es directly
+        mov ds, ax
+        
+        ; setup stack
+        mov ss, ax
+        mov sp, FST_STG_OFFSET                   ; stack grows downwards from where we are loaded in memory
 
-		mov bx, SEC_STAGE_LOAD_OFFSET
+        ; save drive number from DL
+        mov [ebr_drive_number], dl
 
-	.loop:
-		mov eax, [si]
-		add si, 4
-		mov cl, [si]
-		inc si
+        ; check extensions present
+        mov ah, 0x41
+        mov bx, 0x55AA
+        stc
+        int 13h
 
-		cmp eax, 0
-		je .read_finish
+        jc .no_disk_extensions
+        cmp bx, 0xAA55
+        jne .no_disk_extensions
 
-		call read_disk_data
+        ; extensions are present
+        mov byte [have_extensions], 1
+        jmp .after_disk_extensions_check
 
-		xor ch, ch
-		shl cx, 5
-		mov di, es
-		add di, cx
-		mov es, di
+    .no_disk_extensions:
+        mov byte [have_extensions], 0
 
-		jmp .loop
+    .after_disk_extensions_check:
+        ;
+        ; load boot_table_lba which contains the boot table
+        ;
+        mov eax, [boot_table_lba]
+        mov cx, 1
+        mov bx, boot_table
+        call read_disk_data
 
-	.read_finish:
-		; jump to our kernel
-		mov dl, [ebr_drive_number]          ; boot device in dl
+        ;
+        ; parse boot table and load
+        ;
+        mov si, boot_table
 
-		mov si, PARTITION_ENTRY_OFFSET
-		mov di, PARTITION_ENTRY_SEGMENT
+        ; parse entry point
+        mov eax, [si]
+        mov [entry_point], eax
+        add si, 4
 
-		mov ax, SEC_STAGE_LOAD_SEGMENT      ; set segment registers
-		mov ds, ax
-		mov es, ax
+    .readloop:
+        ; read until lba=0
+        cmp dword [si + boot_table_entry.lba], 0
+        je .endreadloop
 
-		jmp SEC_STAGE_LOAD_SEGMENT:SEC_STAGE_LOAD_OFFSET
+        mov eax, [si + boot_table_entry.lba]
+        mov bx, [si + boot_table_entry.load_seg]
+        mov es, bx
+        mov bx, [si + boot_table_entry.load_off]
+        mov cx, [si + boot_table_entry.count]
+        call read_disk_data
 
-		jmp wait_key_end_reboot             ; should never happen
+        ; go to next entry
+        add si, boot_table_entry_size
+        jmp .readloop
 
-		cli                                 ; disable interrupts, this way CPU can't get out of "halt" state
-		hlt
+		.endreadloop:
+		
+			; jump to our kernel
+			mov dl, [ebr_drive_number]          ; boot device in dl
+			mov di, partition_entry             ; es:di points to partition entry
+		
+			mov ax, [entry_point.seg]           ; set segment registers
+			mov ds, ax
+
+			; do far jump
+			push ax
+			push word [entry_point.off]
+			retf
+
+    .never:
+        jmp wait_key_and_reboot             ; should never happen
+        cli                                 ; disable interrupts, this way CPU can't get out of "halt" state
+        hlt
 
 	;
 	;	Error handlers
@@ -177,16 +209,11 @@ section .entry
 section .text
 
 	floppy_error:
-		mov si, msg_reading_fail
+		mov si, msg_read_failed
 		call print
-		jmp wait_key_end_reboot
+		jmp wait_key_and_reboot
 
-	sec_stg_not_found_error:
-		mov si, msg_sec_stg_not_found
-		call print
-		jmp wait_key_end_reboot
-
-	wait_key_end_reboot:
+	wait_key_and_reboot:
 		mov ah, 0
 		int 16h						; wait for kyboard press
 		jmp 0FFFFh:0				; jump to begining of BIOS
@@ -201,8 +228,8 @@ section .text
 	;		- ds:si points to string
 
 	print:
-		;	save registers we will modify
-		push si
+
+		push si			; save registers we will modify
 		push ax
 		push bx
 
@@ -217,7 +244,7 @@ section .text
 
 		jmp .loop
 
-		.done: 				;	Loop done
+		.done: 			; Loop done
 			pop bx
 			pop ax
 			pop si
@@ -276,65 +303,102 @@ section .text
 
 	read_disk_data:
 
-		push eax							; Save register that will be modify
-		push bx
-		push cx
-		push dx
-		push si
-		push di
+		push eax                            ; save registers we will modify
+        push bx
+        push cx
+        push dx
+        push si
+        push di
 
-		cmp byte [have_extension], 1
-		jne .no_disk_extention
+        cmp byte [have_extensions], 1
+        jne .no_disk_extensions
 
-		; with extention
-		mov [extension_struct.lba], 		eax		;
-		mov [extension_struct.segment], 	es		; Fill structure
-		mov [extension_struct.offset], 		bx		;
-		mov [extension_struct.count], 		cl		;
+        ; with extensions
+        mov [extensions_struct.lba], eax
+        mov [extensions_struct.segment], es
+        mov [extensions_struct.offset], bx
+        mov [extensions_struct.count], cx
 
-		mov ah, 0x42
-		mov si, extension_struct
-		mov di, 3
+        mov ah, 0x42
+        mov si, extensions_struct
+        mov di, 3                           ; retry count
 
-		jmp .retry
+        .retry:
+            pusha                           ; save all registers, we don't know what bios modifies
+            stc                             ; set carry flag, some BIOS'es don't set it
+            int 13h                         ; carry flag cleared = success
+            jnc .done                       ; jump if carry not set
 
-		.no_disk_extention:
-			push cx								; Save cl (number of sectors for reading)
-			call convert_lba_to_chs				; Converting
-			pop ax								; AL = num of sectors for read
+            ; read failed
+            popa
+            call disk_reset
 
-			mov ah, 02h
-			mov di, 3							; retry count
+            dec di
+            test di, di
+            jnz .retry
 
-		.retry:
-			pusha								; save all registers, cuz we don't know what bios modify
-			stc									; set carry flag (Some bios'es don't set him)
-			int 13h								; if flag cleared -> success
-			jnc .done
+        .fail:								; all attempts are exhausted   
+            jmp floppy_error
 
-			; reading failed
-			popa
-			call disk_reset
+        .done:
+            popa
+            jmp .function_end
 
-			dec di
-			test di, di
-			jnz .retry
-			
-			.fail:
-				; after all attemps
-				jmp floppy_error
+    .no_disk_extensions:
+        mov esi, eax                            ; save lba to esi
+        mov di, cx                              ; save number of sectors to di
 
-			.done:
-				popa
+        .outer_loop:
+            mov eax, esi
+            call convert_lba_to_chs             ; compute CHS
+            mov al, 1                           ; read 1 sector
 
-				pop di
-				pop si
-				pop dx
-				pop cx
-				pop bx
-				pop eax
+            push di
+            mov di, 3                           ; retry count
+            mov ah, 02h
 
-				ret
+            .inner_retry:
+                pusha                           ; save all registers, we don't know what bios modifies
+                stc                             ; set carry flag, some BIOS'es don't set it
+                int 13h                         ; carry flag cleared = success
+                jnc .inner_done                 ; jump if carry not set
+
+                ; read failed
+                popa
+                call .inner_retry
+
+                dec di
+                test di, di
+                jnz .retry
+
+            .inner_fail:
+                ; all attempts are exhausted
+                jmp floppy_error
+
+            .inner_done:
+
+            popa
+            pop di
+
+            cmp di, 0                   ; exit condition - have we read all the sectors?
+            je .function_end
+
+            inc esi                     ; increment lba we want to read
+            dec di                      ; decrement number of sectors
+            
+            mov ax, es
+            add ax, 512 / 16            ; increment destination address (use segment to avoid segment boundary trouble)
+            mov es, ax
+            jmp .outer_loop
+
+    .function_end:
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        pop eax                            ; restore registers modified
+        ret
 
 	
 	;
@@ -360,33 +424,34 @@ section .text
 
 section .rodata
 
-	msg_reading_fail: 		db 'Read was failed', ENDL, 0
-	msg_sec_stg_not_found:	db 'Sec stage not found!', ENDL, 0	
-	file_sec_stg_bin:		db 'SEC_STG BIN' 								; Don't foget 11 bytes name	
+    msg_read_failed:        db 'Read failed!', ENDL, 0
 
 section .data
 
-	have_extension:			db 0
-	extension_struct:
-		.size:				db 10h											; Reserved struct of extention 
-							db 0
-		.count:				dw 0
-		.offset:			dw 0
-		.segment:			dw 0
-		.lba:				dq 0
+    extensions_struct:
+        .size:              db 10h
+                            db 0
+        .count:             dw 0
+        .offset:            dw 0
+        .segment:           dw 0
+        .lba:               dq 0
 
-	SEC_STAGE_LOAD_SEGMENT	equ 0x0
-	SEC_STAGE_LOAD_OFFSET	equ 0x500
+    struc boot_table_entry
+        .lba                resd 1
+        .load_off           resw 1
+        .load_seg           resw 1
+        .count              resw 1
+    endstruc
 
-	PARTITION_ENTRY_SEGMENT	equ 0x2000
-	PARTITION_ENTRY_OFFSET	equ 0x0
-
-; bios footer may be?
 section .data
-
-    global sec_stg_location
-	sec_stg_location:		times 30 db 0									; Generate 30 bytes with 0
+    global boot_table_lba
+    boot_table_lba:         dd 0
 
 section .bss
-
-	buffer:					resb 512
+    have_extensions:        resb 1
+    buffer:                 resb 512
+    partition_entry:        resb 16
+    boot_table:             resb 512
+    entry_point:
+        .off                resw 1
+        .seg                resw 1

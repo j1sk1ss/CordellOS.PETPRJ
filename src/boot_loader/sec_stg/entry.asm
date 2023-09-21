@@ -26,8 +26,8 @@ entry:
 
     mov [boot_drive], dl            ; save boot drive
 
-    mov [boot_partition_off], si
-    mov [boot_partition_seg], di
+    mov [boot_partition_off], di
+    mov [boot_partition_seg], es
 
     ; setup stack
     mov ax, ds

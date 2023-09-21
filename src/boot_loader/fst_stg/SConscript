@@ -9,6 +9,7 @@ env = TARGET_ENVIRONMENT.Clone()
 env.Append(
     ASFLAGS = [
         f'-DFILESYSTEM={TARGET_ENVIRONMENT["image_file_system"]}',
+        f'-I', env.Dir('.').srcnode()
     ],
     LINKFLAGS = [
         '-Wl,-T', env.File('linker.ld').srcnode().path,
@@ -17,9 +18,11 @@ env.Append(
 )
 
 inputs = glob_recursive(env, "*.asm")
+headers = glob_recursive(env, "*.inc")
 
 objects = env.Object(inputs)
 
 fst_stg = env.Program('fst_stg.bin', objects)
+env.Depends(fst_stg, headers)
 
 Export('fst_stg')

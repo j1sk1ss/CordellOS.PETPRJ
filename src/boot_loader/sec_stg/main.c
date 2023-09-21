@@ -21,7 +21,7 @@ uint8_t* Kernel             = (uint8_t*)MEMORY_KERNEL_ADDR;
 
 BootParams _bootParams;
 
-typedef void (*KernelStart)(BootParams* bootParams, void* partition, DISK* disk);
+typedef void (*KernelStart)(BootParams* bootParams, void* partition, DISK* disk, Partition* partirion);
 
 void __attribute__((cdecl)) start(uint16_t bootDrive, void* partition) {
     clrscr();
@@ -52,7 +52,7 @@ void __attribute__((cdecl)) start(uint16_t bootDrive, void* partition) {
     }
 
     // execute kernel
-    kernelEntry(&_bootParams, &partition, &disk);
+    kernelEntry(&_bootParams, &partition, &disk, &disk);
 
 end:
     for(;;);

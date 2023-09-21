@@ -4,7 +4,6 @@ from SCons.Variables import *
 from SCons.Environment import *
 from SCons.Node import *
 
-from build_scripts.phony_targets import phony_targets
 from build_scripts.utility import parse_size, remove_suffix
 
 VARS = Variables('build_scripts/config.py', ARGUMENTS)
@@ -99,18 +98,19 @@ tool_chainBin = Path(tool_chainDir, 'bin')
 tool_chainGccLibs = Path(tool_chainDir, 'lib', 'gcc', remove_suffix(platform_prefix, '-'), DEPS['gcc'])
 
 TARGET_ENVIRONMENT = HOST_ENVIRONMENT.Clone(
-    AR = f'{platform_prefix}ar',
-    CC = f'{platform_prefix}gcc',
-    CXX = f'{platform_prefix}g++',
-    LD = f'{platform_prefix}g++',
-    RANLIB = f'{platform_prefix}ranlib',
-    STRIP = f'{platform_prefix}strip',
+    AR      = f'{platform_prefix}ar',
+    CC      = f'{platform_prefix}gcc',
+    CXX     = f'{platform_prefix}g++',
+    LD      = f'{platform_prefix}g++',
+    RANLIB  = f'{platform_prefix}ranlib',
+    STRIP   = f'{platform_prefix}strip',
 
     # toolchain
     TOOLCHAIN_PREFIX = str(tool_chainDir),
     TOOLCHAIN_LIBGCC = str(tool_chainGccLibs),
-    BINUTILS_URL = f'https://ftp.gnu.org/gnu/binutils/binutils-{DEPS["binutils"]}.tar.xz',
-    GCC_URL = f'https://ftp.gnu.org/gnu/gcc/gcc-{DEPS["gcc"]}/gcc-{DEPS["gcc"]}.tar.xz',
+
+    BINUTILS_URL    = f'https://ftp.gnu.org/gnu/binutils/binutils-{DEPS["binutils"]}.tar.xz',
+    GCC_URL         = f'https://ftp.gnu.org/gnu/gcc/gcc-{DEPS["gcc"]}/gcc-{DEPS["gcc"]}.tar.xz',
 )
 
 
@@ -134,7 +134,7 @@ TARGET_ENVIRONMENT.Append(
         '-nostdlib'
     ],
     
-    LIBS = ['gcc'],
+    LIBS    = ['gcc'],
     LIBPATH = [ str(tool_chainGccLibs) ],
 )
 
@@ -153,5 +153,5 @@ SConscript('src/boot_loader/sec_stg/SConscript', variant_dir=variantDir + '/sec_
 SConscript('src/kernel/SConscript', variant_dir=variantDir + '/kernel', duplicate=0)
 SConscript('image/SConscript', variant_dir=variantDir, duplicate=0)
 
-Import('image')
-Default(image)
+Import('fst_stg', 'sec_stg', 'kernel', 'image')
+Default(fst_stg, sec_stg, kernel, image)

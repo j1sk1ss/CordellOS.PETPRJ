@@ -27,6 +27,10 @@ sources = glob_recursive(env, '*.c') + \
           glob_recursive(env, '*.cpp') + \
           glob_recursive(env, '*.asm')
 
+headers = glob_recursive(env, '*.h') + \
+          glob_recursive(env, '*.hpp') + \
+          glob_recursive(env, '*.inc')
+
 objects = env.Object(sources)
 
 obj_crti = objects.pop(find_index(objects, lambda item: is_file_name(item, 'crti.o')))
@@ -47,6 +51,7 @@ objects = [
     obj_crtn
 ]
 
-sec_stg = env.Program('sec_stg.bin', objects)
+sec_stg = env.Program('sec_stg.elf', objects)
+env.Depends(sec_stg, headers)
 
 Export('sec_stg')
