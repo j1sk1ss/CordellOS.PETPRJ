@@ -25,7 +25,7 @@ extern void _init();
 
 char* currentPassword;
 
-void start(BootParams* bootParams, void* partition, DISK* disk) {
+void start(BootParams* bootParams, void* partition, DISK* disk, Partition* partirion) {
     _init();                            // global constructors
     mm_init(0x50000);                   // Kernel Load is 0x50000 and kernel size is 0x00010000. Malloc start in 0x50000
     HAL_initialize();
@@ -40,8 +40,9 @@ void start(BootParams* bootParams, void* partition, DISK* disk) {
 
     printf("\r\n Questo sistema operativo 'e in costruzione. \r\n");
 
-    log_debug("Main.c", "Boot device: %x", bootParams->BootDevice);
-
+    log_debug("Main.c", "Boot device: [%x]", bootParams->BootDevice);
+    log_debug("Main.c", "Disk device: [%x]", disk->id);
+    log_debug("Main.c", "Partition device: [%x]", partition);
 
     currentPassword = (char*)malloc(6);
     strcpy(currentPassword, "12345\0");
