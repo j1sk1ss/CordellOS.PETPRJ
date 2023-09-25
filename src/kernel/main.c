@@ -3,7 +3,10 @@
 #include <boot/bootparams.h>
 
 #include "memory/memory.h"
-#include "memory/allocator/malloc.h"
+
+#include "../libs/core/shared/allocator/malloc.h"
+#include "../libs/core/shared/file_system/ata.h"
+#include "../libs/core/shared/file_system/file_system.h"
 
 #include <io/debug.h>
 #include "io/string.h"
@@ -15,11 +18,6 @@
 #include <arch/i686/io.h>
 
 #include "Keyboard.h"
-
-#include "../libs/core/shared/file_system/elf.h"
-#include "../libs/core/shared/file_system/mbr.h"
-#include "../libs/core/shared/file_system/disk.h"
-#include "../libs/core/shared/file_system/fat.h"
 
 extern void _init();
 
@@ -40,21 +38,31 @@ void start(BootParams* bootParams, void* partition, DISK* disk, Partition* parti
 
     printf("\r\n Questo sistema operativo 'e in costruzione. \r\n");
 
+<<<<<<< HEAD
     log_debug("Main.c", "Boot device: [%x]", bootParams->BootDevice);
     log_debug("Main.c", "Disk device: [%x]", disk->id);
     log_debug("Main.c", "Partition device: [%x]", partition);
+=======
+    log_debug("Main.c", "Boot device: %x", bootParams->BootDevice);
 
-    currentPassword = (char*)malloc(6);
-    strcpy(currentPassword, "12345\0");
+    char *data1 = malloc(512);
+    strcpy(data1, "The content of the first file on 539filesystem");
+    create_file("first_file", data1);
+>>>>>>> 1043c8eb9a5869425647fbe15dbee89f49fddfdb
 
-    while (1) {
-        printf("\r\n[CORDELL OS]: ");
+    printf("Content: %s\n", read_file("first_file"));
 
-        char* command = keyboard_read(1);
-        execute_command(command);
+    // currentPassword = (char*)malloc(6);
+    // strcpy(currentPassword, "12345\0");
+
+    // while (1) {
+    //     printf("\r\n[CORDELL OS]: ");
+
+    //     char* command = keyboard_read(1);
+    //     execute_command(command);
             
-        free(command);
-    }
+    //     free(command);
+    // }
 
 end:
     for (;;);
