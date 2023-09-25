@@ -1,4 +1,7 @@
-#include "malloc.h"
+#include <stddef.h>
+#include <stdint.h>
+
+#include "allocator.h"
 
 #define MAX_PAGE_ALIGNED_ALLOCS 32
 
@@ -44,7 +47,7 @@ char* pmalloc(size_t size) {
 		if (pheap_desc[i]) continue;
 
 		pheap_desc[i] = 1;
-		return (char *)(pheap_begin + i*4096);
+		return (char *)(pheap_begin + i * 4096);
 	}
 
 	return 0;
@@ -114,4 +117,24 @@ void* malloc(size_t size) {
 
 	memset((char*)((uint32_t)alloc + sizeof(alloc_t)), 0, size);
 	return (char*)((uint32_t)alloc + sizeof(alloc_t));
+}
+
+void* calloc(size_t nelem, size_t elsize) {
+    void* tgt = malloc(nelem * elsize);
+
+    if (tgt != NULL) 
+        memset(tgt, 0, nelem * elsize);
+
+    return tgt;
+}
+
+unsigned int heap_base;
+
+void heap_init() { heap_base = 0x100000; }
+
+int kalloc(int bytes) {
+    unsigned int new_object_address = heap_base;
+    heap_base += bytes;
+	
+    return new_object_address;
 }

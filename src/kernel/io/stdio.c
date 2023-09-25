@@ -6,6 +6,7 @@
 
 #include <hal/vfs.h>
 
+
 void fputc(char c, fileDescriptorId file) {
     VFS_Write(file, &c, sizeof(c));
 }

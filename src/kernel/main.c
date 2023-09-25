@@ -4,9 +4,10 @@
 
 #include "memory/memory.h"
 
-#include "../libs/core/shared/allocator/malloc.h"
+#include "../libs/core/shared/allocator/allocator.h"
 #include "../libs/core/shared/file_system/ata.h"
 #include "../libs/core/shared/file_system/file_system.h"
+#include "../libs/core/shared/file_system/temp_file_system.h"
 
 #include <io/debug.h>
 #include "io/string.h"
@@ -16,6 +17,8 @@
 
 #include <arch/i686/irq.h>
 #include <arch/i686/io.h>
+
+#include "calculator/calculator.h"
 
 #include "Keyboard.h"
 
@@ -29,6 +32,10 @@ void start(BootParams* bootParams) {
     HAL_initialize();
     x86_init_keyboard();
 
+    init_directory();
+    // heap_init();
+    // filesystem_init();
+
     printf("  _____  ____  ____   ___    ___ ||    ||        ____    ____\r\n");
     printf("_|      ||  || || ||  || || ||   ||    ||       ||  ||  |    \r\n");
     printf("||      ||  || ||_||  || || ||   ||    ||       ||  || ||    \r\n");
@@ -38,15 +45,14 @@ void start(BootParams* bootParams) {
 
     printf("\r\n Questo sistema operativo 'e in costruzione. \r\n");
 
-    
+    // char *data1 = kalloc(512);
+    // strcpy(data1, "a");
+    // create_file("first_file", data1);
 
-    char *data1 = malloc(10);
-    strcpy(data1, "Test_data");
-    create_file("first_file", data1);
+    // printf("%s\r\n", read_file("first_file")); 
+    // print_fs();
 
     log_debug("Main.c", "Boot device: %x", bootParams->BootDevice);
-
-    printf("Content: %s\n", read_file("image/root/test"));
 
     currentPassword = (char*)malloc(6);
     strcpy(currentPassword, "12345\0");
@@ -65,26 +71,61 @@ end:
 }
 
 void execute_command(char* command) {
-    if (strstr(command, "help") == 0) {
-        printf("\r\n> Use help for getting help");
-        printf("\r\n> Use clear for screen cleaning");
-        printf("\r\n> Use echo for echo");
-        printf("\r\n> Use setpas for setting password for cordell");
-        printf("\r\n> Use cordell for using cordell commands");
+    if (strstr(command, "aiuto") == 0) {
+        printf("\r\n> Usa l'aiuto per ottenere aiuto");
+        printf("\r\n> Utilizzare clear per la pulizia dello schermo");
+        printf("\r\n> Usa l'eco per l'eco");
+        printf("\r\n> Utilizza la calc per i calcoli (+, -, * e /)");
+        printf("\r\n> Utilizzare setpas per impostare la password per cordell");
+        printf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
     }
     else if (strstr(command, "clear") == 0) 
         VGA_clrscr();
-    else if (strstr(command, "echo") == 0) {
-        char* echo = command + strlen("echo") + 1; 
+    else if (strstr(command, "eco") == 0) {
+        char* echo = command + strlen("eco") + 1; 
         printf("\r\n%s", echo);
+    }
+    else if (strstr(command, "mkdir") == 0) {
+        char* mkdir = command + strlen("mkdir") + 1; 
+        create_temp_directory(mkdir);
+    }
+    else if (strstr(command, "rmdir") == 0) {
+        char* rmdir = command + strlen("rmdir") + 1; 
+        delete_temp_directory(rmdir);
+    }
+    else if (strstr(command, "dirs") == 0) {
+        char* dirs = print_temp_dirs(); 
+        printf("'\r\n");
+        
+        for (int i = 0; i < MAX_DIRECTORIES; i++) {
+            if (dirs[i] != NULL) 
+                printf("\t %s", i + 1, dirs[i]);
+            else 
+                break; // Exit the loop if you reach a NULL pointer
+        }
+
+    }
+    else if (strstr(command, "calc") == 0) {
+        char* expression = command + strlen("calc") + 1; 
+
+        char* tokens[100];
+        int tokenCount = 0;
+
+        char* splitted = strtok(expression, " ");
+        while(splitted) {
+            tokens[tokenCount++] = splitted;
+            splitted = strtok(NULL, " ");
+        }
+
+        printf("\r\n> Risposta: %s", calculator(tokens, tokenCount));
     }
     else if (strstr(command, "cordell") == 0) {
         char* cordellCommand = command + strlen("cordell") + 1; 
 
-        printf("\r\n[PASSWORD]: ");
+        printf("\r\n[PAROLA D'ORDINE]: ");
         char* password = keyboard_read(0);
         while (strcmp(password, currentPassword) != 0) {
-            printf("\r\nIncorrect password, try again.\r\n[PASSWORD]: ");
+            printf("\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
             free(password);
 
             password = keyboard_read(0);
@@ -107,7 +148,16 @@ void execute_command(char* command) {
             currentPassword[strlen(currentPassword)]    = '\0';
         }
     } else 
-        printf("\r\nUnknown command. Maybe you forgot CORDELL?");
+        printf("\r\nComando sconosciuto. Forse hai dimenticato CORDELL?");
             
     printf("\r\n");
+}
+
+void print_fs() {
+    char **files = list_files();
+
+    for ( int currIdx = 0; currIdx < get_files_number(); currIdx++ ) 
+        printf("File: %s\r\n", files[currIdx]);
+    
+    printf("==\r\n");
 }

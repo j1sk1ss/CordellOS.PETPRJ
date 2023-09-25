@@ -4,9 +4,12 @@
 #include "Keyboard.h"
 
 #include "memory/memory.h"
-#include "../libs/core/shared/allocator/malloc.h"
+
+#include "../libs/core/shared/allocator/allocator.h"
 
 #include <arch/i686/io.h>
+
+#include <arch/i686/vga_text.h>
 
 /* KBDUS means US Keyboard Layout. This is a scancode table
 *  used to layout a standard US keyboard. I have left some
@@ -64,12 +67,22 @@ char* keyboard_read(int visibility) {
             if (!(character & 0x80)) {
                 char currentCharacter = alphabet[character];
                 if (currentCharacter != '\n') {
+                    if (currentCharacter == '\b') {
+                        if (cursor_get_x() > 14) {
+                            VGA_putchr(cursor_get_x() - 1, cursor_get_y(), ' ');
+                            VGA_setcursor(cursor_get_x() - 1, cursor_get_y());
+                        }
+
+                        continue;
+                    }
+
                     if (visibility == 1)
                         printf("%c", currentCharacter);
 
                     // Allocate memory to accommodate the new character
                     char* buffer = (char*)malloc(++input_size + 1);
                     memset(buffer, 0, sizeof(buffer));
+                    
                     if (buffer == NULL) {
                         printf("\nMemory allocation failed\n");
                         free(buffer);

@@ -14,6 +14,14 @@ uint8_t* _screenBuffer = (uint8_t*)0xB8000; // Position of screen buffer in memo
 int _screenX = 0;                           //  Cursor position
 int _screenY = 0;                           //
 
+int cursor_get_x() {
+    return _screenX;
+}
+
+int cursor_get_y() {
+    return _screenY;
+}
+
 //
 //  Get char from screen buffer
 //

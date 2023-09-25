@@ -1,7 +1,7 @@
 #include "ata.h"
 #include "file_system.h"
 
-#include "../allocator/malloc.h"
+#include "../allocator/allocator.h"
 #include "../string/string.h"
 
 base_block_t* base_block;
@@ -14,7 +14,7 @@ void create_file(char* filename, char* buffer) {
     int metadata_lba    = (base_block->head == 0) ? BASE_BLOCK_ADDRESS + 1 : base_block->tail + 2;
     int file_lba        = metadata_lba + 1;
 
-    metadata_t* metadata = malloc(sizeof(metadata_t));
+    metadata_t* metadata = kalloc(sizeof(metadata_t));
     metadata->next_file_address = 0;
 
     int currIdx;
@@ -39,6 +39,7 @@ void create_file(char* filename, char* buffer) {
     }
 
     free(metadata);
+    free(buffer);
 }
 
 char** list_files() {
@@ -46,7 +47,7 @@ char** list_files() {
         return -1;
 
     char** list;
-    list = malloc(get_files_number() * sizeof(char *));
+    list = kalloc(get_files_number() * sizeof(char *));
 
     metadata_t* curr_file = load_metadata(base_block->head);
     int idx = 0;
@@ -102,6 +103,8 @@ void delete_file(char *filename) {
         if (curr_file_address == base_block->tail) 
             update_base_block(base_block->head, prev_file_address);
     }
+
+    free(filename);
 }
 
 void update_base_block(int new_head, int new_tail) {

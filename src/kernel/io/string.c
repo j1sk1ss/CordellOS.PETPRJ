@@ -2,6 +2,17 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
+
+#define DOUBLE_STR_BUFFER_SIZE 64
+
+int isdigit(int c) {
+    return (c >= '0' && c <= '9');
+}
+
+int isspace(int c) {
+    return ((c == '\n') || (c == '\t') || (c == ' '));
+}
 
 const char* strchr(const char* str, char chr) {
     if (str == NULL)
@@ -90,6 +101,156 @@ int strcmp(const char* firstStr, const char* secondStr) {
     }
 
     return (*firstStr) - (*secondStr);
+}
+
+void reverse(char* str, int len) {
+    int start = 0;
+    int end = len - 1;
+    char temp;
+
+    while (start < end) {
+        temp        = str[start];
+        str[start]  = str[end];
+        str[end]    = temp;
+
+        start++;
+        end--;
+    }
+}
+
+double atof(const char *str) {
+    double result       = 0.0;
+    int sign            = 1;
+    double fraction     = 0.0;
+    bool is_decimal     = false;
+    int decimal_places  = 0;
+
+    // Skip whitespace characters
+    while (isspace(*str)) 
+        str++;
+
+    // Determine sign
+    if (*str == '-') {
+        sign = -1;
+        str++;
+    } else if (*str == '+') 
+        str++;
+    
+    // Process the string
+    while (*str != '\0') {
+        if (*str == '.' && !is_decimal) {
+            is_decimal = true;
+            str++;
+            continue;
+        }
+
+        if (isdigit(*str)) {
+            if (is_decimal) {
+                fraction = fraction * 10.0 + (*str - '0');
+                decimal_places++;
+            } else 
+                result = result * 10.0 + (*str - '0');
+        } else 
+            break;
+
+        str++;
+    }
+
+    // Combine integer and fractional parts
+    result += fraction / pow(10.0, decimal_places);
+    result *= sign;
+
+    return result;
+}
+
+char* double_to_string(double value) {
+    static char buffer[DOUBLE_STR_BUFFER_SIZE];
+
+    int int_part            = (int)value;
+    double fractional_part  = value - int_part;
+    int i                   = 0;
+    bool is_negative        = false;
+
+    if (value < 0) {
+        is_negative     = true;
+        int_part        = -int_part;
+        fractional_part = -fractional_part;
+    }
+
+    do {
+        buffer[i++] = int_part % 10 + '0';
+        int_part /= 10;
+    } while (int_part != 0);
+
+    if (is_negative) 
+        buffer[i++] = '-';
+
+    reverse(buffer, i);
+
+    buffer[i++] = '.';
+
+    int num_decimal_digits = 6;
+    for (int j = 0; j < num_decimal_digits; j++) {
+        fractional_part *= 10;
+        int digit = (int)fractional_part;
+        buffer[i++] = digit + '0';
+        fractional_part -= digit;
+    }
+
+    buffer[i] = '\0';
+    return buffer;
+}
+
+char* strtok(char* s, const char* delim) {
+	static char* last;
+	return strtok_r(s, delim, &last);
+}
+
+char* strtok_r(char* s, const char* delim, char** last) {
+	char* spanp;
+	int c, sc;
+	char* tok;
+
+	if (s == NULL && (s = *last) == NULL)
+		return (NULL);
+	/*
+	 * Skip (span) leading delimiters (s += strspn(s, delim), sort of).
+	 */
+cont:
+	c = *s++;
+	for (spanp = (char *)delim; (sc = *spanp++) != 0;) {
+	    if (c == sc)
+		    goto cont;
+	}
+
+	if (c == 0) {		/* no non-delimiter characters */
+	    *last = NULL;
+		return (NULL);
+	}
+
+	tok = s - 1;
+
+	/*
+	 * Scan token (scan for delimiters: s += strcspn(s, delim), sort of).
+	 * Note that delim must have one NUL; we stop if we see that, too.
+	 */
+
+	for (;;) {
+		c = *s++;
+		spanp = (char *)delim;
+		do {
+			if ((sc = *spanp++) == c) {
+				if (c == 0)
+					s = NULL;
+				else
+					s[-1] = 0;
+
+				*last = s;
+
+				return (tok);
+			}
+		} while (sc != 0);
+	}
 }
 
 wchar_t* utf16_to_codepoint(wchar_t* string, int* codePoint) {
