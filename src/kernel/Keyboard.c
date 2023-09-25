@@ -4,7 +4,7 @@
 #include "Keyboard.h"
 
 #include "memory/memory.h"
-#include "memory/allocator/malloc.h"
+#include "../libs/core/shared/allocator/malloc.h"
 
 #include <arch/i686/io.h>
 
