@@ -1,8 +1,10 @@
 #include "ata.h"
-#include "filesystem.h"
+#include "file_system.h"
 
 #include "../allocator/malloc.h"
 #include "../string/string.h"
+
+base_block_t* base_block;
 
 void filesystem_init() {
     base_block = read_disk(BASE_BLOCK_ADDRESS);
@@ -13,14 +15,13 @@ void create_file(char* filename, char* buffer) {
     int file_lba        = metadata_lba + 1;
 
     metadata_t* metadata = malloc(sizeof(metadata_t));
-
     metadata->next_file_address = 0;
 
     int currIdx;
 
     for (currIdx = 0; *filename != '\0' && currIdx < FILENAME_LENGTH - 1; currIdx++, filename++) 
         metadata->filename[currIdx] = *filename;
-    
+
     metadata->filename[currIdx] = '\0';
 
     write_disk(metadata_lba, metadata);

@@ -10,8 +10,6 @@ typedef struct {
     int next_file_address;
 } metadata_t;
 
-base_block_t* base_block;
-
 void filesystem_init();
 void create_file(char*, char*);
 char** list_files();

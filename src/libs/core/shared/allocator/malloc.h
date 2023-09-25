@@ -1,8 +1,7 @@
 #include <stdint.h>
+#include <stddef.h>
 
-#include "../memory.h"
-#include "../../io/stdio.h"
-#include "../../arch/i686/isr.h"
+#include "memory.h"
 
 
 typedef struct {

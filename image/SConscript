@@ -215,7 +215,7 @@ def install_sec_stg(target: str, sec_stg: str, boot_data_lba=0, offset=0, limit=
                                             # FLOPPY IMAGE CREATION
 
 
-def build_floppy(image, stage1, sec_stg, kernel, files, env):
+def build_floppy(image, fst_stg, sec_stg, kernel, files, env):
     size_sectors = 2880
     sec_stg_size = os.stat(sec_stg).st_size
     sec_stg_sectors = (sec_stg_size + SECTOR_SIZE - 1) // SECTOR_SIZE
@@ -225,8 +225,8 @@ def build_floppy(image, stage1, sec_stg, kernel, files, env):
     print(f"> formatting file using fat12...")
     create_filesystem(image, 'fat12', reserved_sectors=sec_stg_sectors+1)
 
-    print(f"> installing stage1...")
-    install_stage1(image, stage1, boot_data_lba=1)
+    print(f"> installing fst_stg...")
+    install_fst_stg(image, fst_stg, boot_data_lba=1)
 
     print(f"> installing sec_stg...")
     install_sec_stg(image, sec_stg, boot_data_lba=1, offset=2)
