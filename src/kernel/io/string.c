@@ -201,6 +201,11 @@ char* double_to_string(double value) {
     return buffer;
 }
 
+char* strcat(char* dest, const char* src) {
+    strcpy(dest + strlen(dest), src);
+    return dest;
+}
+
 char* strtok(char* s, const char* delim) {
 	static char* last;
 	return strtok_r(s, delim, &last);

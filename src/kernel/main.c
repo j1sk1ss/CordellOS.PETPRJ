@@ -7,7 +7,7 @@
 #include "../libs/core/shared/allocator/allocator.h"
 #include "../libs/core/shared/file_system/ata.h"
 #include "../libs/core/shared/file_system/file_system.h"
-#include "../libs/core/shared/file_system/temp_file_system.h"
+#include "../libs/core/shared/file_system/temp_file_system.c"
 
 #include <io/debug.h>
 #include "io/string.h"
@@ -45,6 +45,8 @@ void start(BootParams* bootParams) {
 
     printf("\r\n Questo sistema operativo 'e in costruzione. \r\n");
 
+    // One of variants of implementation FS (look ..file_system/file_system.h")
+
     // char *data1 = kalloc(512);
     // strcpy(data1, "a");
     // create_file("first_file", data1);
@@ -58,11 +60,13 @@ void start(BootParams* bootParams) {
     strcpy(currentPassword, "12345\0");
 
     while (1) {
-        printf("\r\n[CORDELL OS]: ");
+        char* path = get_full_temp_name();
+        printf("\r\n[CORDELL OS] $%s: ", path);
 
         char* command = keyboard_read(1);
         execute_command(command);
             
+        free(path);
         free(command);
     }
 
@@ -70,86 +74,211 @@ end:
     for (;;);
 }
 
+
+
+
+
+///////////////////////////////////////
+//
+//  SHELL COMMANDS
+//
+//
+
 void execute_command(char* command) {
-    if (strstr(command, "aiuto") == 0) {
+    char* command_line[100];
+    int tokenCount = 0;
+
+    char* splitted = strtok(command, " ");
+    while(splitted) {
+        command_line[tokenCount++] = splitted;
+        splitted = strtok(NULL, " ");
+    }
+
+    if (strstr(command_line[0], "aiuto") == 0) {
         printf("\r\n> Usa l'aiuto per ottenere aiuto");
         printf("\r\n> Utilizzare clear per la pulizia dello schermo");
         printf("\r\n> Usa l'eco per l'eco");
         printf("\r\n> Utilizza la calc per i calcoli (+, -, * e /)");
         printf("\r\n> Utilizzare setpas per impostare la password per cordell");
         printf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
+
+        printf("\r\n> Usa mkdir <nome> per cretore dir");
+        printf("\r\n> Usa mkfile <accesso> <nome> per cretore file");
+        printf("\r\n> Usa rmdir <nome> per elimita dir");
+        printf("\r\n> Usa cd <nome> per entranto dir");
+        printf("\r\n> Usa .. per uscire di dir");
+        printf("\r\n> Usa dir per guardare tutto cosa in dir");
     }
-    else if (strstr(command, "clear") == 0) 
+    else if (strstr(command_line[0], "clear") == 0) 
         VGA_clrscr();
-    else if (strstr(command, "eco") == 0) {
-        char* echo = command + strlen("eco") + 1; 
+    else if (strstr(command_line[0], "eco") == 0) {
+        char* echo = command_line[1]; 
         printf("\r\n%s", echo);
     }
-    else if (strstr(command, "mkdir") == 0) {
-        char* mkdir = command + strlen("mkdir") + 1; 
-        create_temp_directory(mkdir);
-    }
-    else if (strstr(command, "rmdir") == 0) {
-        char* rmdir = command + strlen("rmdir") + 1; 
-        delete_temp_directory(rmdir);
-    }
-    else if (strstr(command, "dirs") == 0) {
-        char* dirs = print_temp_dirs(); 
-        printf("'\r\n");
-        
-        for (int i = 0; i < MAX_DIRECTORIES; i++) {
-            if (dirs[i] != NULL) 
-                printf("\t %s", i + 1, dirs[i]);
-            else 
-                break; // Exit the loop if you reach a NULL pointer
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //  TEMP FILE SYSTEM COMMANDS (TEMP FILE SYSTEM CREATED FOR SIMULATION OF WORKING FS (WIP))
+    //
+    //
+
+
+        else if (strstr(command_line[0], "mkdir") == 0)                         // Create new dir
+            create_temp_directory(command_line[1]);                             // Name placed as second arg
+
+        else if (strstr(command_line[0], "cd") == 0)                            // Move to dir           
+            move_to_temp_directory(command_line[1]);                            //
+
+        else if (strstr(command_line[0], "..") == 0)                            // Up from dir
+            up_from_temp_directory();                                           //
+
+        else if (strstr(command_line[0], "rmdir") == 0)                         // Delete dir
+            delete_temp_directory(command_line[1]);                             //
+
+        else if (strstr(command_line[0], "mkfile") == 0)                        //
+            create_temp_file(command_line[1], command_line[2], command_line[3]);// Name placed as third arg
+
+        else if (strstr(command_line[0], "rmfile") == 0)                        // Delete file by name
+            delete_temp_file(command_line[1]);                                  //
+
+        else if (strstr(command_line[0], "dir") == 0) {                         // List of all files
+            printf("\r\nDirs: \t");                                             //
+            
+            struct Directory* current_dir = currentDirectory->subDirectory;     // Print dirs
+            if (current_dir != NULL) {                                          //
+                printf("\t%s", current_dir->name);                              //
+
+                while (current_dir->next != NULL) {                             //
+                    current_dir = current_dir->next;                            //
+                    printf("\t%s", current_dir->name);                          //
+                }                                                               //
+            }                                                                   //
+            else                                                                //
+                printf("\r\nNo dirs");                                          //
+
+            printf("\r\nFiles: \t");                                            //
+
+            struct File* current = currentDirectory->files;                     // Print files
+            if (current != NULL) {                                              //
+                printf("\t%s", current->name);                                  //
+
+                while (current->next != NULL) {                                 //
+                    current = current->next;                                    //
+                    printf("\t%s", current->name);                              //
+                }                                                               //
+            }                                                                   //
+            else                                                                //
+                printf("\r\nNo files");                                         //
+        }                                                                       //
+
+        else if (strstr(command_line[0], "view") == 0) {
+            struct File* file = find_temp_file(command_line[1]);
+            if (file == NULL)
+                return;
+            
+            if (strcmp(file->fileType, "0") == 0) {
+                printf("\r\nYou don`t have permissions. Use cordell.\r\n");
+                return;
+            }
+
+            printf("\r\nContent of %s: %s", file->name, file->content);
         }
 
-    }
-    else if (strstr(command, "calc") == 0) {
-        char* expression = command + strlen("calc") + 1; 
 
-        char* tokens[100];
-        int tokenCount = 0;
+    //
+    //
+    //  TEMP FILE SYSTEM COMMANDS (TEMP FILE SYSTEM CREATED FOR SIMULATION OF WORKING FS (WIP))
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //  APPLICATIONS
+    //
+    //
 
-        char* splitted = strtok(expression, " ");
-        while(splitted) {
-            tokens[tokenCount++] = splitted;
-            splitted = strtok(NULL, " ");
+        else if (strstr(command_line[0], "calc") == 0) {
+            char* tokens[100];
+            int tokenCount = 0;
+
+            char* splitted = strtok(command_line[1], ".");
+            while(splitted) {
+                tokens[tokenCount++] = splitted;
+                splitted = strtok(NULL, ".");
+            }
+
+            printf("\r\n> Risposta: %s", calculator(tokens, tokenCount));
         }
 
-        printf("\r\n> Risposta: %s", calculator(tokens, tokenCount));
-    }
-    else if (strstr(command, "cordell") == 0) {
-        char* cordellCommand = command + strlen("cordell") + 1; 
+    //
+    //
+    //  APPLICATIONS  
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //  CORDELL COMMANDS (COMMANDS THAT NEED CORDELL SPEC. WORD)
+    //
+    //
 
-        printf("\r\n[PAROLA D'ORDINE]: ");
-        char* password = keyboard_read(0);
-        while (strcmp(password, currentPassword) != 0) {
-            printf("\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
+
+        else if (strstr(command_line[0], "cordell") == 0) {
+            printf("\r\n[PAROLA D'ORDINE]: ");
+            char* password = keyboard_read(0);
+            while (strcmp(password, currentPassword) != 0) {
+                printf("\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
+                free(password);
+
+                password = keyboard_read(0);
+            }
+
             free(password);
 
-            password = keyboard_read(0);
-        }
+            if (strstr(command_line[1], "setpas") == 0) {
+                char* newPassword = command_line[2]; 
+                free(currentPassword);
 
-        free(password);
+                char* buffer = (char*)malloc(strlen(newPassword) + 1);
+                memset(buffer, 0, sizeof(buffer));
+                if (buffer == NULL)
+                    return;
 
-        if (strstr(cordellCommand, "setpas") == 0) {
-            char* newPassword = cordellCommand + strlen("setpas") + 1; 
-            free(currentPassword);
+                strcpy(buffer, newPassword);
 
-            char* buffer = (char*)malloc(strlen(newPassword) + 1);
-            memset(buffer, 0, sizeof(buffer));
-            if (buffer == NULL)
-                return;
+                currentPassword                             = buffer;
+                currentPassword[strlen(currentPassword)]    = '\0';
+            }
 
-            strcpy(buffer, newPassword);
+            /////////////////////////////////////////////////////////
+            //
+            //  VFS CORDELL COMMANDS
+            //
 
-            currentPassword                             = buffer;
-            currentPassword[strlen(currentPassword)]    = '\0';
-        }
-    } else 
-        printf("\r\nComando sconosciuto. Forse hai dimenticato CORDELL?");
-            
+                if (strstr(command_line[1], "rmdir") == 0) 
+                    cordell_delete_temp_directory(command_line[2]); 
+                
+                else if (strstr(command_line[1], "view") == 0) {
+                    struct File* file = find_temp_file(command_line[2]);
+                    if (file == NULL)
+                        return;
+
+                    printf("\r\nContent of %s: %s", file->name, file->content);
+                }
+
+            //
+            //  VFS CORDELL COMMANDS
+            //
+            /////////////////////////////////////////////////////////
+
+        } else 
+            printf("\r\nComando sconosciuto. Forse hai dimenticato CORDELL?");
+
+
+    //
+    //
+    //  CORDELL COMMANDS (COMMANDS THAT NEED CORDELL SPEC. WORD)
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
     printf("\r\n");
 }
 
@@ -161,3 +290,9 @@ void print_fs() {
     
     printf("==\r\n");
 }
+
+//
+//
+//  SHELL COMMANDS
+//
+////////////////////////////////////////////

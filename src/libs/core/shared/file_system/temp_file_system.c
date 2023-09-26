@@ -1,54 +1,173 @@
 #include "../string/string.h"
-#include "../allocator/allocator.h"
-
-#include "temp_file_system.h"
 
 
-Directory* directory; // Array to store directory pointers
+struct File {
+    char* fileType;
+
+    char* name;
+    char* content;
+
+    struct File* next;
+};
+
+struct Directory  {
+    char* name;
+
+    struct File* files;
+
+    struct Directory* next;
+
+    struct Directory* subDirectory;
+    struct Directory* upDirectory;
+};
+
+struct Directory* currentDirectory;
+
+char* get_full_temp_name() {
+    char* name = malloc(0);
+    memset(name, 0, sizeof(name));
+
+    struct Directory* current = currentDirectory;
+
+    while (current != NULL) {
+        char* temp_name = malloc(sizeof(name) + sizeof(current->name) + 1);
+        memset(temp_name, 0, sizeof(temp_name));
+        if (temp_name == NULL) {
+            printf("[TFS 40] Alloc error!");
+            return NULL;
+        }
+
+        strcpy(temp_name, name);
+
+        temp_name = strcat(temp_name, current->name);
+        temp_name = strcat(temp_name, "/");
+
+        name    = temp_name;
+        current = current->upDirectory;
+    }
+
+    return name;
+}
 
 void init_directory() {
-    directory = NULL; // Initialize your directory data structure
+    currentDirectory = NULL;
+
+    create_temp_directory("root");
 }
 
 void create_temp_directory(char* name) {
-    Directory* newDirectory = (Directory*)pmalloc(sizeof(Directory));
+    struct Directory* newDirectory = malloc(sizeof(struct Directory));
     memset(newDirectory, 0, sizeof(newDirectory));
 
-    newDirectory->name  = name;
-    newDirectory->files = NULL;
-    newDirectory->next  = NULL;
+    newDirectory->name  = malloc(strlen(name));
+    memcpy(newDirectory->name, name, strlen(name));
+    
+    newDirectory->files         = NULL;
+    newDirectory->next          = NULL;
+    newDirectory->subDirectory  = NULL;
 
-    if (directory == NULL)
-        directory = newDirectory;
+    if (currentDirectory == NULL)
+        currentDirectory = newDirectory;
     else {
-        Directory* current = directory;
-        while (current->next != NULL) 
-            current = current->next;
+        newDirectory->upDirectory = currentDirectory;
 
-        current->next = newDirectory;
+        if (currentDirectory->subDirectory == NULL) 
+            currentDirectory->subDirectory = newDirectory;
+        else {
+            struct Directory* current = currentDirectory->subDirectory;
+            while (current->next != NULL) 
+                current = current->next;
+
+            current->next = newDirectory;
+        }
     }
 }
 
-void create_temp_file(Directory* path, FileType* type, char* name, char** content) {
-    File* newFile = (File*)pmalloc(sizeof(File));
+void create_temp_file(char* type, char* name, char** content) {
+    struct File* newFile = malloc(sizeof(struct File));
     memset(newFile, 0, sizeof(newFile));
 
-    newFile->fileType   = type;
-    newFile->name       = name;
-    newFile->content    = content;
-    newFile->next       = path->files;
+    newFile->name = malloc(strlen(name));;
+    memcpy(newFile->name, name, strlen(name));
 
-    path->files = newFile;
+    newFile->fileType   = type;
+    newFile->content    = content;
+
+    if (currentDirectory->files == NULL)
+        currentDirectory->files = newFile;
+    else {
+        struct File* current = currentDirectory->files;
+        while (current->next != NULL) 
+            current = current->next;
+        
+        current->next = newFile;
+    }
 }
 
 void delete_temp_directory(char* name) {
-    Directory* current = directory;
-    Directory* prev = NULL;
+    struct Directory* current   = currentDirectory->subDirectory;
+    struct Directory* prev      = NULL;
+
+    while (current != NULL) {
+        if (strcmp(current->name, name) == 0) {
+
+            if (current->files != NULL || current->subDirectory != NULL) {
+                printf("\r\nDirectory not empty. Use cordell.\r\n");
+                return;
+            }
+
+            if (prev == NULL) 
+                currentDirectory = current->next;
+            else 
+                prev->next = current->next;
+            
+            free(current->name);
+            free(current);
+
+            break;
+        }
+
+        prev    = current;
+        current = current->next;
+    }
+}
+
+void cordell_delete_temp_directory(char* name) {
+    struct Directory* current   = currentDirectory->subDirectory;
+    struct Directory* prev      = NULL;
 
     while (current != NULL) {
         if (strcmp(current->name, name) == 0) {
             if (prev == NULL) 
-                directory = current->next;
+                currentDirectory = current->next;
+            else 
+                prev->next = current->next;
+            
+            free(current->name);
+            free(current);
+
+            break;
+        }
+
+        prev    = current;
+        current = current->next;
+    }
+}
+
+void delete_temp_file(char* name) {
+    struct File* current    = currentDirectory->files;
+    struct File* prev       = NULL;
+
+    while (current != NULL) {
+        if (strcmp(current->name, name) == 0) {
+
+            if (strcmp(current->fileType, "0") == 0) {
+                printf("\r\nI don`t have permission. Use cordell.\r\n");
+                return;
+            }
+
+            if (prev == NULL) 
+                currentDirectory->files = current->next;
             else 
                 prev->next = current->next;
             
@@ -61,14 +180,14 @@ void delete_temp_directory(char* name) {
     }
 }
 
-void delete_temp_file(Directory* path, char* name) {
-    File* current = path->files;
-    File* prev = NULL;
+void cordell_delete_temp_file(char* name) {
+    struct File* current    = currentDirectory->files;
+    struct File* prev       = NULL;
 
     while (current != NULL) {
         if (strcmp(current->name, name) == 0) {
             if (prev == NULL) 
-                path->files = current->next;
+                currentDirectory->files = current->next;
             else 
                 prev->next = current->next;
             
@@ -81,8 +200,8 @@ void delete_temp_file(Directory* path, char* name) {
     }
 }
 
-File* find_temp_file(Directory* directory, char* name) {
-    File* current = directory->files;
+struct File* find_temp_file(char* name) {
+    struct File* current = currentDirectory->files;
 
     while (current != NULL) {
         if (strcmp(current->name, name) == 0) 
@@ -91,11 +210,12 @@ File* find_temp_file(Directory* directory, char* name) {
         current = current->next;
     }
 
-    return NULL; // File not found
+    printf("\r\nFile not found.");
+    return NULL;
 }
 
-Directory* find_temp_directory(char* name) {
-    Directory* current = directory;
+struct Directory* find_temp_directory(char* name) {
+    struct Directory* current = currentDirectory->subDirectory;
 
     while (current != NULL) {
         if (strcmp(current->name, name) == 0) 
@@ -104,27 +224,17 @@ Directory* find_temp_directory(char* name) {
         current = current->next;
     }
 
-    return NULL; // Directory not found
+    printf("\r\nDirectory not found.");
+    return NULL;
 }
 
-char** print_temp_dirs() {
-    Directory* current = directory;
-    int count = 0;
-    
-    // Count the number of directories
-    while (current != NULL) {
-        count++;
-        current = current->next;
-    }
-    
-    char* dirNames[100];
-    current = directory;
-    
-    // Store directory names in the array
-    for (int i = 0; i < count; i++) {
-        dirNames[i] = current->name;
-        current     = current->next;
-    }
-    
-    return dirNames;
+void move_to_temp_directory(char* name) {
+    struct Directory* neededDirectory = find_temp_directory(name);
+    if (neededDirectory != NULL) 
+        currentDirectory = neededDirectory;
+}
+
+void up_from_temp_directory() {
+    if (currentDirectory->upDirectory != NULL)
+        currentDirectory = currentDirectory->upDirectory;
 }

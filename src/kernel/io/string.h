@@ -12,6 +12,7 @@ int strstr(const char* haystack, const char* needle);
 char* strcpy(char* dst, const char* src);
 unsigned strlen(const char* str);
 int strcmp(const char* firstStr, const char* secondStr);
+char* strcat(char* dest, const char* src);
 
 char* strtok(char* s, const char* delim);
 char* strtok_r(char* s, const char* delim, char** last);
