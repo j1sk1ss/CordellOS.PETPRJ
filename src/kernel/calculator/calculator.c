@@ -1,7 +1,7 @@
 #include "calculator.h"
 
-#include "../io/string.h"
-#include "../io/stdio.h"
+#include "../include/string.h"
+#include "../include/stdio.h"
 
 typedef struct {
     double stack[MAX_CALCULATOR_STACK_SIZE];

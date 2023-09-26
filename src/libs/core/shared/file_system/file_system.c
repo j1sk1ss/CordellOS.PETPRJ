@@ -1,8 +1,7 @@
-#include "ata.h"
-#include "file_system.h"
-
-#include "../allocator/allocator.h"
-#include "../string/string.h"
+#include "../include/ata.h"
+#include "../include/file_system.h"
+#include "../include/allocator.h"
+#include "../include/string.h"
 
 base_block_t* base_block;
 
