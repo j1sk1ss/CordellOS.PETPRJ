@@ -1,10 +1,10 @@
-#include "isr.h"
-#include "idt.h"
-#include "gdt.h"
-#include "io.h"
+#include "../../include/isr.h"
+#include "../../include/idt.h"
+#include "../../include/gdt.h"
+#include "../../include/io.h"
 
 #include<stddef.h>
-#include <io/stdio.h>
+#include <include/stdio.h>
 
 ISRHandler _isrHandlers[256];
 

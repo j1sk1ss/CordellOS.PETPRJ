@@ -1,11 +1,11 @@
-#include "hal.h"
+#include "../include/hal.h"
 
-#include <arch/i686/gdt.h>
-#include <arch/i686/idt.h>
-#include <arch/i686/isr.h>
-#include <arch/i686/irq.h>
+#include <include/gdt.h>
+#include <include/idt.h>
+#include <include/isr.h>
+#include <include/irq.h>
 
-#include <arch/i686/vga_text.h>
+#include <include/vga_text.h>
 
 void HAL_initialize() {
     VGA_clrscr();

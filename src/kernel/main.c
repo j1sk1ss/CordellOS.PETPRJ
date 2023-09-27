@@ -5,7 +5,7 @@
 #include "../libs/core/shared/include/allocator.h"
 #include "../libs/core/shared/include/ata.h"
 #include "../libs/core/shared/include/file_system.h"
-#include "../libs/core/shared/include/temp_file_system.c"
+#include "../libs/core/shared/file_system/temp_file_system.c"
 
 #include <include/memory.h>
 #include <include/debug.h>
@@ -58,11 +58,11 @@ void start(BootParams* bootParams) {
 
     while (1) {
         char* path = get_full_temp_name();
-        printf("\r\n[CORDELL OS] $%s: ", path);
+        printf("\r\n[CORDELL OS] $%s >", path);
 
         char* command = keyboard_read(VISIBLE_KEYBOARD);
         execute_command(command);
-            
+
         free(path);
         free(command);
     }
@@ -120,6 +120,9 @@ end:
                 printf("\r\n> Usa cd <nome> per entranto dir");
                 printf("\r\n> Usa .. per uscire di dir");
                 printf("\r\n> Usa dir per guardare tutto cosa in dir");
+
+                printf("\r\n> Usa view per guardare tutto data in file");
+                printf("\r\n> Usa cordell-nano per modifica data in file");
             }
 
             else if (strstr(command_line[0], "clear") == 0) 
@@ -155,8 +158,12 @@ end:
 
             else if (strstr(command_line[0], "mkfile") == 0) {                          //
                 char* text = 
-                    command + strlen(command_line[1]) + strlen(command_line[2]) + 2;
-                
+                    command 
+                     + strlen(command_line[0])
+                     + strlen(command_line[1])
+                     + strlen(command_line[2]) 
+                     + 3;
+    
                 create_temp_file(command_line[1], command_line[2], text);               // Name placed as third arg
             }
             
@@ -203,7 +210,7 @@ end:
                     return;
                 }
 
-                printf("\r\nContent of %s: %s", file->name, file->content);
+                printf("\r\n%s", file->content);
             }
 
         //

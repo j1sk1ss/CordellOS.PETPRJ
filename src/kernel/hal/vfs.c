@@ -1,7 +1,7 @@
-#include "vfs.h"
+#include "../include/vfs.h"
 
-#include <arch/i686/vga_text.h>
-#include <arch/i686/e9.h>
+#include <include/vga_text.h>
+#include <include/e9.h>
 
 int VFS_Write(fileDescriptorId file, uint8_t* data, size_t size) {
     switch (file) {

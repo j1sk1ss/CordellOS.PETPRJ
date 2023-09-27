@@ -1,5 +1,5 @@
-#include "i8259.h"
-#include "io.h"
+#include "../../include/i8259.h"
+#include "../../include/io.h"
 
 #include <stdint.h>
 #include <stdbool.h>

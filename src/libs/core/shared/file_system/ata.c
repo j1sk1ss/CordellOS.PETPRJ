@@ -1,7 +1,6 @@
-#include "ata.h"
-
-#include "../allocator/allocator.h"
-#include "../x86/x86.h"
+#include "../include/ata.h"
+#include "../include/allocator.h"
+#include "../include/x86.h"
 
 void wait_drive_until_ready() {
 	int status = 0;

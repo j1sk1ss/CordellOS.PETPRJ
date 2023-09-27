@@ -1,8 +1,8 @@
-#include "irq.h"
-#include "pic.h"
-#include "i8259.h"
-#include "io.h"
-#include "io/stdio.h"
+#include "../../include/irq.h"
+#include "../../include/pic.h"
+#include "../../include/i8259.h"
+#include "../../include/io.h"
+#include "../../include/stdio.h"
 
 #include <util/arrays.h>
 #include <stddef.h>

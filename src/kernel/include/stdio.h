@@ -2,7 +2,8 @@
 
 #include <stdint.h>
 #include <stdarg.h>
-#include <hal/vfs.h>
+
+#include "vfs.h"
 
 void clrscr();
 void putc(char c);

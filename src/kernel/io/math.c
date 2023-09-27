@@ -1,4 +1,4 @@
-#include "math.h"
+#include "../include/math.h"
 
 double pow(double base, int exponent) {
     double result = 1.0;
