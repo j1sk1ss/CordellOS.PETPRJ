@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "allocator.h"
+#include "../include/allocator.h"
 
 #define MAX_PAGE_ALIGNED_ALLOCS 32
 

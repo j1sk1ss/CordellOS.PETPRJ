@@ -1,4 +1,4 @@
-#include "../string/string.h"
+#include "../include/string.h"
 
 
 struct File {
@@ -51,58 +51,75 @@ char* get_full_temp_name() {
 
 void init_directory() {
     currentDirectory = NULL;
-
     create_temp_directory("root");
 }
 
-void create_temp_directory(char* name) {
-    struct Directory* newDirectory = malloc(sizeof(struct Directory));
-    memset(newDirectory, 0, sizeof(newDirectory));
+////////////////////////////////////////////////
+//
+//  CREATES TEMP DIRECTORY <NAME> IN CURRENT DIRECTORY
+//
 
-    newDirectory->name  = malloc(strlen(name));
-    memcpy(newDirectory->name, name, strlen(name));
-    
-    newDirectory->files         = NULL;
-    newDirectory->next          = NULL;
-    newDirectory->subDirectory  = NULL;
+    void create_temp_directory(char* name) {
+        struct Directory* newDirectory = malloc(sizeof(struct Directory));
+        memset(newDirectory, 0, sizeof(newDirectory));
 
-    if (currentDirectory == NULL)
-        currentDirectory = newDirectory;
-    else {
-        newDirectory->upDirectory = currentDirectory;
+        newDirectory->name  = malloc(strlen(name));
+        memcpy(newDirectory->name, name, strlen(name));
+        
+        newDirectory->files         = NULL;
+        newDirectory->next          = NULL;
+        newDirectory->subDirectory  = NULL;
 
-        if (currentDirectory->subDirectory == NULL) 
-            currentDirectory->subDirectory = newDirectory;
+        if (currentDirectory == NULL)
+            currentDirectory = newDirectory;
         else {
-            struct Directory* current = currentDirectory->subDirectory;
-            while (current->next != NULL) 
-                current = current->next;
+            newDirectory->upDirectory = currentDirectory;
 
-            current->next = newDirectory;
+            if (currentDirectory->subDirectory == NULL) 
+                currentDirectory->subDirectory = newDirectory;
+            else {
+                struct Directory* current = currentDirectory->subDirectory;
+                while (current->next != NULL) 
+                    current = current->next;
+
+                current->next = newDirectory;
+            }
         }
     }
-}
 
-void create_temp_file(char* type, char* name, char** content) {
-    struct File* newFile = malloc(sizeof(struct File));
-    memset(newFile, 0, sizeof(newFile));
+//
+//  CREATES TEMP DIRECTORY <NAME> IN CURRENT DIRECTORY
+//
+////////////////////////////////////////////////
+//
+//  CREATES TEMP FILE WITH NAME <NAME> IN CURRENT DIRECTORY
+//
 
-    newFile->name = malloc(strlen(name));;
-    memcpy(newFile->name, name, strlen(name));
+    void create_temp_file(char* type, char* name, char** content) {
+        struct File* newFile = malloc(sizeof(struct File));
+        memset(newFile, 0, sizeof(newFile));
 
-    newFile->fileType   = type;
-    newFile->content    = content;
+        newFile->name = malloc(strlen(name));;
+        memcpy(newFile->name, name, strlen(name));
 
-    if (currentDirectory->files == NULL)
-        currentDirectory->files = newFile;
-    else {
-        struct File* current = currentDirectory->files;
-        while (current->next != NULL) 
-            current = current->next;
-        
-        current->next = newFile;
+        newFile->fileType   = type;
+        newFile->content    = content;
+
+        if (currentDirectory->files == NULL)
+            currentDirectory->files = newFile;
+        else {
+            struct File* current = currentDirectory->files;
+            while (current->next != NULL) 
+                current = current->next;
+            
+            current->next = newFile;
+        }
     }
-}
+
+//
+//  CREATES TEMP FILE WITH NAME <NAME> IN CURRENT DIRECTORY
+//
+////////////////////////////////////////////////
 
 void delete_temp_directory(char* name) {
     struct Directory* current   = currentDirectory->subDirectory;

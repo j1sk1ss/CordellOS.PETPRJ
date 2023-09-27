@@ -62,6 +62,9 @@ void VGA_setcursor(int x, int y) {
     i686_outb(0x3D5, (uint8_t)(pos & 0xFF));         // for this register
     i686_outb(0x3D4, 0x0E);                          // Check of. docs for info about this ports
     i686_outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));  //
+
+    _screenX = x;
+    _screenY = y;
 }
 
 //

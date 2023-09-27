@@ -1,21 +1,21 @@
-#include "io/stdio.h"
-#include "io/string.h"
-
 #include "Keyboard.h"
 
-#include "memory/memory.h"
+#include "../libs/core/shared/include/allocator.h"
 
-#include "../libs/core/shared/allocator/allocator.h"
+#include <include/stdio.h>
+#include <include/string.h>
+#include <include/memory.h>
+#include <include/io.h>
+#include <include/vga_text.h>
 
-#include <arch/i686/io.h>
-
-#include <arch/i686/vga_text.h>
-
-/* KBDUS means US Keyboard Layout. This is a scancode table
+/* 
+*  KBDUS means US Keyboard Layout. This is a scancode table
 *  used to layout a standard US keyboard. I have left some
 *  comments in to give you an idea of what key is what, even
 *  though I set it's array index to 0. You can change that to
-*  whatever you want using a macro, if you wish! */
+*  whatever you want using a macro, if you wish! 
+*/
+
 unsigned char alphabet[128] = {
     0,  27, '1', '2', '3', '4', '5', '6', '7', '8',	                    /* 9 */
     '9', '0', '-', '=', '\b',	                                        /* Backspace */
@@ -30,14 +30,14 @@ unsigned char alphabet[128] = {
     '*',
     0,	                                        /* Alt */
     ' ',	                                    /* Space bar */
-    0,	                                        /* Caps lock */
+    '{',	                                    /* Caps lock */
     0,	                                        /* 59 - F1 key ... > */
     0,   0,   0,   0,   0,   0,   0,   0,
     0,	                                        /* < ... F10 */
     0,	                                        /* 69 - Num lock*/
     0,	                                        /* Scroll Lock */
     0,	                                        /* Home key */
-    0,	                                        /* Up Arrow */
+    '0',	                                    /* Up Arrow */
     0,	                                        /* Page Up */
     '-',
     0,	                                        /* Left Arrow */
@@ -56,7 +56,7 @@ unsigned char alphabet[128] = {
 };
 
 
-char* keyboard_read(int visibility) {
+char* keyboard_read(int mode) {
     char* input       = NULL;  // Start with an empty string
     size_t input_size = 0;
 
@@ -68,38 +68,88 @@ char* keyboard_read(int visibility) {
                 char currentCharacter = alphabet[character];
                 if (currentCharacter != '\n') {
                     if (currentCharacter == '\b') {
-                        if (cursor_get_x() > 14) {
-                            VGA_putchr(cursor_get_x() - 1, cursor_get_y(), ' ');
-                            VGA_setcursor(cursor_get_x() - 1, cursor_get_y());
-                        }
+                        if (cursor_get_x() > 14) 
+                            backspace_string(&input, &input_size);
 
                         continue;
                     }
 
-                    if (visibility == 1)
+                    if (mode == VISIBLE_KEYBOARD)
                         printf("%c", currentCharacter);
 
-                    // Allocate memory to accommodate the new character
-                    char* buffer = (char*)malloc(++input_size + 1);
-                    memset(buffer, 0, sizeof(buffer));
-                    
-                    if (buffer == NULL) {
-                        printf("\nMemory allocation failed\n");
-                        free(buffer);
-
-                        return NULL;
-                    }
-                    
-                    strcpy(buffer, input);
-                    input = buffer;
-
-                    input[input_size - 1] = currentCharacter;     // Set last character
-                    input[input_size]     = '\0';                 // Null-terminate the string
-                } 
+                    add_char_to_string(&input, &input_size, currentCharacter);
+                }
                 else break;
             }
         }
     }
 
     return input;
+}
+
+char* keyboard_edit(char* previous_data) {
+    char* input       = previous_data;  // Start with an empty string
+    printf("%s", input);
+
+    size_t input_size = 0;
+
+    while (1) {
+        if (i686_inb(0x64) & 0x1) {
+            char character = i686_inb(0x60);
+
+            if (!(character & 0x80)) {
+                char currentCharacter = alphabet[character];
+                if (currentCharacter != '{') {
+                    if (currentCharacter == '\b') {
+                        backspace_string(&input, &input_size);
+                        continue;
+                    }
+
+                    if (currentCharacter == '\n' && mode == EDITOR_KEYBOARD) {
+                        add_char_to_string(&input, input_size, '\n');
+                        printf("\n");
+                    }
+                    else {
+                        printf("%c", currentCharacter);
+                        add_char_to_string(&input, &input_size, currentCharacter);
+                    }
+                }
+                else break;
+            }
+        }
+    }
+
+    return input;
+}
+
+void backspace_string(char* str, size_t size) {
+    VGA_putchr(cursor_get_x() - 1, cursor_get_y(), ' ');
+    VGA_setcursor(cursor_get_x() - 1, cursor_get_y());
+
+    char* buffer = (char*)malloc(--size);
+    memset(buffer, 0, sizeof(buffer));
+
+    strcpy(buffer, str);
+    str = buffer;   
+
+    input[size] = '\0';
+}
+
+void add_char_to_string(char* str, size_t size, char character) {
+    // Allocate memory to accommodate the new character
+    char* buffer = (char*)malloc(++size + 1);
+    memset(buffer, 0, sizeof(buffer));
+    
+    if (buffer == NULL) {
+        printf("\nMemory allocation failed\n");
+        free(buffer);
+
+        return NULL;
+    }
+    
+    strcpy(buffer, str);
+    str = buffer;
+
+    str[size - 1] = character;            // Set last character
+    str[size]     = '\0';                 // Null-terminate the string
 }
