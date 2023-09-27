@@ -17,6 +17,11 @@ const char* strchr(const char* str, char chr) {
     return NULL;
 }
 
+char* strcat(char* dest, const char* src) {
+    strcpy(dest + strlen(dest), src);
+    return dest;
+}
+
 int strstr(const char* haystack, const char* needle) {
     if (*needle == '\0')    // If the needle is an empty string, return 0 (position 0).
         return 0;
