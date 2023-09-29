@@ -1,12 +1,12 @@
-#include "Keyboard.h"
+#include "../include/Keyboard.h"
 
-#include "../libs/core/shared/include/allocator.h"
+#include "../../../libs/core/shared/include/allocator.h"
 
-#include <include/stdio.h>
-#include <include/string.h>
-#include <include/memory.h>
-#include <include/io.h>
-#include <include/vga_text.h>
+#include "../../include/stdio.h"
+#include "../../include/string.h"
+#include "../../include/memory.h"
+#include "../../include/io.h"
+#include "../../include/vga_text.h"
 
 /* 
 *  KBDUS means US Keyboard Layout. This is a scancode table
@@ -28,31 +28,31 @@ unsigned char alphabet[128] = {
     '\\', 'z', 'x', 'c', 'v', 'b', 'n',			                        /* 49 */
     'm', ',', '.', '/',   0,				                            /* Right shift */
     '*',
-    0,	                                        /* Alt */
-    ' ',	                                    /* Space bar */
-    '{',	                                    /* Caps lock */
-    0,	                                        /* 59 - F1 key ... > */
-    0,   0,   0,   0,   0,   0,   0,   0,
-    0,	                                        /* < ... F10 */
-    0,	                                        /* 69 - Num lock*/
-    0,	                                        /* Scroll Lock */
-    0,	                                        /* Home key */
-    '0',	                                    /* Up Arrow */
-    0,	                                        /* Page Up */
-    '-',
-    0,	                                        /* Left Arrow */
-    0,
-    0,	                                        /* Right Arrow */
-    '+',
-    0,	                                        /* 79 - End key*/
-    0,	                                        /* Down Arrow */
-    0,	                                        /* Page Down */
-    0,	                                        /* Insert Key */
-    0,	                                        /* Delete Key */
-    0,   0,   0,
-    0,	                                        /* F11 Key */
-    0,	                                        /* F12 Key */
-    0,	                                        /* All other keys are undefined */
+    0,	                                                                /* Alt */
+    ' ',	                                                            /* Space bar */
+    '{',	                                                            /* Caps lock */
+    0,	                                                                /* 59 - F1 key ... > */
+    0,   0,   0,   0,   0,   0,   0,   0,                       
+    0,	                                                                /* < ... F10 */
+    0,	                                                                /* 69 - Num lock*/
+    0,	                                                                /* Scroll Lock */
+    0,	                                                                /* Home key */
+    '0',	                                                            /* Up Arrow */
+    0,	                                                                /* Page Up */
+    '-',                        
+    0,	                                                                /* Left Arrow */
+    0,                      
+    0,	                                                                /* Right Arrow */
+    '+',                        
+    0,	                                                                /* 79 - End key*/
+    0,	                                                                /* Down Arrow */
+    0,	                                                                /* Page Down */
+    0,	                                                                /* Insert Key */
+    0,	                                                                /* Delete Key */
+    0,   0,   0,                        
+    0,	                                                                /* F11 Key */
+    0,	                                                                /* F12 Key */
+    0,	                                                                /* All other keys are undefined */
 };
 
 
@@ -151,46 +151,3 @@ unsigned char alphabet[128] = {
 ////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-void backspace_string(char** str, size_t size) {
-    VGA_putchr(cursor_get_x() - 1, cursor_get_y(), ' ');
-    VGA_setcursor(cursor_get_x() - 1, cursor_get_y());
-
-    char* buffer = (char*)malloc(size);
-    memset(buffer, 0, sizeof(buffer));
-
-    if (buffer == NULL) {
-        free(buffer);
-        return;
-    }
-
-    strcpy(buffer, *str);
-
-    buffer[size] = '\0';
-
-    free(*str);
-    *str = buffer;   
-}
-
-void add_char_to_string(char** str, size_t size, char character) {
-    // Allocate memory to accommodate the new character
-    char* buffer = (char*)malloc(size + 1);
-    memset(buffer, 0, sizeof(buffer));
-    
-    if (buffer == NULL) {
-        printf("\nMemory allocation failed\n");
-        free(buffer);
-
-        return NULL;
-    }
-    
-    strcpy(buffer, *str);
-
-    buffer[size - 1] = character;            // Set last character
-    buffer[size]     = '\0';                 // Null-terminate the string
-
-    free(*str);
-    *str = buffer;    
-}

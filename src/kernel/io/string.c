@@ -254,8 +254,47 @@ cont:
 
 				return (tok);
 			}
+
 		} while (sc != 0);
 	}
+}
+
+void backspace_string(char** str, size_t size) {
+    VGA_putchr(cursor_get_x() - 1, cursor_get_y(), ' ');
+    VGA_setcursor(cursor_get_x() - 1, cursor_get_y());
+
+    char* buffer = (char*)malloc(size);
+    memset(buffer, 0, sizeof(buffer));
+
+    if (buffer == NULL) {
+        free(buffer);
+        return;
+    }
+
+    strcpy(buffer, *str);
+
+    buffer[size] = '\0';
+
+    free(*str);
+    *str = buffer;   
+}
+
+void add_char_to_string(char** str, size_t size, char character) {
+    char* buffer = (char*)malloc(size + 1);
+    memset(buffer, 0, sizeof(buffer));
+    
+    if (buffer == NULL) {
+        free(buffer);
+        return;
+    }
+    
+    strcpy(buffer, *str);
+
+    buffer[size - 1] = character;            // Set last character
+    buffer[size]     = '\0';                 // Null-terminate the string
+
+    free(*str);
+    *str = buffer;    
 }
 
 wchar_t* utf16_to_codepoint(wchar_t* string, int* codePoint) {

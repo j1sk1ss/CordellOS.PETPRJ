@@ -1,27 +1,11 @@
-#include "../include/string.h"
+#include "temp_file_system.h"
 
-
-struct File {
-    char* fileType;
-
-    char* name;
-    char* content;
-
-    struct File* next;
-};
-
-struct Directory  {
-    char* name;
-
-    struct File* files;
-
-    struct Directory* next;
-
-    struct Directory* subDirectory;
-    struct Directory* upDirectory;
-};
 
 struct Directory* currentDirectory;
+
+struct Directory* get_current_directory() {
+    return currentDirectory;
+}
 
 char* get_full_temp_name() {
     char* name = malloc(0);
@@ -134,7 +118,7 @@ void delete_temp_directory(char* name) {
             }
 
             if (prev == NULL) 
-                currentDirectory = current->next;
+                currentDirectory->subDirectory = current->next;
             else 
                 prev->next = current->next;
             
@@ -156,7 +140,7 @@ void cordell_delete_temp_directory(char* name) {
     while (current != NULL) {
         if (strcmp(current->name, name) == 0) {
             if (prev == NULL) 
-                currentDirectory = current->next;
+                currentDirectory->subDirectory = current->next;
             else 
                 prev->next = current->next;
             

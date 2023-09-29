@@ -1,6 +1,6 @@
 #include "../include/calculator.h"
-#include "../include/string.h"
-#include "../include/stdio.h"
+#include "../../include/string.h"
+#include "../../include/stdio.h"
 
 typedef struct {
     double stack[MAX_CALCULATOR_STACK_SIZE];
@@ -8,19 +8,14 @@ typedef struct {
 } calc_stack;
 
 static void stack_push(calc_stack *c_stack, double value) {
-    if (c_stack->top >= MAX_CALCULATOR_STACK_SIZE) {
-        printf("Error: Stack overflow!");
+    if (c_stack->top >= MAX_CALCULATOR_STACK_SIZE)
         return;
-    }
 
     c_stack->stack[++c_stack->top] = value;
 }
 
 static double stack_pop(calc_stack *c_stack) {
     double val;
-    
-    if (c_stack->top < 0) 
-	    printf("Error: Stack underflow!");
     
     val = c_stack->stack[c_stack->top--];
     return val;
@@ -33,10 +28,8 @@ char* calculator(char **args, int n_args) {
     memset(&c_stack.stack, 0, sizeof(c_stack.stack));
     c_stack.top = -1;
 
-    if (n_args < 3) {
-        printf("Insufficient arguments.");
+    if (n_args < 3) 
         return "null";
-    }
 
     for (int i = 0; i < n_args; i++) {
         if (isdigit(*args[i])) {
@@ -56,6 +49,7 @@ char* calculator(char **args, int n_args) {
 
                         stack_push(&c_stack, a + b);
                     }
+
                 break;
 
             case '-':
@@ -69,6 +63,7 @@ char* calculator(char **args, int n_args) {
 
                         stack_push(&c_stack, a - b);
                     }
+
                 break;
 
             case '*':
@@ -76,6 +71,7 @@ char* calculator(char **args, int n_args) {
                     b = stack_pop(&c_stack);
 
                     stack_push(&c_stack, a * b);
+
                 break;
 
             case '/':
