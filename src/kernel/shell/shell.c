@@ -12,10 +12,13 @@ void shell() {
 
     while (1) {
         char* path = get_full_temp_name();
-        printf("\r\n[CORDELL OS] $%s >", path);
+        printf("\r\n[CORDELL OS] $%s> ", path);
 
         char* command = keyboard_read(VISIBLE_KEYBOARD);
-        execute_command(command);
+        if (strstr(command, "cordell") == 0)
+            execute_command(command + strlen("cordell"), CORDELL_ACCESS);
+        else
+            execute_command(command, DEFAULT_ACCESS);
 
         free(path);
         free(command);
@@ -23,6 +26,7 @@ void shell() {
 }
 
 void shell_start_screen() {
+    
     printf("  _____  ____  ____   ___    ___ ||    ||        ____    ____\r\n");
     printf("_|      ||  || || ||  || || ||   ||    ||       ||  ||  |    \r\n");
     printf("||      ||  || ||_||  || || ||   ||    ||       ||  || ||    \r\n");
@@ -38,8 +42,34 @@ void shell_start_screen() {
 //
 //
 
-    void execute_command(char* command) {
+    void execute_command(char* command, int access_level) {
 
+        ////////////////////////////////
+        //
+        //  PASSWORD VERIFICATION
+        //
+
+            if (access_level == 1) {
+                printf("\r\n[PAROLA D'ORDINE]: ");
+                char* password = keyboard_read(HIDDEN_KEYBOARD);
+
+                int tries = 0;
+
+                while (strcmp(password, currentPassword) != 0) {
+                    printf("\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
+                    free(password);
+
+                    password = keyboard_read(HIDDEN_KEYBOARD);
+                    if (tries >= 4) 
+                        return;
+                }
+
+                free(password);            
+            }
+
+        //
+        //  PASSWORD VERIFICATION
+        //
         ////////////////////////////////
         //
         //  SPLIT COMMAND LINE TO ARGS
@@ -48,7 +78,10 @@ void shell_start_screen() {
             char* command_line[100];
             int tokenCount = 0;
 
-            char* splitted = strtok(command, " ");
+            char* command_for_split = (char*)malloc(strlen(command));
+            strcpy(command_for_split, command);
+
+            char* splitted = strtok(command_for_split, " ");
             while(splitted) {
                 command_line[tokenCount++]  = splitted;
                 splitted                    = strtok(NULL, " ");
@@ -79,7 +112,8 @@ void shell_start_screen() {
                 printf("\r\n> Usa dir per guardare tutto cosa in dir");
 
                 printf("\r\n> Usa view per guardare tutto data in file");
-                printf("\r\n> Usa cordell-nano per modifica data in file");
+                printf("\r\n> Usa nano per modifica data in file");
+                printf("\r\n> Usa run per run file");
             }
 
             else if (strstr(command_line[0], "clear") == 0) 
@@ -88,6 +122,26 @@ void shell_start_screen() {
             else if (strstr(command_line[0], "eco") == 0) {
                 char* echo = command_line[1]; 
                 printf("\r\n%s", echo);
+            }
+
+            if (strstr(command_line[0], "setpas") == 0) {
+                if (access_level == 0) {
+                    printf("\r\nYou don`t have permissions. Use cordell.\r\n");                 
+                    return;
+                }
+
+                char* newPassword = command_line[2]; 
+                free(currentPassword);
+
+                char* buffer = (char*)malloc(strlen(newPassword) + 1);
+                memset(buffer, 0, sizeof(buffer));
+                if (buffer == NULL)
+                    return;
+
+                strcpy(buffer, newPassword);
+
+                currentPassword                             = buffer;
+                currentPassword[strlen(currentPassword)]    = '\0';
             }
 
         //
@@ -111,7 +165,15 @@ void shell_start_screen() {
                 up_from_temp_directory();                                                           //
             
             else if (strstr(command_line[0], "rmdir") == 0)                                         // Delete dir
-                delete_temp_directory(command_line[1]);                                             //
+                switch (access_level) {
+                    case DEFAULT_ACCESS:
+                        delete_temp_directory(command_line[1]); 
+                    break;
+
+                    case CORDELL_ACCESS:
+                        cordell_delete_temp_directory(command_line[1]);
+                    break;
+                }                                              
             
             else if (strstr(command_line[0], "mkfile") == 0) {                                      //
                 char* text =            
@@ -125,7 +187,15 @@ void shell_start_screen() {
             }           
                         
             else if (strstr(command_line[0], "rmfile") == 0)                                        // Delete file by name
-                delete_temp_file(command_line[1]);                                                  //
+                switch (access_level) {
+                    case DEFAULT_ACCESS:
+                        delete_temp_file(command_line[1]); 
+                    break;
+
+                    case CORDELL_ACCESS:
+                        cordell_delete_temp_file(command_line[1]);
+                    break;
+                }   
             
             else if (strstr(command_line[0], "dir") == 0) {                                         // List of all files
                 struct Directory* current_dir = get_current_directory()->subDirectory;              // Print dirs
@@ -154,7 +224,7 @@ void shell_start_screen() {
                 if (file == NULL)
                     return;
                 
-                if (strcmp(file->fileType, "0") == 0) {
+                if (strcmp(file->fileType, "0") == 0 && access_level == DEFAULT_ACCESS) {
                     printf("\r\nYou don`t have permissions. Use cordell.\r\n");
                     return;
                 }
@@ -176,26 +246,62 @@ void shell_start_screen() {
                 char* tokens[100];
                 int tokenCount = 0;
 
-                char* splitted = strtok(command_line[1], ".");
+                char* expression =            
+                    command             
+                     + strlen(command_line[0])          
+                     + 1;  
+
+                char* splitted = strtok(expression, " ");
                 while(splitted) {
                     tokens[tokenCount++] = splitted;
-                    splitted = strtok(NULL, ".");
+                    splitted = strtok(NULL, " ");
                 }
 
                 printf("\r\n> Risposta: %s", calculator(tokens, tokenCount));
             }
 
-            else if (strstr(command_line[0], "cordell-nano") == 0) {
+            else if (strstr(command_line[0], "nano") == 0) {
                 struct File* file = find_temp_file(command_line[1]);
                 if (file == NULL)
                     return;
                 
-                if (strcmp(file->fileType, "0") == 0) {
+                if (strcmp(file->fileType, "0") == 0 && access_level == DEFAULT_ACCESS) {
                     printf("\r\nYou don`t have permissions. Use cordell.\r\n");
                     return;
                 }
 
-                file->content = cordell_nano_editor(file->content);
+                VGA_clrscr();
+                printf("You are editing file. Use CAPSLOCK to exit.\r\n\r\n");
+
+                file->content = keyboard_edit(file->content);
+            }
+
+            else if (strstr(command_line[0], "run") == 0) {
+                struct File* execute = find_temp_file(command_line[1]);
+                if (execute == NULL)
+                    return;
+                
+                if (strcmp(execute->fileType, "0") == 0 && access_level == DEFAULT_ACCESS) {
+                    printf("\r\nYou don`t have permissions. Use cordell.\r\n");
+                    return;
+                }
+
+                char* command_for_split = (char*)malloc(strlen(execute->content));  // not work
+                strcpy(command_for_split, execute->content);
+
+                char* lines[100];
+                int tokenCount = 0;
+
+                char* splitted = strtok(command_for_split, "\n");
+                while(splitted) {
+                    lines[tokenCount++] = splitted;
+                    splitted = strtok(NULL, "\n");
+                }
+
+                for (int i = 0; i < tokenCount; i++)
+                    execute_command(lines[i], 0);
+
+                free(command_for_split);
             }
 
         //
@@ -203,78 +309,13 @@ void shell_start_screen() {
         //  APPLICATIONS  
         //
         ///////////////////////////////////////////////////////////////////////////////////////////
-        //
-        //  CORDELL COMMANDS (COMMANDS THAT NEED CORDELL SPEC. WORD)
-        //
-        //
 
-
-            else if (strstr(command_line[0], "cordell") == 0) {
-                printf("\r\n[PAROLA D'ORDINE]: ");
-                char* password = keyboard_read(HIDDEN_KEYBOARD);
-                while (strcmp(password, currentPassword) != 0) {
-                    printf("\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
-                    free(password);
-
-                    password = keyboard_read(0);
-                }
-
-                free(password);
-
-                if (strstr(command_line[1], "setpas") == 0) {
-                    char* newPassword = command_line[2]; 
-                    free(currentPassword);
-
-                    char* buffer = (char*)malloc(strlen(newPassword) + 1);
-                    memset(buffer, 0, sizeof(buffer));
-                    if (buffer == NULL)
-                        return;
-
-                    strcpy(buffer, newPassword);
-
-                    currentPassword                             = buffer;
-                    currentPassword[strlen(currentPassword)]    = '\0';
-                }
-
-                /////////////////////////////////////////////////////////
-                //
-                //  VFS CORDELL COMMANDS
-                //
-
-                    if (strstr(command_line[1], "rmdir") == 0) 
-                        cordell_delete_temp_directory(command_line[2]); 
-                    
-                    else if (strstr(command_line[1], "view") == 0) {
-                        struct File* file = find_temp_file(command_line[2]);
-                        if (file == NULL)
-                            return;
-
-                        printf("\r\nContent of %s: %s", file->name, file->content);
-                    }
-
-                    else if (strstr(command_line[1], "cordell-nano") == 0) {
-                        struct File* file = find_temp_file(command_line[2]);
-                        if (file == NULL)
-                            return;
-
-                        file->content = cordell_nano_editor(file->content);
-                    }
-
-                //
-                //  VFS CORDELL COMMANDS
-                //
-                /////////////////////////////////////////////////////////
-
-            } else 
+            else 
                 printf("\r\nComando sconosciuto. Forse hai dimenticato CORDELL?");
 
 
-        //
-        //
-        //  CORDELL COMMANDS (COMMANDS THAT NEED CORDELL SPEC. WORD)
-        //
-        ///////////////////////////////////////////////////////////////////////////////////////////
-
+        free(command_line);
+        free(command_for_split);
 
         printf("\r\n");
     }

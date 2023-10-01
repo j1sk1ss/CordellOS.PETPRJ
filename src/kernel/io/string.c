@@ -1,3 +1,4 @@
+#include "../../libs/core/shared/include/allocator.h"
 #include "../include/string.h"
 
 #include <stdint.h>
