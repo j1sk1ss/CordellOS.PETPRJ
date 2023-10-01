@@ -8,5 +8,14 @@
 #define CORDELL_ACCESS      1
 #define DEFAULT_ACCESS      0
 
+/////////////////
+//  CONSTANTS
+
+    #define CORDELL_ATTENTION   "Non hai i permessi. Usa cordell."
+    #define MAX_ATTEMPT_COUNT   4
+
+//  CONSTANTS
+/////////////////
+
 void shell();
 void execute_command(char* command, int access_level);

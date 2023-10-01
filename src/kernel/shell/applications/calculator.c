@@ -39,53 +39,57 @@ char* calculator(char **args, int n_args) {
 
         switch(*args[i]) {
             case '+':
-                    if (i + 1 < n_args && isdigit(*args[i + 1])) {
-                        // Indicates a +ve number of the form e.g. "+41394"
-                        stack_push(&c_stack, atof(args[i]));
-                    }
-                    else {
-                        a = stack_pop(&c_stack);
-                        b = stack_pop(&c_stack);
+                if (i + 1 < n_args && isdigit(*args[i + 1])) 
+                    stack_push(&c_stack, atof(args[i]));
+                else {
+                    a = stack_pop(&c_stack);
+                    b = stack_pop(&c_stack);
 
-                        stack_push(&c_stack, a + b);
-                    }
+                    stack_push(&c_stack, a + b);
+                }
 
-                break;
+            break;
 
             case '-':
-                    if (i + 1 < n_args && isdigit(*args[i + 1])) {
-                        // Indicates a -ve number, e.g. "-1902"
-                        stack_push(&c_stack, atof(args[i]));
-                    }
-                    else {
-                        b = stack_pop(&c_stack);
-                        a = stack_pop(&c_stack);
+                if (i + 1 < n_args && isdigit(*args[i + 1])) 
+                    stack_push(&c_stack, atof(args[i]));
+                else {
+                    b = stack_pop(&c_stack);
+                    a = stack_pop(&c_stack);
 
-                        stack_push(&c_stack, a - b);
-                    }
-
-                break;
+                    stack_push(&c_stack, a - b);
+                }
+            break;
 
             case '*':
-                    a = stack_pop(&c_stack);
-                    b = stack_pop(&c_stack);
+                a = stack_pop(&c_stack);
+                b = stack_pop(&c_stack);
 
-                    stack_push(&c_stack, a * b);
-
-                break;
+                stack_push(&c_stack, a * b);
+            break;
 
             case '/':
-                    b = stack_pop(&c_stack);
-                    a = stack_pop(&c_stack);
+                b = stack_pop(&c_stack);
+                a = stack_pop(&c_stack);
 
-                    if (b == 0) {
-                        printf("Division by zero!");
-                        return "null";
-                    }
+                if (b == 0) {
+                    printf("Division by zero!");
+                    return "null";
+                }
 
-                    stack_push(&c_stack, a / b);
+                stack_push(&c_stack, a / b);
+            break;
 
-                break;
+            case 'p':
+                a = stack_pop(&c_stack);
+                b = stack_pop(&c_stack);
+
+                int answer = 1;
+                for (int i = 0; i < b; i++)
+                    answer *= a;
+
+                stack_push(&c_stack, answer);
+            break;
         }
     }
 

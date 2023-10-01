@@ -1,14 +1,10 @@
-#include "shell.h"
+#include "include/shell.h"
 
-
-char* currentPassword;
+char currentPassword[6] = "12345";
 
 void shell() {
     shell_start_screen();
     init_directory(); 
-
-    currentPassword = (char*)malloc(6);
-    strcpy(currentPassword, "12345\0");
 
     while (1) {
         char* path = get_full_temp_name();
@@ -16,7 +12,7 @@ void shell() {
 
         char* command = keyboard_read(VISIBLE_KEYBOARD);
         if (strstr(command, "cordell") == 0)
-            execute_command(command + strlen("cordell"), CORDELL_ACCESS);
+            execute_command(command + strlen("cordell") + 1, CORDELL_ACCESS);
         else
             execute_command(command, DEFAULT_ACCESS);
 
@@ -26,13 +22,13 @@ void shell() {
 }
 
 void shell_start_screen() {
-    
     printf("  _____  ____  ____   ___    ___ ||    ||        ____    ____\r\n");
     printf("_|      ||  || || ||  || || ||   ||    ||       ||  ||  |    \r\n");
     printf("||      ||  || ||_||  || || ||   ||    ||       ||  || ||    \r\n");
     printf("||      ||  || |||    || || ||__ ||    ||       ||  || ||    \r\n");
     printf("||      ||  || || ||  || || ||   ||    ||       ||  || ||    \r\n");
     printf(" |_____  |__|  ||  || ||_|| ||__ ||___ ||___     |__|   |____\r\n");
+
     printf("\r\n Questo sistema operativo 'e in costruzione. \r\n");
 }
 
@@ -52,7 +48,6 @@ void shell_start_screen() {
             if (access_level == 1) {
                 printf("\r\n[PAROLA D'ORDINE]: ");
                 char* password = keyboard_read(HIDDEN_KEYBOARD);
-
                 int tries = 0;
 
                 while (strcmp(password, currentPassword) != 0) {
@@ -60,7 +55,7 @@ void shell_start_screen() {
                     free(password);
 
                     password = keyboard_read(HIDDEN_KEYBOARD);
-                    if (tries >= 4) 
+                    if (++tries >= MAX_ATTEMPT_COUNT) 
                         return;
                 }
 
@@ -97,9 +92,9 @@ void shell_start_screen() {
         //
 
             if (strstr(command_line[0], "aiuto") == 0) {
-                printf("\r\n> Usa l'aiuto per ottenere aiuto");
+                printf("\r\n> Usa aiuto per ottenere aiuto");
                 printf("\r\n> Utilizzare clear per la pulizia dello schermo");
-                printf("\r\n> Usa l'eco per l'eco");
+                printf("\r\n> Usa eco per l'eco");
                 printf("\r\n> Utilizza la calc per i calcoli (+, -, * e /)");
                 printf("\r\n> Utilizzare setpas per impostare la password per cordell");
                 printf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
@@ -112,21 +107,19 @@ void shell_start_screen() {
                 printf("\r\n> Usa dir per guardare tutto cosa in dir");
 
                 printf("\r\n> Usa view per guardare tutto data in file");
-                printf("\r\n> Usa nano per modifica data in file");
+                printf("\r\n> Usa edit per modifica data in file");
                 printf("\r\n> Usa run per run file");
             }
 
             else if (strstr(command_line[0], "clear") == 0) 
                 VGA_clrscr();
 
-            else if (strstr(command_line[0], "eco") == 0) {
-                char* echo = command_line[1]; 
-                printf("\r\n%s", echo);
-            }
+            else if (strstr(command_line[0], "eco") == 0) 
+                printf("\r\n%s", command_line[1]);
 
             if (strstr(command_line[0], "setpas") == 0) {
                 if (access_level == 0) {
-                    printf("\r\nYou don`t have permissions. Use cordell.\r\n");                 
+                    printf("\r\n%s\r\n", CORDELL_ATTENTION);                 
                     return;
                 }
 
@@ -198,7 +191,7 @@ void shell_start_screen() {
                 }   
             
             else if (strstr(command_line[0], "dir") == 0) {                                         // List of all files
-                struct Directory* current_dir = get_current_directory()->subDirectory;              // Print dirs
+                struct TempDirectory* current_dir = get_current_directory()->subDirectory;          // Print dirs
                 if (current_dir != NULL) {                                                          //
                     printf("\t%s", current_dir->name);                                              //
             
@@ -208,7 +201,7 @@ void shell_start_screen() {
                     }                                                                               //
                 }                                                                                   //
             
-                struct File* current = get_current_directory()->files;                              // Print files
+                struct TempFile* current = get_current_directory()->files;                          // Print files
                 if (current != NULL) {                                                              //
                     printf("\t%s", current->name);                                                  //
             
@@ -220,12 +213,12 @@ void shell_start_screen() {
             }                                                                                       //
 
             else if (strstr(command_line[0], "view") == 0) {
-                struct File* file = find_temp_file(command_line[1]);
+                struct TempFile* file = find_temp_file(command_line[1]);
                 if (file == NULL)
                     return;
                 
                 if (strcmp(file->fileType, "0") == 0 && access_level == DEFAULT_ACCESS) {
-                    printf("\r\nYou don`t have permissions. Use cordell.\r\n");
+                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
                     return;
                 }
 
@@ -260,29 +253,29 @@ void shell_start_screen() {
                 printf("\r\n> Risposta: %s", calculator(tokens, tokenCount));
             }
 
-            else if (strstr(command_line[0], "nano") == 0) {
-                struct File* file = find_temp_file(command_line[1]);
+            else if (strstr(command_line[0], "edit") == 0) {
+                struct TempFile* file = find_temp_file(command_line[1]);
                 if (file == NULL)
                     return;
                 
                 if (strcmp(file->fileType, "0") == 0 && access_level == DEFAULT_ACCESS) {
-                    printf("\r\nYou don`t have permissions. Use cordell.\r\n");
+                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
                     return;
                 }
 
                 VGA_clrscr();
-                printf("You are editing file. Use CAPSLOCK to exit.\r\n\r\n");
+                printf("Stai modificando il file. Utilizzare CAPSLOCK per uscire.\r\n\r\n");
 
                 file->content = keyboard_edit(file->content);
             }
 
             else if (strstr(command_line[0], "run") == 0) {
-                struct File* execute = find_temp_file(command_line[1]);
+                struct TempFile* execute = find_temp_file(command_line[1]);
                 if (execute == NULL)
                     return;
                 
                 if (strcmp(execute->fileType, "0") == 0 && access_level == DEFAULT_ACCESS) {
-                    printf("\r\nYou don`t have permissions. Use cordell.\r\n");
+                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
                     return;
                 }
 
