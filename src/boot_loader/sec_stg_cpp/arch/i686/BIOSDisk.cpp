@@ -53,24 +53,24 @@ struct ExtendedDriveParameters {
 EXPORT bool ASMCALL i686_Disk_ExtendedGetDriveParams(uint8_t drive,
                                                      ExtendedDriveParameters* params);
 
-BIOSDisk::BIOSDisk(uint8_t id): m_Id(id), m_Pos(-1), m_Size(0) { }
+BIOSDisk::BIOSDisk(uint8_t id): _Id(id), _Pos(-1), _Size(0) { }
 
 bool BIOSDisk::Initialize() {
-    m_HaveExtensions = i686_Disk_ExtensionsPresent(m_Id);
+    _HaveExtensions = i686_Disk_ExtensionsPresent(_Id);
 
-    if (m_HaveExtensions) {
+    if (_HaveExtensions) {
         ExtendedDriveParameters params;
         params.ParamsSize = sizeof(ExtendedDriveParameters);
 
-        if (!i686_Disk_ExtendedGetDriveParams(m_Id, &params))
+        if (!i686_Disk_ExtendedGetDriveParams(_Id, &params))
             return false;
 
         Assert(params.BytesPerSector == SectorSize);
-        m_Size = SectorSize * params.Sectors;
+        _Size = SectorSize * params.Sectors;
     }
     else {
         uint8_t driveType;
-        if (!i686_Disk_GetDriveParams(m_Id, &driveType, &m_Cylinders, &m_Sectors, &m_Heads))
+        if (!i686_Disk_GetDriveParams(_Id, &driveType, &_Cylinders, &_Sectors, &_Heads))
             return false;
     }
 
@@ -78,49 +78,49 @@ bool BIOSDisk::Initialize() {
 }
 
 size_t BIOSDisk::Read(uint8_t* data, size_t size) {
-    size_t initialPos = m_Pos;
-    if (m_Pos == -1) {
+    size_t initialPos = _Pos;
+    if (_Pos == -1) {
         ReadNextSector();
-        m_Pos = 0;
+        _Pos = 0;
     }
 
-    if (m_Pos >= m_Size)
+    if (_Pos >= _Size)
         return 0;
     
     while (size > 0) {
-        size_t bufferPos    = m_Pos % SectorSize;
+        size_t bufferPos    = _Pos % SectorSize;
         size_t canRead      = Min(size, SectorSize - bufferPos);
 
-        Memory::Copy(data, m_Buffer + bufferPos, canRead);
+        Memory::Copy(data, _Buffer + bufferPos, canRead);
 
         size    -= canRead;
         data    += canRead;
-        m_Pos   += canRead;
+        _Pos   += canRead;
 
         if (size > 0) 
             ReadNextSector();
     }
 
-    return m_Pos - initialPos;
+    return _Pos - initialPos;
 }
 
 bool BIOSDisk::ReadNextSector() {
-    uint64_t lba    = m_Pos / SectorSize;
+    uint64_t lba    = _Pos / SectorSize;
     bool ok         = false;
 
-    if (m_HaveExtensions) {
+    if (_HaveExtensions) {
         ExtendedReadParameters params;
 
         params.ParamsSize   = sizeof(ExtendedDriveParameters);
         params.Reserved     = 0;
         params.Count        = 1;
-        params.Buffer       = ToSegOffset(m_Buffer);
+        params.Buffer       = ToSegOffset(_Buffer);
         params.LBA          = lba;
 
         for (int i = 0; i < 3 && !ok; i++)  {
-            ok = i686_Disk_ExtendedRead(m_Id, &params);
+            ok = i686_Disk_ExtendedRead(_Id, &params);
             if (!ok)
-                i686_Disk_Reset(m_Id);
+                i686_Disk_Reset(_Id);
         }
     }
     else {
@@ -128,9 +128,9 @@ bool BIOSDisk::ReadNextSector() {
         LbaToChs(lba, &cylinder, &sector, &head);
 
         for (int i = 0; i < 3 && !ok; i++)  {
-            ok = i686_Disk_Read(m_Id, cylinder, sector, head, 1, m_Buffer);
+            ok = i686_Disk_Read(_Id, cylinder, sector, head, 1, _Buffer);
             if (!ok)
-                i686_Disk_Reset(m_Id);
+                i686_Disk_Reset(_Id);
         }
     }
 
@@ -142,24 +142,24 @@ size_t BIOSDisk::Print(const uint8_t* data, size_t size) {
 }
 
 void BIOSDisk::LbaToChs(uint32_t lba, uint16_t* cylinderOut, uint16_t* sectorOut, uint16_t* headOut) {
-    *sectorOut      = lba % m_Sectors + 1;              // sector = (LBA % sectors per track + 1)
-    *cylinderOut    = (lba / m_Sectors) / m_Heads;      // cylinder = (LBA / sectors per track) / heads
-    *headOut        = (lba / m_Sectors) % m_Heads;      // head = (LBA / sectors per track) % heads
+    *sectorOut      = lba % _Sectors + 1;              // sector = (LBA % sectors per track + 1)
+    *cylinderOut    = (lba / _Sectors) / _Heads;      // cylinder = (LBA / sectors per track) / heads
+    *headOut        = (lba / _Sectors) % _Heads;      // head = (LBA / sectors per track) % heads
 }
 
 bool BIOSDisk::Seek(SeekPosition pos, int rel) {
     switch (pos) {
         case SeekPosition::StartPosition:
-            m_Pos = -1;
+            _Pos = -1;
             return true;
 
         case SeekPosition::CurrentPosition:
-            m_Pos += rel;
+            _Pos += rel;
             ReadNextSector();
             return true;
 
         case SeekPosition::EndPosition:
-            m_Pos = m_Size;
+            _Pos = _Size;
             return true;
     }
 
@@ -167,9 +167,9 @@ bool BIOSDisk::Seek(SeekPosition pos, int rel) {
 }
 
 size_t BIOSDisk::Size() {
-    return m_Size;
+    return _Size;
 }
 
 size_t BIOSDisk::Position() {
-    return m_Pos;
+    return _Pos;
 }

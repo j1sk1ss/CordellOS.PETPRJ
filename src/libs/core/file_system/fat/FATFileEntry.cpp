@@ -4,41 +4,41 @@
 #include <file_system/FATFileSystem.hpp>
 #include <core/Debug.hpp>
 
-FATFileEntry::FATFileEntry() : m_FS(), m_DirEntry() {}
+FATFileEntry::FATFileEntry() : _FS(), _DirEntry() {}
 
 void FATFileEntry::Release() {
-    m_FS->ReleaseFileEntry(this);
+    _FS->ReleaseFileEntry(this);
 }
 
 void FATFileEntry::Initialize(FATFileSystem* fs, const FATDirectoryEntry& dirEntry) {
-    m_FS        = fs;
-    m_DirEntry  = dirEntry;
+    _FS        = fs;
+    _DirEntry  = dirEntry;
 }
 
 const char* FATFileEntry::Name() {
-    return reinterpret_cast<const char*>(m_DirEntry.Name);
+    return reinterpret_cast<const char*>(_DirEntry.Name);
 }
 
 const FileType FATFileEntry::Type() {
-    if (m_DirEntry.Attributes & FAT_ATTRIBUTE_DIRECTORY)
+    if (_DirEntry.Attributes & FAT_ATTRIBUTE_DIRECTORY)
         return FileType::Directory;
 
     return FileType::File;
 }
 
 File* FATFileEntry::Open(FileOpenMode mode) {
-    FATFile* file = m_FS->AllocateFile();
+    FATFile* file = _FS->AllocateFile();
     if (file == nullptr) {
         Debug::Error("FAT File Entry: 32", "FAT Open error!");
         return nullptr;
     }
 
     // setup vars
-    uint32_t size           = m_DirEntry.Size;
-    uint32_t firstCluster   = m_DirEntry.FirstClusterLow + ((uint32_t)m_DirEntry.FirstClusterHigh << 16);
+    uint32_t size           = _DirEntry.Size;
+    uint32_t firstCluster   = _DirEntry.FirstClusterLow + ((uint32_t)_DirEntry.FirstClusterHigh << 16);
 
-    if (!file->Open(m_FS, firstCluster, Name(), size, m_DirEntry.Attributes & FAT_ATTRIBUTE_DIRECTORY)) {
-        m_FS->ReleaseFile(file);
+    if (!file->Open(_FS, firstCluster, Name(), size, _DirEntry.Attributes & FAT_ATTRIBUTE_DIRECTORY)) {
+        _FS->ReleaseFile(file);
         return nullptr;
     }
 

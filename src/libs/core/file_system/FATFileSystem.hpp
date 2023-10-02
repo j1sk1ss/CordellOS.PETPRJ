@@ -17,8 +17,8 @@ class FATFileSystem : public FileSystem {
         bool ReadSectorFromCluster(uint32_t cluster, uint32_t sectorOffset, uint8_t* buffer);
         uint32_t GetNextCluster(uint32_t currentCluster);
 
-        uint8_t FatType() const { return m_FatType; }
-        FATData& Data() { return *m_Data; }
+        uint8_t FatType() const { return _FatType; }
+        FATData& Data() { return *_Data; }
 
         FATFile* AllocateFile();
         void ReleaseFile(FATFile*);
@@ -32,10 +32,10 @@ class FATFileSystem : public FileSystem {
         void DetectFatType();
         bool ReadFat(uint32_t lbaOffset);
 
-        BlockDevice* m_Device;
-        FATData* m_Data;
-        uint32_t m_DataSectionLba;
-        uint8_t m_FatType;
-        uint32_t m_TotalSectors;
-        uint32_t m_SectorsPerFat;
+        BlockDevice* _Device;
+        FATData* _Data;
+        uint32_t _DataSectionLba;
+        uint8_t _FatType;
+        uint32_t _TotalSectors;
+        uint32_t _SectorsPerFat;
 };
