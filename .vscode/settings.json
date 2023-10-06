@@ -45,7 +45,12 @@
         "hal.h": "c",
         "*.def": "c",
         "cstdio": "c",
-        "io_context": "c"
+        "io_context": "c",
+        "malloc.h": "c",
+        "math.h": "c",
+        "stdlib.h": "c",
+        "vbe.h": "c",
+        "x86.h": "c"
     },
     "git.ignoreLimitWarning": true,
     "C_Cpp.errorSquiggles": "disabled"

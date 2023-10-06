@@ -444,10 +444,12 @@ section .data
     endstruc
 
 section .data
+
     global boot_table_lba
     boot_table_lba:         dd 0
 
 section .bss
+    
     have_extensions:        resb 1
     buffer:                 resb 512
     partition_entry:        resb 16
