@@ -7,5 +7,6 @@ Simple OS based on .asm / .c double stage boot loader, and .c / .cpp based kerne
 - CPP kernel
 - Working with files (create/edit/delete)
 - USER switching
+- С/CPP in-build compiler
 
 ![Alt Text](https://github.com/j1sk1ss/CordellOS.MPRJ/blob/main/cover.png)
