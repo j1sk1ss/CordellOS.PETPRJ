@@ -2,27 +2,27 @@
 
 #include "../include/string.h"
 
-struct File {
+struct TempFile {
     char* fileType;
 
     char* name;
     char* content;
 
-    struct File* next;
+    struct TempFile* next;
 };
 
-struct Directory  {
+struct TempDirectory  {
     char* name;
 
-    struct File* files;
+    struct TempFile* files;
 
-    struct Directory* next;
+    struct TempDirectory* next;
 
-    struct Directory* subDirectory;
-    struct Directory* upDirectory;
+    struct TempDirectory* subDirectory;
+    struct TempDirectory* upDirectory;
 };
 
-struct Directory* get_current_directory();
+struct TempDirectory* get_current_directory();
 
 char* get_full_temp_name();
 
@@ -34,8 +34,8 @@ void cordell_delete_temp_directory(char* name);
 void delete_temp_file(char* name);
 void cordell_delete_temp_file(char* name);
 
-struct File* find_temp_file(char* name);
-struct Directory* find_temp_directory(char* name);
+struct TempFile* find_temp_file(char* name);
+struct TempDirectory* find_temp_directory(char* name);
 
 void move_to_temp_directory(char* name);
 void up_from_temp_directory();

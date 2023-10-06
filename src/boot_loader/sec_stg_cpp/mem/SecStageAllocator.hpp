@@ -10,7 +10,7 @@ class SecStageAllocator : public Allocator {
         virtual void Free(void* addr) override;
 
     private:
-        uint8_t* m_Base;
-        uint32_t m_Allocated;
-        uint32_t m_Limit;
+        uint8_t* _Base;
+        uint32_t _Allocated;
+        uint32_t _Limit;
 };

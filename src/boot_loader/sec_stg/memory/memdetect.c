@@ -1,8 +1,6 @@
-#include "x86/x86.h"
-
-#include "memdetect.h"
-
-#include "std/stdio.h"
+#include "../include/x86.h"
+#include "../include/memdetect.h"
+#include "../include/stdio.h"
 
 #include <boot/bootparams.h>
 

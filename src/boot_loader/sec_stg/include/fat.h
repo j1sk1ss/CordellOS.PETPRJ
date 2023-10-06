@@ -1,10 +1,9 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "mbr.h"
-
-#include <stdbool.h>
 
 typedef struct {
     uint8_t Name[11];

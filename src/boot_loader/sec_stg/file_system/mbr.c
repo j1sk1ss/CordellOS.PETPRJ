@@ -1,8 +1,6 @@
-#include "mbr.h"
-
-#include "memory/memory.h"
-
-#include "std/stdio.h"
+#include "../include/mbr.h"
+#include "../include/memory.h"
+#include "../include/stdio.h"
 
 typedef struct  {
     uint8_t Attributes;

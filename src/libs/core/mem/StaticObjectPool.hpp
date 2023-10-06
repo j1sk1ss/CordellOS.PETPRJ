@@ -9,28 +9,28 @@ class StaticObjectPool {
         void Free(T* object);
 
     private:
-        T m_Objects[PoolSize] {};
-        bool m_ObjectInUse[PoolSize] {};
-        size_t m_Size;
+        T _Objects[PoolSize] {};
+        bool _ObjectInUse[PoolSize] {};
+        size_t _Size;
 };
 
 template <typename T, size_t PoolSize>
-StaticObjectPool<T, PoolSize>::StaticObjectPool() : m_Size(0) {
+StaticObjectPool<T, PoolSize>::StaticObjectPool() : _Size(0) {
     for (size_t i = 0; i < PoolSize; i++)
-        m_ObjectInUse[i] = false;
+        _ObjectInUse[i] = false;
 }
 
 template <typename T, size_t PoolSize>
 T* StaticObjectPool<T, PoolSize>::Allocate() {
-    if (m_Size >= PoolSize)
+    if (_Size >= PoolSize)
         return nullptr;
 
     for (size_t i = 0; i < PoolSize; i++) {
-        size_t idx = (i + m_Size) % PoolSize;
-        if (!m_ObjectInUse[idx]) {
-            m_ObjectInUse[idx] = true;
-            m_Size++;
-            return &m_Objects[idx];
+        size_t idx = (i + _Size) % PoolSize;
+        if (!_ObjectInUse[idx]) {
+            _ObjectInUse[idx] = true;
+            _Size++;
+            return &_Objects[idx];
         }
     }
 
@@ -40,10 +40,10 @@ T* StaticObjectPool<T, PoolSize>::Allocate() {
 
 template <typename T, size_t PoolSize>
 void StaticObjectPool<T, PoolSize>::Free(T* object) {
-    if (object < m_Objects || object >= m_Objects + PoolSize)
+    if (object < _Objects || object >= _Objects + PoolSize)
         return;
 
-    size_t idx = object - m_Objects;
-    m_ObjectInUse[idx] = false;
-    m_Size--;
+    size_t idx = object - _Objects;
+    _ObjectInUse[idx] = false;
+    _Size--;
 }

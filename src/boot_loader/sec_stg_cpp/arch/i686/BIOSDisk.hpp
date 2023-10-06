@@ -20,16 +20,16 @@ class BIOSDisk : public BlockDevice {
 
         static inline const constexpr int SectorSize = 512;
 
-        uint8_t m_Id;
+        uint8_t _Id;
 
-        bool m_HaveExtensions;
+        bool _HaveExtensions;
 
-        uint16_t m_Cylinders;
-        uint16_t m_Sectors;
-        uint16_t m_Heads;
+        uint16_t _Cylinders;
+        uint16_t _Sectors;
+        uint16_t _Heads;
 
-        uint8_t m_Buffer[SectorSize];
+        uint8_t _Buffer[SectorSize];
 
-        uint64_t m_Pos;
-        uint64_t m_Size;
+        uint64_t _Pos;
+        uint64_t _Size;
 };

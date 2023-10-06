@@ -159,7 +159,7 @@ void puts(const char* str) {
 //  Define variables
 //
 
-const char g_HexChars[] = "0123456789abcdef";
+const char _HexChars[] = "0123456789abcdef";
 
 void printf_unsigned(unsigned long long number, int radix){
     char buffer[32];
@@ -168,7 +168,7 @@ void printf_unsigned(unsigned long long number, int radix){
     do {
         unsigned long long rem = number % radix;
         number /= radix;
-        buffer[pos++] = g_HexChars[rem];
+        buffer[pos++] = _HexChars[rem];
     } while (number > 0);
 
     // print number in reverse order
@@ -355,8 +355,8 @@ void print_buffer(const char* msg, const void* buffer, uint16_t count) {
     
     puts(msg);
     for (uint16_t i = 0; i < count; i++) {
-        putc(g_HexChars[u8Buffer[i] >> 4]);
-        putc(g_HexChars[u8Buffer[i] & 0xF]);
+        putc(_HexChars[u8Buffer[i] >> 4]);
+        putc(_HexChars[u8Buffer[i] & 0xF]);
     }
     
     puts("\n");

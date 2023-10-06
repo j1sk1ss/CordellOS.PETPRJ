@@ -1,11 +1,9 @@
-#include "elf.h"
-#include "fat.h"
-
-#include "memory/memdefs.h"
-#include "memory/memory.h"
-
-#include "std/math.h"
-#include "std/stdio.h"
+#include "../include/elf.h"
+#include "../include/fat.h"
+#include "../include/memdefs.h"
+#include "../include/memory.h"
+#include "../include/math.h"
+#include "../include/stdio.h"
 
 bool ELF_Read(Partition* part, const char* path, void** entryPoint) {
     uint8_t* headerBuffer   = MEMORY_ELF_ADDR;
@@ -17,7 +15,7 @@ bool ELF_Read(Partition* part, const char* path, void** entryPoint) {
     // Read header
     FAT_File* fd = FAT_open(part, path);
     if ((read = FAT_read(part, fd, sizeof(ELFHeader), headerBuffer)) != sizeof(ELFHeader)) {
-        printf("ELF Load error!\n");
+        printf("[elf.c 18] FAT read error!\n");
         return false;
     }
 
@@ -45,7 +43,7 @@ bool ELF_Read(Partition* part, const char* path, void** entryPoint) {
 
     filePos += FAT_read(part, fd, programHeaderOffset - filePos, headerBuffer);
     if ((read = FAT_read(part, fd, programHeaderSize, headerBuffer)) != programHeaderSize) {
-        printf("ELF Load error!\n");
+        printf("[elf.c 46] FAT read error!\n");
         return false;
     }
 
@@ -60,29 +58,30 @@ bool ELF_Read(Partition* part, const char* path, void** entryPoint) {
             uint8_t* virtAddress = (uint8_t*)progHeader->VirtualAddress;
             memset(virtAddress, 0, progHeader->MemorySize);
             
-            // ugly nasty seeking
             // TODO: proper seeking
             fd = FAT_open(part, path);
-            while (progHeader->Offset > 0) 
-            {
+            while (progHeader->Offset > 0)  {
                 uint32_t shouldRead = min(progHeader->Offset, MEMORY_LOAD_SIZE);
                 read = FAT_read(part, fd, shouldRead, loadBuffer);
+
                 if (read != shouldRead) {
-                    printf("ELF Load error!\n");
+                    printf("[elf.c 68] FAT read error!\n");
                     return false;
                 }
+
                 progHeader->Offset -= read;
             }
 
             // read program
-            while (progHeader->FileSize > 0) 
-            {
+            while (progHeader->FileSize > 0) {
                 uint32_t shouldRead = min(progHeader->FileSize, MEMORY_LOAD_SIZE);
                 read = FAT_read(part, fd, shouldRead, loadBuffer);
+
                 if (read != shouldRead) {
-                    printf("ELF Load error!\n");
+                    printf("[elf.c 81] FAT read error!\n");
                     return false;
                 }
+
                 progHeader->FileSize -= read;
 
                 memcpy(virtAddress, loadBuffer, read);

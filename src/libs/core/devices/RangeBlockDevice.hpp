@@ -14,7 +14,7 @@ class RangeBlockDevice : public BlockDevice {
         virtual size_t Position() override;
 
     private:
-        BlockDevice* m_Device;
-        size_t m_RangeBegin;
-        size_t m_RangeSize;
+        BlockDevice* _Device;
+        size_t _RangeBegin;
+        size_t _RangeSize;
 };

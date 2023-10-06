@@ -48,23 +48,31 @@ bool TextDevice::VPrintf(const char* string, va_list args) {
         switch (state) {
             case FormatState::Normal:
                 switch (*string) {
-                    case '%':   state = FormatState::Length;
-                                break;
-                    default:    ok = ok && Print(*string);
-                                break;
+                    case '%':   
+                        state = FormatState::Length;
+                    break;
+
+                    default:    
+                        ok = ok && Print(*string);
+                    break;
                 }
 
                 break;
 
             case FormatState::Length:
                 switch (*string) {
-                    case 'h':   length = FormatLength::Short;
-                                state = FormatState::LengthShort;
-                                break;
-                    case 'l':   length = FormatLength::Long;
-                                state = FormatState::LengthLong;
-                                break;
-                    default:    goto FormatState_Spec;
+                    case 'h':   
+                        length = FormatLength::Short;
+                        state = FormatState::LengthShort;
+                    break;
+    
+                    case 'l':
+                       length = FormatLength::Long;
+                       state = FormatState::LengthLong;
+                    break;
+
+                    default:    
+                        goto FormatState_Spec;
                 }
 
                 break;
@@ -90,15 +98,17 @@ bool TextDevice::VPrintf(const char* string, va_list args) {
             case FormatState::Spec:
             FormatState_Spec:
                 switch (*string) {
-                    case 'c':   ok = ok && Print((char)va_arg(args, int));
-                                break;
+                    case 'c':   
+                        ok = ok && Print((char)va_arg(args, int));
+                    break;
 
                     case 's':   
-                                ok = ok && Print(va_arg(args, const char*));
-                                break;
+                        ok = ok && Print(va_arg(args, const char*));
+                    break;
 
-                    case '%':   ok = ok && Print('%');
-                                break;
+                    case '%':   
+                        ok = ok && Print('%');
+                    break;
 
                     case 'd':
                     case 'i':   
@@ -128,7 +138,8 @@ bool TextDevice::VPrintf(const char* string, va_list args) {
                     break;
 
                     // ignore invalid spec
-                    default:    break;
+                    default:    
+                    break;
                 }
 
                 if (number) {
@@ -136,28 +147,34 @@ bool TextDevice::VPrintf(const char* string, va_list args) {
                         switch (length) {
                             case FormatLength::ShortShort:
                             case FormatLength::Short:
-                            case FormatLength::Default:     ok = ok && Print(va_arg(args, int), radix);
-                                                            break;
+                            case FormatLength::Default:     
+                                ok = ok && Print(va_arg(args, int), radix);
+                            break;
 
-                            case FormatLength::Long:        ok = ok && Print(va_arg(args, long), radix);
-                                                            break;
+                            case FormatLength::Long:        
+                                ok = ok && Print(va_arg(args, long), radix);
+                            break;
 
-                            case FormatLength::LongLong:    ok = ok && Print(va_arg(args, long long), radix);
-                                                            break;
+                            case FormatLength::LongLong:    
+                                ok = ok && Print(va_arg(args, long long), radix);
+                            break;
                         }
                     }
                     else {
                         switch (length) {
                             case FormatLength::ShortShort:
                             case FormatLength::Short:
-                            case FormatLength::Default:     ok = ok && Print(va_arg(args, unsigned int), radix);
-                                                            break;
+                            case FormatLength::Default:     
+                                ok = ok && Print(va_arg(args, unsigned int), radix);
+                            break;
                                                             
-                            case FormatLength::Long:        ok = ok && Print(va_arg(args, unsigned  long), radix);
-                                                            break;
+                            case FormatLength::Long:        
+                                ok = ok && Print(va_arg(args, unsigned  long), radix);
+                            break;
 
-                            case FormatLength::LongLong:    ok = ok && Print(va_arg(args, unsigned  long long), radix);
-                                                            break;
+                            case FormatLength::LongLong:    
+                                ok = ok && Print(va_arg(args, unsigned  long long), radix);
+                            break;
                         }
                     }
                 }

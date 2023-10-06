@@ -25,11 +25,11 @@ void logf(const char* module, DebugLevel level, const char* fmt, ...) {
     fprintf(VFS_FD_DEBUG, "[CORDELL OS]: [%s] ", module);
 
     // Write text
-    vfprintf(VFS_FD_DEBUG, fmt, args);
+    vfprintf(VFS_FD_DEBUG, fmt, args, 0);
 
     // reset format
     fputs(_colorReset, VFS_FD_DEBUG);
-    fputc('\n', VFS_FD_DEBUG);
+    fputc('\n', VFS_FD_DEBUG, 0);
 
     va_end(args);
 }

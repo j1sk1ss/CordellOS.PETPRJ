@@ -19,6 +19,6 @@ class FATFileEntry : public FileEntry
         virtual File* Open(FileOpenMode mode) override;
 
     private:
-        FATFileSystem* m_FS;
-        FATDirectoryEntry m_DirEntry;
+        FATFileSystem* _FS;
+        FATDirectoryEntry _DirEntry;
 };
