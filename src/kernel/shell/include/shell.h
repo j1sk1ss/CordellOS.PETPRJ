@@ -1,5 +1,8 @@
 #include <include/stdio.h>
 #include <include/string.h>
+#include <include/date_time.h>
+#include <include/util.h>
+#include <include/hard_drive.h>
 
 #include "Keyboard.h"
 
@@ -18,9 +21,14 @@
     /////////////////
     //  COMMANDS
 
+        #define COMMAND_HELP                            "aiuto"
         #define COMMAND_CLEAR                           "clear" 
+        #define COMMAND_TIME                            "date"
         #define COMMAND_ECHO                            "eco"
         #define COMMAND_PASS                            "setpas"
+
+        #define COMMAND_DRIVES_LIST                     "drives"
+        #define COMMAND_GET_HDD_SECTOR                  "sector"
 
         #define COMMAND_CREATE_DIR                      "mkdir"
         #define COMMAND_DELETE_DIR                      "rmdir"

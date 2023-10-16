@@ -261,8 +261,13 @@ cont:
 }
 
 void backspace_string(char** str, size_t size) {
-    VGA_putchr(cursor_get_x() - 1, cursor_get_y(), ' ');
-    VGA_setcursor(cursor_get_x() - 1, cursor_get_y());
+    if (*str[size] == '\n') {
+        VGA_putchr(cursor_get_x() - 1, cursor_get_y() - 1, ' ');
+        VGA_setcursor(cursor_get_x() - 1, cursor_get_y() - 1); 
+    } else {
+        VGA_putchr(cursor_get_x() - 1, cursor_get_y(), ' ');
+        VGA_setcursor(cursor_get_x() - 1, cursor_get_y()); 
+    }
 
     char* buffer = (char*)malloc(size);
     memset(buffer, 0, sizeof(buffer));

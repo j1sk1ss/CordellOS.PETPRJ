@@ -9,7 +9,8 @@ void shell() {
 
     while (1) {
         char* path = get_full_temp_name();
-        printf("\r\n[CORDELL OS] $%s> ", path);
+        cprintf(FOREGROUND_GREEN, "\r\n[CORDELL OS]");
+        printf(" $%s> ", path);
 
         char *command = keyboard_read(VISIBLE_KEYBOARD);
         if (strstr(command, "cordell") == 0)
@@ -47,12 +48,12 @@ void shell_start_screen() {
         //
 
             if (access_level == 1) {
-                printf("\r\n[PAROLA D'ORDINE]: ");
+                cprintf(FOREGROUND_GREEN, "\r\n[PAROLA D'ORDINE]: ");
                 char* password = keyboard_read(HIDDEN_KEYBOARD);
                 int tries = 0;
 
                 while (strcmp(password, currentPassword) != 0) {
-                    printf("\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
+                    cprintf(FOREGROUND_RED, "\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
                     free(password);
 
                     password = keyboard_read(HIDDEN_KEYBOARD);
@@ -92,24 +93,27 @@ void shell_start_screen() {
         //
         //
 
-            if (strstr(command_line[0], "aiuto") == 0) {
-                printf("\r\n> Usa aiuto per ottenere aiuto");
-                printf("\r\n> Utilizzare clear per la pulizia dello schermo");
-                printf("\r\n> Usa eco per l'eco");
-                printf("\r\n> Utilizza la calc per i calcoli (+, -, * e /)");
-                printf("\r\n> Utilizzare setpas per impostare la password per cordell");
+            if (strstr(command_line[0], COMMAND_HELP) == 0) {
+                printf("\r\n> Usa [%s] per ottenere aiuto", COMMAND_HELP);
+                printf("\r\n> Utilizzare [%s] per la pulizia dello schermo", COMMAND_CLEAR);
+                printf("\r\n> Usa [%s] per l'eco", COMMAND_ECHO);
+                printf("\r\n> Utilizza la [%s] per i calcoli (+, -, * e /)", COMMAND_CALCULATOR);
+                printf("\r\n> Utilizzare [%s] per impostare la password per cordell", COMMAND_PASS);
                 printf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
 
-                printf("\r\n> Usa mkdir <nome> per cretore dir");
-                printf("\r\n> Usa mkfile <accesso> <nome> per cretore file");
-                printf("\r\n> Usa rmdir <nome> per elimita dir");
-                printf("\r\n> Usa cd <nome> per entranto dir");
-                printf("\r\n> Usa .. per uscire di dir");
-                printf("\r\n> Usa dir per guardare tutto cosa in dir");
+                printf("\r\n> Utilizzare [%s] che guardare tutte drivi", COMMAND_DRIVES_LIST);
+                printf("\r\n> Utilizzare [%s] con numerico per guardare sector data", COMMAND_GET_HDD_SECTOR);
 
-                printf("\r\n> Usa view per guardare tutto data in file");
-                printf("\r\n> Usa edit per modifica data in file");
-                printf("\r\n> Usa run per run file");
+                printf("\r\n> Usa [%s] <nome> per cretore dir", COMMAND_CREATE_DIR);
+                printf("\r\n> Usa [%s] <accesso> <nome> per cretore file", COMMAND_CREATE_FILE);
+                printf("\r\n> Usa [%s] <nome> per elimita dir", COMMAND_DELETE_FILE);
+                printf("\r\n> Usa [%s] <nome> per entranto dir", COMMAND_IN_DIR);
+                printf("\r\n> Usa [%s] per uscire di dir", COMMAND_OUT_DIR);
+                printf("\r\n> Usa [%s] per guardare tutto cosa in dir", COMMAND_LIST_DIR);
+
+                printf("\r\n> Usa [%s] per guardare tutto data in file", COMMAND_FILE_VIEW);
+                printf("\r\n> Usa [%s] per modifica data in file", COMMAND_FILE_EDIT);
+                printf("\r\n> Usa [%s] per run file", COMMAND_FILE_RUN);
             }
 
             else if (strstr(command_line[0], COMMAND_CLEAR) == 0) 
@@ -118,7 +122,7 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_ECHO) == 0) 
                 printf("\r\n%s", command_line[1]);
 
-            if (strstr(command_line[0], COMMAND_PASS) == 0) {
+            else if (strstr(command_line[0], COMMAND_PASS) == 0) {
                 if (access_level == 0) {
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);                 
                     return;
@@ -138,9 +142,62 @@ void shell_start_screen() {
                 currentPassword[strlen(currentPassword)]    = '\0';
             }
 
+            else if (strstr(command_line[0], COMMAND_TIME) == 0) {
+                datetime_read_rtc();
+                printf("\r\n%i/%i/%i\r\n%i:%i:%i", datetime_day, datetime_month, datetime_year, datetime_hour, datetime_minute, datetime_second);
+            }
+
         //
         //
         //  DEFAULT SHELL COMMANDS CLEAR, ECHO AND HELP
+        //
+        ///////////////////////////////////////////////////////////////////////////////////////////
+        //
+        //  FILE SYSTEM COMMANDS
+        //
+        //
+        
+            else if (strstr(command_line[0], COMMAND_GET_HDD_SECTOR) == 0) {
+                int LBA = command_line[1];
+
+                uint8_t slavebit = 0;
+                uint8_t sectorCount = 1;
+
+                outportb(0x1F6, 0xE0 | (slavebit << 4) | ((LBA >> 24) & 0x0F));
+                outportb(0x1F1, 0x00);
+                outportb(0x1F2, sectorCount);
+                outportb(0x1F3, (uint8_t)(LBA & 0xFF));
+                outportb(0x1F4, (uint8_t)((LBA >> 8) & 0xFF));
+                outportb(0x1F5, (uint8_t)((LBA >> 16) & 0xFF));
+                outportb(0x1F7, 0x20);
+
+                while ((inportb(0x1F7) & 0x8) == 0) 
+                    continue;
+
+                for (int n = 0; n < 256; n++) {
+                    uint16_t value = inportw(0x1F0);
+                    printf("%c%c", value & 0xFF, (value >> 8));
+                } 
+            }
+
+            else if (strstr(command_line[0], COMMAND_DRIVES_LIST) == 0) {
+                printf("\r\n");
+                cmos_select_register(0x10);
+                
+                uint8_t driveDesc   = cmos_read();
+                uint8_t drive0Desc  = driveDesc >> 4;
+                uint8_t drive1Desc  = driveDesc & 0x0F;
+
+                printf("DRIVE 0:  %s\r\n", drive_get_description(drive0Desc));
+                printf("DRIVE 1:  %s\r\n", drive_get_description(drive1Desc));
+                printf("DRIVE 2:  %i\r\n", harddrive_detect_devtype(0, 0x1F0, 0x3F6));
+                printf("DRIVE 3:  %i\r\n", harddrive_detect_devtype(1, 0x1F0, 0x3F6));
+            }
+
+        //
+        //
+        //
+        //  FILE SYSTEM COMMANDS
         //
         ///////////////////////////////////////////////////////////////////////////////////////////
         //
