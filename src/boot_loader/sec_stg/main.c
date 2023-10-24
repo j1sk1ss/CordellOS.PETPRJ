@@ -2,17 +2,17 @@
 
 #include <boot/bootparams.h>
 
-#include "include/x86.h"
-#include "include/vbe.h"
-#include "include/stdio.h"
-#include "include/stdlib.h"
-#include "include/elf.h"
-#include "include/mbr.h"
-#include "include/disk.h"
-#include "include/fat.h"
-#include "include/memdefs.h"
-#include "include/memory.h"
-#include "include/memdetect.h"
+#include "../libs/core/shared/include/x86.h"
+#include "../libs/core/shared/include/vbe.h"
+#include "../libs/core/shared/include/stdio.h"
+#include "../libs/core/shared/include/stdlib.h"
+#include "../libs/core/shared/include/elf.h"
+#include "../libs/core/shared/include/mbr.h"
+#include "../libs/core/shared/include/disk.h"
+#include "../libs/core/shared/include/fat.h"
+#include "../libs/core/shared/include/memdefs.h"
+#include "../libs/core/shared/include/memory.h"
+#include "../libs/core/shared/include/memdetect.h"
 
 // Place in memory where will be situated kernel
 uint8_t* KernelLoadBuffer   = (uint8_t*)MEMORY_LOAD_KERNEL;
@@ -21,7 +21,7 @@ uint8_t* Kernel             = (uint8_t*)MEMORY_KERNEL_ADDR;
 
 BootParams _bootParams;
 
-typedef void (*KernelStart)(BootParams* bootParams);
+typedef void (*KernelStart)(BootParams* bootParams, Partition* part);
 
 void __attribute__((cdecl)) start(uint16_t bootDrive, void* partition) {
     clrscr();
@@ -32,7 +32,7 @@ void __attribute__((cdecl)) start(uint16_t bootDrive, void* partition) {
 
         DISK disk;
         if (!DISK_initialize(&disk, bootDrive)) {
-            printf("[main.c 28] Disk init error\r\n");
+            printf("[main.c 35] Disk init error\r\n");
             goto end;
         }
 
@@ -46,7 +46,7 @@ void __attribute__((cdecl)) start(uint16_t bootDrive, void* partition) {
         MBR_detectPartition(&part, &disk, partition);
 
         if (!FAT_init(&part)) {
-            printf("[main.c 36] FAT init error\r\n");
+            printf("[main.c 49] FAT init error\r\n");
             goto end;
         }
 
@@ -63,12 +63,12 @@ void __attribute__((cdecl)) start(uint16_t bootDrive, void* partition) {
         // load kernel
         KernelStart kernelEntry;
         if (!ELF_Read(&part, "/boot/kernel.elf", (void**)&kernelEntry)) {
-            printf("[main.c 47] ELF read failed, booting halted");
+            printf("[main.c 66] ELF read failed, booting halted");
             goto end;
         }
 
         // execute kernel
-        kernelEntry(&_bootParams);
+        kernelEntry(&_bootParams, &part);
 
     // KERNEL LOADING
     //

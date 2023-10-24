@@ -30,7 +30,7 @@ int VFS_Write(fileDescriptorId file, uint8_t* data, size_t size) {
 int VFS_Color_Write(uint8_t color, uint8_t* data, size_t size) {
     for (size_t i = 0; i < size; i++) {
         VGA_putc(data[i]);
-        VGA_putcolor(cursor_get_x(), cursor_get_y(), color);
+        VGA_putcolor(cursor_get_x() - 1, cursor_get_y(), color);
     }
 
     return size;

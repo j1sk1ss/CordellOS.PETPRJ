@@ -94,26 +94,26 @@ void shell_start_screen() {
         //
 
             if (strstr(command_line[0], COMMAND_HELP) == 0) {
-                printf("\r\n> Usa [%s] per ottenere aiuto", COMMAND_HELP);
-                printf("\r\n> Utilizzare [%s] per la pulizia dello schermo", COMMAND_CLEAR);
-                printf("\r\n> Usa [%s] per l'eco", COMMAND_ECHO);
-                printf("\r\n> Utilizza la [%s] per i calcoli (+, -, * e /)", COMMAND_CALCULATOR);
-                printf("\r\n> Utilizzare [%s] per impostare la password per cordell", COMMAND_PASS);
+                printf("\r\n> Usa [%s] per ottenere aiuto",                             COMMAND_HELP);
+                printf("\r\n> Utilizzare [%s] per la pulizia dello schermo",            COMMAND_CLEAR);
+                printf("\r\n> Usa [%s] per l'eco",                                      COMMAND_ECHO);
+                printf("\r\n> Utilizza la [%s] per i calcoli (+, -, * e /)",            COMMAND_CALCULATOR);
+                printf("\r\n> Utilizzare [%s] per impostare la password per cordell",   COMMAND_PASS);
                 printf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
 
-                printf("\r\n> Utilizzare [%s] che guardare tutte drivi", COMMAND_DRIVES_LIST);
-                printf("\r\n> Utilizzare [%s] con numerico per guardare sector data", COMMAND_GET_HDD_SECTOR);
+                printf("\r\n> Utilizzare [%s] che guardare tutte drivi",                COMMAND_DRIVES_LIST);
+                printf("\r\n> Utilizzare [%s] con numerico per guardare sector data",   COMMAND_GET_HDD_SECTOR);
 
-                printf("\r\n> Usa [%s] <nome> per cretore dir", COMMAND_CREATE_DIR);
-                printf("\r\n> Usa [%s] <accesso> <nome> per cretore file", COMMAND_CREATE_FILE);
-                printf("\r\n> Usa [%s] <nome> per elimita dir", COMMAND_DELETE_FILE);
-                printf("\r\n> Usa [%s] <nome> per entranto dir", COMMAND_IN_DIR);
-                printf("\r\n> Usa [%s] per uscire di dir", COMMAND_OUT_DIR);
-                printf("\r\n> Usa [%s] per guardare tutto cosa in dir", COMMAND_LIST_DIR);
+                printf("\r\n> Usa [%s] <nome> per cretore dir",                         COMMAND_CREATE_DIR);
+                printf("\r\n> Usa [%s] <accesso> <nome> per cretore file",              COMMAND_CREATE_FILE);
+                printf("\r\n> Usa [%s] <nome> per elimita dir",                         COMMAND_DELETE_FILE);
+                printf("\r\n> Usa [%s] <nome> per entranto dir",                        COMMAND_IN_DIR);
+                printf("\r\n> Usa [%s] per uscire di dir",                              COMMAND_OUT_DIR);
+                printf("\r\n> Usa [%s] per guardare tutto cosa in dir",                 COMMAND_LIST_DIR);
 
-                printf("\r\n> Usa [%s] per guardare tutto data in file", COMMAND_FILE_VIEW);
-                printf("\r\n> Usa [%s] per modifica data in file", COMMAND_FILE_EDIT);
-                printf("\r\n> Usa [%s] per run file", COMMAND_FILE_RUN);
+                printf("\r\n> Usa [%s] per guardare tutto data in file",                COMMAND_FILE_VIEW);
+                printf("\r\n> Usa [%s] per modifica data in file",                      COMMAND_FILE_EDIT);
+                printf("\r\n> Usa [%s] per run file",                                   COMMAND_FILE_RUN);
             }
 
             else if (strstr(command_line[0], COMMAND_CLEAR) == 0) 
