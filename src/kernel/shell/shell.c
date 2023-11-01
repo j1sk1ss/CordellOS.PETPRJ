@@ -198,14 +198,21 @@ void shell_start_screen() {
 
             else if (strstr(command_line[0], COMMAND_SAVE_FILES) == 0) {
                 clearSector(100);
-                saveTempDirectory(100, get_main_directory());
+                
+                char result[512];
+                int index = 0;
+
+                saveTempDirectory(get_main_directory(), result, index);
+                writeSector(100, result);
             }
 
             else if (strstr(command_line[0], COMMAND_LOAD_FILES) == 0) {
-                struct TempDirectory* directory;
-                loadTempDirectory(100, directory);
+                int index = 0;
 
-                set_main_directory(directory);
+                char sector_data[512];
+                readSector(100, sector_data);
+
+                set_main_directory(loadTempDirectory(sector_data, index));
             }
 
             else if (strstr(command_line[0], COMMAND_DRIVES_LIST) == 0) {

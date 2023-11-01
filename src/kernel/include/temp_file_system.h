@@ -47,5 +47,5 @@ void up_from_temp_directory();
 void set_main_directory(struct TempDirectory* directory);
 struct TempDirectory* get_main_directory();
 
-void saveTempDirectory(uint32_t LBA, struct TempDirectory* directory);
-void loadTempDirectory(uint32_t LBA, struct TempDirectory* directory);
+void saveTempDirectory(struct TempDirectory* directory, char* result, int* index);
+struct TempDirectory* loadTempDirectory(const char* input, int* index);

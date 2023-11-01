@@ -291,77 +291,155 @@ void init_directory() {
 //  SAVING DATA TO DISK
 //
 
-    void serializeTempFile(struct TempFile* file, char* buffer) {
-        char sector_data[512];
-        readSector(file->sector, sector_data);
+    void saveTempDirectory(struct TempDirectory* directory, char* result, int* index) {
+        if (directory == NULL) {
+            return;
+        }
 
-        // Serialize fileType, name, and content
-        memcpy(buffer, file->fileType, sizeof(file->fileType));
-        memcpy(buffer + sizeof(file->fileType), file->name, sizeof(file->name));
-        memcpy(buffer + sizeof(file->fileType) + sizeof(file->name), sector_data, sizeof(sector_data));
+        // Add directory name to the result
+        strcat(result, directory->name);
+        (*index) += strlen(directory->name);
+
+        // Add a separator to differentiate between directory and file names
+        strcat(result, "|");
+        (*index)++;
+
+        // Recursively convert subdirectories
+        saveTempDirectory(directory->subDirectory, result, index);
+
+        // Add a separator to differentiate between subdirectories and files
+        strcat(result, "#");
+        (*index)++;
+
+        // Recursively convert files
+        struct TempFile* file = directory->files;
+        while (file != NULL) {
+            // Add file type, name, and sector information
+            strcat(result, file->fileType);
+            strcat(result, "|");
+            strcat(result, file->name);
+            strcat(result, "|");
+            strcat(result, file->sector);
+
+            (*index) += strlen(file->fileType) + strlen(file->name) + strlen(file->sector);
+
+            if (file->next != NULL) {
+                // Add a separator to differentiate between files
+                strcat(result, ",");
+                (*index)++;
+            }
+
+            file = file->next;
+        }
+
+        // Recursively convert next directories
+        strcat(result, "@");
+        (*index)++;
+
+        saveTempDirectory(directory->next, result, index);
     }
 
-    void deserializeTempFile(char* buffer, struct TempFile* file) {
-        // Deserialize fileType, name, and content
-        memcpy(file->fileType, buffer, sizeof(file->fileType));
-        memcpy(file->name, buffer + sizeof(file->fileType), sizeof(file->name));
-        memcpy(file->sector, buffer + sizeof(file->fileType) + sizeof(file->name), sizeof(file->sector));
-    }
-
-    // Function to serialize a TempDirectory to a buffer
-    void serializeTempDirectory(struct TempDirectory* directory, char* buffer) {
-        // Serialize name
-        memcpy(buffer, directory->name, sizeof(directory->name));
-        
-        // Serialize and save the next TempFile (if available)
-        if (directory->files) {
-            serializeTempFile(directory->files, buffer + sizeof(directory->name));
-        } else {
-            memset(buffer + sizeof(directory->name), 0, sizeof(struct TempFile));
+    struct TempDirectory* loadTempDirectory(const char* input, int* index) {
+        // Extract the directory name
+        int start = *index;
+        while (input[*index] != '|') {
+            (*index)++;
         }
         
-        // Serialize and save the next TempDirectory (if available)
-        if (directory->next) {
-            serializeTempDirectory(directory->next, buffer + sizeof(directory->name) + sizeof(struct TempFile));
+        char dirName[256];
+        strncpy(dirName, input + start, *index - start);
+        dirName[*index - start] = '\0';
+
+        // Create a directory node
+        struct TempDirectory* directory = malloc(sizeof(struct TempDirectory));
+        directory->name = strdup(dirName);
+        directory->upDirectory = NULL;
+
+        // Move past the separator
+        (*index)++;
+
+        // Recursively create subdirectories
+        if (input[*index] == '|') {
+            (*index)++;
+            directory->subDirectory = loadTempDirectory(input, index);
         } else {
-            memset(buffer + sizeof(directory->name) + sizeof(struct TempFile), 0, sizeof(struct TempDirectory));
+            directory->subDirectory = NULL;
         }
-        
-        // Serialize and save the subdirectory (if available)
-        if (directory->subDirectory) {
-            serializeTempDirectory(directory->subDirectory, buffer + sizeof(directory->name) + sizeof(struct TempFile) + sizeof(struct TempDirectory));
-        } else {
-            memset(buffer + sizeof(directory->name) + sizeof(struct TempFile) + sizeof(struct TempDirectory), 0, sizeof(struct TempDirectory));
+
+        // Move past the separator
+        (*index)++;
+
+        // Initialize file list
+        directory->files = NULL;
+        struct TempFile* currentFile = NULL;
+
+        // Parse files
+        while (input[*index] != '@') {
+            char fileType[4];
+            start = *index;
+
+            while (input[*index] != '|') {
+                (*index)++;
+            }
+
+            strncpy(fileType, input + start, *index - start);
+            fileType[*index - start] = '\0';
+
+            // Move past the separator
+            (*index)++;
+
+            start = *index;
+            while (input[*index] != '|') {
+                (*index)++;
+            }
+
+            char fileName[256];
+            strncpy(fileName, input + start, *index - start);
+            fileName[*index - start] = '\0';
+
+            // Move past the separator
+            (*index)++;
+
+            // Extract and store the sector directly as an integer
+            char sectorStr[4];
+            start = *index;
+            while (input[*index] != ',' && input[*index] != '@') {
+                sectorStr[*index - start] = input[*index];
+                (*index)++;
+            }
+
+            sectorStr[*index - start] = '\0';
+            int sector = atoi(sectorStr);
+
+            // Create a file node
+            struct TempFile* file = malloc(sizeof(struct TempFile));
+            file->fileType = strdup(fileType);
+            file->name = strdup(fileName);
+            file->sector = sector;
+            file->next = NULL;
+
+            if (currentFile == NULL) 
+                directory->files = file;
+                currentFile = file;
+            else 
+                currentFile->next = file;
+                currentFile = file;
+
+            // Move past the separator or comma
+            if (input[*index] == ',') 
+                (*index)++;
         }
-    }
 
-    // Function to deserialize a buffer into a TempDirectory
-    void deserializeTempDirectory(char* buffer, struct TempDirectory* directory) {
-        // Deserialize name
-        memcpy(directory->name, buffer, sizeof(directory->name));
-        
-        // Deserialize the next TempFile
-        deserializeTempFile(buffer + sizeof(directory->name), directory->files);
-        
-        // Deserialize the next TempDirectory
-        deserializeTempDirectory(buffer + sizeof(directory->name) + sizeof(struct TempFile), directory->next);
-        
-        // Deserialize the subdirectory
-        deserializeTempDirectory(buffer + sizeof(directory->name) + sizeof(struct TempFile) + sizeof(struct TempDirectory), directory->subDirectory);
-    }
+        // Move past the '@' separator
+        (*index)++;
 
-    // Function to save a TempDirectory to the disk
-    void saveTempDirectory(uint32_t LBA, struct TempDirectory* directory) {
-        char buffer[512];  // Assuming 512-byte sectors
-        serializeTempDirectory(directory, buffer);
-        writeSector(LBA, buffer);
-    }
+        // Recursively create next directories
+        if (input[*index] == '\0') 
+            directory->next = NULL;
+        else 
+            directory->next = loadTempDirectory(input, index);
 
-    // Function to load a TempDirectory from the disk
-    void loadTempDirectory(uint32_t LBA, struct TempDirectory* directory) {
-        char buffer[512];  // Assuming 512-byte sectors
-        readSector(LBA, buffer);
-        deserializeTempDirectory(buffer, directory);
+        return directory;
     }
 
 //
