@@ -1,0 +1,1 @@
+void printTable(int numRows, int numColumns, const char* tableData[], int columnWidth);

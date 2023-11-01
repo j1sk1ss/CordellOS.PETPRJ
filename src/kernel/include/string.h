@@ -26,3 +26,5 @@ void add_char_to_string(char** str, size_t size, char character);
 
 wchar_t* utf16_to_codepoint(wchar_t*  strin, int* codePointg);
 char* codepoint_to_utf8(int codePoint, char* stringOutput);
+
+int	atoi(char *str);

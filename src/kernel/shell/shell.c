@@ -2,11 +2,12 @@
 
 
 char *currentPassword = "12345";
+uint8_t sectors = 105;
 
 void shell() {
     shell_start_screen();
     init_directory(); 
-
+    
     while (1) {
         char* path = get_full_temp_name();
         cprintf(FOREGROUND_GREEN, "\r\n[CORDELL OS]");
@@ -102,7 +103,6 @@ void shell_start_screen() {
                 printf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
 
                 printf("\r\n> Utilizzare [%s] che guardare tutte drivi",                COMMAND_DRIVES_LIST);
-                printf("\r\n> Utilizzare [%s] con numerico per guardare sector data",   COMMAND_GET_HDD_SECTOR);
 
                 printf("\r\n> Usa [%s] <nome> per cretore dir",                         COMMAND_CREATE_DIR);
                 printf("\r\n> Usa [%s] <accesso> <nome> per cretore file",              COMMAND_CREATE_FILE);
@@ -153,31 +153,59 @@ void shell_start_screen() {
         //
         ///////////////////////////////////////////////////////////////////////////////////////////
         //
-        //  FILE SYSTEM COMMANDS
+        //  ATA COMMANDS
         //
         //
         
             else if (strstr(command_line[0], COMMAND_GET_HDD_SECTOR) == 0) {
-                int LBA = command_line[1];
+                if (access_level == CORDELL_ACCESS) {
+                    int LBA = atoi(command_line[1]);
+                    char buffer[512];
 
-                uint8_t slavebit = 0;
-                uint8_t sectorCount = 1;
+                    readSector(LBA, buffer);
 
-                outportb(0x1F6, 0xE0 | (slavebit << 4) | ((LBA >> 24) & 0x0F));
-                outportb(0x1F1, 0x00);
-                outportb(0x1F2, sectorCount);
-                outportb(0x1F3, (uint8_t)(LBA & 0xFF));
-                outportb(0x1F4, (uint8_t)((LBA >> 8) & 0xFF));
-                outportb(0x1F5, (uint8_t)((LBA >> 16) & 0xFF));
-                outportb(0x1F7, 0x20);
-
-                while ((inportb(0x1F7) & 0x8) == 0) 
-                    continue;
-
-                for (int n = 0; n < 256; n++) {
-                    uint16_t value = inportw(0x1F0);
-                    printf("%c%c", value & 0xFF, (value >> 8));
+                    printf("\r\n%s", buffer);
                 } 
+                else
+                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
+            }
+
+            else if (strstr(command_line[0], COMMAND_SET_HDD_SECTOR) == 0) {
+                if (access_level == CORDELL_ACCESS) {
+                    int LBA = atoi(command_line[1]);
+
+                    char* text =            
+                        command             
+                        + strlen(command_line[0])          
+                        + strlen(command_line[1])           
+                        + 2;
+
+                    writeSector(LBA, text);
+                }
+                else
+                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
+            }
+
+            else if (strstr(command_line[0], COMMAND_CLEAR_SECTOR) == 0) {
+                if (access_level == CORDELL_ACCESS) {
+                    int LBA = atoi(command_line[1]);
+
+                    clearSector(LBA);
+                }
+                else
+                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
+            }
+
+            else if (strstr(command_line[0], COMMAND_SAVE_FILES) == 0) {
+                clearSector(100);
+                saveTempDirectory(100, get_main_directory());
+            }
+
+            else if (strstr(command_line[0], COMMAND_LOAD_FILES) == 0) {
+                struct TempDirectory* directory;
+                loadTempDirectory(100, directory);
+
+                set_main_directory(directory);
             }
 
             else if (strstr(command_line[0], COMMAND_DRIVES_LIST) == 0) {
@@ -197,7 +225,7 @@ void shell_start_screen() {
         //
         //
         //
-        //  FILE SYSTEM COMMANDS
+        //  ATA COMMANDS
         //
         ///////////////////////////////////////////////////////////////////////////////////////////
         //
@@ -225,17 +253,9 @@ void shell_start_screen() {
                     break;
                 }                                              
             
-            else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0) {                           //
-                char* text =            
-                    command             
-                     + strlen(command_line[0])          
-                     + strlen(command_line[1])          
-                     + strlen(command_line[2])          
-                     + 3;           
-                
-                create_temp_file(command_line[1], command_line[2], text);                           // Name placed as third arg
-            }           
-                        
+            else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0)                
+                create_temp_file(command_line[1], command_line[2], ++sectors);                      // Name placed as third arg
+                             
             else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)                             // Delete file by name
                 switch (access_level) {
                     case DEFAULT_ACCESS:
@@ -279,7 +299,10 @@ void shell_start_screen() {
                     return;
                 }
 
-                printf("\r\n%s", file->content);
+                char sector_data[512];
+                readSector(file->sector, sector_data);
+
+                printf("\r\n%s", sector_data);
             }
 
         //
@@ -323,7 +346,10 @@ void shell_start_screen() {
                 VGA_clrscr();
                 printf("Stai modificando il file. Utilizzare CAPSLOCK per uscire.\r\n\r\n");
 
-                file->content = keyboard_edit(file->content);
+                char sector_data[512];
+                readSector(file->sector, sector_data);
+
+                writeSector(file->sector, keyboard_edit(sector_data));
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {
@@ -336,8 +362,11 @@ void shell_start_screen() {
                     return;
                 }
 
-                char* command_for_split = (char*)malloc(strlen(execute->content));  // not work
-                strcpy(command_for_split, execute->content);
+                char sector_data[512];
+                readSector(execute->sector, sector_data);
+
+                char* command_for_split = (char*)malloc(strlen(sector_data));
+                strcpy(command_for_split, sector_data);
 
                 char* lines[100];
                 int tokenCount = 0;

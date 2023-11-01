@@ -1,12 +1,14 @@
 #include <include/stdio.h>
 #include <include/string.h>
 #include <include/date_time.h>
-#include <include/util.h>
 #include <include/hard_drive.h>
+#include <include/temp_file_system.h>
+#include <include/ata.h>
+#include <include/util.h>
 
 #include "Keyboard.h"
+#include "table.h"
 
-#include "../libs/core/shared/file_system/temp_file_system.h"
 #include "../libs/core/shared/include/x86.h"
 
 #define CORDELL_ACCESS      1
@@ -28,7 +30,12 @@
         #define COMMAND_PASS                            "setpas"
 
         #define COMMAND_DRIVES_LIST                     "drives"
-        #define COMMAND_GET_HDD_SECTOR                  "sector"
+        #define COMMAND_GET_HDD_SECTOR                  "rsector"
+        #define COMMAND_SET_HDD_SECTOR                  "wsector"
+        #define COMMAND_CLEAR_SECTOR                    "clsector"
+
+        #define COMMAND_LOAD_FILES                      "loadfs"
+        #define COMMAND_SAVE_FILES                      "savefs"
 
         #define COMMAND_CREATE_DIR                      "mkdir"
         #define COMMAND_DELETE_DIR                      "rmdir"
