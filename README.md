@@ -5,7 +5,7 @@ Simple OS based on .asm / .c double stage boot loader, and .c / .cpp based kerne
 
 - RAM detection
 - CPP kernel
-- Working with files (create/edit/delete)
+- Working with files (create/edit/delete) (Completed)
 - USER switching
 - С/CPP in-build compiler
 
