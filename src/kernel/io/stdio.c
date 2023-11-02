@@ -39,8 +39,8 @@ void fputs(const char* str, fileDescriptorId file) {
 
 const char _HexChars[] = "0123456789abcdef";
 
-void fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radix) {
-    char buffer[32];
+char* fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radix) {
+    char* buffer = (char*)malloc(32);
     int pos = 0;
 
     // convert number to ASCII
@@ -51,8 +51,11 @@ void fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radi
     } while (number > 0);
 
     // print number in reverse order
-    while (--pos >= 0)
-        fputc(buffer[pos], file, 0);
+    if (file > 0)
+        while (--pos >= 0)
+            fputc(buffer[pos], file, 0);
+
+    return buffer;
 }
 
 void fprintf_signed(fileDescriptorId file, long long number, int radix) {

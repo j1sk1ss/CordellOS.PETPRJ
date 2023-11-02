@@ -5,6 +5,7 @@
 #include "string.h"
 #include "ata.h"
 #include "memory.h"
+#include "stdio.h"
 
 struct TempFile {
     char* fileType;
@@ -47,5 +48,5 @@ void up_from_temp_directory();
 void set_main_directory(struct TempDirectory* directory);
 struct TempDirectory* get_main_directory();
 
-void saveTempDirectory(struct TempDirectory* directory, char* result, int* index);
+void saveTempDirectory(struct TempDirectory* directory, char* result);
 struct TempDirectory* loadTempDirectory(const char* input, int* index);

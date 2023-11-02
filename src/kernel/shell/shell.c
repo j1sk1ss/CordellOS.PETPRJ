@@ -2,7 +2,6 @@
 
 
 char *currentPassword = "12345";
-uint8_t sectors = 105;
 
 void shell() {
     shell_start_screen();
@@ -157,18 +156,8 @@ void shell_start_screen() {
         //
         //
         
-            else if (strstr(command_line[0], COMMAND_GET_HDD_SECTOR) == 0) {
-                if (access_level == CORDELL_ACCESS) {
-                    int LBA = atoi(command_line[1]);
-                    char buffer[512];
-
-                    readSector(LBA, buffer);
-
-                    printf("\r\n%s", buffer);
-                } 
-                else
-                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
-            }
+            else if (strstr(command_line[0], COMMAND_GET_HDD_SECTOR) == 0) 
+                printf("\r\n%s", readSector(atoi(command_line[1])));
 
             else if (strstr(command_line[0], COMMAND_SET_HDD_SECTOR) == 0) {
                 if (access_level == CORDELL_ACCESS) {
@@ -200,19 +189,16 @@ void shell_start_screen() {
                 clearSector(100);
                 
                 char result[512];
-                int index = 0;
 
-                saveTempDirectory(get_main_directory(), result, index);
+                saveTempDirectory(get_main_directory(), result);
+
                 writeSector(100, result);
             }
 
             else if (strstr(command_line[0], COMMAND_LOAD_FILES) == 0) {
                 int index = 0;
 
-                char sector_data[512];
-                readSector(100, sector_data);
-
-                set_main_directory(loadTempDirectory(sector_data, index));
+                set_main_directory(loadTempDirectory(readSector(100), index));
             }
 
             else if (strstr(command_line[0], COMMAND_DRIVES_LIST) == 0) {
@@ -261,7 +247,7 @@ void shell_start_screen() {
                 }                                              
             
             else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0)                
-                create_temp_file(command_line[1], command_line[2], ++sectors);                      // Name placed as third arg
+                create_temp_file(command_line[1], command_line[2], findEmptySector());              // Name placed as third arg
                              
             else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)                             // Delete file by name
                 switch (access_level) {
@@ -306,10 +292,7 @@ void shell_start_screen() {
                     return;
                 }
 
-                char sector_data[512];
-                readSector(file->sector, sector_data);
-
-                printf("\r\n%s", sector_data);
+                printf("\r\n%s", readSector(file->sector));
             }
 
         //
@@ -353,10 +336,7 @@ void shell_start_screen() {
                 VGA_clrscr();
                 printf("Stai modificando il file. Utilizzare CAPSLOCK per uscire.\r\n\r\n");
 
-                char sector_data[512];
-                readSector(file->sector, sector_data);
-
-                writeSector(file->sector, keyboard_edit(sector_data));
+                writeSector(file->sector, keyboard_edit(readSector(file->sector)));
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {
@@ -369,9 +349,7 @@ void shell_start_screen() {
                     return;
                 }
 
-                char sector_data[512];
-                readSector(execute->sector, sector_data);
-
+                char* sector_data = readSector(execute->sector);
                 char* command_for_split = (char*)malloc(strlen(sector_data));
                 strcpy(command_for_split, sector_data);
 
@@ -388,6 +366,7 @@ void shell_start_screen() {
                     execute_command(lines[i], 0);
 
                 free(command_for_split);
+                free(sector_data);
             }
 
         //

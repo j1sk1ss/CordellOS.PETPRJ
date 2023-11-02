@@ -1,4 +1,4 @@
-#include "../../include/temp_file_system.h"
+#include "../../include/file_system.h"
 
 
 struct TempDirectory* mainDirectory;
@@ -56,11 +56,13 @@ void init_directory() {
         struct TempFile* newFile = malloc(sizeof(struct TempFile));
         memset(newFile, 0, sizeof(newFile));
 
-        newFile->name = malloc(strlen(name));;
+        newFile->name = malloc(strlen(name));
         memcpy(newFile->name, name, strlen(name));
 
-        newFile->fileType   = type;
-        newFile->sector     = sector;
+        newFile->fileType = malloc(strlen(type));
+        memcpy(newFile->fileType, type, strlen(type));
+
+        newFile->sector = sector;
 
         if (currentDirectory->files == NULL)
             currentDirectory->files = newFile;
@@ -291,153 +293,200 @@ void init_directory() {
 //  SAVING DATA TO DISK
 //
 
-    void saveTempDirectory(struct TempDirectory* directory, char* result, int* index) {
+    void saveTempDirectory(struct TempDirectory* directory, char* result) {
         if (directory == NULL) {
             return;
         }
 
-        // Add directory name to the result
+        strcat(result, "D");
         strcat(result, directory->name);
-        (*index) += strlen(directory->name);
 
-        // Add a separator to differentiate between directory and file names
-        strcat(result, "|");
-        (*index)++;
+        if (directory->subDirectory != NULL) {
+            strcat(result, "N");
+            saveTempDirectory(directory->subDirectory, result);
+        }
 
-        // Recursively convert subdirectories
-        saveTempDirectory(directory->subDirectory, result, index);
-
-        // Add a separator to differentiate between subdirectories and files
-        strcat(result, "#");
-        (*index)++;
-
-        // Recursively convert files
         struct TempFile* file = directory->files;
         while (file != NULL) {
-            // Add file type, name, and sector information
-            strcat(result, file->fileType);
-            strcat(result, "|");
+            strcat(result, "F");
             strcat(result, file->name);
-            strcat(result, "|");
-            strcat(result, file->sector);
+            strcat(result, "T");
+            strcat(result, file->fileType);
+            strcat(result, "S");
 
-            (*index) += strlen(file->fileType) + strlen(file->name) + strlen(file->sector);
+            char* sector_position = fprintf_unsigned(-1, file->sector, 10);
+            strcat(result, sector_position);
 
-            if (file->next != NULL) {
-                // Add a separator to differentiate between files
-                strcat(result, ",");
+            file = file->next;
+            if (file != NULL) 
+                strcat(result, "#");
+        }
+
+        strcat(result, "@");
+
+        if (directory->next != NULL) {
+            strcat(result, "#");
+            saveTempDirectory(directory->next, result);
+        }
+    }
+
+    struct TempFile* loadTempFile(const char* input, int* index) {
+        struct TempFile* file = (struct TempFile*)malloc(sizeof(struct TempFile));
+        file->fileType = NULL;
+        file->name = NULL;
+        
+        if (input[*index] == 'F') {
+            (*index)++; // Move past 'F'
+            
+            int start = *index;
+            while (input[*index] != '\0' && input[*index] != 'T') {
                 (*index)++;
             }
 
-            file = file->next;
+            int length = *index - start;
+            if (length > 0) {
+                file->name = (char*)malloc(length + 1);
+                strncpy(file->name, input + start, length);
+                file->name[length] = '\0';
+            }
+            
+            if (input[*index] == 'T') {
+                (*index)++; // Move past 'T'
+                
+                start = *index;
+                while (input[*index] != '\0' && input[*index] != 'S') {
+                    (*index)++;
+                }
+
+                length = *index - start;
+                if (length > 0) {
+                    file->fileType = (char*)malloc(length + 1);
+                    strncpy(file->fileType, input + start, length);
+                    file->fileType[length] = '\0';
+                }
+                
+                if (input[*index] == 'S') {
+                    (*index)++; // Move past 'S'
+                    
+                    start = *index;
+                    while (input[*index] != '\0' && (input[*index] >= '0' && input[*index] <= '9')) {
+                        (*index)++;
+                    }
+                    length = *index - start;
+                    if (length > 0) {
+                        char sectorStr[4];
+                        strncpy(sectorStr, input + start, length);
+                        sectorStr[length] = '\0';
+                        int sector = atoi(sectorStr);
+                        file->sector = (uint8_t)sector;
+                    }
+                }
+            }
         }
-
-        // Recursively convert next directories
-        strcat(result, "@");
-        (*index)++;
-
-        saveTempDirectory(directory->next, result, index);
+        
+        return file;
     }
 
     struct TempDirectory* loadTempDirectory(const char* input, int* index) {
-        // Extract the directory name
-        int start = *index;
-        while (input[*index] != '|') {
+        struct TempDirectory* directory = (struct TempDirectory*)malloc(sizeof(struct TempDirectory));
+        directory->name         = NULL;
+        directory->files        = NULL;
+        directory->subDirectory = NULL;
+        directory->upDirectory  = NULL;
+        directory->next         = NULL;
+
+        if (input[*index] == 'D') {
             (*index)++;
-        }
-        
-        char dirName[256];
-        strncpy(dirName, input + start, *index - start);
-        dirName[*index - start] = '\0';
-
-        // Create a directory node
-        struct TempDirectory* directory = malloc(sizeof(struct TempDirectory));
-        directory->name = strdup(dirName);
-        directory->upDirectory = NULL;
-
-        // Move past the separator
-        (*index)++;
-
-        // Recursively create subdirectories
-        if (input[*index] == '|') {
-            (*index)++;
-            directory->subDirectory = loadTempDirectory(input, index);
-        } else {
-            directory->subDirectory = NULL;
-        }
-
-        // Move past the separator
-        (*index)++;
-
-        // Initialize file list
-        directory->files = NULL;
-        struct TempFile* currentFile = NULL;
-
-        // Parse files
-        while (input[*index] != '@') {
-            char fileType[4];
-            start = *index;
-
-            while (input[*index] != '|') {
+            int start = *index;
+            while (input[*index] != '\0' && input[*index] != '@' && input[*index] != '#' && input[*index] != 'N') {
                 (*index)++;
             }
 
-            strncpy(fileType, input + start, *index - start);
-            fileType[*index - start] = '\0';
-
-            // Move past the separator
-            (*index)++;
-
-            start = *index;
-            while (input[*index] != '|') {
-                (*index)++;
-            }
-
-            char fileName[256];
-            strncpy(fileName, input + start, *index - start);
-            fileName[*index - start] = '\0';
-
-            // Move past the separator
-            (*index)++;
-
-            // Extract and store the sector directly as an integer
-            char sectorStr[4];
-            start = *index;
-            while (input[*index] != ',' && input[*index] != '@') {
-                sectorStr[*index - start] = input[*index];
-                (*index)++;
-            }
-
-            sectorStr[*index - start] = '\0';
-            int sector = atoi(sectorStr);
-
-            // Create a file node
-            struct TempFile* file = malloc(sizeof(struct TempFile));
-            file->fileType = strdup(fileType);
-            file->name = strdup(fileName);
-            file->sector = sector;
-            file->next = NULL;
-
-            if (currentFile == NULL) 
-                directory->files = file;
-                currentFile = file;
-            else 
-                currentFile->next = file;
-                currentFile = file;
-
-            // Move past the separator or comma
-            if (input[*index] == ',') 
-                (*index)++;
+            char dirName[256];
+            strncpy(dirName, input + start, *index - start);
+            dirName[*index - start] = '\0';
+            directory->name = strdup(dirName);
         }
 
-        // Move past the '@' separator
-        (*index)++;
+        if (input[*index] == 'N') {
+            (*index)++;
 
-        // Recursively create next directories
-        if (input[*index] == '\0') 
-            directory->next = NULL;
-        else 
-            directory->next = loadTempDirectory(input, index);
+            if (input[*index] == 'D') {
+                directory->subDirectory = loadTempDirectory(input, index);
+                directory->subDirectory->upDirectory = directory;
+            }
+
+            if (input[*index] == 'F') {
+                directory->files = loadTempFile(input, index);
+            }
+        }
+
+        while (input[*index] == '#') {
+            (*index)++;
+            if (input[*index] == 'D') {
+                directory = loadTempDirectory(input, index);
+            }
+
+            if (input[*index] == 'F') {
+                (*index)++;
+                struct TempFile* file = (struct TempFile*)malloc(sizeof(struct TempFile));
+                file->fileType = NULL;
+                file->name = NULL;
+
+                int start = *index;
+                while (input[*index] != '\0' && input[*index] != '#' && input[*index] != '@') {
+                    (*index)++;
+                }
+
+                if (input[start] == 'T') {
+                    start++;
+                    file->fileType = (char*)malloc(2);
+                    strncpy(file->fileType, input + start, 1);
+                    file->fileType[1] = '\0';
+                }
+
+                start = *index;
+                while (input[*index] != '\0' && input[*index] != '#' && input[*index] != '@') {
+                    (*index)++;
+                }
+
+                if (input[start] == 'T') {
+                    start++;
+                    file->name = (char*)malloc(2);
+                    strncpy(file->name, input + start, 1);
+                    file->name[1] = '\0';
+                }
+
+                start = *index;
+                while (input[*index] != '\0' && input[*index] != '#' && input[*index] != '@') {
+                    (*index)++;
+                }
+
+                if (input[start] == 'S') {
+                    start++;
+                    int sector = atoi(input + start);
+                    file->sector = (uint8_t)sector;
+                }
+
+                struct TempFile* end_file = directory->files;
+                while (end_file->next != NULL)
+                    end_file = end_file->next;
+
+                end_file->next = file;
+            }
+        }
+
+        if (input[*index] == '@') {
+            (*index)++;
+
+            if (input[*index] == 'D') {
+                struct TempDirectory* end_directory = directory->files;
+                while (end_directory->next != NULL)
+                    end_directory = end_directory->next;
+
+                end_directory->next = loadTempDirectory(input, index);
+            }  
+        }
 
         return directory;
     }

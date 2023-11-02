@@ -1,7 +1,11 @@
 #include "../../include/ata.h"
 
 // Function to read a sector from the disk.
-void readSector(uint32_t LBA, char* buffer) {
+char* readSector(uint32_t LBA) {
+    char* buffer = (char*)malloc(SECTOR_SIZE);
+    if (buffer == NULL) 
+        return NULL;
+    
     uint8_t slavebit = 0;
     uint8_t sectorCount = 1;
 
@@ -20,6 +24,8 @@ void readSector(uint32_t LBA, char* buffer) {
         buffer[n * 2] = value & 0xFF;
         buffer[n * 2 + 1] = value >> 8;
     }
+
+    return buffer;
 }
 
 // Function to write a sector to the disk.
@@ -41,6 +47,15 @@ void writeSector(uint32_t lba, const uint8_t* buffer) {
     }
 }
 
+// Function that add data to sector
+void appendSector(uint32_t lba, char* append_data) {
+    char* previous_data = readSector(lba);
+
+    strcat(previous_data, append_data);
+    writeSector(lba, previous_data);
+}
+
+// Function that clear sector
 void clearSector(uint32_t LBA) {
     char buffer[512];  // Assuming 512-byte sectors
 
@@ -49,4 +64,27 @@ void clearSector(uint32_t LBA) {
 
     // Write the buffer to the specified sector
     writeSector(LBA, buffer);
+}
+
+// Function to check if a sector is empty (all bytes are zero)
+bool isSectorEmpty(const char* sectorData, size_t sectorSize) {
+    for (size_t i = 0; i < sectorSize; i++) 
+        if (sectorData[i] != 0) 
+            return false;
+        
+    return true;
+}
+
+#define SECTOR_SIZE     512
+#define SECTOR_COUNT    1000
+
+// Function to find an empty sector on the disk
+int findEmptySector() {
+    for (uint32_t sector = 0; sector < SECTOR_COUNT; sector++) {
+        if (isSectorEmpty(readSector(sector), SECTOR_SIZE)) 
+            return sector;
+    }
+
+    // Return -1 if no empty sector is found
+    return -1;
 }
