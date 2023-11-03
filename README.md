@@ -1,8 +1,8 @@
 # CordellOS.MPRJ
-This repo is storage of my attempts of creating own PC from scratch. In this ReadME will be situated all info about this project, and here we start.
+This repository contains my attempts to build my own computer from scratch. This ReadME will contain all the information about this project, and this is where we will begin.
 
 ## Main idea 
-The main idea, as you might guess, is to create your own computer (case, motherboard and OS), primarily in order to gain experience in low-level programming, engineering design, and, as an option, in design.
+The main idea, as you might guess, is to create my own computer (case, motherboard and OS), primarily in order to gain experience in low-level programming, engineering design, and, as an option, in design.
 
 *Well, what to hide, I also wanted to come to the university with this work of art and try to pass at least some work on it...*
 
