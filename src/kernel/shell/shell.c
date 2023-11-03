@@ -101,8 +101,6 @@ void shell_start_screen() {
                 printf("\r\n> Utilizzare [%s] per impostare la password per cordell",   COMMAND_PASS);
                 printf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
 
-                printf("\r\n> Utilizzare [%s] che guardare tutte drivi",                COMMAND_DRIVES_LIST);
-
                 printf("\r\n> Usa [%s] <nome> per cretore dir",                         COMMAND_CREATE_DIR);
                 printf("\r\n> Usa [%s] <accesso> <nome> per cretore file",              COMMAND_CREATE_FILE);
                 printf("\r\n> Usa [%s] <nome> per elimita dir",                         COMMAND_DELETE_FILE);
@@ -189,7 +187,6 @@ void shell_start_screen() {
                 clearSector(100);
                 
                 char result[512];
-
                 saveTempDirectory(get_main_directory(), result);
 
                 writeSector(100, result);
@@ -197,22 +194,7 @@ void shell_start_screen() {
 
             else if (strstr(command_line[0], COMMAND_LOAD_FILES) == 0) {
                 int index = 0;
-
                 set_main_directory(loadTempDirectory(readSector(100), index));
-            }
-
-            else if (strstr(command_line[0], COMMAND_DRIVES_LIST) == 0) {
-                printf("\r\n");
-                cmos_select_register(0x10);
-                
-                uint8_t driveDesc   = cmos_read();
-                uint8_t drive0Desc  = driveDesc >> 4;
-                uint8_t drive1Desc  = driveDesc & 0x0F;
-
-                printf("DRIVE 0:  %s\r\n", drive_get_description(drive0Desc));
-                printf("DRIVE 1:  %s\r\n", drive_get_description(drive1Desc));
-                printf("DRIVE 2:  %i\r\n", harddrive_detect_devtype(0, 0x1F0, 0x3F6));
-                printf("DRIVE 3:  %i\r\n", harddrive_detect_devtype(1, 0x1F0, 0x3F6));
             }
 
         //

@@ -1,7 +1,6 @@
 #include <include/stdio.h>
 #include <include/string.h>
 #include <include/date_time.h>
-#include <include/hard_drive.h>
 #include <include/file_system.h>
 #include <include/ata.h>
 #include <include/util.h>
@@ -30,7 +29,6 @@
         #define COMMAND_ECHO                            "eco"
         #define COMMAND_PASS                            "setpas"
 
-        #define COMMAND_DRIVES_LIST                     "drives"
         #define COMMAND_GET_HDD_SECTOR                  "rsector"
         #define COMMAND_SET_HDD_SECTOR                  "wsector"
         #define COMMAND_CLEAR_SECTOR                    "clsector"

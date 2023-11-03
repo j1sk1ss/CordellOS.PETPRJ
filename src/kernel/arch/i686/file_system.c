@@ -4,24 +4,6 @@
 struct TempDirectory* mainDirectory;
 struct TempDirectory* currentDirectory;
 
-void init_directory() {
-    char* loaded_data = readSector(100);
-    if (isSectorEmpty(loaded_data, sizeof(loaded_data)) == false) {
-        int index = 0;
-        
-        struct TempDirectory* loaded = loadTempDirectory(loaded_data, index);
-        if (loaded->subDirectory != NULL) {
-            set_main_directory(loaded);
-            return;
-        }
-    }
-
-    currentDirectory = NULL;
-    create_temp_directory("root");
-
-    mainDirectory = currentDirectory;
-}
-
 ////////////////////////////////////////////////
 //
 //  CREATES TEMP DIRECTORY <NAME> IN CURRENT DIRECTORY
@@ -58,9 +40,7 @@ void init_directory() {
 
                 current->next = newDirectory;
             }
-        }
-
-        // save_temp();
+        }  
     }
 
 //
@@ -100,7 +80,7 @@ void init_directory() {
             current->next = newFile;
         }
 
-        save_temp();
+        
     }
 
 //
@@ -131,7 +111,7 @@ void init_directory() {
                 free(current->name);
                 free(current);
 
-                save_temp();
+                
 
                 break;
             }
@@ -161,7 +141,7 @@ void init_directory() {
                 free(current->name);
                 free(current);
 
-                save_temp();
+                
 
                 break;
             }
@@ -199,7 +179,7 @@ void init_directory() {
                     prev->next = current->next;
                 
                 free(current);
-                save_temp();
+                
                 break;
             }
 
@@ -229,7 +209,7 @@ void init_directory() {
                     prev->next = current->next;
                 
                 free(current);
-                save_temp();
+                
                 break;
             }
 
@@ -330,17 +310,6 @@ void init_directory() {
 //  SAVING DATA TO DISK
 //
 
-    void save_temp() {
-        clearSector(100);
-        
-        char result[512];
-
-        saveTempDirectory(get_main_directory(), result);
-
-        while (writeSector(100, result) != 1) 
-            continue;
-    }
-
     void saveTempDirectory(struct TempDirectory* directory, char* result) {
         if (directory == NULL) 
             return;
@@ -355,7 +324,7 @@ void init_directory() {
 
         struct TempFile* file = directory->files;
         while (file != NULL) {
-            strcat(result, "F");
+            strcat(result, "NF");
             strcat(result, file->name);
             strcat(result, "T");
             strcat(result, file->fileType);
@@ -435,6 +404,7 @@ void init_directory() {
 
     struct TempDirectory* loadTempDirectory(const char* input, int* index) {
         struct TempDirectory* directory = (struct TempDirectory*)malloc(sizeof(struct TempDirectory));
+
         directory->name         = NULL;
         directory->files        = NULL;
         directory->subDirectory = NULL;
@@ -453,7 +423,7 @@ void init_directory() {
             directory->name = strdup(dirName);
         }
 
-        if (input[*index] == 'N') {
+        while (input[*index] == 'N') {
             (*index)++;
 
             if (input[*index] == 'D') {
@@ -516,17 +486,8 @@ void init_directory() {
             }
         }
 
-        if (input[*index] == '@') {
+        if (input[*index] == '@') 
             (*index)++;
-
-            if (input[*index] == 'D') {
-                struct TempDirectory* end_directory = directory->files;
-                while (end_directory->next != NULL)
-                    end_directory = end_directory->next;
-
-                end_directory->next = loadTempDirectory(input, index);
-            }  
-        }
 
         return directory;
     }
@@ -535,3 +496,11 @@ void init_directory() {
 //  SAVING DATA TO DISK
 //
 ////////////////////////////////////////////////
+
+void init_directory() {
+    currentDirectory = NULL;
+
+    create_temp_directory("root");
+
+    mainDirectory = currentDirectory;
+}
