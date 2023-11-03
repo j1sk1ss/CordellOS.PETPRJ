@@ -15,8 +15,17 @@ Then, reaching the current end of the tutorial (currently 11/3/2023, video still
 I decided to print the body on a 3D printer. Well, for this it was necessary to first create a model for printing.
 As a reference, or basis, I chose the cases of old commodore and atari computers. Well, something like this:
 
-![Alt Text](https://github.com/j1sk1ss/CordellOS.MPRJ/blob/main/covers/1_cover.png)
+![Alt Text](https://github.com/j1sk1ss/CordellOS.MPRJ/blob/main/covers/1_cover.jpg)
+
+*just old pc in keyboard. Don`t know what is this model*
+
 ![Alt Text](https://github.com/j1sk1ss/CordellOS.MPRJ/blob/main/covers/2_cover.png)
+
+*ATARI pc*
+
+After modeling the model in **Blender**, I ended up with approximately the following design (Of course, I prepared for printing and left all the necessary connectors for the components):
+
+![Alt Text](https://github.com/j1sk1ss/CordellOS.MPRJ/blob/main/covers/3_cover.png)
 
 **TODO:**
 
