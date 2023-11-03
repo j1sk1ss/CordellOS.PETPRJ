@@ -67,6 +67,41 @@ void fprintf_signed(fileDescriptorId file, long long number, int radix) {
         fprintf_unsigned(file, number, radix);
 }
 
+int sscanf(const char *input, const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    int items_matched = 0;
+
+    while (*format) {
+        if (*format == '%' && format[1]) {
+            format++; // Skip the '%'
+            
+            if (*format == 'd') {
+                // Integer specifier
+                int *int_arg = va_arg(args, int *);
+                items_matched += sscanf(input, "%d", int_arg);
+            } else if (*format == 's') {
+                // String specifier
+                char *str_arg = va_arg(args, char *);
+                items_matched += sscanf(input, "%s", str_arg);
+            }
+        } else {
+            // Check for a matching character in the input
+            if (*input != *format) {
+                break; // If it doesn't match, stop parsing
+            }
+            
+            input++;
+        }
+
+        format++;
+    }
+
+    va_end(args);
+    return items_matched;
+}
+
 void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
     int state   = PRINTF_STATE_NORMAL;
     int length  = PRINTF_LENGTH_DEFAULT;

@@ -12,6 +12,7 @@ void printf(const char* fmt, ...);
 void cprintf(uint8_t color, const char* fmt, ...);
 void print_buffer(const char* msg, const void* buffer, uint32_t count);
 
+int sscanf(const char *input, const char *format, ...);
 char* fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radix);
 
 void fputc(char c, fileDescriptorId file, int color);

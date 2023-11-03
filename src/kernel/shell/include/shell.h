@@ -5,6 +5,7 @@
 #include <include/file_system.h>
 #include <include/ata.h>
 #include <include/util.h>
+#include <include/asm_compiler.h>
 
 #include "Keyboard.h"
 #include "table.h"
@@ -47,11 +48,14 @@
         #define COMMAND_FILE_VIEW                       "view"
         #define COMMAND_FILE_EDIT                       "edit"
         #define COMMAND_FILE_RUN                        "run"
+        #define COMMAND_FILE_ASM_RUN                    "asm"
 
         #define COMMAND_CREATE_FILE                     "mkfile"
         #define COMMAND_DELETE_FILE                     "rmfile"
 
         #define COMMAND_CALCULATOR                      "calc"
+        
+        #define COMMAND_SPLIT_LINE                      "split"
 
     //  COMMANDS
     /////////////////

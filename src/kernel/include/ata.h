@@ -6,8 +6,11 @@
 
 #define SECTOR_SIZE 512
 
+bool isSectorEmpty(const char* sectorData, size_t sectorSize);
+
 char* readSector(uint32_t LBA);
-void writeSector(uint32_t lba, const uint8_t* buffer);
+int writeSector(uint32_t lba, const uint8_t* buffer);
+
 void appendSector(uint32_t lba, char* append_data);
 void clearSector(uint32_t LBA);
 

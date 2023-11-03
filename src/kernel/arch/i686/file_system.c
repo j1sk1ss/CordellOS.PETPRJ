@@ -5,6 +5,17 @@ struct TempDirectory* mainDirectory;
 struct TempDirectory* currentDirectory;
 
 void init_directory() {
+    char* loaded_data = readSector(100);
+    if (isSectorEmpty(loaded_data, sizeof(loaded_data)) == false) {
+        int index = 0;
+        
+        struct TempDirectory* loaded = loadTempDirectory(loaded_data, index);
+        if (loaded->subDirectory != NULL) {
+            set_main_directory(loaded);
+            return;
+        }
+    }
+
     currentDirectory = NULL;
     create_temp_directory("root");
 
@@ -17,10 +28,16 @@ void init_directory() {
 //
 
     void create_temp_directory(char* name) {
+        if (find_temp_directory(name) != NULL) {
+            printf("Directory alredy exist.");
+            return;
+        }
+
         struct TempDirectory* newDirectory = malloc(sizeof(struct TempDirectory));
         memset(newDirectory, 0, sizeof(newDirectory));
 
-        newDirectory->name  = malloc(strlen(name));
+        newDirectory->name = malloc(strlen(name));
+        memset(newDirectory->name, 0, sizeof(newDirectory->name));
         memcpy(newDirectory->name, name, strlen(name));
         
         newDirectory->files         = NULL;
@@ -42,6 +59,8 @@ void init_directory() {
                 current->next = newDirectory;
             }
         }
+
+        // save_temp();
     }
 
 //
@@ -53,16 +72,23 @@ void init_directory() {
 //
 
     void create_temp_file(char* type, char* name, uint8_t* sector) {
+        if (find_temp_file(name) != NULL) {
+            printf("File alredy exist.");
+            return;
+        }
+
         struct TempFile* newFile = malloc(sizeof(struct TempFile));
         memset(newFile, 0, sizeof(newFile));
 
         newFile->name = malloc(strlen(name));
+        memset(newFile->name, 0, sizeof(newFile->name));
         memcpy(newFile->name, name, strlen(name));
 
         newFile->fileType = malloc(strlen(type));
         memcpy(newFile->fileType, type, strlen(type));
 
         newFile->sector = sector;
+        writeSector(sector, "\0");
 
         if (currentDirectory->files == NULL)
             currentDirectory->files = newFile;
@@ -73,6 +99,8 @@ void init_directory() {
             
             current->next = newFile;
         }
+
+        save_temp();
     }
 
 //
@@ -103,6 +131,8 @@ void init_directory() {
                 free(current->name);
                 free(current);
 
+                save_temp();
+
                 break;
             }
 
@@ -130,6 +160,8 @@ void init_directory() {
                 
                 free(current->name);
                 free(current);
+
+                save_temp();
 
                 break;
             }
@@ -159,12 +191,15 @@ void init_directory() {
                     return;
                 }
 
+                clearSector(current->sector);
+
                 if (prev == NULL) 
                     currentDirectory->files = current->next;
                 else 
                     prev->next = current->next;
                 
                 free(current);
+                save_temp();
                 break;
             }
 
@@ -185,12 +220,16 @@ void init_directory() {
 
         while (current != NULL) {
             if (strcmp(current->name, name) == 0) {
+
+                clearSector(current->sector);
+
                 if (prev == NULL) 
                     currentDirectory->files = current->next;
                 else 
                     prev->next = current->next;
                 
                 free(current);
+                save_temp();
                 break;
             }
 
@@ -217,7 +256,6 @@ void init_directory() {
             current = current->next;
         }
 
-        printf("\r\nFile not found.");
         return NULL;
     }
 
@@ -231,7 +269,6 @@ void init_directory() {
             current = current->next;
         }
 
-        printf("\r\nDirectory not found.");
         return NULL;
     }
 
@@ -293,10 +330,20 @@ void init_directory() {
 //  SAVING DATA TO DISK
 //
 
+    void save_temp() {
+        clearSector(100);
+        
+        char result[512];
+
+        saveTempDirectory(get_main_directory(), result);
+
+        while (writeSector(100, result) != 1) 
+            continue;
+    }
+
     void saveTempDirectory(struct TempDirectory* directory, char* result) {
-        if (directory == NULL) {
+        if (directory == NULL) 
             return;
-        }
 
         strcat(result, "D");
         strcat(result, directory->name);
@@ -339,9 +386,8 @@ void init_directory() {
             (*index)++; // Move past 'F'
             
             int start = *index;
-            while (input[*index] != '\0' && input[*index] != 'T') {
+            while (input[*index] != '\0' && input[*index] != 'T') 
                 (*index)++;
-            }
 
             int length = *index - start;
             if (length > 0) {
@@ -354,9 +400,8 @@ void init_directory() {
                 (*index)++; // Move past 'T'
                 
                 start = *index;
-                while (input[*index] != '\0' && input[*index] != 'S') {
+                while (input[*index] != '\0' && input[*index] != 'S') 
                     (*index)++;
-                }
 
                 length = *index - start;
                 if (length > 0) {
@@ -372,6 +417,7 @@ void init_directory() {
                     while (input[*index] != '\0' && (input[*index] >= '0' && input[*index] <= '9')) {
                         (*index)++;
                     }
+
                     length = *index - start;
                     if (length > 0) {
                         char sectorStr[4];
@@ -398,9 +444,8 @@ void init_directory() {
         if (input[*index] == 'D') {
             (*index)++;
             int start = *index;
-            while (input[*index] != '\0' && input[*index] != '@' && input[*index] != '#' && input[*index] != 'N') {
+            while (input[*index] != '\0' && input[*index] != '@' && input[*index] != '#' && input[*index] != 'N') 
                 (*index)++;
-            }
 
             char dirName[256];
             strncpy(dirName, input + start, *index - start);
@@ -416,16 +461,14 @@ void init_directory() {
                 directory->subDirectory->upDirectory = directory;
             }
 
-            if (input[*index] == 'F') {
+            if (input[*index] == 'F') 
                 directory->files = loadTempFile(input, index);
-            }
         }
 
         while (input[*index] == '#') {
             (*index)++;
-            if (input[*index] == 'D') {
+            if (input[*index] == 'D') 
                 directory = loadTempDirectory(input, index);
-            }
 
             if (input[*index] == 'F') {
                 (*index)++;
@@ -434,9 +477,8 @@ void init_directory() {
                 file->name = NULL;
 
                 int start = *index;
-                while (input[*index] != '\0' && input[*index] != '#' && input[*index] != '@') {
+                while (input[*index] != '\0' && input[*index] != '#' && input[*index] != '@') 
                     (*index)++;
-                }
 
                 if (input[start] == 'T') {
                     start++;
@@ -446,9 +488,8 @@ void init_directory() {
                 }
 
                 start = *index;
-                while (input[*index] != '\0' && input[*index] != '#' && input[*index] != '@') {
+                while (input[*index] != '\0' && input[*index] != '#' && input[*index] != '@') 
                     (*index)++;
-                }
 
                 if (input[start] == 'T') {
                     start++;
@@ -458,9 +499,8 @@ void init_directory() {
                 }
 
                 start = *index;
-                while (input[*index] != '\0' && input[*index] != '#' && input[*index] != '@') {
+                while (input[*index] != '\0' && input[*index] != '#' && input[*index] != '@') 
                     (*index)++;
-                }
 
                 if (input[start] == 'S') {
                     start++;

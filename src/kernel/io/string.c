@@ -207,9 +207,140 @@ char* strcat(char* dest, const char* src) {
     return dest;
 }
 
-char* strtok(char* s, const char* delim) {
-	static char* last;
-	return strtok_r(s, delim, &last);
+void* __rawmemchr (const void* s, int c_in) {
+  const unsigned char *char_ptr;
+  const unsigned long int *longword_ptr;
+  unsigned long int longword, magic_bits, charmask;
+  unsigned char c;
+
+  c = (unsigned char) c_in;
+
+  /* Handle the first few characters by reading one character at a time.
+     Do this until CHAR_PTR is aligned on a longword boundary.  */
+  for (char_ptr = (const unsigned char *) s;
+       ((unsigned long int) char_ptr & (sizeof (longword) - 1)) != 0;
+       ++char_ptr)
+    if (*char_ptr == c)
+      return (void*) char_ptr;
+
+  /* All these elucidatory comments refer to 4-byte longwords,
+     but the theory applies equally well to 8-byte longwords.  */
+
+  longword_ptr = (unsigned long int *) char_ptr;
+
+  if (sizeof (longword) != 4 && sizeof (longword) != 8)
+    abort ();
+
+#if LONG_MAX <= LONG_MAX_32_BITS
+  magic_bits = 0x7efefeff;
+#else
+  magic_bits = ((unsigned long int) 0x7efefefe << 32) | 0xfefefeff;
+#endif
+
+  /* Set up a longword, each of whose bytes is C.  */
+  charmask = c | (c << 8);
+  charmask |= charmask << 16;
+#if LONG_MAX > LONG_MAX_32_BITS
+  charmask |= charmask << 32;
+#endif
+
+  while (1)
+    {
+      longword = *longword_ptr++ ^ charmask;
+
+      /* Add MAGIC_BITS to LONGWORD.  */
+      if ((((longword + magic_bits)
+
+	    /* Set those bits that were unchanged by the addition.  */
+	    ^ ~longword)
+
+	   & ~magic_bits) != 0)
+	{
+
+	  const unsigned char *cp = (const unsigned char *) (longword_ptr - 1);
+
+	  if (cp[0] == c)
+	    return (void*) cp;
+	  if (cp[1] == c)
+	    return (void*) &cp[1];
+	  if (cp[2] == c)
+	    return (void*) &cp[2];
+	  if (cp[3] == c)
+	    return (void*) &cp[3];
+#if LONG_MAX > 2147483647
+	  if (cp[4] == c)
+	    return (void*) &cp[4];
+	  if (cp[5] == c)
+	    return (void*) &cp[5];
+	  if (cp[6] == c)
+	    return (void*) &cp[6];
+	  if (cp[7] == c)
+	    return (void*) &cp[7];
+#endif
+	}
+    }
+}
+
+char *strpbrk (const char *s, const char *accept) {
+    while (*s != '\0') {
+        const char *a = accept;
+        while (*a != '\0')
+	        if (*a++ == *s)
+	            return (char *) s;
+
+            ++s;
+    }
+
+  return NULL;
+}
+
+size_t strspn(const char* s, const char* accept) {
+  const char *p;
+  const char *a;
+  size_t count = 0;
+
+  for (p = s; *p != '\0'; ++p) {
+    for (a = accept; *a != '\0'; ++a)
+	    if (*p == *a)
+	        break;
+
+    if (*a == '\0')
+        return count;
+    else
+        ++count;
+    }
+
+  return count;
+}
+
+static char *olds;
+
+char *strtok (char *s, const char *delim){
+    char *token;
+
+    if (s == NULL)
+        s = olds;
+
+    /* Scan leading delimiters.  */
+    s += strspn (s, delim);
+    if (*s == '\0') {
+      olds = s;
+      return NULL;
+    }
+
+    /* Find the end of the token.  */
+    token = s;
+    s = strpbrk(token, delim);
+    if (s == NULL)
+        /* This token finishes the string.  */
+        olds = __rawmemchr(token, '\0');
+    else {
+        /* Terminate the token and make OLDS point past it.  */
+        *s = '\0';
+        olds = s + 1;
+    }
+
+  return token;
 }
 
 char* strtok_r(char* s, const char* delim, char** last) {

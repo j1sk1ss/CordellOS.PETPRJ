@@ -369,6 +369,26 @@ void shell_start_screen() {
                 free(sector_data);
             }
 
+            else if (strstr(command_line[0], COMMAND_FILE_ASM_RUN) == 0) {
+                struct TempFile* execute = find_temp_file(command_line[1]);
+                if (execute == NULL)
+                    return;
+
+                if (strcmp(execute->fileType, "0") == 0 && access_level == DEFAULT_ACCESS) {
+                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
+                    return;
+                }
+
+                char* sector_data = readSector(execute->sector);
+                asm_execute(sector_data);
+
+                free(sector_data);
+            }
+
+            else if (strstr(command_line[0], COMMAND_SPLIT_LINE) == 0) 
+                for (int i = 1; i < 100; i++)
+                    printf(" [%s] ", command_line[i]);
+
         //
         //
         //  APPLICATIONS  
