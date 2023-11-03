@@ -27,6 +27,12 @@ After modeling the model in **Blender**, I ended up with approximately the follo
 
 ![Alt Text](https://github.com/j1sk1ss/CordellOS.MPRJ/blob/main/covers/3_cover.png)
 
+And that`s how looks model in special app for 3D printing:
+![Alt Text](https://github.com/j1sk1ss/CordellOS.MPRJ/blob/main/covers/5_cover.jpg)
+
+## Motherboard
+The motherboard was originally planned as a board based on an 8086 processor, initially assembled from components, but after estimating the final dimensions, and the need for soldering and purchasing a huge number of components (This would have turned out to be a rather expensive undertaking), I decided to turn my attention to the Rasberry Pi.
+
 **TODO:**
 
 - RAM detection
@@ -34,5 +40,8 @@ After modeling the model in **Blender**, I ended up with approximately the follo
 - Working with files (create/edit/delete) (Completed)
 - USER switching
 - С/CPP in-build compiler
+- Prepare for non-emulator device
+- Print case
+- Assemble
 
 ![Alt Text](https://github.com/j1sk1ss/CordellOS.MPRJ/blob/main/cover.png)
