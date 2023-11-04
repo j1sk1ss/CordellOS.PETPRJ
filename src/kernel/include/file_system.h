@@ -7,7 +7,10 @@
 #include "memory.h"
 #include "stdio.h"
 
-#include "../shell/include/table.h"
+
+#define FILE_SYSTEM_SECTOR  100
+#define USERS_SECTOR        101
+
 
 struct File {
     char* fileType;
@@ -38,7 +41,7 @@ void print_directory_data();
 
 void init_directory();
 void create_directory(char* name);
-void create_file(char* type, char* name, uint8_t* sector);
+void create_file(char* type, char* name, uint8_t* head_sector);
 void delete_directory(char* name);
 void cordell_delete_directory(char* name);
 void delete_file(char* name);
@@ -47,6 +50,7 @@ void cordell_delete_file(char* name);
 void write_file(struct File* file, char* data);
 char* read_file(struct File* file);
 void clear_file(struct File* file);
+int file_exist(char* name);
 
 struct File* find_file(char* name);
 struct Directory* find_directory(char* name);

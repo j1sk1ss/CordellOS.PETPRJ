@@ -5,16 +5,16 @@ struct Directory* mainDirectory     = NULL;
 struct Directory* currentDirectory  = NULL;
 
 //
-//  In sector(100) placed LBA of sectors (13, 23, ..., n), that contains data about FS. 
+//  In sector(FILE_SYSTEM_SECTOR) placed LBA of sectors (13, 23, ..., n), that contains data about FS. 
 //  
 //
 
 
 void init_directory() {
-    char* loaded_data = readSector(100);
+    char* loaded_data = readSector(FILE_SYSTEM_SECTOR);
 
     if (loaded_data != NULL)
-        if (is_sector_empty(loaded_data, sizeof(loaded_data)) == false) {
+        if (is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
             int index = 0;
             memset(index, 0, sizeof(index));
             set_main_directory(load_directory(loaded_data, index));
@@ -130,7 +130,7 @@ void init_directory() {
 //  CREATES TEMP FILE WITH NAME <NAME> IN CURRENT DIRECTORY
 //
 
-    void create_file(char* type, char* name, uint8_t* sector) {
+    void create_file(char* type, char* name, uint8_t* head_sector) {
         if (find_file(name) != NULL) {
             printf("File alredy exist.");
             return;
@@ -150,8 +150,8 @@ void init_directory() {
         newFile->sector_count++;
         memset(newFile->sectors, 0, sizeof(newFile->sectors));
 
-        newFile->sectors[0] = sector;
-        writeSector(sector, "\0");
+        newFile->sectors[0] = head_sector;
+        writeSector(head_sector, "\0");
 
         if (currentDirectory->files == NULL)
             currentDirectory->files = newFile;
@@ -233,6 +233,17 @@ void init_directory() {
         }
 
     //  CLEAR FILE
+    ////////////
+    //  CHECK FILE EXIST
+
+        int file_exist(char* name) {
+            if (find_file(name) == NULL)
+                return -1;
+
+            return 1;
+        }
+
+    //  CHECK FILE EXIST
     ////////////
 
 //
@@ -467,14 +478,14 @@ void init_directory() {
 //
 
     void save_temp() {
-        clear_sector(100);
+        clear_sector(FILE_SYSTEM_SECTOR);
 
         char result[512];
         memset(result, 0, sizeof(result));
 
         save_directory(get_main_directory(), result);
 
-        if (writeSector(100, result) == -1)
+        if (writeSector(FILE_SYSTEM_SECTOR, result) == -1)
             printf("\n\rError while writing to disk. Please try again");
     }
 
@@ -521,8 +532,10 @@ void init_directory() {
 
     struct File* load_temp_file(const char* input, int* index) {
         struct File* file = (struct File*)malloc(sizeof(struct File));
-        file->fileType = NULL;
-        file->name = NULL;
+
+        file->fileType      = NULL;
+        file->name          = NULL;
+        file->sector_count  = 0;
         
         if (input[*index] == 'F') {
             (*index)++; // Move past 'F'
@@ -556,9 +569,8 @@ void init_directory() {
                     (*index)++; // Move past 'S'
                     
                     start = *index;
-                    while (input[*index] != '\0' && (input[*index] >= '0' && input[*index] <= '9')) {
+                    while (input[*index] != '\0' && (input[*index] >= '0' && input[*index] <= '9')) 
                         (*index)++;
-                    }
 
                     length = *index - start;
                     if (length > 0) {
@@ -568,9 +580,9 @@ void init_directory() {
 
                         int sector = atoi(sectorStr);
 
-                        size_t sector_count = file->sector_count;
-                        file->sectors = realloc(file->sectors, sector_count * sizeof(uint32_t));
-                        file->sectors[sector_count - 1] = (uint32_t)sector;
+                        file->sector_count++;
+                        file->sectors = realloc(file->sectors, file->sector_count * sizeof(uint32_t));
+                        file->sectors[file->sector_count - 1] = (uint32_t)sector;
                     }
                 }
             }

@@ -37,15 +37,15 @@ unsigned char alphabet[128] = {
     0,	                                                                /* 69 - Num lock*/
     0,	                                                                /* Scroll Lock */
     0,	                                                                /* Home key */
-    '0',	                                                            /* Up Arrow */
+    '\4',	                                                            /* Up Arrow */
     0,	                                                                /* Page Up */
     '-',                        
-    0,	                                                                /* Left Arrow */
+    '\1',	                                                            /* Left Arrow */
     0,                      
-    0,	                                                                /* Right Arrow */
+    '\2',	                                                            /* Right Arrow */
     '+',                        
     0,	                                                                /* 79 - End key*/
-    0,	                                                                /* Down Arrow */
+    '\3',	                                                            /* Down Arrow */
     0,	                                                                /* Page Down */
     0,	                                                                /* Insert Key */
     0,	                                                                /* Delete Key */
@@ -122,6 +122,24 @@ unsigned char alphabet[128] = {
                     if (!(character & 0x80)) {
                         char currentCharacter = alphabet[character];
                         if (currentCharacter != '{') {
+
+                            if (currentCharacter == '\1') { // Left
+                                VGA_setcursor(cursor_get_x() - 1, cursor_get_y()); 
+                                continue;
+                            }
+                            else if (currentCharacter == '\2') { // Right
+                                VGA_setcursor(cursor_get_x() + 1, cursor_get_y()); 
+                                continue;
+                            } 
+                            else if (currentCharacter == '\3') { // Down
+                                VGA_setcursor(cursor_get_x(), cursor_get_y() + 1); 
+                                continue;
+                            }
+                            else if (currentCharacter == '\4') { // Up
+                                VGA_setcursor(cursor_get_x(), cursor_get_y() - 1); 
+                                continue;
+                            }
+
                             if (currentCharacter == '\b') {
                                 if (strlen(input) > 0 && input_size > 0)
                                     backspace_string(&input, --input_size);

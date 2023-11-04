@@ -113,6 +113,15 @@
         return true;
     }
 
+    // Function to check if a sector (by LBA) is empty (all bytes are zero)
+    bool is_current_sector_empty(uint32_t LBA) {
+        if (is_sector_empty(readSector(LBA), SECTOR_SIZE)) 
+            return true;
+
+        // Return -1 if no empty sector is found
+        return false;
+    }
+
     // Function to find an empty sector on the disk
     int find_empty_sector() {
         for (uint32_t sector = 0; sector < SECTOR_COUNT; sector++) 

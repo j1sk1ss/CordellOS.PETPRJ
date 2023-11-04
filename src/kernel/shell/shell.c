@@ -2,11 +2,48 @@
 
 
 char *currentPassword = "12345";
+struct User* user     = NULL;
 
 void shell() {
     shell_start_screen();
     init_directory(); 
+    init_users();
     
+    ////////////////////////////////////////////////////
+    //
+    //  USER LOGIN
+    //
+
+        cprintf(FOREGROUND_LIGHT_RED, "\r\n[LOGIN]: ");
+        char* user_login = keyboard_read(VISIBLE_KEYBOARD);
+
+        cprintf(FOREGROUND_LIGHT_RED, "\r\n[PASSWORD]: ");
+        char* user_pass = keyboard_read(HIDDEN_KEYBOARD);
+
+        user = login(user_login, user_pass);
+        while (user == NULL) {
+            cprintf(FOREGROUND_RED, "\r\nPassword o login errata, riprova.\n\r");
+            cprintf(FOREGROUND_LIGHT_RED, "\r\n[LOGIN]: ");
+            user_login = keyboard_read(VISIBLE_KEYBOARD);
+
+            cprintf(FOREGROUND_LIGHT_RED, "\r\n[PASSWORD]: ");
+            user_pass = keyboard_read(HIDDEN_KEYBOARD);
+            user = login(user_login, user_pass);
+
+            free(user_login);
+            free(user_pass);
+        }
+    
+        free(user_login);
+        free(user_pass);
+
+        printf("\n");
+
+    //
+    //  USER LOGIN
+    //
+    ////////////////////////////////////////////////////
+
     while (1) {
         char* path = get_full_temp_name();
         cprintf(FOREGROUND_GREEN, "\r\n[CORDELL OS]");
@@ -15,6 +52,8 @@ void shell() {
         char *command = keyboard_read(VISIBLE_KEYBOARD);
         if (strstr(command, "cordell") == 0)
             execute_command(command + strlen("cordell") + 1, CORDELL_ACCESS);
+        else if (user->access == 0)
+            execute_command(command, SUPER_ACCESS);
         else
             execute_command(command, DEFAULT_ACCESS);
 
@@ -47,7 +86,7 @@ void shell_start_screen() {
         //  PASSWORD VERIFICATION
         //
 
-            if (access_level == 1) {
+            if (access_level == CORDELL_ACCESS) {
                 cprintf(FOREGROUND_GREEN, "\r\n[PAROLA D'ORDINE]: ");
                 char* password = keyboard_read(HIDDEN_KEYBOARD);
                 int tries = 0;
@@ -63,6 +102,9 @@ void shell_start_screen() {
 
                 free(password);            
             }
+
+            if (access_level == SUPER_ACCESS)
+                access_level = CORDELL_ACCESS;
 
         //
         //  PASSWORD VERIFICATION

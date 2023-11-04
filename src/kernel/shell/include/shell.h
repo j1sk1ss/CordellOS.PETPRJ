@@ -7,12 +7,13 @@
 #include <include/asm_compiler.h>
 
 #include "Keyboard.h"
-#include "table.h"
+#include "user.h"
 
 #include "../libs/core/shared/include/x86.h"
 
-#define CORDELL_ACCESS      1
-#define DEFAULT_ACCESS      0
+#define SUPER_ACCESS        -1
+#define CORDELL_ACCESS      0
+#define DEFAULT_ACCESS      1
 
 /////////////////
 //  CONSTANTS

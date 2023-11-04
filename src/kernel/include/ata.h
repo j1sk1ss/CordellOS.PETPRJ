@@ -88,6 +88,7 @@
 #define ATA_WRITE                   0x01
 
 bool is_sector_empty(const char* sectorData, size_t sectorSize);
+bool is_current_sector_empty(uint32_t LBA);
 
 char* readSector(uint32_t LBA);
 int writeSector(uint32_t lba, const uint8_t* buffer);
