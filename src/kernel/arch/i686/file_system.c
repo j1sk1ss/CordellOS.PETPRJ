@@ -17,11 +17,11 @@ void init_directory() {
         if (is_sector_empty(loaded_data, sizeof(loaded_data)) == false) {
             int index = 0;
             memset(index, 0, sizeof(index));
-            set_main_directory(load_temp_directory(loaded_data, index));
+            set_main_directory(load_directory(loaded_data, index));
             return;
         }
 
-    create_temp_directory("root");
+    create_directory("root");
 
     mainDirectory = currentDirectory;
 }
@@ -86,8 +86,8 @@ void init_directory() {
 //  CREATES TEMP DIRECTORY <NAME> IN CURRENT DIRECTORY
 //
 
-    void create_temp_directory(char* name) {
-        if (find_temp_directory(name) != NULL) {
+    void create_directory(char* name) {
+        if (find_directory(name) != NULL) {
             printf("Directory alredy exist.");
             return;
         }
@@ -130,8 +130,8 @@ void init_directory() {
 //  CREATES TEMP FILE WITH NAME <NAME> IN CURRENT DIRECTORY
 //
 
-    void create_temp_file(char* type, char* name, uint8_t* sector) {
-        if (find_temp_file(name) != NULL) {
+    void create_file(char* type, char* name, uint8_t* sector) {
+        if (find_file(name) != NULL) {
             printf("File alredy exist.");
             return;
         }
@@ -170,7 +170,7 @@ void init_directory() {
     ////////////
     //  WRITE TO FILE
 
-        void write_temp_file(struct File* file, char* data) {
+        void write_file(struct File* file, char* data) {
             int data_len = strlen(data);
             
             // Iterate through the sectors of the file and write the data
@@ -211,7 +211,7 @@ void init_directory() {
     ////////////
     //  READ FROM FILE
 
-        char* read_temp_file(struct File* file) {
+        char* read_file(struct File* file) {
             char* data = (char*)malloc(512 * file->sector_count);
 
             for (size_t i = 0; i < file->sector_count; i++) 
@@ -224,7 +224,7 @@ void init_directory() {
     ////////////
     //  CLEAR FILE
 
-        void clear_temp_file(struct File* file) {
+        void clear_file(struct File* file) {
             char* empty_data[512];
             memset(empty_data, 0, sizeof(empty_data));
 
@@ -243,7 +243,7 @@ void init_directory() {
 //  DELETE TEMP DIRECTORY (EMPTY DIRECTORY)
 //
 
-    void delete_temp_directory(char* name) {
+    void delete_directory(char* name) {
         struct Directory* current   = currentDirectory->subDirectory;
         struct Directory* prev      = NULL;
 
@@ -279,7 +279,7 @@ void init_directory() {
 //  DELETE TEMP DIRECTORY (ANY DIRECTORY)
 //
 
-    void cordell_delete_temp_directory(char* name) {
+    void cordell_delete_directory(char* name) {
         struct Directory* current   = currentDirectory->subDirectory;
         struct Directory* prev      = NULL;
 
@@ -311,7 +311,7 @@ void init_directory() {
 //  DELETE TEMP FILE (FILE WITH ACCESS LARGER THAN 0)
 //
 
-    void delete_temp_file(char* name) {
+    void delete_file(char* name) {
         struct File* current    = currentDirectory->files;
         struct File* prev       = NULL;
 
@@ -323,7 +323,7 @@ void init_directory() {
                     return;
                 }
 
-                clear_temp_file(current);
+                clear_file(current);
 
                 if (prev == NULL) 
                     currentDirectory->files = current->next;
@@ -348,14 +348,14 @@ void init_directory() {
 //  DELETE TEMP FILE (ANY FILE)
 //
 
-    void cordell_delete_temp_file(char* name) {
+    void cordell_delete_file(char* name) {
         struct File* current    = currentDirectory->files;
         struct File* prev       = NULL;
 
         while (current != NULL) {
             if (strcmp(current->name, name) == 0) {
 
-                clear_temp_file(current);
+                clear_file(current);
 
                 if (prev == NULL) 
                     currentDirectory->files = current->next;
@@ -382,7 +382,7 @@ void init_directory() {
 //  OTHER FUNCTIONS
 //
 
-    struct File* find_temp_file(char* name) {
+    struct File* find_file(char* name) {
         struct File* current = currentDirectory->files;
 
         while (current != NULL) {
@@ -395,7 +395,7 @@ void init_directory() {
         return NULL;
     }
 
-    struct Directory* find_temp_directory(char* name) {
+    struct Directory* find_directory(char* name) {
         struct Directory* current = currentDirectory->subDirectory;
 
         while (current != NULL) {
@@ -408,13 +408,13 @@ void init_directory() {
         return NULL;
     }
 
-    void move_to_temp_directory(char* name) {
-        struct Directory* neededDirectory = find_temp_directory(name);
+    void move_to_directory(char* name) {
+        struct Directory* neededDirectory = find_directory(name);
         if (neededDirectory != NULL) 
             currentDirectory = neededDirectory;
     }
 
-    void up_from_temp_directory() {
+    void up_from_directory() {
         if (currentDirectory->upDirectory != NULL)
             currentDirectory = currentDirectory->upDirectory;
     }
@@ -472,13 +472,13 @@ void init_directory() {
         char result[512];
         memset(result, 0, sizeof(result));
 
-        save_temp_directory(get_main_directory(), result);
+        save_directory(get_main_directory(), result);
 
         if (writeSector(100, result) == -1)
             printf("\n\rError while writing to disk. Please try again");
     }
 
-    void save_temp_directory(struct Directory* directory, char* result) {
+    void save_directory(struct Directory* directory, char* result) {
         if (directory == NULL) 
             return;
 
@@ -487,7 +487,7 @@ void init_directory() {
 
         if (directory->subDirectory != NULL) {
             strcat(result, "N");
-            save_temp_directory(directory->subDirectory, result);
+            save_directory(directory->subDirectory, result);
         }
 
         struct File* file = directory->files;
@@ -515,7 +515,7 @@ void init_directory() {
 
         if (directory->next != NULL) {
             strcat(result, "#");
-            save_temp_directory(directory->next, result);
+            save_directory(directory->next, result);
         }
     }
 
@@ -579,7 +579,7 @@ void init_directory() {
         return file;
     }
 
-    struct Directory* load_temp_directory(const char* input, int* index) {
+    struct Directory* load_directory(const char* input, int* index) {
         struct Directory* directory = (struct Directory*)malloc(sizeof(struct Directory));
 
         directory->name         = NULL;
@@ -606,7 +606,7 @@ void init_directory() {
             (*index)++;
 
             if (input[*index] == 'D') {
-                directory->subDirectory = load_temp_directory(input, index);
+                directory->subDirectory = load_directory(input, index);
                 directory->subDirectory->upDirectory = directory;
             }
 
@@ -617,7 +617,7 @@ void init_directory() {
         while (input[*index] == '#') {
             (*index)++;
             if (input[*index] == 'D') 
-                directory->next = load_temp_directory(input, index);
+                directory->next = load_directory(input, index);
 
             if (input[*index] == 'F') {
                 (*index)++;
@@ -671,7 +671,7 @@ void init_directory() {
         if (input[*index] == '@') {
             (*index)++;
             if (input[*index] == '#' && input[*index + 1] == 'D')
-                directory->next = load_temp_directory(input, ++(*index));
+                directory->next = load_directory(input, ++(*index));
             
             if (input[*index] == '#' && input[*index + 1] == 'F') {
                 struct File* end_file = directory->files;

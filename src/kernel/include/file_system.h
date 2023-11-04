@@ -37,25 +37,25 @@ char* get_full_temp_name();
 void print_directory_data();
 
 void init_directory();
-void create_temp_directory(char* name);
-void create_temp_file(char* type, char* name, uint8_t* sector);
-void delete_temp_directory(char* name);
-void cordell_delete_temp_directory(char* name);
-void delete_temp_file(char* name);
-void cordell_delete_temp_file(char* name);
+void create_directory(char* name);
+void create_file(char* type, char* name, uint8_t* sector);
+void delete_directory(char* name);
+void cordell_delete_directory(char* name);
+void delete_file(char* name);
+void cordell_delete_file(char* name);
 
-void write_temp_file(struct File* file, char* data);
-char* read_temp_file(struct File* file);
-void clear_temp_file(struct File* file);
+void write_file(struct File* file, char* data);
+char* read_file(struct File* file);
+void clear_file(struct File* file);
 
-struct File* find_temp_file(char* name);
-struct Directory* find_temp_directory(char* name);
+struct File* find_file(char* name);
+struct Directory* find_directory(char* name);
 
-void move_to_temp_directory(char* name);
-void up_from_temp_directory();
+void move_to_directory(char* name);
+void up_from_directory();
 
 void set_main_directory(struct Directory* directory);
 struct Directory* get_main_directory();
 
-void save_temp_directory(struct Directory* directory, char* result);
-struct Directory* load_temp_directory(const char* input, int* index);
+void save_directory(struct Directory* directory, char* result);
+struct Directory* load_directory(const char* input, int* index);
