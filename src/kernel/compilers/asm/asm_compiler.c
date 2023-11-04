@@ -176,14 +176,13 @@ int getAddress(char *variable_name) {
 	}
 
 	strcpy(variable_name, temp);
-	for (int i = 0; i < symbol_index; i++){
-		if (strcmp(symbol_tab[i]->variable_name, variable_name) == 0) {
+	for (int i = 0; i < symbol_index; i++)
+		if (strcmp(symbol_tab[i]->variable_name, variable_name) == 0) 
 			if (is_array)
 				return symbol_tab[i]->address + array_index;
 			else
 				return symbol_tab[i]->address;
-		}
-	}
+		
 	return -1; // variable not present
 }
 
@@ -213,6 +212,7 @@ void mov_func(char *param, int instruction_no){
 		intermediate_table[intermediate_index]->parameters[1] = getAddress(src);
 		intermediate_table[intermediate_index]->parameters[2] = -1;  // to run the for loop
 	}
+	
 	intermediate_index++;
 	return;
 }

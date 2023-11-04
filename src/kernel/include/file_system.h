@@ -12,7 +12,8 @@ struct TempFile {
 
     char* name;
     uint8_t sector;
-
+    uint8_t* sectors;
+    
     struct TempFile* next;
 };
 
@@ -48,5 +49,5 @@ void up_from_temp_directory();
 void set_main_directory(struct TempDirectory* directory);
 struct TempDirectory* get_main_directory();
 
-void saveTempDirectory(struct TempDirectory* directory, char* result);
-struct TempDirectory* loadTempDirectory(const char* input, int* index);
+void save_temp_directory(struct TempDirectory* directory, char* result);
+struct TempDirectory* load_temp_directory(const char* input, int* index);

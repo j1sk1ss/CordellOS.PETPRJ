@@ -5,7 +5,8 @@
 #include "string.h"
 #include "stdio.h"
 
-#define SECTOR_SIZE 512
+#define SECTOR_SIZE     512
+#define SECTOR_COUNT    1000
 
 #define ATA_SR_BSY                  0x80    // Busy
 #define ATA_SR_DRDY                 0x40    // Drive ready
@@ -89,7 +90,7 @@
 bool isSectorEmpty(const char* sectorData, size_t sectorSize);
 
 char* readSector(uint32_t LBA);
-void writeSector(uint32_t lba, const uint8_t* buffer);
+int writeSector(uint32_t lba, const uint8_t* buffer);
 
 void appendSector(uint32_t lba, char* append_data);
 void clearSector(uint32_t LBA);

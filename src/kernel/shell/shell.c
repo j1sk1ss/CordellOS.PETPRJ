@@ -154,8 +154,16 @@ void shell_start_screen() {
         //
         //
         
-            else if (strstr(command_line[0], COMMAND_GET_HDD_SECTOR) == 0) 
-                printf("\r\n%s", readSector(atoi(command_line[1])));
+            else if (strstr(command_line[0], COMMAND_GET_HDD_SECTOR) == 0) {
+                char* loaded_data = readSector(atoi(command_line[1]));
+                
+                if (loaded_data != NULL) 
+                    printf("\r\n%s", readSector(atoi(command_line[1])));
+                else 
+                    printf("\n\rError while reading from disk. Please try again");
+
+                free(loaded_data);
+            }
 
             else if (strstr(command_line[0], COMMAND_SET_HDD_SECTOR) == 0) {
                 if (access_level == CORDELL_ACCESS) {
@@ -167,34 +175,50 @@ void shell_start_screen() {
                         + strlen(command_line[1])           
                         + 2;
 
-                    writeSector(LBA, text);
+                    if (writeSector(LBA, text) == -1)
+                        printf("\n\rError while writing to disk. Please try again");
                 }
                 else
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);
             }
 
             else if (strstr(command_line[0], COMMAND_CLEAR_SECTOR) == 0) {
-                if (access_level == CORDELL_ACCESS) {
-                    int LBA = atoi(command_line[1]);
-
-                    clearSector(LBA);
-                }
+                if (access_level == CORDELL_ACCESS) 
+                    clearSector(atoi(command_line[1]));
                 else
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);
             }
 
             else if (strstr(command_line[0], COMMAND_SAVE_FILES) == 0) {
-                clearSector(100);
-                
-                char result[512];
-                saveTempDirectory(get_main_directory(), result);
+                if (access_level == CORDELL_ACCESS) {
+                    clearSector(100);
+                    
+                    char result[512];
+                    memset(result, 0, sizeof(result));
 
-                writeSector(100, result);
+                    save_temp_directory(get_main_directory(), result);
+
+                    if (writeSector(100, result) == -1)
+                        printf("\n\rError while writing to disk. Please try again");
+                }
+                else
+                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
             }
 
             else if (strstr(command_line[0], COMMAND_LOAD_FILES) == 0) {
-                int index = 0;
-                set_main_directory(loadTempDirectory(readSector(100), index));
+                if (access_level == CORDELL_ACCESS) {
+                    int index = 0;
+                    char* loaded_data = readSector(100);
+
+                    if (loaded_data != NULL) 
+                        set_main_directory(load_temp_directory(loaded_data, index));
+                    else 
+                        printf("\n\rError while reading from disk. Please try again");
+
+                    free(loaded_data);
+                }
+                else
+                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
             }
 
         //

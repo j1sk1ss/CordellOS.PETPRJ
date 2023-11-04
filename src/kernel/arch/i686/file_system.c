@@ -1,8 +1,30 @@
 #include "../../include/file_system.h"
 
 
-struct TempDirectory* mainDirectory;
-struct TempDirectory* currentDirectory;
+struct TempDirectory* mainDirectory     = NULL;
+struct TempDirectory* currentDirectory  = NULL;
+
+//
+//  In sector(100) placed LBA of sectors (13, 23, ..., n), that contains data about FS. 
+//  
+//
+
+
+void init_directory() {
+    char* loaded_data = readSector(100);
+
+    if (loaded_data != NULL)
+        if (isSectorEmpty(loaded_data, sizeof(loaded_data)) == false) {
+            int index = 0;
+            memset(index, 0, sizeof(index));
+            set_main_directory(load_temp_directory(loaded_data, index));
+            return;
+        }
+
+    create_temp_directory("root");
+
+    mainDirectory = currentDirectory;
+}
 
 ////////////////////////////////////////////////
 //
@@ -41,6 +63,8 @@ struct TempDirectory* currentDirectory;
                 current->next = newDirectory;
             }
         }  
+
+        save_temp();
     }
 
 //
@@ -80,7 +104,7 @@ struct TempDirectory* currentDirectory;
             current->next = newFile;
         }
 
-        
+        save_temp();
     }
 
 //
@@ -111,14 +135,14 @@ struct TempDirectory* currentDirectory;
                 free(current->name);
                 free(current);
 
-                
-
                 break;
             }
 
             prev    = current;
             current = current->next;
         }
+
+        save_temp();
     }
 
 //
@@ -141,14 +165,14 @@ struct TempDirectory* currentDirectory;
                 free(current->name);
                 free(current);
 
-                
-
                 break;
             }
 
             prev    = current;
             current = current->next;
         }
+
+        save_temp();
     }
 
 //
@@ -186,6 +210,8 @@ struct TempDirectory* currentDirectory;
             prev    = current;
             current = current->next;
         }
+
+        save_temp();
     }
 
 //
@@ -216,6 +242,8 @@ struct TempDirectory* currentDirectory;
             prev    = current;
             current = current->next;
         }
+
+        save_temp();
     }
 
 //
@@ -277,7 +305,7 @@ struct TempDirectory* currentDirectory;
             char* temp_name = malloc(sizeof(name) + sizeof(current->name) + 1);
             memset(temp_name, 0, sizeof(temp_name));
             if (temp_name == NULL) {
-                printf("[TFS 40] Alloc error!");
+                printf("[TFS 304] Alloc error!");
                 return NULL;
             }
 
@@ -310,7 +338,19 @@ struct TempDirectory* currentDirectory;
 //  SAVING DATA TO DISK
 //
 
-    void saveTempDirectory(struct TempDirectory* directory, char* result) {
+    void save_temp() {
+        clearSector(100);
+
+        char result[512];
+        memset(result, 0, sizeof(result));
+
+        save_temp_directory(get_main_directory(), result);
+
+        if (writeSector(100, result) == -1)
+            printf("\n\rError while writing to disk. Please try again");
+    }
+
+    void save_temp_directory(struct TempDirectory* directory, char* result) {
         if (directory == NULL) 
             return;
 
@@ -319,7 +359,7 @@ struct TempDirectory* currentDirectory;
 
         if (directory->subDirectory != NULL) {
             strcat(result, "N");
-            saveTempDirectory(directory->subDirectory, result);
+            save_temp_directory(directory->subDirectory, result);
         }
 
         struct TempFile* file = directory->files;
@@ -342,11 +382,11 @@ struct TempDirectory* currentDirectory;
 
         if (directory->next != NULL) {
             strcat(result, "#");
-            saveTempDirectory(directory->next, result);
+            save_temp_directory(directory->next, result);
         }
     }
 
-    struct TempFile* loadTempFile(const char* input, int* index) {
+    struct TempFile* load_temp_file(const char* input, int* index) {
         struct TempFile* file = (struct TempFile*)malloc(sizeof(struct TempFile));
         file->fileType = NULL;
         file->name = NULL;
@@ -402,7 +442,7 @@ struct TempDirectory* currentDirectory;
         return file;
     }
 
-    struct TempDirectory* loadTempDirectory(const char* input, int* index) {
+    struct TempDirectory* load_temp_directory(const char* input, int* index) {
         struct TempDirectory* directory = (struct TempDirectory*)malloc(sizeof(struct TempDirectory));
 
         directory->name         = NULL;
@@ -418,6 +458,8 @@ struct TempDirectory* currentDirectory;
                 (*index)++;
 
             char dirName[256];
+            memset(dirName, 0, sizeof(dirName));
+
             strncpy(dirName, input + start, *index - start);
             dirName[*index - start] = '\0';
             directory->name = strdup(dirName);
@@ -427,24 +469,24 @@ struct TempDirectory* currentDirectory;
             (*index)++;
 
             if (input[*index] == 'D') {
-                directory->subDirectory = loadTempDirectory(input, index);
+                directory->subDirectory = load_temp_directory(input, index);
                 directory->subDirectory->upDirectory = directory;
             }
 
             if (input[*index] == 'F') 
-                directory->files = loadTempFile(input, index);
+                directory->files = load_temp_file(input, index);
         }
 
         while (input[*index] == '#') {
             (*index)++;
             if (input[*index] == 'D') 
-                directory = loadTempDirectory(input, index);
+                directory->next = load_temp_directory(input, index);
 
             if (input[*index] == 'F') {
                 (*index)++;
                 struct TempFile* file = (struct TempFile*)malloc(sizeof(struct TempFile));
-                file->fileType = NULL;
-                file->name = NULL;
+                file->fileType  = NULL;
+                file->name      = NULL;
 
                 int start = *index;
                 while (input[*index] != '\0' && input[*index] != '#' && input[*index] != '@') 
@@ -486,8 +528,11 @@ struct TempDirectory* currentDirectory;
             }
         }
 
-        if (input[*index] == '@') 
+        if (input[*index] == '@') {
             (*index)++;
+            if (input[*index] == '#' && input[*index + 1] == 'D')
+                directory->next = load_temp_directory(input, index);
+        }
 
         return directory;
     }
@@ -496,11 +541,3 @@ struct TempDirectory* currentDirectory;
 //  SAVING DATA TO DISK
 //
 ////////////////////////////////////////////////
-
-void init_directory() {
-    currentDirectory = NULL;
-
-    create_temp_directory("root");
-
-    mainDirectory = currentDirectory;
-}
