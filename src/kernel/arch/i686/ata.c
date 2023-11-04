@@ -85,7 +85,7 @@
 //
 
     // Function that add data to sector
-    void appendSector(uint32_t lba, char* append_data) {
+    void append_sector(uint32_t lba, char* append_data) {
         char* previous_data = readSector(lba);
 
         strcat(previous_data, append_data);
@@ -93,7 +93,7 @@
     }
 
     // Function that clear sector
-    void clearSector(uint32_t LBA) {
+    void clear_sector(uint32_t LBA) {
         char buffer[512];  // Assuming 512-byte sectors
 
         // Fill the buffer with zeros
@@ -105,7 +105,7 @@
     }
 
     // Function to check if a sector is empty (all bytes are zero)
-    bool isSectorEmpty(const char* sectorData, size_t sectorSize) {
+    bool is_sector_empty(const char* sectorData, size_t sectorSize) {
         for (size_t i = 0; i < sectorSize; i++) 
             if (sectorData[i] != 0) 
                 return false;
@@ -114,11 +114,10 @@
     }
 
     // Function to find an empty sector on the disk
-    int findEmptySector() {
-        for (uint32_t sector = 0; sector < SECTOR_COUNT; sector++) {
-            if (isSectorEmpty(readSector(sector), SECTOR_SIZE)) 
+    int find_empty_sector() {
+        for (uint32_t sector = 0; sector < SECTOR_COUNT; sector++) 
+            if (is_sector_empty(readSector(sector), SECTOR_SIZE)) 
                 return sector;
-        }
 
         // Return -1 if no empty sector is found
         return -1;

@@ -48,6 +48,8 @@
         #define COMMAND_FILE_RUN                        "run"
         #define COMMAND_FILE_ASM_RUN                    "asm"
 
+        #define COMMAND_GET_DIRECTORY_DATA              "dirinfo"
+
         #define COMMAND_CREATE_FILE                     "mkfile"
         #define COMMAND_DELETE_FILE                     "rmfile"
 

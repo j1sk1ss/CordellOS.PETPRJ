@@ -108,6 +108,7 @@ unsigned char alphabet[128] = {
 
         char* keyboard_edit(char* previous_data) {
             char* input = (char*)malloc(strlen(previous_data));  // Start with an empty string
+            memset(input, 0, sizeof(input));
             strcpy(input, previous_data);
 
             printf("%s", input);

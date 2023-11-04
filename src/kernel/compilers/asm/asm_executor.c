@@ -64,7 +64,7 @@ void asm_executor(int *memory_array,int memory_index){
 
 		switch (intermediate_table[i]->opcode) {
 			case 14:  
-                printf("\nEnter input : ");
+				printf("\n\r");
                 memory_array[intermediate_table[i]->parameters[0]] = atoi(keyboard_read(VISIBLE_KEYBOARD));
 			break; // READ Instruction //
 

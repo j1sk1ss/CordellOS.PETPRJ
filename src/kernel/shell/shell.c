@@ -184,14 +184,14 @@ void shell_start_screen() {
 
             else if (strstr(command_line[0], COMMAND_CLEAR_SECTOR) == 0) {
                 if (access_level == CORDELL_ACCESS) 
-                    clearSector(atoi(command_line[1]));
+                    clear_sector(atoi(command_line[1]));
                 else
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);
             }
 
             else if (strstr(command_line[0], COMMAND_SAVE_FILES) == 0) {
                 if (access_level == CORDELL_ACCESS) {
-                    clearSector(100);
+                    clear_sector(100);
                     
                     char result[512];
                     memset(result, 0, sizeof(result));
@@ -235,6 +235,9 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0)                              // Create new dir
                 create_temp_directory(command_line[1]);                                             // Name placed as second arg
             
+            else if (strstr(command_line[0], COMMAND_GET_DIRECTORY_DATA) == 0)                      
+                print_directory_data();                                             
+
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0)                                  // Move to dir           
                 move_to_temp_directory(command_line[1]);                                            //
             
@@ -253,7 +256,7 @@ void shell_start_screen() {
                 }                                              
             
             else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0)                
-                create_temp_file(command_line[1], command_line[2], findEmptySector());              // Name placed as third arg
+                create_temp_file(command_line[1], command_line[2], find_empty_sector());              // Name placed as third arg
                              
             else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)                             // Delete file by name
                 switch (access_level) {
@@ -267,7 +270,7 @@ void shell_start_screen() {
                 }   
             
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {                              // List of all files
-                struct TempDirectory* current_dir = get_current_directory()->subDirectory;          // Print dirs
+                struct Directory* current_dir = get_current_directory()->subDirectory;          // Print dirs
                 if (current_dir != NULL) {                                                          //
                     printf("\r\n\t%s", current_dir->name);                                          //
             
@@ -277,7 +280,7 @@ void shell_start_screen() {
                     }                                                                               //
                 }                                                                                   //
             
-                struct TempFile* current = get_current_directory()->files;                          // Print files
+                struct File* current = get_current_directory()->files;                          // Print files
                 if (current != NULL) {                                                              //
                     printf("\r\n\t%s", current->name);                                              //
             
@@ -289,7 +292,7 @@ void shell_start_screen() {
             }                                                                                       //
 
             else if (strstr(command_line[0], COMMAND_FILE_VIEW) == 0) {
-                struct TempFile* file = find_temp_file(command_line[1]);
+                struct File* file = find_temp_file(command_line[1]);
                 if (file == NULL)
                     return;
                 
@@ -298,7 +301,7 @@ void shell_start_screen() {
                     return;
                 }
 
-                printf("\r\n%s", readSector(file->sector));
+                printf("\r\n%s", read_temp_file(file));
             }
 
         //
@@ -330,7 +333,7 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {
-                struct TempFile* file = find_temp_file(command_line[1]);
+                struct File* file = find_temp_file(command_line[1]);
                 if (file == NULL)
                     return;
                 
@@ -342,11 +345,11 @@ void shell_start_screen() {
                 VGA_clrscr();
                 printf("Stai modificando il file. Utilizzare CAPSLOCK per uscire.\r\n\r\n");
 
-                writeSector(file->sector, keyboard_edit(readSector(file->sector)));
+                write_temp_file(file, keyboard_edit(read_temp_file(file)));
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {
-                struct TempFile* execute = find_temp_file(command_line[1]);
+                struct File* execute = find_temp_file(command_line[1]);
                 if (execute == NULL)
                     return;
                 
@@ -355,7 +358,7 @@ void shell_start_screen() {
                     return;
                 }
 
-                char* sector_data = readSector(execute->sector);
+                char* sector_data = read_temp_file(execute);
                 char* command_for_split = (char*)malloc(strlen(sector_data));
                 strcpy(command_for_split, sector_data);
 
@@ -376,7 +379,7 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_ASM_RUN) == 0) {
-                struct TempFile* execute = find_temp_file(command_line[1]);
+                struct File* execute = find_temp_file(command_line[1]);
                 if (execute == NULL)
                     return;
 
@@ -385,7 +388,7 @@ void shell_start_screen() {
                     return;
                 }
 
-                char* sector_data = readSector(execute->sector);
+                char* sector_data = read_temp_file(execute);
                 asm_execute(sector_data);
 
                 free(sector_data);
