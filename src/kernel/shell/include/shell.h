@@ -11,14 +11,16 @@
 
 #include "../libs/core/shared/include/x86.h"
 
-#define SUPER_ACCESS        -1
-#define CORDELL_ACCESS      0
-#define DEFAULT_ACCESS      1
+#define SUPER_ACCESS        0
+#define CORDELL_ACCESS      1
+#define DEFAULT_ACCESS      2
+#define GUEST_ACCESS        3
 
 /////////////////
 //  CONSTANTS
 
     #define CORDELL_ATTENTION   "Non hai i permessi. Usa cordell."
+    #define GUEST_ATTENTION     "Modalita` ospite. Accesso rifiutato."
     #define MAX_ATTEMPT_COUNT   4
 
     /////////////////
@@ -44,9 +46,9 @@
         #define COMMAND_OUT_DIR                         ".."
         #define COMMAND_LIST_DIR                        "dir"
 
-        #define COMMAND_FILE_VIEW                       "view"
-        #define COMMAND_FILE_EDIT                       "edit"
-        #define COMMAND_FILE_RUN                        "run"
+        #define COMMAND_FILE_VIEW                       "vista"
+        #define COMMAND_FILE_EDIT                       "modif"
+        #define COMMAND_FILE_RUN                        "fuga"
         #define COMMAND_FILE_ASM_RUN                    "asm"
 
         #define COMMAND_GET_DIRECTORY_DATA              "dirinfo"
@@ -56,7 +58,7 @@
 
         #define COMMAND_CALCULATOR                      "calc"
         
-        #define COMMAND_SPLIT_LINE                      "split"
+        #define COMMAND_SPLIT_LINE                      "diviso"
 
     //  COMMANDS
     /////////////////
