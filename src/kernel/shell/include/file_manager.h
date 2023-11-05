@@ -6,4 +6,4 @@
 
 #define COLUMN_WIDTH 15
 
-void open_file_manager();
+void open_file_manager(int access_level);

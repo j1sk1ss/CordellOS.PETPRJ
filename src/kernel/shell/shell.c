@@ -280,7 +280,7 @@ void shell_start_screen() {
                 create_directory(command_line[1]);                                                  // Name placed as second arg
             
             else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0)                      
-                open_file_manager();                                             
+                open_file_manager(user->access);                                             
 
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0)                                  // Move to dir           
                 move_to_directory(command_line[1]);                                                 //

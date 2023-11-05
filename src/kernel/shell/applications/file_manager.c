@@ -2,7 +2,7 @@
 
 int row_position = 1;
 
-void open_file_manager() {
+void open_file_manager(int access_level) {
     VGA_clrscr();
     print_directory_data();
 
@@ -13,7 +13,7 @@ void open_file_manager() {
         else if (user_action == '\3')
             row_position++;
         else if (user_action == '\n') 
-            execute_item();
+            execute_item(access_level);
         else if (user_action == '\5') {
             VGA_clrscr();
             break;
@@ -24,7 +24,7 @@ void open_file_manager() {
     }
 }
 
-void execute_item() {
+void execute_item(int access_level) {
     if (row_position == 0) {
         up_from_directory();
         return;
@@ -41,9 +41,65 @@ void execute_item() {
         currentDir = currentDir->next;
     }
 
-    struct File* currentFile = currentDir->files;
+    struct File* currentFile = get_current_directory()->files;
     while (currentFile != NULL) {
         if (rows++ == row_position) {
+            row_position = 0;
+            while(1) {
+                printf("\n");
+                printf("+-----------------+-------+-----------+-----------------+\n");
+
+                if (row_position == 0) {
+                    cprintf(FOREGROUND_GREEN, ">");
+                } else printf("|");
+                printf(" VIEW                                                  |\n");
+                printf("+-----------------+-------+-----------+-----------------+\n");
+
+                if (row_position == 1) {
+                    cprintf(FOREGROUND_GREEN, ">");
+                } else printf("|");
+                printf(" EDIT                                                  |\n");
+                printf("+-----------------+-------+-----------+-----------------+\n");
+
+                char user_action = keyboard_navigation();
+                if (user_action == '\4' && row_position > 0) 
+                    row_position--;
+                else if (user_action == '\3' && row_position < 2)
+                    row_position++;
+                else if (user_action == '\n') {
+                    if (currentFile->fileType >= access_level) {
+                        switch (row_position) {
+                            case 0:
+                                VGA_clrscr();
+                                printf("Press CAPSLOCK to exit\nFile: [%s]\n%s", currentFile->name, read_file(currentFile));
+
+                                while (1) {
+                                    user_action = keyboard_navigation();
+                                    if (user_action == '\5')
+                                        break;
+                                }
+                                
+                            break;
+
+                            case 1:
+                                VGA_clrscr();
+                                printf("Stai modificando il file. Utilizzare CAPSLOCK per uscire.\r\n\r\n");
+
+                                write_file(currentFile, keyboard_edit(read_file(currentFile)));
+                            break;
+                        }
+
+                        if (row_position == 0)
+                            break;
+                    }
+                }
+                else if (user_action == '\5') {
+                    VGA_clrscr();
+                    break;
+                }
+
+                VGA_clrscr();
+            }
 
             break;
         }
