@@ -3,7 +3,6 @@
 #include <boot/bootparams.h>
 
 #include <include/memory.h>
-#include <include/debug.h>
 #include <include/string.h>
 #include <include/stdio.h>
 #include <include/hal.h>

@@ -30,7 +30,7 @@ unsigned char alphabet[128] = {
     '*',
     0,	                                                                /* Alt */
     ' ',	                                                            /* Space bar */
-    '{',	                                                            /* Caps lock */
+    '\5',	                                                            /* Caps lock */
     0,	                                                                /* 59 - F1 key ... > */
     0,   0,   0,   0,   0,   0,   0,   0,                       
     0,	                                                                /* < ... F10 */
@@ -65,7 +65,7 @@ unsigned char alphabet[128] = {
 ////
 
         char* keyboard_read(int mode) {
-            char* input       = NULL;  // Start with an empty string
+            char* input       = (char*)malloc(0);  // Start with an empty string
             size_t input_size = 0;
 
             while (1) {
@@ -121,33 +121,37 @@ unsigned char alphabet[128] = {
 
                     if (!(character & 0x80)) {
                         char currentCharacter = alphabet[character];
-                        if (currentCharacter != '{') {
+                        if (currentCharacter != '\5') {
 
                             if (currentCharacter == '\1') { // Left
-                                VGA_setcursor(cursor_get_x() - 1, cursor_get_y()); 
+                                VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y()); 
                                 continue;
                             }
                             else if (currentCharacter == '\2') { // Right
-                                VGA_setcursor(cursor_get_x() + 1, cursor_get_y()); 
+                                if (VGA_getchr(VGA_cursor_get_x() + 1, VGA_cursor_get_y()) != NULL)
+                                    VGA_setcursor(VGA_cursor_get_x() + 1, VGA_cursor_get_y()); 
+
                                 continue;
                             } 
                             else if (currentCharacter == '\3') { // Down
-                                VGA_setcursor(cursor_get_x(), cursor_get_y() + 1); 
+                                if (VGA_getchr(VGA_cursor_get_x(), VGA_cursor_get_y() + 1) != NULL)
+                                    VGA_setcursor(VGA_cursor_get_x(), VGA_cursor_get_y() + 1); 
+
                                 continue;
                             }
                             else if (currentCharacter == '\4') { // Up
-                                VGA_setcursor(cursor_get_x(), cursor_get_y() - 1); 
+                                if (VGA_getchr(VGA_cursor_get_x(), VGA_cursor_get_y() - 1) != NULL)
+                                    VGA_setcursor(VGA_cursor_get_x(), VGA_cursor_get_y() - 1); 
+
                                 continue;
                             }
-
-                            if (currentCharacter == '\b') {
-                                if (strlen(input) > 0 && input_size > 0)
+                            else if (currentCharacter == '\b') {
+                                if (strlen(input) > 0 && input_size > 0) 
                                     backspace_string(&input, --input_size);
-
+                                
                                 continue;
                             }
-
-                            if (currentCharacter == '\n') {
+                            else if (currentCharacter == '\n') {
                                 printf("\n");                        
                                 add_char_to_string(&input, ++input_size, '\n');
                             }

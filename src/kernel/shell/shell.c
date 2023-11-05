@@ -17,21 +17,29 @@ void shell() {
         cprintf(FOREGROUND_LIGHT_RED, "\r\n[LOGIN]: ");
         char* user_login = keyboard_read(VISIBLE_KEYBOARD);
 
-        cprintf(FOREGROUND_LIGHT_RED, "\r\n[PASSWORD]: ");
+        cprintf(FOREGROUND_LIGHT_RED, "\r\n[PAROLA D'ORDINE]: ");
         char* user_pass = keyboard_read(HIDDEN_KEYBOARD);
 
         user = login(user_login, user_pass);
+        int attempts = 0;
         while (user == NULL) {
             cprintf(FOREGROUND_RED, "\r\nPassword o login errata, riprova.\n\r");
             cprintf(FOREGROUND_LIGHT_RED, "\r\n[LOGIN]: ");
             user_login = keyboard_read(VISIBLE_KEYBOARD);
 
-            cprintf(FOREGROUND_LIGHT_RED, "\r\n[PASSWORD]: ");
+            cprintf(FOREGROUND_LIGHT_RED, "\r\n[PAROLA D'ORDINE]: ");
             user_pass = keyboard_read(HIDDEN_KEYBOARD);
             user = login(user_login, user_pass);
 
             free(user_login);
             free(user_pass);
+
+            if (++attempts > MAX_ATTEMPT_COUNT) {
+                cprintf(FOREGROUND_BLUE, "\r\nPassword o login errata, accedere alla modalità ospite.\n\r");
+                user = (struct User*)malloc(sizeof(struct User*));
+                user->access = GUEST_ACCESS;
+                break;
+            }
         }
     
         free(user_login);
@@ -51,11 +59,9 @@ void shell() {
 
         char *command = keyboard_read(VISIBLE_KEYBOARD);
         if (strstr(command, "cordell") == 0)
-            execute_command(command + strlen("cordell") + 1, CORDELL_ACCESS);
-        else if (user->access == 0)
-            execute_command(command, SUPER_ACCESS);
+            execute_command(command + strlen("cordell") + 1, user->access);
         else
-            execute_command(command, DEFAULT_ACCESS);
+            execute_command(command, user->access);
 
         free(path);
         free(command);
@@ -146,6 +152,7 @@ void shell_start_screen() {
                 printf("\r\n> Usa [%s] <nome> per cretore dir",                         COMMAND_CREATE_DIR);
                 printf("\r\n> Usa [%s] <accesso> <nome> per cretore file",              COMMAND_CREATE_FILE);
                 printf("\r\n> Usa [%s] <nome> per elimita dir",                         COMMAND_DELETE_FILE);
+                printf("\r\n> Usa [%s] in dir per ottenere tutte le informazioni",      COMMAND_GET_DIRECTORY_DATA)
                 printf("\r\n> Usa [%s] <nome> per entranto dir",                        COMMAND_IN_DIR);
                 printf("\r\n> Usa [%s] per uscire di dir",                              COMMAND_OUT_DIR);
                 printf("\r\n> Usa [%s] per guardare tutto cosa in dir",                 COMMAND_LIST_DIR);
@@ -162,8 +169,13 @@ void shell_start_screen() {
                 printf("\r\n%s", command_line[1]);
 
             else if (strstr(command_line[0], COMMAND_PASS) == 0) {
-                if (access_level == 0) {
+                if (access_level == DEFAULT_ACCESS) {
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);                 
+                    return;
+                }
+
+                if (access_level == GUEST_ACCESS) {
+                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
                     return;
                 }
 
@@ -197,17 +209,27 @@ void shell_start_screen() {
         //
         
             else if (strstr(command_line[0], COMMAND_GET_HDD_SECTOR) == 0) {
+                if (access_level == GUEST_ACCESS) {
+                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
+                    return;
+                }
+
                 char* loaded_data = readSector(atoi(command_line[1]));
                 
                 if (loaded_data != NULL) 
                     printf("\r\n%s", readSector(atoi(command_line[1])));
                 else 
-                    printf("\n\rError while reading from disk. Please try again");
+                    printf("\n\rErrore durante la lettura dal disco. Per favore riprova");
 
                 free(loaded_data);
             }
 
             else if (strstr(command_line[0], COMMAND_SET_HDD_SECTOR) == 0) {
+                if (access_level == GUEST_ACCESS) {
+                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
+                    return;
+                }
+
                 if (access_level == CORDELL_ACCESS) {
                     int LBA = atoi(command_line[1]);
 
@@ -218,13 +240,18 @@ void shell_start_screen() {
                         + 2;
 
                     if (writeSector(LBA, text) == -1)
-                        printf("\n\rError while writing to disk. Please try again");
+                        printf("\n\rErrore durante la scrittura su disco. Per favore riprova");
                 }
                 else
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);
             }
 
             else if (strstr(command_line[0], COMMAND_CLEAR_SECTOR) == 0) {
+                if (access_level == GUEST_ACCESS) {
+                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
+                    return;
+                }
+
                 if (access_level == CORDELL_ACCESS) 
                     clear_sector(atoi(command_line[1]));
                 else
@@ -232,6 +259,11 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_SAVE_FILES) == 0) {
+                if (access_level == GUEST_ACCESS) {
+                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
+                    return;
+                }
+
                 if (access_level == CORDELL_ACCESS) {
                     clear_sector(100);
                     
@@ -241,13 +273,18 @@ void shell_start_screen() {
                     save_directory(get_main_directory(), result);
 
                     if (writeSector(100, result) == -1)
-                        printf("\n\rError while writing to disk. Please try again");
+                        printf("\n\rErrore durante la scrittura su disco. Per favore riprova");
                 }
                 else
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);
             }
 
             else if (strstr(command_line[0], COMMAND_LOAD_FILES) == 0) {
+                if (access_level == GUEST_ACCESS) {
+                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
+                    return;
+                }
+
                 if (access_level == CORDELL_ACCESS) {
                     int index = 0;
                     char* loaded_data = readSector(100);
@@ -255,7 +292,7 @@ void shell_start_screen() {
                     if (loaded_data != NULL) 
                         set_main_directory(load_directory(loaded_data, index));
                     else 
-                        printf("\n\rError while reading from disk. Please try again");
+                        printf("\n\rErrore durante la lettura dal disco. Per favore riprova");
 
                     free(loaded_data);
                 }
@@ -270,23 +307,28 @@ void shell_start_screen() {
         //
         ///////////////////////////////////////////////////////////////////////////////////////////
         //
-        //  TEMP FILE SYSTEM COMMANDS (TEMP FILE SYSTEM CREATED FOR SIMULATION OF WORKING FS (WIP))
+        //  FILE SYSTEM COMMANDS
         //
         //
 
             else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0)                              // Create new dir
-                create_directory(command_line[1]);                                             // Name placed as second arg
+                create_directory(command_line[1]);                                                  // Name placed as second arg
             
             else if (strstr(command_line[0], COMMAND_GET_DIRECTORY_DATA) == 0)                      
                 print_directory_data();                                             
 
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0)                                  // Move to dir           
-                move_to_directory(command_line[1]);                                            //
+                move_to_directory(command_line[1]);                                                 //
             
             else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0)                                 // Up from dir
-                up_from_directory();                                                           //
+                up_from_directory();                                                                //
             
-            else if (strstr(command_line[0], COMMAND_DELETE_DIR) == 0)                              // Delete dir
+            else if (strstr(command_line[0], COMMAND_DELETE_DIR) == 0) {                            // Delete dir
+                if (access_level == GUEST_ACCESS) {
+                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
+                    return;
+                }
+
                 switch (access_level) {
                     case DEFAULT_ACCESS:
                         delete_directory(command_line[1]); 
@@ -296,11 +338,17 @@ void shell_start_screen() {
                         cordell_delete_directory(command_line[1]);
                     break;
                 }                                              
+            }
             
             else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0)                
                 create_file(command_line[1], command_line[2], find_empty_sector());              // Name placed as third arg
                              
-            else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)                             // Delete file by name
+            else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {                       // Delete file by name
+                if (access_level == GUEST_ACCESS) {
+                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
+                    return;
+                }
+
                 switch (access_level) {
                     case DEFAULT_ACCESS:
                         delete_file(command_line[1]); 
@@ -310,9 +358,10 @@ void shell_start_screen() {
                         cordell_delete_file(command_line[1]);
                     break;
                 }   
-            
+            }
+
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {                              // List of all files
-                struct Directory* current_dir = get_current_directory()->subDirectory;          // Print dirs
+                struct Directory* current_dir = get_current_directory()->subDirectory;              // Print dirs
                 if (current_dir != NULL) {                                                          //
                     printf("\r\n\t%s", current_dir->name);                                          //
             
@@ -322,7 +371,7 @@ void shell_start_screen() {
                     }                                                                               //
                 }                                                                                   //
             
-                struct File* current = get_current_directory()->files;                          // Print files
+                struct File* current = get_current_directory()->files;                              // Print files
                 if (current != NULL) {                                                              //
                     printf("\r\n\t%s", current->name);                                              //
             
@@ -338,6 +387,11 @@ void shell_start_screen() {
                 if (file == NULL)
                     return;
                 
+                if (strcmp(file->fileType, "2") != 0 && access_level == GUEST_ACCESS) {
+                    printf("\r\n%s\r\n", GUEST_ACCESS);
+                    return;
+                }
+
                 if (strcmp(file->fileType, "0") == 0 && access_level == DEFAULT_ACCESS) {
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);
                     return;
@@ -348,7 +402,7 @@ void shell_start_screen() {
 
         //
         //
-        //  TEMP FILE SYSTEM COMMANDS (TEMP FILE SYSTEM CREATED FOR SIMULATION OF WORKING FS (WIP))
+        //  FILE SYSTEM COMMANDS
         //
         ///////////////////////////////////////////////////////////////////////////////////////////
         //
@@ -375,6 +429,11 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {
+                if (access_level == GUEST_ACCESS) {
+                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
+                    return;
+                }
+                
                 struct File* file = find_file(command_line[1]);
                 if (file == NULL)
                     return;

@@ -4,17 +4,17 @@
 #include <include/vfs.h>
 
 static const char* const _logSeverityColors[] = {
-    [LVL_DEBUG]     = "\033[2;37m",
-    [LVL_INFO]      = "\033[2;34m",
-    [LVL_WARN]      = "\033[2;33m",
-    [LVL_ERROR]     = "\033[2;31m",
-    [LVL_CRITICAL]  = "\033[2;31m",
-    [CORDELL_MSG]   = "\033[2;32m"
+    [0]     = "\033[2;37m",
+    [1]      = "\033[2;34m",
+    [2]      = "\033[2;33m",
+    [3]     = "\033[2;31m",
+    [4]  = "\033[2;31m",
+    [5]   = "\033[2;32m"
 };
 
 static const char* const _colorReset = "\033[0m";
 
-void logf(const char* module, DebugLevel level, const char* fmt, ...) {
+void logf(const char* module,int level, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
 

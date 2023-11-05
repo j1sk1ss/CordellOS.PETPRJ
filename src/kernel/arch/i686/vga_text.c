@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 const unsigned int SCREEN_WIDTH  = 80;      //  Default widgth of screens
 const unsigned int SCREEN_HEIGHT = 25;      //  Default height of screens
@@ -14,11 +15,12 @@ uint8_t* _screenBuffer = (uint8_t*)0xB8000; // Position of screen buffer in memo
 int _screenX = 0;                           //  Cursor position
 int _screenY = 0;                           //
 
-int cursor_get_x() {
+
+int VGA_cursor_get_x() {
     return _screenX;
 }
 
-int cursor_get_y() {
+int VGA_cursor_get_y() {
     return _screenY;
 }
 
@@ -27,6 +29,11 @@ int cursor_get_y() {
 //
 char VGA_getchr(int x, int y) {
     return (char)_screenBuffer[2 * (y * SCREEN_WIDTH + x)];
+}
+
+void VGA_cursor_place_to_line() {
+    while (VGA_getchr(VGA_cursor_get_x() - 1, VGA_cursor_get_y()) == NULL) 
+        VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
 }
 
 //

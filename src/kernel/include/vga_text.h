@@ -14,5 +14,6 @@ void VGA_putcolor(int x, int y, uint8_t color);
 void VGA_setcursor(int x, int y);
 void VGA_scrollback(int lines);
 
-int cursor_get_x();
-int cursor_get_y();
+int VGA_cursor_get_x();
+int VGA_cursor_get_y();
+void VGA_cursor_place_to_line();

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "math.h"
+#include "stdio.h"
 
 #include <stddef.h>
 
