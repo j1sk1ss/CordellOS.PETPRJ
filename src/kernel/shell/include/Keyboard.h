@@ -8,5 +8,6 @@
 
 char* keyboard_read(int mode);
 char* keyboard_edit(char* previous_data);
+char keyboard_navigation();
 
 void __attribute__((cdecl)) x86_init_keyboard();

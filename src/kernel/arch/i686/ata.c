@@ -6,8 +6,8 @@
 //
 
     // Function to read a sector from the disk.
-    char* readSector(uint32_t LBA) {
-        ata_wait();
+    char* ATA_read_sector(uint32_t LBA) {
+        ATA_ata_wait();
         char* buffer = (char*)malloc(SECTOR_SIZE);
         if (buffer == NULL) 
             return NULL;
@@ -49,8 +49,8 @@
 //
 
     // Function to write a sector on the disk.
-    int writeSector(uint32_t lba, const uint8_t* buffer) {
-        ata_wait();
+    int ATA_write_sector(uint32_t lba, const uint8_t* buffer) {
+        ATA_ata_wait();
         outportb(0x1F6, 0xE0 | ((lba >> 24) & 0x0F));
         outportb(0x1F1, 0x00);
         outportb(0x1F2, 1);
@@ -85,27 +85,27 @@
 //
 
     // Function that add data to sector
-    void append_sector(uint32_t lba, char* append_data) {
-        char* previous_data = readSector(lba);
+    void ATA_append_sector(uint32_t lba, char* append_data) {
+        char* previous_data = ATA_read_sector(lba);
 
         strcat(previous_data, append_data);
-        writeSector(lba, previous_data);
+        ATA_write_sector(lba, previous_data);
     }
 
     // Function that clear sector
-    void clear_sector(uint32_t LBA) {
+    void ATA_clear_sector(uint32_t LBA) {
         char buffer[512];  // Assuming 512-byte sectors
 
         // Fill the buffer with zeros
         memset(buffer, 0, sizeof(buffer));
 
         // Write the buffer to the specified sector
-        if (writeSector(LBA, buffer) == -1) 
-            printf("\n\rCleaning of sector not completed!");
+        if (ATA_write_sector(LBA, buffer) == -1) 
+            printf("\n\rPulizia del settore non completata!");
     }
 
     // Function to check if a sector is empty (all bytes are zero)
-    bool is_sector_empty(const char* sectorData, size_t sectorSize) {
+    bool ATA_is_sector_empty(const char* sectorData, size_t sectorSize) {
         for (size_t i = 0; i < sectorSize; i++) 
             if (sectorData[i] != 0) 
                 return false;
@@ -114,8 +114,8 @@
     }
 
     // Function to check if a sector (by LBA) is empty (all bytes are zero)
-    bool is_current_sector_empty(uint32_t LBA) {
-        if (is_sector_empty(readSector(LBA), SECTOR_SIZE)) 
+    bool ATA_is_current_sector_empty(uint32_t LBA) {
+        if (ATA_is_sector_empty(ATA_read_sector(LBA), SECTOR_SIZE)) 
             return true;
 
         // Return -1 if no empty sector is found
@@ -123,9 +123,9 @@
     }
 
     // Function to find an empty sector on the disk
-    int find_empty_sector() {
+    int ATA_find_empty_sector() {
         for (uint32_t sector = 0; sector < SECTOR_COUNT; sector++) 
-            if (is_sector_empty(readSector(sector), SECTOR_SIZE)) 
+            if (ATA_is_sector_empty(ATA_read_sector(sector), SECTOR_SIZE)) 
                 return sector;
 
         // Return -1 if no empty sector is found
@@ -133,7 +133,7 @@
     }
 
     // Delay for working with ATA
-    void ata_wait() {
+    void ATA_ata_wait() {
         int delay = 99999;
         while (--delay > 0)
             continue;

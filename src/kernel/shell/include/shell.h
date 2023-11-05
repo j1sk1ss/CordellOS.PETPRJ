@@ -8,6 +8,7 @@
 
 #include "Keyboard.h"
 #include "user.h"
+#include "file_manager.h"
 
 #include "../libs/core/shared/include/x86.h"
 
@@ -20,7 +21,7 @@
 //  CONSTANTS
 
     #define CORDELL_ATTENTION   "Non hai i permessi. Usa cordell."
-    #define GUEST_ATTENTION     "Modalita` ospite. Accesso rifiutato."
+    #define GUEST_ATTENTION     "Tu in modalita' ospite. Azione respinta."
     #define MAX_ATTEMPT_COUNT   4
 
     /////////////////
@@ -36,9 +37,6 @@
         #define COMMAND_SET_HDD_SECTOR                  "wsector"
         #define COMMAND_CLEAR_SECTOR                    "clsector"
 
-        #define COMMAND_LOAD_FILES                      "loadfs"
-        #define COMMAND_SAVE_FILES                      "savefs"
-
         #define COMMAND_CREATE_DIR                      "mkdir"
         #define COMMAND_DELETE_DIR                      "rmdir"
 
@@ -51,7 +49,7 @@
         #define COMMAND_FILE_RUN                        "fuga"
         #define COMMAND_FILE_ASM_RUN                    "asm"
 
-        #define COMMAND_GET_DIRECTORY_DATA              "dirinfo"
+        #define COMMAND_GO_TO_MANAGER                   "mng"
 
         #define COMMAND_CREATE_FILE                     "mkfile"
         #define COMMAND_DELETE_FILE                     "rmfile"

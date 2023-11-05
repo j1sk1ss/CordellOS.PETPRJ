@@ -5,7 +5,7 @@ void init_users() {
         return;
 
     // create default users file
-    create_file("0", "users", USERS_SECTOR);
+    create_file(0, "users", USERS_SECTOR);
     write_file(find_file("users"), "admin[0[28072003\n");
 }
 

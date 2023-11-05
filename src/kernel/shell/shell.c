@@ -69,14 +69,16 @@ void shell() {
 }
 
 void shell_start_screen() {
-    cprintf(FOREGROUND_LIGHT_GREEN, "  _____  ____  ____   ___    ___ ||    ||        ____    ____\r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, "_|      ||  || || ||  || || ||   ||    ||       ||  ||  |    \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, "||      ||  || ||_||  || || ||   ||    ||       ||  || ||    \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, "||      ||  || |||    || || ||__ ||    ||       ||  || ||    \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, "||      ||  || || ||  || || ||   ||    ||       ||  || ||    \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, " |_____  |__|  ||  || ||_|| ||__ ||___ ||___     |__|   |____\r\n");
+    printf("\n");
 
-    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. \r\n");
+    cprintf(FOREGROUND_LIGHT_GREEN, "  .o88b.  .d88b.  d8888b. d8888b. d88888b db      db         .d88b.  .d8888. \r\n");
+    cprintf(FOREGROUND_LIGHT_GREEN, " d8P  Y8 .8P  Y8. 88  `8D 88  `8D 88'     88      88        .8P  Y8. 88'  YP \r\n");
+    cprintf(FOREGROUND_LIGHT_GREEN, " 8P      88    88 88oobY' 88   88 88ooooo 88      88        88    88 `8bo.   \r\n");
+    cprintf(FOREGROUND_LIGHT_GREEN, " 8b      88    88 88`8b   88   88 88~~~~~ 88      88        88    88   `Y8b. \r\n");
+    cprintf(FOREGROUND_LIGHT_GREEN, " Y8b  d8 `8b  d8' 88 `88. 88  .8D 88.     88booo. 88booo.   `8b  d8' db   8D \r\n");
+    cprintf(FOREGROUND_LIGHT_GREEN, "  `Y88P'  `Y88P'  88   YD Y8888D' Y88888P Y88888P Y88888P    `Y88P'  `8888Y' \r\n");
+
+    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5 | 05.11.2023] \r\n");
 }
 
 ///////////////////////////////////////
@@ -152,7 +154,7 @@ void shell_start_screen() {
                 printf("\r\n> Usa [%s] <nome> per cretore dir",                         COMMAND_CREATE_DIR);
                 printf("\r\n> Usa [%s] <accesso> <nome> per cretore file",              COMMAND_CREATE_FILE);
                 printf("\r\n> Usa [%s] <nome> per elimita dir",                         COMMAND_DELETE_FILE);
-                printf("\r\n> Usa [%s] in dir per ottenere tutte le informazioni",      COMMAND_GET_DIRECTORY_DATA)
+                printf("\r\n> Usa [%s] in dir per ottenere tutte le informazioni",      COMMAND_GO_TO_MANAGER);
                 printf("\r\n> Usa [%s] <nome> per entranto dir",                        COMMAND_IN_DIR);
                 printf("\r\n> Usa [%s] per uscire di dir",                              COMMAND_OUT_DIR);
                 printf("\r\n> Usa [%s] per guardare tutto cosa in dir",                 COMMAND_LIST_DIR);
@@ -195,7 +197,12 @@ void shell_start_screen() {
 
             else if (strstr(command_line[0], COMMAND_TIME) == 0) {
                 datetime_read_rtc();
-                printf("\r\n%i/%i/%i\r\n%i:%i:%i", datetime_day, datetime_month, datetime_year, datetime_hour, datetime_minute, datetime_second);
+                printf("\r\nGiorno: %i/%i/%i\tTempo: %i:%i:%i", datetime_day, 
+                                                                datetime_month, 
+                                                                datetime_year, 
+                                                                datetime_hour, 
+                                                                datetime_minute, 
+                                                                datetime_second);
             }
 
         //
@@ -214,10 +221,10 @@ void shell_start_screen() {
                     return;
                 }
 
-                char* loaded_data = readSector(atoi(command_line[1]));
+                char* loaded_data = ATA_read_sector(atoi(command_line[1]));
                 
                 if (loaded_data != NULL) 
-                    printf("\r\n%s", readSector(atoi(command_line[1])));
+                    printf("\r\n%s", ATA_read_sector(atoi(command_line[1])));
                 else 
                     printf("\n\rErrore durante la lettura dal disco. Per favore riprova");
 
@@ -239,7 +246,7 @@ void shell_start_screen() {
                         + strlen(command_line[1])           
                         + 2;
 
-                    if (writeSector(LBA, text) == -1)
+                    if (ATA_write_sector(LBA, text) == -1)
                         printf("\n\rErrore durante la scrittura su disco. Per favore riprova");
                 }
                 else
@@ -253,49 +260,7 @@ void shell_start_screen() {
                 }
 
                 if (access_level == CORDELL_ACCESS) 
-                    clear_sector(atoi(command_line[1]));
-                else
-                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
-            }
-
-            else if (strstr(command_line[0], COMMAND_SAVE_FILES) == 0) {
-                if (access_level == GUEST_ACCESS) {
-                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
-                    return;
-                }
-
-                if (access_level == CORDELL_ACCESS) {
-                    clear_sector(100);
-                    
-                    char result[512];
-                    memset(result, 0, sizeof(result));
-
-                    save_directory(get_main_directory(), result);
-
-                    if (writeSector(100, result) == -1)
-                        printf("\n\rErrore durante la scrittura su disco. Per favore riprova");
-                }
-                else
-                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
-            }
-
-            else if (strstr(command_line[0], COMMAND_LOAD_FILES) == 0) {
-                if (access_level == GUEST_ACCESS) {
-                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
-                    return;
-                }
-
-                if (access_level == CORDELL_ACCESS) {
-                    int index = 0;
-                    char* loaded_data = readSector(100);
-
-                    if (loaded_data != NULL) 
-                        set_main_directory(load_directory(loaded_data, index));
-                    else 
-                        printf("\n\rErrore durante la lettura dal disco. Per favore riprova");
-
-                    free(loaded_data);
-                }
+                    ATA_clear_sector(atoi(command_line[1]));
                 else
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);
             }
@@ -314,8 +279,8 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0)                              // Create new dir
                 create_directory(command_line[1]);                                                  // Name placed as second arg
             
-            else if (strstr(command_line[0], COMMAND_GET_DIRECTORY_DATA) == 0)                      
-                print_directory_data();                                             
+            else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0)                      
+                open_file_manager();                                             
 
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0)                                  // Move to dir           
                 move_to_directory(command_line[1]);                                                 //
@@ -329,19 +294,16 @@ void shell_start_screen() {
                     return;
                 }
 
-                switch (access_level) {
-                    case DEFAULT_ACCESS:
+                struct Directory* directory = find_directory(command_line[1]);
+                if (directory->subDirectory != NULL || directory->files != NULL) 
+                    if (access_level == CORDELL_ACCESS || access_level == SUPER_ACCESS) 
                         delete_directory(command_line[1]); 
-                    break;
-
-                    case CORDELL_ACCESS:
-                        cordell_delete_directory(command_line[1]);
-                    break;
-                }                                              
+                    else printf("\r\nDirectory non vuota. Usa [cordell]\r\n");
+                else delete_directory(command_line[1]);                                              
             }
             
             else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0)                
-                create_file(command_line[1], command_line[2], find_empty_sector());              // Name placed as third arg
+                create_file(atoi(command_line[1]), command_line[2], ATA_find_empty_sector());              // Name placed as third arg
                              
             else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {                       // Delete file by name
                 if (access_level == GUEST_ACCESS) {
@@ -349,15 +311,12 @@ void shell_start_screen() {
                     return;
                 }
 
-                switch (access_level) {
-                    case DEFAULT_ACCESS:
-                        delete_file(command_line[1]); 
-                    break;
-
-                    case CORDELL_ACCESS:
-                        cordell_delete_file(command_line[1]);
-                    break;
-                }   
+                struct File* file = find_file(command_line[1]);
+                if (file->fileType <= 1) 
+                    if (access_level == CORDELL_ACCESS || access_level == SUPER_ACCESS) 
+                        delete_file(command_line[1]);
+                    else printf(CORDELL_ATTENTION);
+                else delete_file(command_line[1]);  
             }
 
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {                              // List of all files
@@ -387,12 +346,12 @@ void shell_start_screen() {
                 if (file == NULL)
                     return;
                 
-                if (strcmp(file->fileType, "2") != 0 && access_level == GUEST_ACCESS) {
+                if (file->fileType != 2 && access_level == GUEST_ACCESS) {
                     printf("\r\n%s\r\n", GUEST_ACCESS);
                     return;
                 }
 
-                if (strcmp(file->fileType, "0") == 0 && access_level == DEFAULT_ACCESS) {
+                if (file->fileType == 0 && access_level == DEFAULT_ACCESS) {
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);
                     return;
                 }
@@ -438,7 +397,7 @@ void shell_start_screen() {
                 if (file == NULL)
                     return;
                 
-                if (strcmp(file->fileType, "0") == 0 && access_level == DEFAULT_ACCESS) {
+                if (file->fileType == 0 && access_level == DEFAULT_ACCESS) {
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);
                     return;
                 }
@@ -454,7 +413,7 @@ void shell_start_screen() {
                 if (execute == NULL)
                     return;
                 
-                if (strcmp(execute->fileType, "0") == 0 && access_level == DEFAULT_ACCESS) {
+                if (execute->fileType == 0 && access_level == DEFAULT_ACCESS) {
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);
                     return;
                 }
@@ -484,7 +443,7 @@ void shell_start_screen() {
                 if (execute == NULL)
                     return;
 
-                if (strcmp(execute->fileType, "0") == 0 && access_level == DEFAULT_ACCESS) {
+                if (execute->fileType == 0 && access_level == DEFAULT_ACCESS) {
                     printf("\r\n%s\r\n", CORDELL_ATTENTION);
                     return;
                 }
