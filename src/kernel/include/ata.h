@@ -87,13 +87,13 @@
 #define ATA_READ                    0x00
 #define ATA_WRITE                   0x01
 
-bool is_sector_empty(const char* sectorData, size_t sectorSize);
-bool is_current_sector_empty(uint32_t LBA);
+bool ATA_is_sector_empty(const char* sectorData, size_t sectorSize);
+bool ATA_is_current_sector_empty(uint32_t LBA);
 
-char* readSector(uint32_t LBA);
-int writeSector(uint32_t lba, const uint8_t* buffer);
+char* ATA_read_sector(uint32_t LBA);
+int ATA_write_sector(uint32_t lba, const uint8_t* buffer);
 
-void append_sector(uint32_t lba, char* append_data);
-void clear_sector(uint32_t LBA);
+void ATA_append_sector(uint32_t lba, char* append_data);
+void ATA_clear_sector(uint32_t LBA);
 
-int find_empty_sector();
+int ATA_find_empty_sector();

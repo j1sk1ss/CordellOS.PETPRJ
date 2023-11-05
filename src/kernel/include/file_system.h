@@ -13,7 +13,7 @@
 
 
 struct File {
-    char* fileType;
+    int fileType;
 
     char* name;
     uint32_t* sectors;
@@ -43,9 +43,7 @@ void init_directory();
 void create_directory(char* name);
 void create_file(char* type, char* name, uint8_t* head_sector);
 void delete_directory(char* name);
-void cordell_delete_directory(char* name);
 void delete_file(char* name);
-void cordell_delete_file(char* name);
 
 void write_file(struct File* file, char* data);
 char* read_file(struct File* file);

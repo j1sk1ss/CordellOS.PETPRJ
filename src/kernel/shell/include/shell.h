@@ -11,14 +11,16 @@
 
 #include "../libs/core/shared/include/x86.h"
 
-#define SUPER_ACCESS        -1
-#define CORDELL_ACCESS      0
-#define DEFAULT_ACCESS      1
+#define SUPER_ACCESS        0
+#define CORDELL_ACCESS      1
+#define DEFAULT_ACCESS      2
+#define GUEST_ACCESS        3
 
 /////////////////
 //  CONSTANTS
 
     #define CORDELL_ATTENTION   "Non hai i permessi. Usa cordell."
+    #define GUEST_ATTENTION     "Tu in modalità ospite. Azione respinta."
     #define MAX_ATTEMPT_COUNT   4
 
     /////////////////
@@ -33,9 +35,6 @@
         #define COMMAND_GET_HDD_SECTOR                  "rsector"
         #define COMMAND_SET_HDD_SECTOR                  "wsector"
         #define COMMAND_CLEAR_SECTOR                    "clsector"
-
-        #define COMMAND_LOAD_FILES                      "loadfs"
-        #define COMMAND_SAVE_FILES                      "savefs"
 
         #define COMMAND_CREATE_DIR                      "mkdir"
         #define COMMAND_DELETE_DIR                      "rmdir"

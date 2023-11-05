@@ -11,10 +11,10 @@ struct Directory* currentDirectory  = NULL;
 
 
 void init_directory() {
-    char* loaded_data = readSector(FILE_SYSTEM_SECTOR);
+    char* loaded_data = ATA_read_sector(FILE_SYSTEM_SECTOR);
 
     if (loaded_data != NULL)
-        if (is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
+        if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
             int index = 0;
             memset(index, 0, sizeof(index));
             set_main_directory(load_directory(loaded_data, index));
@@ -62,7 +62,7 @@ void init_directory() {
                         strcat(file_name, " ");
                 }
 
-                printf("| %s | File  | %s         | %d                  |\n",
+                printf("| %s | File  | %i         | %d                  |\n",
                     file_name,
                     currentFile->fileType,
                     currentFile->sectors[0]);
@@ -88,7 +88,7 @@ void init_directory() {
 
     void create_directory(char* name) {
         if (find_directory(name) != NULL) {
-            printf("Directory alredy exist.");
+            printf("La directory esiste gia'.");
             return;
         }
 
@@ -119,7 +119,7 @@ void init_directory() {
             }
         }  
 
-        save_temp();
+        save_file_system();
     }
 
 //
@@ -132,7 +132,7 @@ void init_directory() {
 
     void create_file(char* type, char* name, uint8_t* head_sector) {
         if (find_file(name) != NULL) {
-            printf("File alredy exist.");
+            printf("Il file esiste gia'.");
             return;
         }
 
@@ -140,7 +140,6 @@ void init_directory() {
         memset(newFile, 0, sizeof(newFile));
 
         newFile->name = malloc(strlen(name));
-        memset(newFile->name, 0, sizeof(newFile->name));
         memcpy(newFile->name, name, strlen(name));
 
         newFile->fileType = malloc(strlen(type));
@@ -148,10 +147,9 @@ void init_directory() {
 
         newFile->sectors = (uint32_t*)malloc(sizeof(uint32_t));
         newFile->sector_count++;
-        memset(newFile->sectors, 0, sizeof(newFile->sectors));
 
         newFile->sectors[0] = head_sector;
-        writeSector(head_sector, "\0");
+        ATA_write_sector(head_sector, "\0");
 
         if (currentDirectory->files == NULL)
             currentDirectory->files = newFile;
@@ -163,7 +161,7 @@ void init_directory() {
             current->next = newFile;
         }
 
-        save_temp();
+        save_file_system();
     }
 
     //  CREATE FILE
@@ -179,7 +177,7 @@ void init_directory() {
                 if (data_len < bytes_to_write) 
                     bytes_to_write = data_len;
 
-                clear_sector(file->sectors[i]);
+                ATA_clear_sector(file->sectors[i]);
 
                 // Read the current sector's data into a buffer
                 char* sector_data = (char*)malloc(bytes_to_write);
@@ -189,19 +187,20 @@ void init_directory() {
                 strncpy(sector_data, data, bytes_to_write);
 
                 // Write the modified sector data back to the sector
-                writeSector(file->sectors[i], sector_data);
+                ATA_write_sector(file->sectors[i], sector_data);
 
                 data += bytes_to_write; // Move the data pointer to the next chunk
                 data_len -= bytes_to_write;
 
                 // If there's more data and we have exceeded the existing sectors, allocate a new sector
                 if (data_len > 0 && i == (file->sector_count - 1)) {
-                    int new_sector = find_empty_sector();
+                    int new_sector = ATA_find_empty_sector();
                     if (new_sector != -1) {
                         file->sectors = realloc(file->sectors, (file->sector_count + 1) * sizeof(uint32_t));
                         file->sectors[file->sector_count] = new_sector;
                         file->sector_count++;
-                    } else 
+                    }
+                    else 
                         return;
                 }
             }
@@ -215,7 +214,7 @@ void init_directory() {
             char* data = (char*)malloc(512 * file->sector_count);
 
             for (size_t i = 0; i < file->sector_count; i++) 
-                strcat(data, readSector(file->sectors[i]));
+                strcat(data, ATA_read_sector(file->sectors[i]));
 
             return data;
         }
@@ -229,7 +228,7 @@ void init_directory() {
             memset(empty_data, 0, sizeof(empty_data));
 
             for (size_t i = 0; i < file->sector_count; i++) 
-                writeSector(file->sectors[i], empty_data);
+                ATA_write_sector(file->sectors[i], empty_data);
         }
 
     //  CLEAR FILE
@@ -251,7 +250,7 @@ void init_directory() {
 //
 ////////////////////////////////////////////////
 //
-//  DELETE TEMP DIRECTORY (EMPTY DIRECTORY)
+//  DELETE TEMP DIRECTORY
 //
 
     void delete_directory(char* name) {
@@ -260,16 +259,8 @@ void init_directory() {
 
         while (current != NULL) {
             if (strcmp(current->name, name) == 0) {
-
-                if (current->files != NULL || current->subDirectory != NULL) {
-                    printf("\r\nDirectory not empty. Use cordell.\r\n");
-                    return;
-                }
-
-                if (prev == NULL) 
-                    currentDirectory->subDirectory = current->next;
-                else 
-                    prev->next = current->next;
+                if (prev == NULL) currentDirectory->subDirectory = current->next;
+                else prev->next = current->next;
                 
                 free(current->name);
                 free(current);
@@ -281,45 +272,15 @@ void init_directory() {
             current = current->next;
         }
 
-        save_temp();
+        save_file_system();
     }
 
 //
-//  DELETE TEMP DIRECTORY (EMPTY DIRECTORY)
-////
-//  DELETE TEMP DIRECTORY (ANY DIRECTORY)
-//
-
-    void cordell_delete_directory(char* name) {
-        struct Directory* current   = currentDirectory->subDirectory;
-        struct Directory* prev      = NULL;
-
-        while (current != NULL) {
-            if (strcmp(current->name, name) == 0) {
-                if (prev == NULL) 
-                    currentDirectory->subDirectory = current->next;
-                else 
-                    prev->next = current->next;
-                
-                free(current->name);
-                free(current);
-
-                break;
-            }
-
-            prev    = current;
-            current = current->next;
-        }
-
-        save_temp();
-    }
-
-//
-//  DELETE TEMP DIRECTORY (ANY DIRECTORY)
+//  DELETE TEMP DIRECTORY
 //
 ////////////////////////////////////////////////
 //
-//  DELETE TEMP FILE (FILE WITH ACCESS LARGER THAN 0)
+//  DELETE TEMP FILE
 //
 
     void delete_file(char* name) {
@@ -328,18 +289,10 @@ void init_directory() {
 
         while (current != NULL) {
             if (strcmp(current->name, name) == 0) {
-
-                if (strcmp(current->fileType, "0") == 0) {
-                    printf("\r\nI don`t have permission. Use cordell.\r\n");
-                    return;
-                }
-
                 clear_file(current);
 
-                if (prev == NULL) 
-                    currentDirectory->files = current->next;
-                else 
-                    prev->next = current->next;
+                if (prev == NULL) currentDirectory->files = current->next;
+                else prev->next = current->next;
                 
                 free(current);
                 
@@ -350,43 +303,11 @@ void init_directory() {
             current = current->next;
         }
 
-        save_temp();
+        save_file_system();
     }
 
 //
-//  DELETE TEMP FILE (FILE WITH ACCESS LARGER THAN 0)
-////
-//  DELETE TEMP FILE (ANY FILE)
-//
-
-    void cordell_delete_file(char* name) {
-        struct File* current    = currentDirectory->files;
-        struct File* prev       = NULL;
-
-        while (current != NULL) {
-            if (strcmp(current->name, name) == 0) {
-
-                clear_file(current);
-
-                if (prev == NULL) 
-                    currentDirectory->files = current->next;
-                else 
-                    prev->next = current->next;
-                
-                free(current);
-                
-                break;
-            }
-
-            prev    = current;
-            current = current->next;
-        }
-
-        save_temp();
-    }
-
-//
-//  DELETE TEMP FILE (ANY FILE)
+//  DELETE TEMP FILE
 //
 ////////////////////////////////////////////////
 //
@@ -477,15 +398,15 @@ void init_directory() {
 //  SAVING DATA TO DISK
 //
 
-    void save_temp() {
-        clear_sector(FILE_SYSTEM_SECTOR);
+    void save_file_system() {
+        ATA_clear_sector(FILE_SYSTEM_SECTOR);
 
         char result[512];
         memset(result, 0, sizeof(result));
 
         save_directory(get_main_directory(), result);
 
-        if (writeSector(FILE_SYSTEM_SECTOR, result) == -1)
+        if (ATA_write_sector(FILE_SYSTEM_SECTOR, result) == -1)
             printf("\n\rError while writing to disk. Please try again");
     }
 
@@ -558,12 +479,7 @@ void init_directory() {
                 while (input[*index] != '\0' && input[*index] != 'S') 
                     (*index)++;
 
-                length = *index - start;
-                if (length > 0) {
-                    file->fileType = (char*)malloc(length + 1);
-                    strncpy(file->fileType, input + start, length);
-                    file->fileType[length] = '\0';
-                }
+                file->fileType = atoi(strncpy((input + start)[0]));
                 
                 while (input[*index] == 'S') {
                     (*index)++; // Move past 'S'
@@ -643,9 +559,7 @@ void init_directory() {
 
                 if (input[start] == 'T') {
                     start++;
-                    file->fileType = (char*)malloc(2);
-                    strncpy(file->fileType, input + start, 1);
-                    file->fileType[1] = '\0';
+                    file->fileType = atoi((input + start)[0]);
                 }
 
                 start = *index;
