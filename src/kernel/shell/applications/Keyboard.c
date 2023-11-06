@@ -1,12 +1,5 @@
 #include "../include/Keyboard.h"
 
-#include "../../../libs/core/shared/include/allocator.h"
-
-#include "../../include/stdio.h"
-#include "../../include/string.h"
-#include "../../include/memory.h"
-#include "../../include/io.h"
-#include "../../include/vga_text.h"
 
 /* 
 *  KBDUS means US Keyboard Layout. This is a scancode table
@@ -55,7 +48,16 @@ unsigned char alphabet[128] = {
     0,	                                                                /* All other keys are undefined */
 };
 
+int key_press() {
+    if (i686_inb(0x64) & 0x1)
+        return 1;
 
+    return 0;
+}
+
+char get_character(char character) {
+    return alphabet[character];
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -76,8 +78,8 @@ unsigned char alphabet[128] = {
 
                     if (!(character & 0x80)) {
                         char currentCharacter = alphabet[character];
-                        if (currentCharacter != '\n') {
-                            if (currentCharacter == '\b') {
+                        if (currentCharacter != ENTER_BUTTON) {
+                            if (currentCharacter == BACKSPACE_BUTTON) {
                                 if (strlen(input) > 0 && input_size > 0)
                                     backspace_string(&input, --input_size);
                                 
@@ -123,37 +125,37 @@ unsigned char alphabet[128] = {
 
                     if (!(character & 0x80)) {
                         char currentCharacter = alphabet[character];
-                        if (currentCharacter != '\5') {
+                        if (currentCharacter != F3_BUTTON) {
 
-                            if (currentCharacter == '\1') { // Left
+                            if (currentCharacter == LEFT_ARROW_BUTTON) { // Left
                                 VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y()); 
                                 continue;
                             }
-                            else if (currentCharacter == '\2') { // Right
+                            else if (currentCharacter == RIGHT_ARROW_BUTTON) { // Right
                                 if (VGA_getchr(VGA_cursor_get_x() + 1, VGA_cursor_get_y()) != NULL)
                                     VGA_setcursor(VGA_cursor_get_x() + 1, VGA_cursor_get_y()); 
 
                                 continue;
                             } 
-                            else if (currentCharacter == '\3') { // Down
+                            else if (currentCharacter == DOWN_ARROW_BUTTON) { // Down
                                 if (VGA_getchr(VGA_cursor_get_x(), VGA_cursor_get_y() + 1) != NULL)
                                     VGA_setcursor(VGA_cursor_get_x(), VGA_cursor_get_y() + 1); 
 
                                 continue;
                             }
-                            else if (currentCharacter == '\4') { // Up
+                            else if (currentCharacter == UP_ARROW_BUTTON) { // Up
                                 if (VGA_getchr(VGA_cursor_get_x(), VGA_cursor_get_y() - 1) != NULL)
                                     VGA_setcursor(VGA_cursor_get_x(), VGA_cursor_get_y() - 1); 
 
                                 continue;
                             }
-                            else if (currentCharacter == '\b') {
+                            else if (currentCharacter == BACKSPACE_BUTTON) {
                                 if (strlen(input) > 0 && input_size > 0) 
                                     backspace_string(&input, --input_size);
                                 
                                 continue;
                             }
-                            else if (currentCharacter == '\n') {
+                            else if (currentCharacter == ENTER_BUTTON) {
                                 cprintf(color, "\n");                        
                                 add_char_to_string(&input, ++input_size, '\n');
                             }

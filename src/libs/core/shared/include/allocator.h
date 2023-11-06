@@ -4,10 +4,6 @@
 #include "memory.h"
 
 
-typedef struct {
-	uint8_t status;
-	uint32_t size;
-} alloc_t;
 
 void mm_init(uint32_t kernel_end);
 void free(void *mem);

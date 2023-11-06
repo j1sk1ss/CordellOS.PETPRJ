@@ -80,7 +80,7 @@ void shell_start_screen() {
     cprintf(FOREGROUND_LIGHT_GREEN, " Y8b  d8 `8b  d8' 88 `88. 88  .8D 88.     88booo. 88booo.   `8b  d8' db   8D \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, "  `Y88P'  `Y88P'  88   YD Y8888D' Y88888P Y88888P Y88888P    `Y88P'  `8888Y' \r\n");
 
-    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5 | 05.11.2023] \r\n");
+    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.1a | 06.11.2023] \r\n");
 }
 
 ///////////////////////////////////////
@@ -389,6 +389,11 @@ void shell_start_screen() {
                 printf("\r\n> Risposta: %s", calculator(tokens, tokenCount));
             }
 
+            else if (strstr(command_line[0], COMMAND_SNAKE_GAME) == 0) {
+                VGA_clrscr();
+                snake_init(atoi(command_line[1]));
+            }
+
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {
                 if (access_level == GUEST_ACCESS) {
                     printf("\r\n%s\r\n", GUEST_ATTENTION);                 
@@ -405,7 +410,7 @@ void shell_start_screen() {
                 }
 
                 VGA_clrscr();
-                printf("Stai modificando il file. Utilizzare CAPSLOCK per uscire.\r\n\r\n");
+                printf("Stai modificando il file. Utilizzare [F3] per uscire.\r\n\r\n");
 
                 write_file(file, keyboard_edit(read_file(file), FOREGROUND_WHITE));
             }

@@ -9,6 +9,7 @@
 #include "Keyboard.h"
 #include "user.h"
 #include "file_manager.h"
+#include "snake.h"
 
 #include "../libs/core/shared/include/x86.h"
 
@@ -55,7 +56,7 @@
         #define COMMAND_DELETE_FILE                     "rmfile"
 
         #define COMMAND_CALCULATOR                      "calc"
-        
+        #define COMMAND_SNAKE_GAME                      "snake"
         #define COMMAND_SPLIT_LINE                      "diviso"
 
     //  COMMANDS

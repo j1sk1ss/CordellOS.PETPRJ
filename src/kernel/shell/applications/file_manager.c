@@ -8,24 +8,24 @@ void open_file_manager(int access_level) {
 
     while(1) {
         char user_action = keyboard_navigation();
-        if (user_action == '\4' && row_position > 0) 
+        if (user_action == UP_ARROW_BUTTON && row_position > 0) 
             row_position--;
-        else if (user_action == '\3')
+        else if (user_action == DOWN_ARROW_BUTTON)
             row_position++;
-        else if (user_action == '\n' || user_action == '\b') 
+        else if (user_action == ENTER_BUTTON || user_action == BACKSPACE_BUTTON) 
             execute_item(access_level, user_action);
-        else if (user_action == '\255') {
+        else if (user_action == F3_BUTTON) {
             VGA_clrscr();
             break;
         }
-        else if (user_action == '\6') {
+        else if (user_action == F1_BUTTON) {
             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nDir name: ");
             char* dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
             
             create_directory(dir_name);   
             free(dir_name); 
         }
-        else if (user_action == '\7') {
+        else if (user_action == F2_BUTTON) {
             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nFile name: ");
             char* file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
             
@@ -43,7 +43,7 @@ void open_file_manager(int access_level) {
 }
 
 void execute_item(int access_level, char action_type) {
-    if (row_position == 0 && action_type != '\b') {
+    if (row_position == 0 && action_type != BACKSPACE_BUTTON) {
         up_from_directory();
         return;
     }
@@ -52,9 +52,9 @@ void execute_item(int access_level, char action_type) {
     struct Directory* currentDir = get_current_directory()->subDirectory;
     while (currentDir != NULL) {
         if (rows++ == row_position) {
-            if (action_type != '\b')
+            if (action_type != BACKSPACE_BUTTON)
                 move_to_directory(currentDir->name);
-            else if (action_type == '\b' && (access_level == 0 || (access_level == 1 && (currentDir->subDirectory != NULL && currentDir->files != NULL))))
+            else if (action_type == BACKSPACE_BUTTON && (access_level == 0 || (access_level == 1 && (currentDir->subDirectory != NULL && currentDir->files != NULL))))
                 delete_directory(currentDir->name);
 
             break;
@@ -94,11 +94,11 @@ void execute_item(int access_level, char action_type) {
                 cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
 
                 char user_action = keyboard_navigation();
-                if (user_action == '\4' && row_position > 0) 
+                if (user_action == UP_ARROW_BUTTON && row_position > 0) 
                     row_position--;
-                else if (user_action == '\3' && row_position < 4)
+                else if (user_action == DOWN_ARROW_BUTTON && row_position < 4)
                     row_position++;
-                else if (user_action == '\n') {
+                else if (user_action == ENTER_BUTTON) {
                     if (currentFile->fileType >= access_level) {
                         switch (row_position) {
                             case READ_POS:
@@ -109,7 +109,7 @@ void execute_item(int access_level, char action_type) {
 
                                 while (1) {
                                     user_action = keyboard_navigation();
-                                    if (user_action == '\n')
+                                    if (user_action == ENTER_BUTTON)
                                         break;
                                 }
                                 
@@ -118,7 +118,7 @@ void execute_item(int access_level, char action_type) {
                             case EDIT_POS:
                                 VGA_clrscr();
                                 set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "Stai modificando il file. Utilizzare CAPSLOCK per uscire.\r\n\r\n");
+                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "Stai modificando il file. Utilizzare [F3] per uscire.\r\n\r\n");
 
                                 write_file(currentFile, keyboard_edit(read_file(currentFile), BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE));
                             break;
@@ -130,7 +130,7 @@ void execute_item(int access_level, char action_type) {
                                 printf("\nPress ENTER to exit");
                                 while (1) {
                                     user_action = keyboard_navigation();
-                                    if (user_action == '\n')
+                                    if (user_action == ENTER_BUTTON)
                                         break;
                                 }
                             break;
@@ -147,7 +147,7 @@ void execute_item(int access_level, char action_type) {
                             break;
                     }
                 }
-                else if (user_action == '\255') {
+                else if (user_action == F3_BUTTON) {
                     VGA_clrscr();
                     break;
                 }
