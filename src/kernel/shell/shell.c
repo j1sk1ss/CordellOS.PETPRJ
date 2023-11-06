@@ -15,20 +15,20 @@ void shell() {
     //
 
         cprintf(FOREGROUND_LIGHT_RED, "\r\n[LOGIN]: ");
-        char* user_login = keyboard_read(VISIBLE_KEYBOARD);
+        char* user_login = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
 
         cprintf(FOREGROUND_LIGHT_RED, "\r\n[PAROLA D'ORDINE]: ");
-        char* user_pass = keyboard_read(HIDDEN_KEYBOARD);
+        char* user_pass = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
 
         user = login(user_login, user_pass);
         int attempts = 0;
         while (user == NULL) {
             cprintf(FOREGROUND_RED, "\r\nPassword o login errata, riprova.\n\r");
             cprintf(FOREGROUND_LIGHT_RED, "\r\n[LOGIN]: ");
-            user_login = keyboard_read(VISIBLE_KEYBOARD);
+            user_login = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
 
             cprintf(FOREGROUND_LIGHT_RED, "\r\n[PAROLA D'ORDINE]: ");
-            user_pass = keyboard_read(HIDDEN_KEYBOARD);
+            user_pass = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
             user = login(user_login, user_pass);
 
             free(user_login);
@@ -57,7 +57,7 @@ void shell() {
         cprintf(FOREGROUND_GREEN, "\r\n[CORDELL OS]");
         printf(" $%s> ", path);
 
-        char *command = keyboard_read(VISIBLE_KEYBOARD);
+        char *command = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
         if (strstr(command, "cordell") == 0)
             execute_command(command + strlen("cordell") + 1, user->access);
         else
@@ -96,14 +96,14 @@ void shell_start_screen() {
 
             if (access_level == CORDELL_ACCESS) {
                 cprintf(FOREGROUND_GREEN, "\r\n[PAROLA D'ORDINE]: ");
-                char* password = keyboard_read(HIDDEN_KEYBOARD);
+                char* password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
                 int tries = 0;
 
                 while (strcmp(password, currentPassword) != 0) {
                     cprintf(FOREGROUND_RED, "\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
                     free(password);
 
-                    password = keyboard_read(HIDDEN_KEYBOARD);
+                    password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
                     if (++tries >= MAX_ATTEMPT_COUNT) 
                         return;
                 }
@@ -405,7 +405,7 @@ void shell_start_screen() {
                 VGA_clrscr();
                 printf("Stai modificando il file. Utilizzare CAPSLOCK per uscire.\r\n\r\n");
 
-                write_file(file, keyboard_edit(read_file(file)));
+                write_file(file, keyboard_edit(read_file(file), FOREGROUND_WHITE));
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {

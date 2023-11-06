@@ -19,7 +19,7 @@ void logf(const char* module,int level, const char* fmt, ...) {
     va_start(args, fmt);
 
     // set color with log lovel
-    fputs(_logSeverityColors[level], VFS_FD_DEBUG);
+    fputs(_logSeverityColors[level], VFS_FD_DEBUG, 0);
 
     // write module
     fprintf(VFS_FD_DEBUG, "[CORDELL OS]: [%s] ", module);
@@ -28,7 +28,7 @@ void logf(const char* module,int level, const char* fmt, ...) {
     vfprintf(VFS_FD_DEBUG, fmt, args, 0);
 
     // reset format
-    fputs(_colorReset, VFS_FD_DEBUG);
+    fputs(_colorReset, VFS_FD_DEBUG, 0);
     fputc('\n', VFS_FD_DEBUG, 0);
 
     va_end(args);

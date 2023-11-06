@@ -31,8 +31,8 @@ unsigned char alphabet[128] = {
     0,	                                                                /* Alt */
     ' ',	                                                            /* Space bar */
     '\5',	                                                            /* Caps lock */
-    0,	                                                                /* 59 - F1 key ... > */
-    0,   0,   0,   0,   0,   0,   0,   0,                       
+    '\6',	                                                            /* 59 - F1 key ... > */
+    '\7',   0,   0,   0,   0,   0,   0,   0,                       
     0,	                                                                /* < ... F10 */
     0,	                                                                /* 69 - Num lock*/
     0,	                                                                /* Scroll Lock */
@@ -64,7 +64,7 @@ unsigned char alphabet[128] = {
 ////    SHELL KEYBOARD
 ////
 
-        char* keyboard_read(int mode) {
+        char* keyboard_read(int mode, int color) {
             char* input       = (char*)malloc(0);  // Start with an empty string
             size_t input_size = 0;
 
@@ -83,7 +83,7 @@ unsigned char alphabet[128] = {
                             }
 
                             if (mode == VISIBLE_KEYBOARD)
-                                printf("%c", currentCharacter);
+                                cprintf(color, "%c", currentCharacter);
 
                             add_char_to_string(&input, ++input_size, currentCharacter);
                         }
@@ -106,12 +106,12 @@ unsigned char alphabet[128] = {
 ////
 ////
 
-        char* keyboard_edit(char* previous_data) {
+        char* keyboard_edit(char* previous_data, int color) {
             char* input = (char*)malloc(strlen(previous_data));  // Start with an empty string
             memset(input, 0, sizeof(input));
             strcpy(input, previous_data);
 
-            printf("%s", input);
+            cprintf(color, "%s", input);
 
             size_t input_size = strlen(input);
 
@@ -152,11 +152,11 @@ unsigned char alphabet[128] = {
                                 continue;
                             }
                             else if (currentCharacter == '\n') {
-                                printf("\n");                        
+                                cprintf(color, "\n");                        
                                 add_char_to_string(&input, ++input_size, '\n');
                             }
                             else {
-                                printf("%c", currentCharacter);
+                                cprintf(color, "%c", currentCharacter);
                                 add_char_to_string(&input, ++input_size, currentCharacter);
                             }
                         }

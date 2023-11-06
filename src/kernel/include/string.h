@@ -24,6 +24,7 @@ double atof(const char *str);
 
 void backspace_string(char** str, size_t size);
 void add_char_to_string(char** str, size_t size, char character);
+void add_string_to_string(char** str, char* string);
 
 wchar_t* utf16_to_codepoint(wchar_t*  strin, int* codePointg);
 char* codepoint_to_utf8(int codePoint, char* stringOutput);

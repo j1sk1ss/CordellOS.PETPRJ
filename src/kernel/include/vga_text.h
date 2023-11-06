@@ -2,6 +2,7 @@
 
 // Important functions
 void VGA_clrscr();
+void VGA_set_color(uint8_t color);
 void VGA_putc(char c);
 
 char VGA_getchr(int x, int y);

@@ -15,14 +15,18 @@ void fputc(char c, fileDescriptorId file, int color) {
 }
 
 void cputc(char c, uint8_t color) {
-    VFS_Color_Write(color, &c, sizeof(c));
+    VFS_color_write(color, &c, sizeof(c));
 }
 
-void fputs(const char* str, fileDescriptorId file) {
+void fputs(const char* str, fileDescriptorId file, int color) {
     while(*str) {
-        fputc(*str, file, 0);
+        fputc(*str, file, color);
         str++;
     }
+}
+
+void set_color(int color) {
+    VFS_set_screen_color(color);
 }
 
 #define PRINTF_STATE_NORMAL         0
@@ -39,7 +43,7 @@ void fputs(const char* str, fileDescriptorId file) {
 
 const char _HexChars[] = "0123456789abcdef";
 
-char* fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radix) {
+char* fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radix, int color) {
     char* buffer = (char*)malloc(32);
     int pos = 0;
 
@@ -53,58 +57,21 @@ char* fprintf_unsigned(fileDescriptorId file, unsigned long long number, int rad
     // print number in reverse order
     if (file > 0)
         while (--pos >= 0)
-            fputc(buffer[pos], file, 0);
+            fputc(buffer[pos], file, color);
 
     return buffer;
 }
 
-void fprintf_signed(fileDescriptorId file, long long number, int radix) {
+void fprintf_signed(fileDescriptorId file, long long number, int radix, int color) {
     if (number < 0) {
-        fputc('-', file, 0);
-        fprintf_unsigned(file, -number, radix);
+        fputc('-', file, color);
+        fprintf_unsigned(file, -number, radix, color);
     }
     else 
-        fprintf_unsigned(file, number, radix);
+        fprintf_unsigned(file, number, radix, color);
 }
 
-int sscanf(const char *input, const char *format, ...) {
-    va_list args;
-    va_start(args, format);
-
-    int items_matched = 0;
-
-    while (*format) {
-        if (*format == '%' && format[1]) {
-            format++; // Skip the '%'
-            
-            if (*format == 'd') {
-                // Integer specifier
-                int *int_arg = va_arg(args, int *);
-                items_matched += sscanf(input, "%d", int_arg);
-            } else if (*format == 's') {
-                // String specifier
-                char *str_arg = va_arg(args, char *);
-                items_matched += sscanf(input, "%s", str_arg);
-            }
-        } else {
-            // Check for a matching character in the input
-            if (*input != *format) {
-                break; // If it doesn't match, stop parsing
-            }
-            
-            input++;
-        }
-
-        format++;
-    }
-
-    va_end(args);
-    return items_matched;
-}
-
-char* vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
-    char* buffer = (char*)malloc(sizeof(char));
-
+void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
     int state   = PRINTF_STATE_NORMAL;
     int length  = PRINTF_LENGTH_DEFAULT;
     int radix   = 10;
@@ -122,7 +89,6 @@ char* vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) 
 
                     default:    
                         fputc(*fmt, file, color);
-                        add_char_to_string(buffer, strlen(buffer) + 1, *fmt);
                     break;
                 }
 
@@ -171,16 +137,14 @@ char* vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) 
                 switch (*fmt) {
                     case 'c':   
                         fputc((char)va_arg(args, int), file, color);
-                        add_char_to_string(buffer, strlen(buffer) + 1, (char)va_arg(args, int));
                     break;
 
                     case 's':   
-                        fputs(va_arg(args, const char*), file);
+                        fputs(va_arg(args, const char*), file, color);
                     break;
 
                     case '%':   
                         fputc('%', file, color);
-                        add_char_to_string(buffer, strlen(buffer) + 1, '%');
                     break;
 
                     case 'd':
@@ -221,18 +185,15 @@ char* vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) 
                             case PRINTF_LENGTH_SHORT_SHORT:
                             case PRINTF_LENGTH_SHORT:
                             case PRINTF_LENGTH_DEFAULT:     
-                                fprintf_signed(file, va_arg(args, int), radix);
-                                add_char_to_string(buffer, strlen(buffer) + 1, fprintf_unsigned(-1, va_arg(args, int), 10));
+                                fprintf_signed(file, va_arg(args, int), radix, color);
                             break;
 
                             case PRINTF_LENGTH_LONG:        
-                                fprintf_signed(file, va_arg(args, long), radix);
-                                add_char_to_string(buffer, strlen(buffer) + 1, fprintf_unsigned(-1, va_arg(args, long), 10));
+                                fprintf_signed(file, va_arg(args, long), radix, color);
                             break;
 
                             case PRINTF_LENGTH_LONG_LONG:   
-                                fprintf_signed(file, va_arg(args, long long), radix);
-                                add_char_to_string(buffer, strlen(buffer) + 1, fprintf_unsigned(-1, va_arg(args, long long), 10));
+                                fprintf_signed(file, va_arg(args, long long), radix, color);
                             break;
                         }
                     }
@@ -241,18 +202,15 @@ char* vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) 
                             case PRINTF_LENGTH_SHORT_SHORT:
                             case PRINTF_LENGTH_SHORT:
                             case PRINTF_LENGTH_DEFAULT:     
-                                fprintf_unsigned(file, va_arg(args, unsigned int), radix);
-                                add_char_to_string(buffer, strlen(buffer) + 1, fprintf_unsigned(-1, va_arg(args, unsigned int), 10));
+                                fprintf_unsigned(file, va_arg(args, unsigned int), radix, color);
                             break;
                                                             
                             case PRINTF_LENGTH_LONG:        
-                                fprintf_unsigned(file, va_arg(args, unsigned  long), radix);
-                                add_char_to_string(buffer, strlen(buffer) + 1, fprintf_unsigned(-1, va_arg(args, unsigned  long), 10));
+                                fprintf_unsigned(file, va_arg(args, unsigned  long), radix, color);
                             break;
 
                             case PRINTF_LENGTH_LONG_LONG:   
-                                fprintf_unsigned(file, va_arg(args, unsigned  long long), radix);
-                                add_char_to_string(buffer, strlen(buffer) + 1, fprintf_unsigned(-1, va_arg(args, unsigned  long long, 10));
+                                fprintf_unsigned(file, va_arg(args, unsigned  long long), radix, color);
                             break;
                         }
                     }
@@ -270,8 +228,6 @@ char* vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) 
 
         fmt++;
     }
-
-    return buffer;
 }
 
 void fprintf(fileDescriptorId file, const char* fmt, ...) {
@@ -284,13 +240,13 @@ void fprintf(fileDescriptorId file, const char* fmt, ...) {
 void fprint_buffer(fileDescriptorId file, const char* msg, const void* buffer, uint32_t count) {
     const uint8_t* u8Buffer = (const uint8_t*)buffer;
     
-    fputs(msg, file);
+    fputs(msg, file, 0);
     for (uint16_t i = 0; i < count; i++) {
         fputc(_HexChars[u8Buffer[i] >> 4], file, 0);
         fputc(_HexChars[u8Buffer[i] & 0xF], file, 0);
     }
 
-    fputs("\n", file);
+    fputs("\n", file, 0);
 }
 
 void putc(char c) {
@@ -298,16 +254,14 @@ void putc(char c) {
 }
 
 void puts(const char* str) {
-    fputs(str, VFS_FD_STDOUT);
+    fputs(str, VFS_FD_STDOUT, 0);
 }
 
-char* printf(const char* fmt, ...) {
+void printf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    char* buffer = vfprintf(VFS_FD_STDOUT, fmt, args, 0);
+    vfprintf(VFS_FD_STDOUT, fmt, args, 0);
     va_end(args);
-
-    return buffer;
 }
 
 void cprintf(uint8_t color, const char* fmt, ...) {
@@ -326,7 +280,7 @@ void debugc(char c) {
 }
 
 void debugs(const char* str) {
-    fputs(str, VFS_FD_DEBUG);
+    fputs(str, VFS_FD_DEBUG, 0);
 }
 
 void debugf(const char* fmt, ...) {

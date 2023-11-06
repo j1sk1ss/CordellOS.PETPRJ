@@ -430,6 +430,33 @@ void add_char_to_string(char** str, size_t size, char character) {
     *str = buffer;
 }
 
+void add_string_to_string(char** str, char* string) {
+    if (str == NULL || string == NULL) {
+        return;
+    }
+
+    // Calculate the new size for the concatenated string
+    size_t new_size = strlen(*str) + strlen(string) + 1;
+
+    // Allocate memory for the new concatenated string
+    char* buffer = (char*)malloc(new_size);
+    if (buffer == NULL) {
+        return;
+    }
+
+    // Copy the old string (*str) into the buffer
+    strcpy(buffer, *str);
+
+    // Concatenate the new string
+    strcat(buffer, string);
+
+    // Free the old string's memory
+    free(*str);
+
+    // Update the original pointer to point to the new concatenated string
+    *str = buffer;
+}
+
 wchar_t* utf16_to_codepoint(wchar_t* string, int* codePoint) {
     int first = *string;
     ++string;

@@ -374,12 +374,12 @@ void init_directory() {
             strcat(result, "F");
             strcat(result, file->name);
             strcat(result, "T");
-            strcat(result, fprintf_unsigned(-1, file->fileType, 10));
+            strcat(result, fprintf_unsigned(-1, file->fileType, 10, 0));
             strcat(result, "S");
 
             int sector_count = file->sector_count;
             for (size_t i = 0; i < sector_count; i++) {
-                strcat(result, fprintf_unsigned(-1, file->sectors[i], 10));
+                strcat(result, fprintf_unsigned(-1, file->sectors[i], 10, 0));
 
                 if (i < sector_count - 1 && file->sectors[i + 1] != -1) 
                     strcat(result, "S");
@@ -433,10 +433,11 @@ void init_directory() {
 
                     length = *index - start;
                     if (length > 0) {
-                        char sectorStr[4];
+                        char sectorStr[10];
                         strncpy(sectorStr, input + start, length);
                         sectorStr[length] = '\0';
 
+                        reverse(sectorStr, strlen(sectorStr));
                         int sector = atoi(sectorStr);
 
                         file->sector_count++;
