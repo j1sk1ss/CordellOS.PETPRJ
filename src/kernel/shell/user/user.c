@@ -4,6 +4,9 @@ void init_users() {
     if (file_exist("users") == 1) 
         return;
 
+    if (find_file("users")->fileType != 0)
+        delete_file("users");
+
     // create default users file
     create_file(0, "users", USERS_SECTOR);
     write_file(find_file("users"), "admin[0[28072003\n");

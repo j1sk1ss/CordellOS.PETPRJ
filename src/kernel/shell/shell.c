@@ -47,6 +47,8 @@ void shell() {
 
         printf("\n");
 
+        open_file_manager(user->access);
+
     //
     //  USER LOGIN
     //

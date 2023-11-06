@@ -32,7 +32,7 @@ unsigned char alphabet[128] = {
     ' ',	                                                            /* Space bar */
     '\5',	                                                            /* Caps lock */
     '\6',	                                                            /* 59 - F1 key ... > */
-    '\7',   0,   0,   0,   0,   0,   0,   0,                       
+    '\7',   '\255',   0,   0,   0,   0,   0,   0,                       
     0,	                                                                /* < ... F10 */
     0,	                                                                /* 69 - Num lock*/
     0,	                                                                /* Scroll Lock */
@@ -65,7 +65,9 @@ unsigned char alphabet[128] = {
 ////
 
         char* keyboard_read(int mode, int color) {
-            char* input       = (char*)malloc(0);  // Start with an empty string
+            char* input = (char*)malloc(sizeof(char));  // Start with an empty string
+            memset(input, 0, sizeof(input));
+
             size_t input_size = 0;
 
             while (1) {

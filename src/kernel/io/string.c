@@ -244,40 +244,33 @@ void* __rawmemchr (const void* s, int c_in) {
   charmask |= charmask << 32;
 #endif
 
-  while (1)
-    {
-      longword = *longword_ptr++ ^ charmask;
+    while (1) {
+        longword = *longword_ptr++ ^ charmask;
 
-      /* Add MAGIC_BITS to LONGWORD.  */
-      if ((((longword + magic_bits)
+        /* Add MAGIC_BITS to LONGWORD.  */
+        if ((((longword + magic_bits) ^ ~longword) & ~magic_bits) != 0) {
+                const unsigned char *cp = (const unsigned char *) (longword_ptr - 1);
 
-	    /* Set those bits that were unchanged by the addition.  */
-	    ^ ~longword)
+                if (cp[0] == c)
+                    return (void*) cp;
+                if (cp[1] == c)
+                    return (void*) &cp[1];
+                if (cp[2] == c)
+                    return (void*) &cp[2];
+                if (cp[3] == c)
+                    return (void*) &cp[3];
 
-	   & ~magic_bits) != 0)
-	{
-
-	  const unsigned char *cp = (const unsigned char *) (longword_ptr - 1);
-
-	  if (cp[0] == c)
-	    return (void*) cp;
-	  if (cp[1] == c)
-	    return (void*) &cp[1];
-	  if (cp[2] == c)
-	    return (void*) &cp[2];
-	  if (cp[3] == c)
-	    return (void*) &cp[3];
-#if LONG_MAX > 2147483647
-	  if (cp[4] == c)
-	    return (void*) &cp[4];
-	  if (cp[5] == c)
-	    return (void*) &cp[5];
-	  if (cp[6] == c)
-	    return (void*) &cp[6];
-	  if (cp[7] == c)
-	    return (void*) &cp[7];
-#endif
-	}
+                #if LONG_MAX > 2147483647
+                    if (cp[4] == c)
+                        return (void*) &cp[4];
+                    if (cp[5] == c)
+                        return (void*) &cp[5];
+                    if (cp[6] == c)
+                        return (void*) &cp[6];
+                    if (cp[7] == c)
+                        return (void*) &cp[7];
+                #endif
+            }
     }
 }
 
@@ -355,10 +348,9 @@ char* strtok_r(char* s, const char* delim, char** last) {
 	 */
 cont:
 	c = *s++;
-	for (spanp = (char *)delim; (sc = *spanp++) != 0;) {
+	for (spanp = (char *)delim; (sc = *spanp++) != 0;) 
 	    if (c == sc)
 		    goto cont;
-	}
 
 	if (c == 0) {		/* no non-delimiter characters */
 	    *last = NULL;
@@ -377,10 +369,8 @@ cont:
 		spanp = (char *)delim;
 		do {
 			if ((sc = *spanp++) == c) {
-				if (c == 0)
-					s = NULL;
-				else
-					s[-1] = 0;
+				if (c == 0) s = NULL;
+				else s[-1] = 0;
 
 				*last = s;
 
@@ -431,29 +421,28 @@ void add_char_to_string(char** str, size_t size, char character) {
 }
 
 void add_string_to_string(char** str, char* string) {
-    if (str == NULL || string == NULL) {
+    if (str == NULL || string == NULL) 
         return;
-    }
 
+
+    // Calculate the new size for the concatenated string
+    
     // Calculate the new size for the concatenated string
     size_t new_size = strlen(*str) + strlen(string) + 1;
 
-    // Allocate memory for the new concatenated string
     char* buffer = (char*)malloc(new_size);
-    if (buffer == NULL) {
+    if (buffer == NULL) 
         return;
-    }
+
 
     // Copy the old string (*str) into the buffer
+    
+    // Copy the old string (*str) into the buffer
     strcpy(buffer, *str);
-
-    // Concatenate the new string
     strcat(buffer, string);
 
-    // Free the old string's memory
     free(*str);
 
-    // Update the original pointer to point to the new concatenated string
     *str = buffer;
 }
 
@@ -508,9 +497,8 @@ int	atoi(char *str) {
 		i++;
 
 	if (str[i] == '-' || str[i] == '+') {
-		if (str[i] == '-') {
+		if (str[i] == '-') 
 			neg *= -1;
-		}
 
 		i++;
 	}
@@ -529,15 +517,15 @@ char* strncpy(char *dst, const char *src, size_t n) {
 		const char *s = src;
 
 		do {
-			if ((*d++ = *s++) == 0) {
-				/* NUL pad the remaining n-1 bytes */
-				while (--n != 0)
-					*d++ = 0;
-				break;
-			}
-		} while (--n != 0);
-	}
-
+            if ((*d++ = *s++) == 0) {
+                while (--n != 0)
+                    *d++ = 0;
+                    
+                break;
+            }
+        } while (--n != 0);
+	    
+    }
 	return (dst);
 }
 

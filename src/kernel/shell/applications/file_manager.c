@@ -13,25 +13,28 @@ void open_file_manager(int access_level) {
         else if (user_action == '\3')
             row_position++;
         else if (user_action == '\n' || user_action == '\b') 
-            execute_item(access_level);
-        else if (user_action == '\5') {
+            execute_item(access_level, user_action);
+        else if (user_action == '\255') {
             VGA_clrscr();
             break;
         }
         else if (user_action == '\6') {
             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nDir name: ");
             char* dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-
-            create_directory(dir_name);    
+            
+            create_directory(dir_name);   
+            free(dir_name); 
         }
         else if (user_action == '\7') {
             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nFile name: ");
             char* file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-
+            
             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\tFile type: ");
             char* file_type = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-
+            
             create_file(atoi(file_type), file_name, ATA_find_empty_sector());  
+            free(file_name);
+            free(file_type);
         }
 
         VGA_clrscr();
@@ -51,7 +54,7 @@ void execute_item(int access_level, char action_type) {
         if (rows++ == row_position) {
             if (action_type != '\b')
                 move_to_directory(currentDir->name);
-            else if (access_level == 0 || (access_level == 1 && (currentDir->subDirectory == NULL && currentDir->files == NULL)))
+            else if (action_type == '\b' && (access_level == 0 || (access_level == 1 && (currentDir->subDirectory != NULL && currentDir->files != NULL))))
                 delete_directory(currentDir->name);
 
             break;
@@ -140,11 +143,11 @@ void execute_item(int access_level, char action_type) {
                             break;
                         }
 
-                        if (row_position == 0)
+                        if (row_position == READ_POS || row_position == DELETE_POS)
                             break;
                     }
                 }
-                else if (user_action == '\5') {
+                else if (user_action == '\255') {
                     VGA_clrscr();
                     break;
                 }
@@ -231,5 +234,5 @@ void print_directory_data() {
         cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, EMPTY);
 
     cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
-    cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "[F1 - CREATE DIR]   [F2 - CREATE FILE]");
+    cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "[F1 - CREATE DIR]   [F2 - CREATE FILE]   [F3 - EXIT]");
 }
