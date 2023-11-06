@@ -102,7 +102,9 @@ int sscanf(const char *input, const char *format, ...) {
     return items_matched;
 }
 
-void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
+char* vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
+    char* buffer = (char*)malloc(sizeof(char));
+
     int state   = PRINTF_STATE_NORMAL;
     int length  = PRINTF_LENGTH_DEFAULT;
     int radix   = 10;
@@ -120,6 +122,7 @@ void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
 
                     default:    
                         fputc(*fmt, file, color);
+                        add_char_to_string(buffer, strlen(buffer) + 1, *fmt);
                     break;
                 }
 
@@ -168,6 +171,7 @@ void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
                 switch (*fmt) {
                     case 'c':   
                         fputc((char)va_arg(args, int), file, color);
+                        add_char_to_string(buffer, strlen(buffer) + 1, (char)va_arg(args, int));
                     break;
 
                     case 's':   
@@ -176,6 +180,7 @@ void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
 
                     case '%':   
                         fputc('%', file, color);
+                        add_char_to_string(buffer, strlen(buffer) + 1, '%');
                     break;
 
                     case 'd':
@@ -217,14 +222,17 @@ void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
                             case PRINTF_LENGTH_SHORT:
                             case PRINTF_LENGTH_DEFAULT:     
                                 fprintf_signed(file, va_arg(args, int), radix);
+                                add_char_to_string(buffer, strlen(buffer) + 1, fprintf_unsigned(-1, va_arg(args, int), 10));
                             break;
 
                             case PRINTF_LENGTH_LONG:        
                                 fprintf_signed(file, va_arg(args, long), radix);
+                                add_char_to_string(buffer, strlen(buffer) + 1, fprintf_unsigned(-1, va_arg(args, long), 10));
                             break;
 
                             case PRINTF_LENGTH_LONG_LONG:   
                                 fprintf_signed(file, va_arg(args, long long), radix);
+                                add_char_to_string(buffer, strlen(buffer) + 1, fprintf_unsigned(-1, va_arg(args, long long), 10));
                             break;
                         }
                     }
@@ -234,14 +242,17 @@ void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
                             case PRINTF_LENGTH_SHORT:
                             case PRINTF_LENGTH_DEFAULT:     
                                 fprintf_unsigned(file, va_arg(args, unsigned int), radix);
+                                add_char_to_string(buffer, strlen(buffer) + 1, fprintf_unsigned(-1, va_arg(args, unsigned int), 10));
                             break;
                                                             
                             case PRINTF_LENGTH_LONG:        
                                 fprintf_unsigned(file, va_arg(args, unsigned  long), radix);
+                                add_char_to_string(buffer, strlen(buffer) + 1, fprintf_unsigned(-1, va_arg(args, unsigned  long), 10));
                             break;
 
                             case PRINTF_LENGTH_LONG_LONG:   
                                 fprintf_unsigned(file, va_arg(args, unsigned  long long), radix);
+                                add_char_to_string(buffer, strlen(buffer) + 1, fprintf_unsigned(-1, va_arg(args, unsigned  long long, 10));
                             break;
                         }
                     }
@@ -259,6 +270,8 @@ void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
 
         fmt++;
     }
+
+    return buffer;
 }
 
 void fprintf(fileDescriptorId file, const char* fmt, ...) {
@@ -288,11 +301,13 @@ void puts(const char* str) {
     fputs(str, VFS_FD_STDOUT);
 }
 
-void printf(const char* fmt, ...) {
+char* printf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    vfprintf(VFS_FD_STDOUT, fmt, args, 0);
+    char* buffer = vfprintf(VFS_FD_STDOUT, fmt, args, 0);
     va_end(args);
+
+    return buffer;
 }
 
 void cprintf(uint8_t color, const char* fmt, ...) {

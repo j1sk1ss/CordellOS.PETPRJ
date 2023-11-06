@@ -50,15 +50,13 @@ void execute_item(int access_level) {
                 printf("+-----------------+-------+-----------+-----------------+\n");
 
                 if (row_position == 0) {
-                    cprintf(FOREGROUND_GREEN, ">");
-                } else printf("|");
-                printf(" VIEW                                                  |\n");
+                    cprintf(BACKGROUND_GREEN, "| VIEW                                                  |\n");
+                } else printf("| VIEW                                                  |\n");
                 printf("+-----------------+-------+-----------+-----------------+\n");
 
-                if (row_position == 1) {
-                    cprintf(FOREGROUND_GREEN, ">");
-                } else printf("|");
-                printf(" EDIT                                                  |\n");
+                if (row_position == 0) {
+                    cprintf(BACKGROUND_GREEN, "| EDIR                                                  |\n");
+                } else printf("| EDIT                                                  |\n");
                 printf("+-----------------+-------+-----------+-----------------+\n");
 
                 char user_action = keyboard_navigation();

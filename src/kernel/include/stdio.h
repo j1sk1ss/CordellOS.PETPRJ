@@ -4,11 +4,12 @@
 #include <stdarg.h>
 
 #include "vfs.h"
+#include "string.h"
 
 void clrscr();
 void putc(char c);
 void puts(const char* str);
-void printf(const char* fmt, ...);
+char* printf(const char* fmt, ...);
 void cprintf(uint8_t color, const char* fmt, ...);
 void print_buffer(const char* msg, const void* buffer, uint32_t count);
 
@@ -18,7 +19,7 @@ char* fprintf_unsigned(fileDescriptorId file, unsigned long long number, int rad
 void fputc(char c, fileDescriptorId file, int color);
 void cputc(char c, uint8_t color);
 void fputs(const char* str, fileDescriptorId file);
-void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color);
+char* vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color);
 void fprintf(fileDescriptorId file, const char* fmt, ...);
 void fprint_buffer(fileDescriptorId file, const char* msg, const void* buffer, uint32_t count);
 
