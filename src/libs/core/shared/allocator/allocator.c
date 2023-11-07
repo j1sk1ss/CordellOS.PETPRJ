@@ -5,6 +5,11 @@
 
 #define MAX_PAGE_ALIGNED_ALLOCS 32
 
+typedef struct {
+	uint8_t status;
+	uint32_t size;
+} alloc_t;
+
 uint32_t last_alloc     = 0;
 uint32_t heap_end       = 0;
 uint32_t heap_begin     = 0;

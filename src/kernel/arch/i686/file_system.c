@@ -41,8 +41,7 @@ void init_directory() {
         memset(newDirectory, 0, sizeof(newDirectory));
 
         newDirectory->name = malloc(strlen(name));
-        memset(newDirectory->name, 0, sizeof(newDirectory->name));
-        memcpy(newDirectory->name, name, strlen(name));
+        strcpy(newDirectory->name, name);
         
         newDirectory->files         = NULL;
         newDirectory->next          = NULL;
@@ -85,7 +84,7 @@ void init_directory() {
         memset(newFile, 0, sizeof(newFile));
 
         newFile->name = malloc(strlen(name));
-        memcpy(newFile->name, name, strlen(name));
+        strcpy(newFile->name, name);
 
         newFile->fileType = type;
 
@@ -138,7 +137,7 @@ void init_directory() {
 
                 // If there's more data and we have exceeded the existing sectors, allocate a new sector
                 if (data_len > 0 && i == (file->sector_count - 1)) {
-                    int new_sector = ATA_find_empty_sector();
+                    int new_sector = ATA_find_empty_sector(0);
                     if (new_sector != -1) {
                         file->sectors = realloc(file->sectors, (file->sector_count + 1) * sizeof(uint32_t));
                         file->sectors[file->sector_count] = new_sector;
@@ -486,10 +485,15 @@ void init_directory() {
                 directory->files = load_temp_file(input, index);
         }
 
+        if (input[*index] == '@') 
+            (*index)++;
+
         while (input[*index] == '#') {
             (*index)++;
-            if (input[*index] == 'D') 
+            if (input[*index] == 'D') {
                 directory->next = load_directory(input, index);
+                directory->next->upDirectory = directory;
+            }
 
             if (input[*index] == 'F') {
                 struct File* end_file = directory->files;
@@ -498,20 +502,6 @@ void init_directory() {
 
                 end_file->next = load_temp_file(input, index);
             }
-        }
-
-        if (input[*index] == '@') {
-            (*index)++;
-            if (input[*index] == '#' && input[*index + 1] == 'D')
-                directory->next = load_directory(input, ++(*index));
-            
-            if (input[*index] == '#' && input[*index + 1] == 'F') {
-                struct File* end_file = directory->files;
-                while (end_file->next != NULL)
-                    end_file = end_file->next;
-
-                end_file->next = load_temp_file(input, ++(*index));
-            } 
         }
 
         return directory;

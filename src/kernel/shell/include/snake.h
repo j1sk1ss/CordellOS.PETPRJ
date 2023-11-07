@@ -18,4 +18,4 @@
 #define N 100
 
 
-void snake_init(int hard);
+int snake_init(int hard, int score);

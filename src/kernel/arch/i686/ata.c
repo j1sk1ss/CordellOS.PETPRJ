@@ -104,7 +104,7 @@
 
     // Function to check if a sector (by LBA) is empty (all bytes are zero)
     bool ATA_is_current_sector_empty(uint32_t LBA) {
-        if (ATA_is_sector_empty(ATA_read_sector(LBA), SECTOR_SIZE)) 
+        if (ATA_is_sector_empty(ATA_read_sector(LBA))) 
             return true;
 
         return false;
@@ -119,17 +119,19 @@
         return true;
     }
 
-    void ATA_find_empty_sector() {
-        for (uint32_t lba = 0; lba <= SECTOR_COUNT; lba++) {
+    uint32_t ATA_find_empty_sector(uint32_t offset) {
+        for (uint32_t lba = offset; lba <= SECTOR_COUNT; lba++) {
             char* sector_data = ATA_read_sector(lba);
             if (sector_data == NULL) 
                 continue;
 
             if (ATA_is_sector_empty((const uint8_t*)sector_data)) 
-                printf("Empty sector found at LBA %u\n", lba);
+                return lba;
 
             free(sector_data);
         }
+
+        return -1;
     }
 
     // Delay for working with ATA

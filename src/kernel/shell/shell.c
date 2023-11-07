@@ -305,7 +305,7 @@ void shell_start_screen() {
             }
             
             else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0)                
-                create_file(atoi(command_line[1]), command_line[2], ATA_find_empty_sector());              // Name placed as third arg
+                create_file(atoi(command_line[1]), command_line[2], ATA_find_empty_sector(0));              // Name placed as third arg
                              
             else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {                       // Delete file by name
                 if (access_level == GUEST_ACCESS) {
@@ -391,7 +391,24 @@ void shell_start_screen() {
 
             else if (strstr(command_line[0], COMMAND_SNAKE_GAME) == 0) {
                 VGA_clrscr();
-                snake_init(atoi(command_line[1]));
+
+                struct File* snake_save;
+                if (file_exist("snake-save") == 1)
+                    snake_save = find_file("snake-save");
+                else {
+                    create_file(0, "snake-save", ATA_find_empty_sector(200));
+                    snake_save = find_file("snake-save");
+                    write_file(snake_save, "0");
+                }
+
+                int best_result = atoi(read_file(snake_save));
+                int current_result = snake_init(atoi(command_line[1]), best_result);
+                if (best_result < current_result) {
+                    char* result = fprintf_unsigned(-1, current_result, 10, 0);
+                    reverse(result, strlen(result));
+
+                    write_file(snake_save, result);
+                }
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {

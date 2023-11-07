@@ -23,7 +23,10 @@ fruit frt;
 
 int hardnes_level = 9999999;
 
-void snake_init(int hard) {
+int snake_size;
+int max_score;
+
+int snake_init(int hard, int score) {
     switch (hard) {
         case 0:
             hardnes_level = 99999999;
@@ -46,37 +49,34 @@ void snake_init(int hard) {
         break;
     }
 
-	int size;
 	char map[V][H];
+	snake_size = 4;
+	max_score = score;
 
-	begin(&size, map);
+	begin(map);
 	show(map);
-	// system("pause");
-	loop(map, size);
+	loop(map);
 
-	// system("pause");
-	return 0;
+	return snake_size - 4;
 }
 
 // Initialized in a initial position
-void begin(int *size, char map[V][H]) {
+void begin(char map[V][H]) {
 	int i;
 	// snake head
 	snk[0].x = 32;
 	snk[0].y = 10; // V
-	// snake body
-	*size = 4;
 
 	frt.x = srand_r() % (H - 2) + 1; // automatic position of fruit
 	frt.y = srand_r() % (V - 2) + 1;
 
-	for (i = 0; i < *size; i++) {
+	for (i = 0; i < snake_size; i++) {
 		snk[i].movX = 1;
 		snk[i].movY = 0;
 	} // snake only move on X
 
 	intro(map);
-	intro_data(map, size);
+	intro_data(map);
 }
 
 // Show everything
@@ -89,6 +89,9 @@ void show(char map[V][H]) {
 		
 		printf("\n");
 	}
+
+	printf("Score: [%i]", snake_size - 4);
+	printf("\nMax score: [%i]", max_score);
 }
 
 // The camp (map).
@@ -103,9 +106,9 @@ void intro(char map[V][H]) {
 }
 
 // Introduce every data inIT
-void intro_data(char map[V][H], int *size) {
+void intro_data(char map[V][H]) {
 	int i;
-	for (i = 1; i < *size; i++) {
+	for (i = 1; i < snake_size; i++) {
 		snk[i].x = snk[i - 1].x - 1;
 		snk[i].y = snk[i - 1].y;
 
@@ -114,21 +117,21 @@ void intro_data(char map[V][H], int *size) {
 
 	snk[0].imagen = 'O'; // head
 
-	for (i = 0; i < *size; i++)
+	for (i = 0; i < snake_size; i++)
 		map[snk[i].y][snk[i].x] = snk[i].imagen;
 	
 	map[frt.y][frt.x] = 'M'; // fruit
 }
 
-void loop(char map[V][H], int size) {
+void loop(char map[V][H]) {
 	int dead = 0;
 
 	do {
 		gotoxy(0, 0);
 
 		show(map);
-		input(map, &size, &dead);
-		update(map, size); // automatic
+		input(map, &dead);
+		update(map); // automatic
 
         int delay = hardnes_level;
         while (--delay > 0)
@@ -136,7 +139,7 @@ void loop(char map[V][H], int size) {
 	} while (dead == 0);
 }
 
-int input(char map[V][H], int *size, int *dead) {
+int input(char map[V][H], int *dead) {
 	int i;
 	char key;
 
@@ -147,16 +150,16 @@ int input(char map[V][H], int *size, int *dead) {
 	if (snk[0].x == 0 || snk[0].x == H - 1 || snk[0].y == 0 || snk[0].y == V - 1)  // 0 es la cabeza de la serpiente, solo evaluaremos cuando la cabeza choque.
 		*dead = 1;
 
-	for (i = 1; i < *size && *dead == 0; i++) 
+	for (i = 1; i < snake_size && *dead == 0; i++) 
 		if (snk[0].x == snk[i].x && snk[0].y == snk[i].y) 
 			*dead = 1;
 
 	// CHECK FRUIT, IF HEAD GET CLOSE, EAT IT!
 
 	if (snk[0].x == frt.x && snk[0].y == frt.y) {
-		*size += 1;
+		snake_size += 1;
 
-		snk[*size - 1].imagen = 'X';
+		snk[snake_size - 1].imagen = 'X';
 
 		// Regenerated fruit position in a random position
 
@@ -191,21 +194,23 @@ int input(char map[V][H], int *size, int *dead) {
 				snk[0].movY = 0;
 			}
 
-            if (key == F3_BUTTON)
-                dead = 1;
+            if (key == F3_BUTTON) {
+				*dead = 1;
+				return;
+			}
 		}
 	}
 }
 
-void update(char map[V][H], int size) {
+void update(char map[V][H]) {
 	intro(map);
-	intro_data2(map, size);
+	intro_data2(map);
 }
 
-void intro_data2(char map[V][H], int size) {
+void intro_data2(char map[V][H]) {
 	int i;
 
-	for (i = size - 1; i > 0; i--) { // 0 is the head. so we going decresing until extremities
+	for (i = snake_size - 1; i > 0; i--) { // 0 is the head. so we going decresing until extremities
 		snk[i].x = snk[i - 1].x;
 		snk[i].y = snk[i - 1].y;
 	}
@@ -215,7 +220,7 @@ void intro_data2(char map[V][H], int size) {
 
 	// now introduce the values in the camp
 
-	for (i = 0; i < size; i++) 
+	for (i = 0; i < snake_size; i++) 
 		map[snk[i].y][snk[i].x] = snk[i].imagen;
 	
 	map[frt.y][frt.x] = 'M';
