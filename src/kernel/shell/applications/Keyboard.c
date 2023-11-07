@@ -126,7 +126,6 @@ char get_character(char character) {
                     if (!(character & 0x80)) {
                         char currentCharacter = alphabet[character];
                         if (currentCharacter != F3_BUTTON) {
-
                             if (currentCharacter == LEFT_ARROW_BUTTON) { // Left
                                 VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y()); 
                                 continue;

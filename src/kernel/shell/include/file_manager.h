@@ -3,6 +3,7 @@
 #include <include/file_system.h>
 
 #include "Keyboard.h"
+#include "shell.h"
 
 
 #define COLUMN_WIDTH 15
@@ -21,6 +22,8 @@
 #define READ_POS        0
 #define EDIT_POS        1
 #define ASM_POS         2
-#define DELETE_POS      3
+#define RUN_POS         3
+#define DELETE_POS      4
+
 
 void open_file_manager(int access_level);

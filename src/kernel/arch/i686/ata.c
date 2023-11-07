@@ -95,8 +95,6 @@
     // Function that clear sector
     void ATA_clear_sector(uint32_t LBA) {
         char buffer[512];  // Assuming 512-byte sectors
-
-        // Fill the buffer with zeros
         memset(buffer, 0, sizeof(buffer));
 
         // Write the buffer to the specified sector
@@ -104,32 +102,34 @@
             printf("\n\rPulizia del settore non completata!");
     }
 
-    // Function to check if a sector is empty (all bytes are zero)
-    bool ATA_is_sector_empty(const char* sectorData, size_t sectorSize) {
-        for (size_t i = 0; i < sectorSize; i++) 
-            if (sectorData[i] != 0) 
-                return false;
-            
-        return true;
-    }
-
     // Function to check if a sector (by LBA) is empty (all bytes are zero)
     bool ATA_is_current_sector_empty(uint32_t LBA) {
         if (ATA_is_sector_empty(ATA_read_sector(LBA), SECTOR_SIZE)) 
             return true;
 
-        // Return -1 if no empty sector is found
         return false;
     }
 
-    // Function to find an empty sector on the disk
-    int ATA_find_empty_sector() {
-        for (uint32_t sector = 0; sector < SECTOR_COUNT; sector++) 
-            if (ATA_is_sector_empty(ATA_read_sector(sector), SECTOR_SIZE)) 
-                return sector;
+    // Function to check if a sector is empty (contains all zeros).
+    bool ATA_is_sector_empty(const uint8_t* sector_data) {
+        for (int i = 0; i < 512; i++) 
+            if (sector_data[i] != 0x00) 
+                return false; 
+        
+        return true;
+    }
 
-        // Return -1 if no empty sector is found
-        return -1;
+    void ATA_find_empty_sector() {
+        for (uint32_t lba = 0; lba <= SECTOR_COUNT; lba++) {
+            char* sector_data = ATA_read_sector(lba);
+            if (sector_data == NULL) 
+                continue;
+
+            if (ATA_is_sector_empty((const uint8_t*)sector_data)) 
+                printf("Empty sector found at LBA %u\n", lba);
+
+            free(sector_data);
+        }
     }
 
     // Delay for working with ATA

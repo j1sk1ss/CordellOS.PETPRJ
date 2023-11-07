@@ -39,6 +39,10 @@ void open_file_manager(int access_level) {
 
         VGA_clrscr();
         print_directory_data();
+
+        int delay = 9999999;
+        while (--delay > 0)
+            continue;
     }
 }
 
@@ -73,25 +77,20 @@ void execute_item(int access_level, char action_type) {
                 cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE,"\n");
                 cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
 
-                if (row_position == READ_POS) {
-                    cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, READ_LINE);
-                } else cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, READ_LINE);
-                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
+                const char* lines[5] = {
+                    READ_LINE,
+                    EDIT_LINE,
+                    ASM_LINE,
+                    RUN_LINE,
+                    DELETE_LINE
+                };
 
-                if (row_position == EDIT_POS) {
-                    cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, EDIT_LINE);
-                } else cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, EDIT_LINE);
-                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
+                for (int i = READ_POS; i <= DELETE_POS; i++) {
+                    if (row_position == i) cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, lines[i]);
+                    else cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, lines[i]);
 
-                if (row_position == ASM_POS) {
-                    cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, ASM_LINE);
-                } else cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, ASM_LINE);
-                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
-
-                if (row_position == DELETE_POS) {
-                    cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, DELETE_LINE);
-                } else cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, DELETE_LINE);
-                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
+                    cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
+                }
 
                 char user_action = keyboard_navigation();
                 if (user_action == UP_ARROW_BUTTON && row_position > 0) 
@@ -104,12 +103,14 @@ void execute_item(int access_level, char action_type) {
                             case READ_POS:
                                 VGA_clrscr();
                                 set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "Press [ENTER] to exit\n\nFile: [%s]\n\n%s",
+                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
+                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "Press [F3] to exit\n\nFile: [%s]\n\n%s",
                                             currentFile->name, read_file(currentFile));
+                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
 
                                 while (1) {
                                     user_action = keyboard_navigation();
-                                    if (user_action == ENTER_BUTTON)
+                                    if (user_action == F3_BUTTON)
                                         break;
                                 }
                                 
@@ -118,7 +119,10 @@ void execute_item(int access_level, char action_type) {
                             case EDIT_POS:
                                 VGA_clrscr();
                                 set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
                                 cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "Stai modificando il file. Utilizzare [F3] per uscire.\r\n\r\n");
+                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
+                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\n");
 
                                 write_file(currentFile, keyboard_edit(read_file(currentFile), BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE));
                             break;
@@ -127,12 +131,43 @@ void execute_item(int access_level, char action_type) {
                                 VGA_clrscr();
                                 asm_execute(read_file(currentFile));
 
-                                printf("\nPress ENTER to exit");
+                                printf("\n\nPress [F3] to exit");
                                 while (1) {
                                     user_action = keyboard_navigation();
-                                    if (user_action == ENTER_BUTTON)
+                                    if (user_action == F3_BUTTON)
                                         break;
                                 }
+                            break;
+                                VGA_clrscr();
+                                
+                                char* sector_data = read_file(currentFile);
+                                char* command_for_split = (char*)malloc(strlen(sector_data));
+                                strcpy(command_for_split, sector_data);
+
+                                char* lines[100];
+                                int tokenCount = 0;
+
+                                char* splitted = strtok(command_for_split, "\n");
+                                while(splitted) {
+                                    lines[tokenCount++] = splitted;
+                                    splitted = strtok(NULL, "\n");
+                                }
+
+                                for (int i = 0; i < tokenCount; i++)
+                                    execute_command(lines[i], access_level);
+
+                                free(command_for_split);
+                                free(sector_data);
+                                free(lines);
+
+                                printf("\n\nPress [F3] to exit");
+                                while (1) {
+                                    user_action = keyboard_navigation();
+                                    if (user_action == F3_BUTTON)
+                                        break;
+                                }
+                            case RUN_POS:
+
                             break;
 
                             case DELETE_POS:
