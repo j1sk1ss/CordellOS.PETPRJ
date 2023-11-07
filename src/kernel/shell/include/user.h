@@ -1,3 +1,5 @@
+#pragma once
+
 #include <include/file_system.h>
 
 struct User {
