@@ -2,35 +2,41 @@
 
 #include "stdio.h"
 #include "string.h"
+#include "file_system.h"
+#include "ata.h"
+
 #include "../shell/include/Keyboard.h"
 
-#define stack_size              100
-#define memory_size             100
-#define variable_memory_start   8
-#define const_variable_size     0
+#define STACK_SIZE              100
+#define MEMORY_SIZE             100
+#define VARIABLE_MEMORY_START   8
+#define CONSTANT_SIZE     		0
 
-#define instruction_length      6
-#define parametes_length        25
-#define line_size               25
-#define variable_length         5
-#define label_length            5
+#define INSTRUCTION_LENGTH      7
+#define PARAMETERS_LENGTH       50
+#define LINE_SIZE               50
+#define VARIABLE_LENGTH         5
+#define LABEL_LENGTH            5
 
 struct intermediate_lang{
 	int instruc_no;
 	int opcode;
 	int parameters[5];
+
+	char* string;
+	char* string_params[5];
 };
 
 
 struct symbol_table{
-	char variable_name[variable_length];
+	char variable_name[VARIABLE_LENGTH];
 	int address;
 	int size;
 };
 
 
 struct blocks_table{
-	char name[label_length];
+	char name[LABEL_LENGTH];
 	int instr_no;  // instruction number after start
 };
 

@@ -21,7 +21,7 @@ typedef struct {
 snake snk[N];
 fruit frt;
 
-int hardnes_level = 9999999;
+int hardnes_level = 20000000;
 
 int snake_size;
 int max_score;
@@ -29,23 +29,23 @@ int max_score;
 int snake_init(int hard, int score) {
     switch (hard) {
         case 0:
-            hardnes_level = 99999999;
+            hardnes_level = 20000000;
         break;
 
         case 1:
-            hardnes_level = 9999999;
+            hardnes_level = 10000000;
         break;
 
         case 2:
-            hardnes_level = 999999;
+            hardnes_level = 6000000;
         break;
 
         case 3:
-            hardnes_level = 99999;
+            hardnes_level = 3000000;
         break;
 
         case 4:
-            hardnes_level = 9999;
+            hardnes_level = 2500000;
         break;
     }
 
@@ -157,7 +157,12 @@ int input(char map[V][H], int *dead) {
 	// CHECK FRUIT, IF HEAD GET CLOSE, EAT IT!
 
 	if (snk[0].x == frt.x && snk[0].y == frt.y) {
-		snake_size += 1;
+		snake_size++;
+		if (hardnes_level < 7000000)
+			snake_size++;
+
+		if (hardnes_level < 5000000)
+			snake_size++;
 
 		snk[snake_size - 1].imagen = 'X';
 

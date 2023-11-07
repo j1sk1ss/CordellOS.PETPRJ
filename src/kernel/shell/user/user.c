@@ -9,7 +9,7 @@ void init_users() {
 
     // create default users file
     create_file(0, "users", USERS_SECTOR);
-    write_file(find_file("users"), "admin[0[28072003\n");
+    write_file(find_file("users"), "admin[0[0\n");
 }
 
 struct User* login(char* user_name, char* pass) {

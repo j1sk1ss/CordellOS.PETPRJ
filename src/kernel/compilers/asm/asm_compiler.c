@@ -11,16 +11,15 @@ int blocks_index = 0;
 struct blocks_table **block_tab = NULL;
 
 
-void const_func(char(*tokens)[10], int *memory, int *memory_index){
-
+void const_func(char(*tokens)[10], int *memory, int *memory_index) {
 	if (symbol_index == 0){
-		symbol_tab[symbol_index]->address = variable_memory_start;
+		symbol_tab[symbol_index]->address = VARIABLE_MEMORY_START;
 		strcpy(symbol_tab[symbol_index]->variable_name, tokens[1]);
-		symbol_tab[symbol_index]->size = const_variable_size;
+		symbol_tab[symbol_index]->size = CONSTANT_SIZE;
 	}
 	else{
 		strcpy(symbol_tab[symbol_index]->variable_name, tokens[1]);
-		symbol_tab[symbol_index]->size = const_variable_size;
+		symbol_tab[symbol_index]->size = CONSTANT_SIZE;
 		if (symbol_tab[symbol_index - 1]->size != 0)
 			symbol_tab[symbol_index]->address = symbol_tab[symbol_index - 1]->address + symbol_tab[symbol_index - 1]->size;
 		else
@@ -34,10 +33,10 @@ void const_func(char(*tokens)[10], int *memory, int *memory_index){
 
 void data_func(char (*tokens)[10], int *memory, int *memory_index){
 	int i = 0, size = 0;
-	char variable_name[variable_length];
+	char variable_name[VARIABLE_LENGTH];
     
 	if (symbol_index == 0) {
-		symbol_tab[symbol_index]->address = variable_memory_start;
+		symbol_tab[symbol_index]->address = VARIABLE_MEMORY_START;
 		while (tokens[1][i] != '\0' && tokens[1][i]!='['){
 			variable_name[i] = tokens[1][i];
 			i++;
@@ -142,13 +141,25 @@ int generate_opcode(char *instruction){
 	if (strcmp(instruction, "end") == 0)
 		return 16;
 
-	if (strcmp(instruction, "prnts") == 0)
+	if (strcmp(instruction, "prints") == 0)
 		return 17;
+
+	if (strcmp(instruction, "mkfile") == 0)
+		return 18;
+
+	if (strcmp(instruction, "rmfile") == 0)
+		return 19;
+
+	if (strcmp(instruction, "wfile") == 0)
+		return 20;
+
+	if (strcmp(instruction, "rfile") == 0)
+		return 21;
 }
 
 int getAddress(char *variable_name) {
 	int i = 0, is_array = 0, array_index = 0;
-	char temp[variable_length];
+	char temp[VARIABLE_LENGTH];
 
 	if (variable_name[1] == 'x' && variable_name[0] >= 'a' && variable_name[0] <= 'h')
 		return variable_name[0] - 'a';
@@ -198,9 +209,8 @@ int getAddress(char *variable_name) {
 	return -1; // variable not present
 }
 
-void mov_func(char *param, int instruction_no){
-	char dest[variable_length], src[variable_length];
-	/* get the first token */
+void mov_func(char *param, int instruction_no) {
+	char dest[VARIABLE_LENGTH], src[VARIABLE_LENGTH];
 	char *token;
 
 	token = strtok(param, ", ");
@@ -230,7 +240,7 @@ void mov_func(char *param, int instruction_no){
 }
 
 void bianryOperations_func(int opcode, char *param, int instruction_no){
-	char dest[variable_length], operand1[variable_length], operand2[variable_length];
+	char dest[VARIABLE_LENGTH], operand1[VARIABLE_LENGTH], operand2[VARIABLE_LENGTH];
 	/* get the first token */
 	char *token;
 
@@ -275,7 +285,10 @@ void print_func(char *param, int instruction_no) {
 }
 
 void prints_func(char *param, int instruction_no){
-	intermediate_table[intermediate_index]->parameters[0] 	= param;
+	intermediate_table[intermediate_index]->string = (char*)malloc(strlen(param));
+	strcpy(intermediate_table[intermediate_index]->string, param);
+
+	intermediate_table[intermediate_index]->parameters[0] 	= -1;
 	intermediate_table[intermediate_index]->parameters[1] 	= -1;
 	intermediate_table[intermediate_index]->opcode 			= 17;
 	intermediate_table[intermediate_index]->instruc_no 		= instruction_no;
@@ -283,9 +296,67 @@ void prints_func(char *param, int instruction_no){
 	intermediate_index++;
 	return;
 }
+///
+void mkfile_func(char* param, char* type, int instruction_no){
+	intermediate_table[intermediate_index]->string_params[0] = (char*)malloc(strlen(param));
+	strcpy(intermediate_table[intermediate_index]->string_params[0], param);
 
-void if_func(char *param, int instruction_no,int *stack,int *top){
-	char operand1[variable_length],oper[4],operand2[variable_length];
+	intermediate_table[intermediate_index]->string_params[1] = (char*)malloc(strlen(type));
+	strcpy(intermediate_table[intermediate_index]->string_params[1], type);
+
+	intermediate_table[intermediate_index]->parameters[0] 	= -1;
+	intermediate_table[intermediate_index]->parameters[1] 	= -1;
+	intermediate_table[intermediate_index]->opcode 			= 18;
+	intermediate_table[intermediate_index]->instruc_no 		= instruction_no;
+
+	intermediate_index++;
+	return;
+}
+
+void rmfile_func(char* param, int instruction_no){
+	intermediate_table[intermediate_index]->string = (char*)malloc(strlen(param));
+	strcpy(intermediate_table[intermediate_index]->string, param);
+
+	intermediate_table[intermediate_index]->parameters[0] 	= -1;
+	intermediate_table[intermediate_index]->parameters[1] 	= -1;
+	intermediate_table[intermediate_index]->opcode 			= 19;
+	intermediate_table[intermediate_index]->instruc_no 		= instruction_no;
+
+	intermediate_index++;
+	return;
+}
+
+void wfile_func(char* param, char* text, int instruction_no) {
+	intermediate_table[intermediate_index]->string_params[0] = (char*)malloc(strlen(param));
+	strcpy(intermediate_table[intermediate_index]->string_params[0], param);
+
+	intermediate_table[intermediate_index]->string_params[1] = (char*)malloc(strlen(text));
+	strcpy(intermediate_table[intermediate_index]->string_params[1], text);
+
+	intermediate_table[intermediate_index]->parameters[0] 	= -1;
+	intermediate_table[intermediate_index]->parameters[1] 	= -1;
+	intermediate_table[intermediate_index]->opcode 			= 20;
+	intermediate_table[intermediate_index]->instruc_no 		= instruction_no;
+
+	intermediate_index++;
+	return;
+}
+
+void rfile_func(char *param, char* name, int instruction_no) {
+	intermediate_table[intermediate_index]->string = (char*)malloc(strlen(name));
+	strcpy(intermediate_table[intermediate_index]->string, name);
+
+	intermediate_table[intermediate_index]->parameters[0] 	= getAddress(param);
+	intermediate_table[intermediate_index]->parameters[1] 	= -1;
+	intermediate_table[intermediate_index]->opcode 			= 21;
+	intermediate_table[intermediate_index]->instruc_no 		= instruction_no;
+
+	intermediate_index++;
+	return;
+}
+
+void if_func(char *param, int instruction_no, int *stack, int *top){
+	char operand1[VARIABLE_LENGTH],oper[4],operand2[VARIABLE_LENGTH];
 	/* get the first token */
 	char *token;
 
@@ -368,24 +439,24 @@ void endif_func(int instruction_no, int *stack, int *top){
 }
 
 void jump_func(char *param, int instruction_no){
-
 	intermediate_table[intermediate_index]->instruc_no = instruction_no;
 	intermediate_table[intermediate_index]->opcode = 6;
-	for (int i = 0; i < blocks_index; i++){
+
+	for (int i = 0; i < blocks_index; i++)
 		if (strcmp(block_tab[i]->name, param) == 0){
 			intermediate_table[intermediate_index]->parameters[0] = block_tab[i]->instr_no;
 			intermediate_table[intermediate_index]->parameters[1] = -1;
 			break;
 		}
-	}
+
 	intermediate_index++;
 	return;
 }
 
 int asm_execute(char* file_data) {
-	int stack[stack_size], top = -1;
-	int memory_array[memory_size];
-	int memory_index = variable_memory_start - 1 ;  // 0 to 7 are already reserved
+	int stack[STACK_SIZE], top = -1;
+	int memory_array[MEMORY_SIZE];
+	int memory_index = VARIABLE_MEMORY_START - 1 ;  // 0 to 7 are already reserved
 
 	symbol_tab = (struct symbol_table**)malloc(sizeof(struct symbol_table*) * 25);
 	for (int i = 0; i < 25; i++)
@@ -410,11 +481,9 @@ int asm_execute(char* file_data) {
     }
 
     // Allocate an array of char* to store the lines
-    char** lines = (char**)malloc(num_lines * sizeof(char*));
-
-    // Split the data into lines and store them in the lines array
-    char* raw_line = strtok(file_data, "\n");
-    int line_index = 0;
+    char** lines 	= (char**)malloc(num_lines * sizeof(char*));
+    char* raw_line 	= strtok(file_data, "\n");
+    int line_index 	= 0;
 
     while (raw_line != NULL) {
         lines[line_index] = (char*)malloc(strlen(raw_line) + 2);
@@ -441,7 +510,6 @@ int asm_execute(char* file_data) {
 
 		// generating tokens //
 		for (int i = 0; lines[index][i] != '\0'; i++) {
-            
 			if (lines[index][i] == ' ' || lines[index][i] == '\n') {
 				buffer[buffer_index] = '\0';
 				buffer_index = 0;
@@ -451,10 +519,9 @@ int asm_execute(char* file_data) {
                 
 				buffer = (char*)malloc(10 * sizeof(char));
 			}
-			else {
-				buffer[buffer_index++] = lines[index][i];
-			}
+			else buffer[buffer_index++] = lines[index][i];
 		}
+
 		// generating tokens //
 		if (strcmp(tokens[0], "data") == 0)
 			data_func(tokens, memory_array, &memory_index);
@@ -462,54 +529,53 @@ int asm_execute(char* file_data) {
 			const_func(tokens, memory_array, &memory_index);
 
 		index++;
+
+		if (index > 11)
+			return -1;
 	}
 	// before start //
 
 	// display_symbol_table();
 
 	// after start//
-	char instruction[instruction_length],param[parametes_length];
-	int opcode = -1,instruction_no = 0;
+	char instruction[INSTRUCTION_LENGTH], param[PARAMETERS_LENGTH], second_param[PARAMETERS_LENGTH];
+	int opcode = -1, instruction_no = 0;
 
 	while (index < num_lines) {
 		instruction_no++;
 		if (lines[index][strlen(lines[index]) - 2] == '-'){
 			lines[index][strlen(lines[index]) - 2] = '\0';
-			block_tab[blocks_index]->instr_no = instruction_no;
-			strcpy(block_tab[blocks_index]->name, lines[index]);
-			blocks_index++;
-			instruction_no--;
-			// printf("[%s]", lines[index]);
-			index++;
+			block_tab[blocks_index]->instr_no = instruction_no--;
+			strcpy(block_tab[blocks_index++]->name, lines[index++]);
+
 			continue;
 		}
 
-		//sscanf(line, "%s %[^*]", instruction, param);
-		int i = 0;
-		int j = 0;
-
-		// Extract instruction
+		int i = 0, j = 0;
 		while (lines[index][i] != ' ' && lines[index][i] != '\0' && j < sizeof(instruction) - 1) 
 			instruction[j++] = lines[index][i++];
 		
 		instruction[j] = '\0';
 
-		// Skip spaces
 		while (lines[index][i] == ' ') 
 			i++;
 		
 		j = 0;
-
-		// Extract param
-		while (lines[index][i] != '*' && lines[index][i] != '\0' && j < sizeof(param) - 1) 
+		while (lines[index][i] != ' ' && lines[index][i] != '\0' && j < sizeof(param) - 1) 
 			param[j++] = lines[index][i++];
 		
-		param[j - 1] = '\0';
-		
-        //
-		//printf("\ninstruction is %d  : %s %s\n",instruction_no, instruction, param);
-		opcode = generate_opcode(instruction);
+		param[j] = '\0';
 
+		while (lines[index][i] == ' ') 
+			i++;
+
+		j = 0;
+		while (lines[index][i] != ' ' && lines[index][i] != '\0' && j < sizeof(second_param) - 1 && lines[index][i] != '\n') 
+			second_param[j++] = lines[index][i++];
+		
+		second_param[j] = '\0';
+
+		opcode = generate_opcode(instruction);
 		switch (opcode) {
 		    case 1 : 
 				mov_func(param, instruction_no);
@@ -556,6 +622,22 @@ int asm_execute(char* file_data) {
 
 			case 17: 
 				prints_func(param, instruction_no);
+			break;
+
+			case 18: 
+				mkfile_func(param, second_param, instruction_no);
+			break;
+
+			case 19: 
+				rmfile_func(param, instruction_no);
+			break;
+
+			case 20: 
+				wfile_func(param, second_param, instruction_no);
+			break;
+
+			case 21: 
+				rfile_func(param, second_param, instruction_no);
 			break;
 		}
 

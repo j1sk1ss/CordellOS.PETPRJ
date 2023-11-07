@@ -59,7 +59,7 @@ int check_condition(int operand1, int operand2, int opcode){
 	return 0;
 }
 
-void asm_executor(int *memory_array,int memory_index){
+void asm_executor(int *memory_array, int memory_index){
 	for (int i = 0; i < intermediate_index;){  // iterating on the intermediate language table
 
 		switch (intermediate_table[i]->opcode) {
@@ -87,8 +87,28 @@ void asm_executor(int *memory_array,int memory_index){
 	    	break;  // PRINT Instruction //
 
 			case 17: 
-                printf("\n%s\n", memory_array[intermediate_table[i]->parameters[0]]);
-	    	break;  // PRINT Instruction //
+                printf("\n%s\n", intermediate_table[i]->string);
+	    	break;  // PRINTS Instruction //
+
+			case 18:
+				create_file(atoi(intermediate_table[i]->string_params[1]), 
+				intermediate_table[i]->string_params[0], ATA_find_empty_sector(200));
+			break;
+
+			case 19:
+				delete_file(intermediate_table[i]->string);
+			break;
+
+			case 20:
+				struct File* wfile = find_file(intermediate_table[i]->string_params[0]);
+				write_file(wfile, intermediate_table[i]->string_params[1]);
+			break;
+
+			case 21:
+				struct File* rfile = find_file(intermediate_table[i]->string);
+				int data = atoi(read_file(rfile));
+				memory_array[intermediate_table[i]->parameters[0]] = data; 
+			break;
 
 			case 7: 
                 if (check_condition(memory_array[intermediate_table[i]->parameters[0]], memory_array[intermediate_table[i]->parameters[1]],
