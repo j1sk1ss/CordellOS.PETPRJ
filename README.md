@@ -11,6 +11,23 @@ It all started with the idea of creating my own operating system to practice C a
 
 Then, reaching the current end of the tutorial (currently 11/3/2023, video still in production), I completed the basic file system functions, integrated a simple ASM compiler with a simple shell language, and began selecting the case and board.
 
+<p align="center">
+  <img width="800" height="480" src="https://github.com/j1sk1ss/CordellOS.MPRJ/blob/main/covers/6_cover.jpeg">
+  <br>
+    <text> *simple file manager* </text>
+  </br>
+</p>
+
+
+
+<p align="center">
+  <img width="800" height="480" src="https://github.com/j1sk1ss/CordellOS.MPRJ/blob/main/covers/7_cover.jpeg">
+    <br>
+      <text> *Start screen with login process* </text>
+    </br>
+</p>
+
+
 ## Case
 I decided to print the body on a 3D printer. Well, for this it was necessary to first create a model for printing.
 As a reference, or basis, I chose the cases of old commodore and atari computers. Well, something like this:
