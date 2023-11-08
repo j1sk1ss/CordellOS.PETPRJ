@@ -6,23 +6,22 @@
 #include <include/util.h>
 #include <include/asm_compiler.h>
 
-#include "Keyboard.h"
+#include "keyboard.h"
 #include "user.h"
 #include "file_manager.h"
 #include "snake.h"
 
 #include "../libs/core/shared/include/x86.h"
 
-#define SUPER_ACCESS        0
-#define CORDELL_ACCESS      1
-#define DEFAULT_ACCESS      2
-#define GUEST_ACCESS        3
+#define SUPER_DERICTIVE        0
+#define CORDELL_DERICTIVE      1
+#define DEFAULT_DERICTIVE      2
 
 /////////////////
 //  CONSTANTS
 
-    #define CORDELL_ATTENTION   "Non hai i permessi. Usa cordell."
-    #define GUEST_ATTENTION     "Tu in modalita' ospite. Azione respinta."
+    #define CORDELL_ATTENTION   "\nNon hai i permessi. Usa cordell."
+    #define GUEST_ATTENTION     "\nTu in modalita' ospite. Azione respinta."
     #define MAX_ATTEMPT_COUNT   4
 
     /////////////////
@@ -32,7 +31,7 @@
         #define COMMAND_CLEAR                           "clear" 
         #define COMMAND_TIME                            "date"
         #define COMMAND_ECHO                            "eco"
-        #define COMMAND_PASS                            "setpas"
+        #define COMMAND_USERS                           "users"
 
         #define COMMAND_GET_HDD_SECTOR                  "rsector"
         #define COMMAND_SET_HDD_SECTOR                  "wsector"

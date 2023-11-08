@@ -453,7 +453,7 @@ void jump_func(char *param, int instruction_no){
 	return;
 }
 
-int asm_execute(char* file_data) {
+int asm_execute(char* file_data, struct User* user) {
 	int stack[STACK_SIZE], top = -1;
 	int memory_array[MEMORY_SIZE];
 	int memory_index = VARIABLE_MEMORY_START - 1 ;  // 0 to 7 are already reserved
@@ -646,7 +646,7 @@ int asm_execute(char* file_data) {
 ending: 
 
 	// executing the program //
-	asm_executor(memory_array, memory_index);
+	asm_executor(memory_array, memory_index, user);
 	// executing the program //
 
 	return 0;

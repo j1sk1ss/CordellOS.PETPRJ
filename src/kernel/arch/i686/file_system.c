@@ -74,7 +74,7 @@ void init_directory() {
 //  CREATES TEMP FILE WITH NAME <NAME> IN CURRENT DIRECTORY
 //
 
-    void create_file(int type, char* name, uint8_t* head_sector) {
+    void create_file(int read, int write, int edit, char* name, uint8_t* head_sector) {
         if (find_file(name) != NULL) {
             printf("Il file esiste gia'.");
             return;
@@ -86,7 +86,9 @@ void init_directory() {
         newFile->name = malloc(strlen(name));
         strcpy(newFile->name, name);
 
-        newFile->fileType = type;
+        newFile->read_level = read;
+        newFile->write_level = write;
+        newFile->edit_level = edit;
 
         newFile->sectors = (uint32_t*)malloc(sizeof(uint32_t));
         newFile->sector_count++;
@@ -373,7 +375,9 @@ void init_directory() {
             strcat(result, "F");
             strcat(result, file->name);
             strcat(result, "T");
-            strcat(result, fprintf_unsigned(-1, file->fileType, 10, 0));
+            strcat(result, fprintf_unsigned(-1, file->read_level, 10, 0));
+            strcat(result, fprintf_unsigned(-1, file->write_level, 10, 0));
+            strcat(result, fprintf_unsigned(-1, file->edit_level, 10, 0));
             strcat(result, "S");
 
             int sector_count = file->sector_count;
@@ -400,7 +404,6 @@ void init_directory() {
     struct File* load_temp_file(const char* input, int* index) {
         struct File* file = (struct File*)malloc(sizeof(struct File));
 
-        file->fileType      = NULL;
         file->name          = NULL;
         file->sector_count  = 0;
         
@@ -421,7 +424,9 @@ void init_directory() {
             if (input[*index] == 'T') {
                 (*index)++; // Move past 'T'
 
-                file->fileType = input[(*index)++] - '0';
+                file->read_level    = input[(*index)++] - '0';
+                file->write_level   = input[(*index)++] - '0';
+                file->edit_level    = input[(*index)++] - '0';
                 
                 while (input[*index] == 'S') {
                     (*index)++; // Move past 'S'

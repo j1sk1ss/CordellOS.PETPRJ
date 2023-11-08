@@ -2,7 +2,7 @@
 
 int row_position = 1;
 
-void open_file_manager(int access_level) {
+void open_file_manager(struct User* user) {
     VGA_clrscr();
     print_directory_data();
 
@@ -15,7 +15,7 @@ void open_file_manager(int access_level) {
             row_position++;
 
         else if (user_action == ENTER_BUTTON || user_action == BACKSPACE_BUTTON) 
-            execute_item(access_level, user_action);
+            execute_item(user, user_action);
 
         else if (user_action == F3_BUTTON) {
             VGA_clrscr();
@@ -34,15 +34,18 @@ void open_file_manager(int access_level) {
             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nFile name: ");
             char* file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
             
-            cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\tFile type: ");
+            cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\tFile type [XXX]: ");
             char* file_type = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
             
-            create_file(atoi(file_type), file_name, ATA_find_empty_sector(0));  
+            create_file(file_type[0] - '0', file_type[1] - '0', file_type[2] - '0', file_name, ATA_find_empty_sector(0));  
             free(file_name);
             free(file_type);
         }
 
-        VGA_clrscr();
+        else if (user_action == F4_BUTTON) 
+            execute_item(user, user_action);
+        
+        VGA_text_clrscr();
         print_directory_data();
 
         int delay = 9999999;
@@ -51,7 +54,7 @@ void open_file_manager(int access_level) {
     }
 }
 
-void execute_item(int access_level, char action_type) {
+void execute_item(struct User* user, char action_type) {
     if (row_position == 0 && action_type != BACKSPACE_BUTTON) {
         up_from_directory();
         return;
@@ -61,19 +64,36 @@ void execute_item(int access_level, char action_type) {
     struct Directory* currentDir = get_current_directory()->subDirectory;
     while (currentDir != NULL) {
         if (rows++ == row_position) {
-            if (action_type != BACKSPACE_BUTTON)
+            if (action_type == ENTER_BUTTON)
                 move_to_directory(currentDir->name);
-            else if (action_type == BACKSPACE_BUTTON && (access_level == 0 || (access_level == 1 && (currentDir->subDirectory != NULL && currentDir->files != NULL)))) {                           
+
+            else if (action_type == BACKSPACE_BUTTON) {       
+                if ((currentDir->subDirectory != NULL || currentDir->files != NULL) && user->edit_access != 0)
+                    break;
+
                 printf("\nDelete? (Y/N): ");
                 while (1) {
-                    char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-                    if (strcmp(user_choose, "y") == 0) {
+                    if (strcmp(keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE), "y") == 0) {
                         delete_directory(currentDir->name);
                         break;
                     }
-                    else
-                        break;
+                    else break;
                 }
+            }
+
+            else if (action_type == F4_BUTTON) { 
+                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nNew dir name: ");
+                char* new_dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                if (find_directory(new_dir_name) == NULL) {
+                    free(currentDir->name);
+                    currentDir->name = (char*)malloc(strlen(new_dir_name));
+                    strcpy(currentDir->name, new_dir_name);
+
+                    save_file_system();
+                    break;
+                }
+
+                free(new_dir_name);
             }
 
             break;
@@ -85,13 +105,37 @@ void execute_item(int access_level, char action_type) {
     struct File* currentFile = get_current_directory()->files;
     while (currentFile != NULL) {
         if (rows++ == row_position) {
-            row_position = 0;
+            row_position = 1;
+
+            if (action_type == F4_BUTTON) { 
+                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nNew file name: ");
+                char* new_file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                
+                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\tNew file type [XXX]: ");
+                char* new_file_type = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                
+                if (file_exist(new_file_name) != 1) 
+                    if (user->edit_access <= currentFile->edit_level) {
+                        free(currentFile->name);
+                        currentFile->name = (char*)malloc(strlen(new_file_name));
+                        strcpy(currentFile->name, new_file_name);
+
+                        currentFile->read_level     = new_file_type[0] - '0';
+                        currentFile->write_level    = new_file_type[1] - '0';
+                        currentFile->edit_level     = new_file_type[2] - '0';
+
+                        save_file_system();
+                        break;
+                    }
+                
+                free(new_file_name);
+                free(new_file_type);
+            }
+
             while(1) {
                 set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
             
-                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE,"\n");
-                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
-
+                printf("\n%s", LINE);
                 const char* lines[5] = {
                     READ_LINE,
                     EDIT_LINE,
@@ -102,9 +146,9 @@ void execute_item(int access_level, char action_type) {
 
                 for (int i = READ_POS; i <= DELETE_POS; i++) {
                     if (row_position == i) cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, lines[i]);
-                    else cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, lines[i]);
+                    else printf(lines[i]);
 
-                    cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
+                    printf(LINE);
                 }
 
                 char user_action = keyboard_navigation();
@@ -113,105 +157,96 @@ void execute_item(int access_level, char action_type) {
                 else if (user_action == DOWN_ARROW_BUTTON && row_position < 4)
                     row_position++;
                 else if (user_action == ENTER_BUTTON) {
-                    if (currentFile->fileType >= access_level) {
-                        switch (row_position) {
-                            case READ_POS:
+                    switch (row_position) {
+                        case READ_POS:
+                            if (user->read_access <= currentFile->read_level) {
                                 VGA_clrscr();
                                 set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
 
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "File: [%s]   [F3 - EXIT]\n", currentFile->name);
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\n\n%s", read_file(currentFile));
-
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\n");
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
-
+                                printf("%sFile: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, read_file(currentFile), LINE);
                                 while (1) {
                                     user_action = keyboard_navigation();
                                     if (user_action == F3_BUTTON)
                                         break;
                                 }
-                                
-                            break;
+                            }
+                        break;
 
-                            case EDIT_POS:
+                        case EDIT_POS:
+                            if (user->write_access <= currentFile->write_level) {
                                 VGA_clrscr();
                                 set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\n");
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "File: [%s]   [F3 - EXIT]", currentFile->name);
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\n");
-                                cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
 
+                                printf("%s\nFile: [%s]   [F3 - EXIT]\n%s", LINE, currentFile->name, LINE);
                                 write_file(currentFile, keyboard_edit(read_file(currentFile), BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE));
-                            break;
+                            }
+                        break;
 
-                            case ASM_POS:
-                                VGA_clrscr();
-                                asm_execute(read_file(currentFile));
+                        case ASM_POS:
+                            VGA_clrscr();
+                            set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                            asm_execute(read_file(currentFile));
 
-                                printf("\n\nPress [F3] to exit");
+                            printf("\n\nPress [F3] to exit");
+                            while (1) {
+                                user_action = keyboard_navigation();
+                                if (user_action == F3_BUTTON)
+                                    break;
+                            }
+                        break;
+
+                        case RUN_POS:
+                            VGA_clrscr();
+                            set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                            
+                            char* sector_data = read_file(currentFile);
+                            char* command_for_split = (char*)malloc(strlen(sector_data));
+                            strcpy(command_for_split, sector_data);
+
+                            char* lines[100];
+                            int tokenCount = 0;
+
+                            char* splitted = strtok(command_for_split, "\n");
+                            while(splitted) {
+                                lines[tokenCount++] = splitted;
+                                splitted = strtok(NULL, "\n");
+                            }
+
+                            for (int i = 0; i < tokenCount; i++)
+                                execute_command(lines[i], 2);
+
+                            free(command_for_split);
+                            free(sector_data);
+                            free(lines);
+
+                            printf("\n\nPress [F3] to exit");
+                            while (1) {
+                                user_action = keyboard_navigation();
+                                if (user_action == F3_BUTTON)
+                                    break;
+                            }
+                        break;
+
+                        case DELETE_POS:
+                            if (user->edit_access <= currentFile->edit_level) {
+                                printf("\nDelete? (Y/N): ");
                                 while (1) {
-                                    user_action = keyboard_navigation();
-                                    if (user_action == F3_BUTTON)
+                                    char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                                    if (strcmp(user_choose, "y") == 0) {
+                                        delete_file(currentFile->name);
                                         break;
-                                }
-                            break;
-
-                            case RUN_POS:
-                                VGA_clrscr();
-                                
-                                char* sector_data = read_file(currentFile);
-                                char* command_for_split = (char*)malloc(strlen(sector_data));
-                                strcpy(command_for_split, sector_data);
-
-                                char* lines[100];
-                                int tokenCount = 0;
-
-                                char* splitted = strtok(command_for_split, "\n");
-                                while(splitted) {
-                                    lines[tokenCount++] = splitted;
-                                    splitted = strtok(NULL, "\n");
-                                }
-
-                                for (int i = 0; i < tokenCount; i++)
-                                    execute_command(lines[i], access_level);
-
-                                free(command_for_split);
-                                free(sector_data);
-                                free(lines);
-
-                                printf("\n\nPress [F3] to exit");
-                                while (1) {
-                                    user_action = keyboard_navigation();
-                                    if (user_action == F3_BUTTON)
-                                        break;
-                                }
-                            break;
-
-                            case DELETE_POS:
-                                if (access_level <= currentFile->fileType) {
-                                    printf("\nDelete? (Y/N): ");
-                                    while (1) {
-                                        char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-                                        if (strcmp(user_choose, "y") == 0) {
-                                            delete_file(currentFile->name);
-                                            break;
-                                        }
-                                        else
-                                            break;
                                     }
+                                    else break;
                                 }
-                                
-                                VGA_clrscr();
+                            }
+                            
+                            VGA_clrscr();
 
-                            break;
-                        }
-
-                        if (row_position == READ_POS || row_position == DELETE_POS)
-                            break;
+                        break;
                     }
+
+                    if (row_position == READ_POS || row_position == DELETE_POS)
+                        break;
                 }
                 else if (user_action == F3_BUTTON) {
                     VGA_clrscr();
@@ -231,16 +266,12 @@ void execute_item(int access_level, char action_type) {
 
 void print_directory_data() {
     set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-
-    cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "Directory: [%s]\n", get_full_temp_name());
-    cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
-    cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, HEADER);
-    cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
+    printf("Directory: [%s]\n%s%s%s", get_full_temp_name(), LINE, HEADER, LINE);
 
     int rows = 0;
     if (rows++ == row_position) {
         cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, UPPED_DIR);
-    } else cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, UPPED_DIR);
+    } else printf(UPPED_DIR);
 
     struct Directory* currentDir = get_current_directory()->subDirectory;
     while (currentDir != NULL) {
@@ -254,7 +285,7 @@ void print_directory_data() {
 
         if (rows++ == row_position) {
             cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, "| %s | Dir               | N/A       | N/A                       |\n", name);
-        } else cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "| %s | Dir               | N/A       | N/A                       |\n", name);
+        } else printf("| %s | Dir               | N/A       | N/A                       |\n", name);
 
         currentDir = currentDir->next;
     }
@@ -282,13 +313,13 @@ void print_directory_data() {
         else strncpy(file_size, file_size_str, (COLUMN_WIDTH + 10) - 3);
 
         if (rows++ == row_position) {
-            cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, "| %s | File              | %d         | %s |\n",
+            cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, "| %s | File              | %d %d %d     | %s |\n",
                 file_name,
-                currentFile->fileType,
+                currentFile->read_level, currentFile->write_level, currentFile->edit_level,
                 file_size);
-        } else cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "| %s | File              | %d         | %s |\n",
+        } else printf("| %s | File              | %d %d %d     | %s |\n",
                 file_name,
-                currentFile->fileType,
+                currentFile->read_level, currentFile->write_level, currentFile->edit_level,
                 file_size);
 
         currentFile = currentFile->next;
@@ -298,9 +329,7 @@ void print_directory_data() {
         row_position = rows - 1;
 
     for (int i = 0; i < 16 - rows; i++)
-        cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, EMPTY);
+        printf(EMPTY);
 
-    cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, LINE);
-    cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "[F1 - CREATE DIR]   [F2 - CREATE FILE]   [F3 - EXIT]");
-    cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\n[ENTER - INTERACT]   [BACKSPACE - DELETE]");
+    printf("%s[F1 - CREATE DIR]   [F2 - CREATE FILE]   [F3 - EXIT]   [F4 - EDIT]\n[ENTER - INTERACT]   [BACKSPACE - DELETE]", LINE);
 }

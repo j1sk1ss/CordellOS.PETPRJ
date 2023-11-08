@@ -7,7 +7,7 @@
 #include "../../include/io.h"
 #include "../../include/vga_text.h"
 
-#include "Keyboard.h"
+#include "keyboard.h"
 
 #define V 21
 #define H 75

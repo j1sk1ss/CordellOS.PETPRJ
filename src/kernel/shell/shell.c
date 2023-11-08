@@ -1,58 +1,70 @@
 #include "include/shell.h"
 
 
-char *currentPassword = "12345";
-struct User* user     = NULL;
+char* currentPassword;
+struct User* user = NULL;
 
 void shell() {
     shell_start_screen();
     init_directory(); 
     init_users();
     
+    /////////////
+    //  SHELL CORDELL PASSWORD
+    //
+
+        if (file_exist("shell") == 1)
+            currentPassword = read_file(find_file("shell"));
+        else {
+            create_file(0, 0, 0, "shell", ATA_find_empty_sector(0));
+
+            struct File* file = find_file("shell");
+            write_file(file, "12345");
+            currentPassword = read_file(file);
+        }
+
+    //
+    //  SHELL CORDELL PASSWORD
+    /////////////
+
     ////////////////////////////////////////////////////
     //
     //  USER LOGIN
     //
 
-        cprintf(FOREGROUND_LIGHT_RED, "\r\n[LOGIN]: ");
-        char* user_login = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
-
-        cprintf(FOREGROUND_LIGHT_RED, "\r\n[PAROLA D'ORDINE]: ");
-        char* user_pass = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
-
-        user = login(user_login, user_pass);
         int attempts = 0;
         while (user == NULL) {
-            cprintf(FOREGROUND_RED, "\r\nPassword o login errata, riprova.\n\r");
             cprintf(FOREGROUND_LIGHT_RED, "\r\n[LOGIN]: ");
-            user_login = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
+            char* user_login = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
 
             cprintf(FOREGROUND_LIGHT_RED, "\r\n[PAROLA D'ORDINE]: ");
-            user_pass = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
-            user = login(user_login, user_pass);
+            char* user_pass = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
+
+            user = login(user_login, user_pass, 0);
 
             free(user_login);
             free(user_pass);
 
-            if (++attempts > MAX_ATTEMPT_COUNT) {
-                cprintf(FOREGROUND_BLUE, "\r\nPassword o login errata, accedere alla modalità ospite.\n\r");
-                user = (struct User*)malloc(sizeof(struct User*));
-                user->access = GUEST_ACCESS;
-                break;
-            }
+            if (user == NULL)
+                if (++attempts > MAX_ATTEMPT_COUNT) {
+                    cprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalità ospite.\n\r");
+                    user = (struct User*)malloc(sizeof(struct User*));
+                    
+                    user->read_access   = 6;
+                    user->write_access  = 6;
+                    user->edit_access   = 6;
+
+                    break;
+                }
+            else cprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalità ospite.\n\r");
         }
-    
-        free(user_login);
-        free(user_pass);
-
-        printf("\n");
-
-        open_file_manager(user->access);
 
     //
     //  USER LOGIN
     //
     ////////////////////////////////////////////////////
+
+    open_file_manager(user);
 
     while (1) {
         char* path = get_full_temp_name();
@@ -61,9 +73,9 @@ void shell() {
 
         char *command = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
         if (strstr(command, "cordell") == 0)
-            execute_command(command + strlen("cordell") + 1, user->access);
+            execute_command(command + strlen("cordell") + 1, CORDELL_DERICTIVE);
         else
-            execute_command(command, user->access);
+            execute_command(command, DEFAULT_DERICTIVE);
 
         free(path);
         free(command);
@@ -89,14 +101,14 @@ void shell_start_screen() {
 //
 //
 
-    void execute_command(char* command, int access_level) {
+    void execute_command(char* command, int cordell_derictive) {
 
         ////////////////////////////////
         //
         //  PASSWORD VERIFICATION
         //
 
-            if (access_level == CORDELL_ACCESS) {
+            if (cordell_derictive == CORDELL_DERICTIVE) {
                 cprintf(FOREGROUND_GREEN, "\r\n[PAROLA D'ORDINE]: ");
                 char* password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
                 int tries = 0;
@@ -106,15 +118,15 @@ void shell_start_screen() {
                     free(password);
 
                     password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
-                    if (++tries >= MAX_ATTEMPT_COUNT) 
+                    if (++tries >= MAX_ATTEMPT_COUNT)
                         return;
                 }
 
-                free(password);            
+                free(password);
             }
 
-            if (access_level == SUPER_ACCESS)
-                access_level = CORDELL_ACCESS;
+            if (cordell_derictive == SUPER_DERICTIVE)
+                cordell_derictive = CORDELL_DERICTIVE;
 
         //
         //  PASSWORD VERIFICATION
@@ -150,7 +162,6 @@ void shell_start_screen() {
                 printf("\r\n> Utilizzare [%s] per la pulizia dello schermo",            COMMAND_CLEAR);
                 printf("\r\n> Usa [%s] per l'eco",                                      COMMAND_ECHO);
                 printf("\r\n> Utilizza la [%s] per i calcoli (+, -, * e /)",            COMMAND_CALCULATOR);
-                printf("\r\n> Utilizzare [%s] per impostare la password per cordell",   COMMAND_PASS);
                 printf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
 
                 printf("\r\n> Usa [%s] <nome> per cretore dir",                         COMMAND_CREATE_DIR);
@@ -172,31 +183,6 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_ECHO) == 0) 
                 printf("\r\n%s", command_line[1]);
 
-            else if (strstr(command_line[0], COMMAND_PASS) == 0) {
-                if (access_level == DEFAULT_ACCESS) {
-                    printf("\r\n%s\r\n", CORDELL_ATTENTION);                 
-                    return;
-                }
-
-                if (access_level == GUEST_ACCESS) {
-                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
-                    return;
-                }
-
-                char* newPassword = command_line[2]; 
-                free(currentPassword);
-
-                char* buffer = (char*)malloc(strlen(newPassword) + 1);
-                memset(buffer, 0, sizeof(buffer));
-                if (buffer == NULL)
-                    return;
-
-                strcpy(buffer, newPassword);
-
-                currentPassword                             = buffer;
-                currentPassword[strlen(currentPassword)]    = '\0';
-            }
-
             else if (strstr(command_line[0], COMMAND_TIME) == 0) {
                 datetime_read_rtc();
                 printf("\r\nGiorno: %i/%i/%i\tTempo: %i:%i:%i", datetime_day, 
@@ -206,6 +192,9 @@ void shell_start_screen() {
                                                                 datetime_minute, 
                                                                 datetime_second);
             }
+
+            else if (strstr(command_line[0], COMMAND_USERS) == 0) 
+                print_users_table();
 
         //
         //
@@ -218,53 +207,34 @@ void shell_start_screen() {
         //
         
             else if (strstr(command_line[0], COMMAND_GET_HDD_SECTOR) == 0) {
-                if (access_level == GUEST_ACCESS) {
-                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
-                    return;
+                if (cordell_derictive == CORDELL_DERICTIVE) {
+                    char* loaded_data = ATA_read_sector(atoi(command_line[1]));
+                    
+                    if (loaded_data != NULL) printf("\r\n%s", loaded_data);
+                    else printf("\n\rErrore durante la lettura dal disco. Per favore riprova");
+
+                    free(loaded_data);
                 }
-
-                char* loaded_data = ATA_read_sector(atoi(command_line[1]));
-                
-                if (loaded_data != NULL) 
-                    printf("\r\n%s", ATA_read_sector(atoi(command_line[1])));
-                else 
-                    printf("\n\rErrore durante la lettura dal disco. Per favore riprova");
-
-                free(loaded_data);
+                else cprintf(FOREGROUND_RED, CORDELL_ATTENTION);
             }
 
             else if (strstr(command_line[0], COMMAND_SET_HDD_SECTOR) == 0) {
-                if (access_level == GUEST_ACCESS) {
-                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
-                    return;
-                }
-
-                if (access_level == CORDELL_ACCESS) {
-                    int LBA = atoi(command_line[1]);
-
+                if (cordell_derictive == CORDELL_DERICTIVE) {
                     char* text =            
                         command             
                         + strlen(command_line[0])          
                         + strlen(command_line[1])           
                         + 2;
 
-                    if (ATA_write_sector(LBA, text) == -1)
-                        printf("\n\rErrore durante la scrittura su disco. Per favore riprova");
+                    if (ATA_write_sector(atoi(command_line[1]), text) == -1) printf("\n\rErrore durante la scrittura su disco. Per favore riprova");
                 }
-                else
-                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
+                else cprintf(FOREGROUND_RED, CORDELL_ATTENTION);
             }
 
             else if (strstr(command_line[0], COMMAND_CLEAR_SECTOR) == 0) {
-                if (access_level == GUEST_ACCESS) {
-                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
-                    return;
-                }
-
-                if (access_level == CORDELL_ACCESS) 
+                if (cordell_derictive == CORDELL_DERICTIVE) 
                     ATA_clear_sector(atoi(command_line[1]));
-                else
-                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
+                else cprintf(FOREGROUND_RED, CORDELL_ATTENTION);
             }
 
         //
@@ -282,7 +252,7 @@ void shell_start_screen() {
                 create_directory(command_line[1]);                                                  // Name placed as second arg
             
             else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0)                      
-                open_file_manager(user->access);                                             
+                open_file_manager(user);                                             
 
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0)                                  // Move to dir           
                 move_to_directory(command_line[1]);                                                 //
@@ -291,34 +261,23 @@ void shell_start_screen() {
                 up_from_directory();                                                                //
             
             else if (strstr(command_line[0], COMMAND_DELETE_DIR) == 0) {                            // Delete dir
-                if (access_level == GUEST_ACCESS) {
-                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
-                    return;
-                }
-
                 struct Directory* directory = find_directory(command_line[1]);
                 if (directory->subDirectory != NULL || directory->files != NULL) 
-                    if (access_level == CORDELL_ACCESS || access_level == SUPER_ACCESS) 
-                        delete_directory(command_line[1]); 
-                    else printf("\r\nDirectory non vuota. Usa [cordell]\r\n");
+                    if (user->edit_access = 0) delete_directory(command_line[1]); 
+                    else printf("\r\nDirectory non vuota.\r\n");
                 else delete_directory(command_line[1]);                                              
             }
             
             else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0)                
-                create_file(atoi(command_line[1]), command_line[2], ATA_find_empty_sector(0));              // Name placed as third arg
+                create_file(atoi(command_line[1]), atoi(command_line[2]), atoi(command_line[3]), command_line[4], ATA_find_empty_sector(0));      
                              
-            else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {                       // Delete file by name
-                if (access_level == GUEST_ACCESS) {
-                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
-                    return;
-                }
-
+            else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {    
                 struct File* file = find_file(command_line[1]);
-                if (file->fileType <= 1) 
-                    if (access_level == CORDELL_ACCESS || access_level == SUPER_ACCESS) 
-                        delete_file(command_line[1]);
-                    else printf(CORDELL_ATTENTION);
-                else delete_file(command_line[1]);  
+                if (file == NULL)
+                    return;
+
+                if (file->edit_level >= user->edit_access) delete_file(command_line[1]);
+                else printf("\nYou don`t have permissions to do this.");
             }
 
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {                              // List of all files
@@ -348,17 +307,8 @@ void shell_start_screen() {
                 if (file == NULL)
                     return;
                 
-                if (file->fileType != 2 && access_level == GUEST_ACCESS) {
-                    printf("\r\n%s\r\n", GUEST_ACCESS);
-                    return;
-                }
-
-                if (file->fileType == 0 && access_level == DEFAULT_ACCESS) {
-                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
-                    return;
-                }
-
-                printf("\r\n%s", read_file(file));
+                if (file->read_level >= user->read_access) printf("\r\n%s", read_file(file));
+                else printf("\nYou don`t have permissions to do this.");
             }
 
         //
@@ -373,14 +323,11 @@ void shell_start_screen() {
 
             else if (strstr(command_line[0], COMMAND_CALCULATOR) == 0) {
                 char* tokens[100];
-                int tokenCount = 0;
 
-                char* expression =            
-                    command             
-                     + strlen(command_line[0])          
-                     + 1;  
+                int tokenCount      = 0;
+                char* expression    = command + strlen(command_line[0]) + 1;  
+                char* splitted      = strtok(expression, " ");
 
-                char* splitted = strtok(expression, " ");
                 while(splitted) {
                     tokens[tokenCount++] = splitted;
                     splitted = strtok(NULL, " ");
@@ -396,7 +343,7 @@ void shell_start_screen() {
                 if (file_exist("snake-save") == 1)
                     snake_save = find_file("snake-save");
                 else {
-                    create_file(0, "snake-save", ATA_find_empty_sector(200));
+                    create_file(0, 0, 0, "snake-save", ATA_find_empty_sector(200));
                     snake_save = find_file("snake-save");
                     write_file(snake_save, "0");
                 }
@@ -412,24 +359,17 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {
-                if (access_level == GUEST_ACCESS) {
-                    printf("\r\n%s\r\n", GUEST_ATTENTION);                 
-                    return;
-                }
-                
                 struct File* file = find_file(command_line[1]);
                 if (file == NULL)
                     return;
                 
-                if (file->fileType == 0 && access_level == DEFAULT_ACCESS) {
-                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
-                    return;
-                }
+                if (file->write_level >= user->write_access) {
+                    VGA_clrscr();
+                    printf("Stai modificando il file. Utilizzare [F3] per uscire.\r\n\r\n");
 
-                VGA_clrscr();
-                printf("Stai modificando il file. Utilizzare [F3] per uscire.\r\n\r\n");
-
-                write_file(file, keyboard_edit(read_file(file), FOREGROUND_WHITE));
+                    write_file(file, keyboard_edit(read_file(file), FOREGROUND_WHITE));
+                } 
+                else printf("\nYou don`t have permissions to do this.");
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {
@@ -437,29 +377,28 @@ void shell_start_screen() {
                 if (execute == NULL)
                     return;
                 
-                if (execute->fileType == 0 && access_level == DEFAULT_ACCESS) {
-                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
-                    return;
+                if (execute->edit_level >= user->edit_access) {
+                    char* sector_data = read_file(execute);
+                    char* command_for_split = (char*)malloc(strlen(sector_data));
+                    strcpy(command_for_split, sector_data);
+
+                    char* lines[100];
+                    int tokenCount = 0;
+
+                    char* splitted = strtok(command_for_split, "\n");
+                    while(splitted) {
+                        lines[tokenCount++] = splitted;
+                        splitted = strtok(NULL, "\n");
+                    }
+
+                    for (int i = 0; i < tokenCount; i++)
+                        if (cordell_derictive == CORDELL_DERICTIVE) execute_command(lines[i], SUPER_DERICTIVE);
+                        else execute_command(lines[i], DEFAULT_DERICTIVE);
+
+                    free(command_for_split);
+                    free(sector_data);
                 }
-
-                char* sector_data = read_file(execute);
-                char* command_for_split = (char*)malloc(strlen(sector_data));
-                strcpy(command_for_split, sector_data);
-
-                char* lines[100];
-                int tokenCount = 0;
-
-                char* splitted = strtok(command_for_split, "\n");
-                while(splitted) {
-                    lines[tokenCount++] = splitted;
-                    splitted = strtok(NULL, "\n");
-                }
-
-                for (int i = 0; i < tokenCount; i++)
-                    execute_command(lines[i], 0);
-
-                free(command_for_split);
-                free(sector_data);
+                else printf("\nYou don`t have permissions to do this.");
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_ASM_RUN) == 0) {
@@ -467,15 +406,13 @@ void shell_start_screen() {
                 if (execute == NULL)
                     return;
 
-                if (execute->fileType == 0 && access_level == DEFAULT_ACCESS) {
-                    printf("\r\n%s\r\n", CORDELL_ATTENTION);
-                    return;
+                if (execute->edit_level >= user->edit_access) {
+                    char* sector_data = read_file(execute);
+                    asm_execute(sector_data, user);
+
+                    free(sector_data);
                 }
-
-                char* sector_data = read_file(execute);
-                asm_execute(sector_data);
-
-                free(sector_data);
+                else printf("\nYou don`t have permissions to do this.");
             }
 
             else if (strstr(command_line[0], COMMAND_SPLIT_LINE) == 0) 

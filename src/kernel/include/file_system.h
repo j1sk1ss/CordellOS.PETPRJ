@@ -15,6 +15,10 @@
 struct File {
     int fileType;
 
+    int read_level;
+    int write_level;
+    int edit_level;
+
     char* name;
     uint32_t* sectors;
     size_t sector_count;
@@ -39,7 +43,7 @@ char* get_full_temp_name();
 
 void init_directory();
 void create_directory(char* name);
-void create_file(int type, char* name, uint8_t* head_sector);
+void create_file(int read, int write, int edit, char* name, uint8_t* head_sector);
 void delete_directory(char* name);
 void delete_file(char* name);
 
@@ -59,3 +63,4 @@ struct Directory* get_main_directory();
 
 void save_directory(struct Directory* directory, char* result);
 struct Directory* load_directory(const char* input, int* index);
+void save_file_system();

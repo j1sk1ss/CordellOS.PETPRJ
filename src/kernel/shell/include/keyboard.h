@@ -12,6 +12,7 @@
 #define HIDDEN_KEYBOARD         0
 #define VISIBLE_KEYBOARD        1
 
+#define F4_BUTTON               '\254'
 #define F3_BUTTON               '\255'
 #define F2_BUTTON               '\7'
 #define F1_BUTTON               '\6'

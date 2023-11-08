@@ -5,7 +5,8 @@
 #include "file_system.h"
 #include "ata.h"
 
-#include "../shell/include/Keyboard.h"
+#include "../shell/include/keyboard.h"
+#include "../shell/include/user.h"
 
 #define STACK_SIZE              100
 #define MEMORY_SIZE             100
@@ -40,9 +41,9 @@ struct blocks_table{
 	int instr_no;  // instruction number after start
 };
 
-int asm_execute(char* file_data);
+int asm_execute(char* file_data, struct User* user);
 
 void display_symbol_table();
 void display_intermediate_table();
 void display_block_table();
-void asm_executor(int *memory_array, int memory_index);
+void asm_executor(int *memory_array, int memory_index, struct User* user);

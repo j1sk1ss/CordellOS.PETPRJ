@@ -1,8 +1,8 @@
-#include "../include/Keyboard.h"
+#include "../include/keyboard.h"
 
 
 /* 
-*  KBDUS means US Keyboard Layout. This is a scancode table
+*  KBDUS means US keyboard Layout. This is a scancode table
 *  used to layout a standard US keyboard. I have left some
 *  comments in to give you an idea of what key is what, even
 *  though I set it's array index to 0. You can change that to
@@ -25,7 +25,7 @@ unsigned char alphabet[128] = {
     ' ',	                                                            /* Space bar */
     '\5',	                                                            /* Caps lock */
     '\6',	                                                            /* 59 - F1 key ... > */
-    '\7',   '\255',   0,   0,   0,   0,   0,   0,                       
+    '\7',   '\255',   '\254',   0,   0,   0,   0,   0,                       
     0,	                                                                /* < ... F10 */
     0,	                                                                /* 69 - Num lock*/
     0,	                                                                /* Scroll Lock */

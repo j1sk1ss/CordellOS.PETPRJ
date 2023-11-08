@@ -2,7 +2,8 @@
 
 #include <include/file_system.h>
 
-#include "Keyboard.h"
+#include "keyboard.h"
+#include "user.h"
 // #include "shell.h"
 
 
@@ -26,4 +27,4 @@
 #define DELETE_POS      4
 
 
-void open_file_manager(int access_level);
+void open_file_manager(struct User* user);
