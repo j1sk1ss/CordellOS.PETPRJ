@@ -5,19 +5,30 @@ struct Directory* mainDirectory     = NULL;
 struct Directory* currentDirectory  = NULL;
 
 //
-//  In sector(FILE_SYSTEM_SECTOR) placed LBA of sectors (13, 23, ..., n), that contains data about FS. 
-//  
+//  In sector(FILE_SYSTEM_SECTOR) placed LBA of sectors (13 23 ... n), that contains data about FS. 
+//  Every file contains list of data of sectors, that contains file data
 //
-
 
 void init_directory() {
     char* loaded_data = ATA_read_sector(FILE_SYSTEM_SECTOR);
-
+    
     if (loaded_data != NULL)
         if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
+            char* token = strtok(loaded_data, " ");
+            char* file_system_data = NULL;
+
+            while(token != NULL) {
+                char* sector_data = ATA_read_sector(atoi(token));
+                file_system_data = (char*)realloc(file_system_data, strlen(sector_data) * sizeof(char));
+                strcat(file_system_data, sector_data);
+
+                token = strtok(NULL, " ");
+                free(sector_data);
+            }
+
             int index = 0;
             memset(index, 0, sizeof(index));
-            set_main_directory(load_directory(loaded_data, index));
+            set_main_directory(load_directory(file_system_data, index));
             return;
         }
 
@@ -115,40 +126,53 @@ void init_directory() {
 
         void write_file(struct File* file, char* data) {
             int data_len = strlen(data);
-            
+
             // Iterate through the sectors of the file and write the data
-            for (size_t i = 0; i < (int)(file->sector_count); i++) {
-                int bytes_to_write = 512;
+            size_t sectors_written = 0;
+            for (size_t i = 0; i < file->sector_count; i++) {
+                int bytes_to_write = SECTOR_SIZE;
                 if (data_len < bytes_to_write) 
                     bytes_to_write = data_len;
 
                 ATA_clear_sector(file->sectors[i]);
 
                 // Read the current sector's data into a buffer
-                char* sector_data = (char*)malloc(bytes_to_write);
-                memset(sector_data, 0, sizeof(sector_data));
+                char* sector_data = (char*)malloc(bytes_to_write + 1);
+                memset(sector_data, 0, bytes_to_write + 1);
 
                 // Copy the data into the sector's data buffer
                 strncpy(sector_data, data, bytes_to_write);
-
-                // Write the modified sector data back to the sector
                 ATA_write_sector(file->sectors[i], sector_data);
 
                 data += bytes_to_write; // Move the data pointer to the next chunk
                 data_len -= bytes_to_write;
 
+                sectors_written++;
                 // If there's more data and we have exceeded the existing sectors, allocate a new sector
+                if (data_len <= 0) break;
+                
                 if (data_len > 0 && i == (file->sector_count - 1)) {
-                    int new_sector = ATA_find_empty_sector(0);
+                    int new_sector = ATA_find_empty_sector(FILES_SECTOR_OFFSET);
                     if (new_sector != -1) {
                         file->sectors = realloc(file->sectors, (file->sector_count + 1) * sizeof(uint32_t));
                         file->sectors[file->sector_count] = new_sector;
                         file->sector_count++;
-                    }
-                    else 
+                    } else {
+                        // Handle the case where you couldn't find an empty sector
+                        free(sector_data); // Free the allocated memory
                         return;
+                    }
                 }
+
+                free(sector_data); // Free the allocated memory for sector_data
             }
+
+            // Update the file's sector count and memory allocation
+            file->sector_count = sectors_written;
+            file->sectors = realloc(file->sectors, file->sector_count * sizeof(uint32_t));
+            
+            // Save the file system
+            save_file_system();
         }
 
     //  WRITE TO FILE
@@ -344,61 +368,109 @@ void init_directory() {
 //
 
     void save_file_system() {
+        if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
+            char* token = strtok(ATA_read_sector(FILE_SYSTEM_SECTOR), " ");
+            while(token != NULL) {
+                ATA_clear_sector(itoa(token));
+                token = strtok(NULL, " ");
+            }
+        }
+
         ATA_clear_sector(FILE_SYSTEM_SECTOR);
 
-        char result[512];
-        memset(result, 0, sizeof(result));
+        char* result = save_directory(get_main_directory());
+        int data_len = strlen(result);
+        while (data_len > 0) {
+            int bytes_to_write = SECTOR_SIZE;
+            if (data_len < bytes_to_write) 
+                bytes_to_write = data_len;
 
-        save_directory(get_main_directory(), result);
+            // Write the modified sector data back to the sector
+            int sector = ATA_find_empty_sector(SYS_FILES_SECTOR_OFFSET);
+            ATA_write_sector(sector, result);
+            ATA_append_sector(FILE_SYSTEM_SECTOR, itoa(sector));
+            ATA_append_sector(FILE_SYSTEM_SECTOR, " ");
 
-        if (ATA_write_sector(FILE_SYSTEM_SECTOR, result) == -1)
-            printf("\n\rError while writing to disk. Please try again");
+            result += bytes_to_write; // Move the data pointer to the next chunk
+            data_len -= bytes_to_write;
+        }
+
+        free(result);
     }
 
-    void save_directory(struct Directory* directory, char* result) {
+    char* save_directory(struct Directory* directory) {
+        char* result = (char*)malloc(sizeof(char));
         if (directory == NULL) 
             return;
 
+        result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
         strcat(result, "D");
+
+        result = realloc(result, strlen(result) * sizeof(char) + strlen(directory->name) * sizeof(char));
         strcat(result, directory->name);
 
         if (directory->subDirectory != NULL) {
+            result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
             strcat(result, "N");
-            save_directory(directory->subDirectory, result);
+
+            char* sub_result = save_directory(directory->subDirectory);
+            result = realloc(result, strlen(result) * sizeof(char) + strlen(sub_result) * sizeof(char));
+            strcat(result, sub_result);
         }
 
         struct File* file = directory->files;
-        if (file != NULL)
+        if (file != NULL) {
+            result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
             strcat(result, "N");
-
-        while (file != NULL) {
-            strcat(result, "F");
-            strcat(result, file->name);
-            strcat(result, "T");
-            strcat(result, fprintf_unsigned(-1, file->read_level, 10, 0));
-            strcat(result, fprintf_unsigned(-1, file->write_level, 10, 0));
-            strcat(result, fprintf_unsigned(-1, file->edit_level, 10, 0));
-            strcat(result, "S");
-
-            int sector_count = file->sector_count;
-            for (size_t i = 0; i < sector_count; i++) {
-                strcat(result, fprintf_unsigned(-1, file->sectors[i], 10, 0));
-
-                if (i < sector_count - 1 && file->sectors[i + 1] != -1) 
-                    strcat(result, "S");
-            }
-
-            file = file->next;
-            if (file != NULL) 
-                strcat(result, "#");
         }
 
+        while (file != NULL) {
+            result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
+            strcat(result, "F");
+
+            result = realloc(result, strlen(result) * sizeof(char) + strlen(file->name) * sizeof(char));
+            strcat(result, file->name);
+
+            result = realloc(result, strlen(result) * sizeof(char) + 5 * sizeof(char));
+            strcat(result, "T");
+
+            strcat(result, itoa(file->read_level));
+            strcat(result, itoa(file->write_level));
+            strcat(result, itoa(file->edit_level));
+
+            strcat(result, "S");
+            size_t sector_count = file->sector_count;
+            for (size_t i = 0; i < sector_count; i++) {
+                char* sector_address = itoa(file->sectors[i]);
+                result = realloc(result, strlen(result) * sizeof(char) + strlen(sector_address) * sizeof(char));
+                strcat(result, itoa(file->sectors[i]));
+
+                if (i < sector_count - 1) {
+                    result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
+                    strcat(result, "S");
+                }
+            }
+            
+            file = file->next;
+            if (file != NULL) {
+                result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
+                strcat(result, "#");
+            }
+        }
+
+        result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
         strcat(result, "@");
 
         if (directory->next != NULL) {
+            result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
             strcat(result, "#");
-            save_directory(directory->next, result);
+
+            char* next_result = save_directory(directory->next);
+            result = realloc(result, strlen(result) * sizeof(char) + strlen(next_result) * sizeof(char));
+            strcat(result, next_result);
         }
+
+        return result;
     }
 
     struct File* load_temp_file(const char* input, int* index) {
@@ -441,9 +513,7 @@ void init_directory() {
                         strncpy(sectorStr, input + start, length);
                         sectorStr[length] = '\0';
 
-                        reverse(sectorStr, strlen(sectorStr));
                         int sector = atoi(sectorStr);
-
                         file->sector_count++;
                         file->sectors = realloc(file->sectors, file->sector_count * sizeof(uint32_t));
                         file->sectors[file->sector_count - 1] = (uint32_t)sector;

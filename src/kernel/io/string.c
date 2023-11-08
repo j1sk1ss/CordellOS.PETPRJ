@@ -511,6 +511,27 @@ int	atoi(char *str) {
 	return (num * neg);
 }
 
+char* itoa(int n) {
+    char* str = (char*)malloc(10);
+    int i, sign;
+
+    if ((sign = n) < 0)        /* record sign */
+        n = -n;                /* make n positive */
+    i = 0;
+
+    do {                       /* generate digits in reverse order */
+        str[i++] = n % 10 + '0'; /* get next digit */
+    } while ((n /= 10) > 0);   /* delete it */
+
+    if (sign < 0)
+        str[i++] = '-';
+
+    reverse(str, strlen(str));
+    str[i] = '\0';
+
+    return str;
+}
+
 char* strncpy(char *dst, const char *src, size_t n) {
 	if (n != 0) {
 		char *d = dst;

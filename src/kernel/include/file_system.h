@@ -8,13 +8,15 @@
 #include "stdio.h"
 
 
-#define FILE_SYSTEM_SECTOR  100
-#define USERS_SECTOR        101
+#define FILE_SYSTEM_SECTOR      300
+#define USERS_SECTOR            301
+#define SHELL_SECTOR            302
+
+#define FILES_SECTOR_OFFSET     450
+#define SYS_FILES_SECTOR_OFFSET 250
 
 
 struct File {
-    int fileType;
-
     int read_level;
     int write_level;
     int edit_level;
@@ -61,6 +63,6 @@ void up_from_directory();
 void set_main_directory(struct Directory* directory);
 struct Directory* get_main_directory();
 
-void save_directory(struct Directory* directory, char* result);
+char* save_directory(struct Directory* directory);
 struct Directory* load_directory(const char* input, int* index);
 void save_file_system();

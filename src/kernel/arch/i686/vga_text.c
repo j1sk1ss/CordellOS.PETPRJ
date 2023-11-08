@@ -80,7 +80,7 @@ void VGA_setcursor(int x, int y) {
 void VGA_clrscr() {
     for (int y = 0; y < SCREEN_HEIGHT; y++)
         for (int x = 0; x < SCREEN_WIDTH; x++) {
-            VGA_putchr(x, y, 0);
+            VGA_putchr(x, y, NULL);
             VGA_putcolor(x, y, DEFAULT_COLOR);
         }
 

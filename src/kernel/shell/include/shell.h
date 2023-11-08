@@ -10,6 +10,7 @@
 #include "user.h"
 #include "file_manager.h"
 #include "snake.h"
+#include "tetris.h"
 
 #include "../libs/core/shared/include/x86.h"
 
@@ -56,6 +57,7 @@
 
         #define COMMAND_CALCULATOR                      "calc"
         #define COMMAND_SNAKE_GAME                      "snake"
+        #define COMMAND_TETRIS_GAME                     "tetris"
         #define COMMAND_SPLIT_LINE                      "diviso"
 
     //  COMMANDS

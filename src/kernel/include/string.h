@@ -30,6 +30,7 @@ wchar_t* utf16_to_codepoint(wchar_t*  strin, int* codePointg);
 char* codepoint_to_utf8(int codePoint, char* stringOutput);
 
 int	atoi(char *str);
+char* itoa(int n);
 
 char* strncpy(char *dst, const char *src, size_t n);
 char* strdup(const char *src);

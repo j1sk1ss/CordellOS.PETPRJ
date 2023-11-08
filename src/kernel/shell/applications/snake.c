@@ -1,10 +1,3 @@
-// #include <stdio.h>
-// #include <time.h> 
-// #include <stdlib.h> 
-// #include <strings.h> 
-// #include <windows.h> 
-// #include <conio.h> 
-
 #include "../include/snake.h"
 
 typedef struct {

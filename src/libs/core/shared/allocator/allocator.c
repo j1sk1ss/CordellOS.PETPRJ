@@ -87,9 +87,6 @@ void* malloc(size_t size) {
 		// requested size, then adjust its size, set status and return the location.
 		
 		if (a->size >= size) {
-
-			// Set to allocated
-
 			a->status = 1;
 
 			memset(mem + sizeof(alloc_t), 0, size);

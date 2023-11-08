@@ -37,7 +37,7 @@ void open_file_manager(struct User* user) {
             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\tFile type [XXX]: ");
             char* file_type = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
             
-            create_file(file_type[0] - '0', file_type[1] - '0', file_type[2] - '0', file_name, ATA_find_empty_sector(0));  
+            create_file(file_type[0] - '0', file_type[1] - '0', file_type[2] - '0', file_name, ATA_find_empty_sector(FILES_SECTOR_OFFSET));  
             free(file_name);
             free(file_type);
         }
@@ -154,8 +154,10 @@ void execute_item(struct User* user, char action_type) {
                 char user_action = keyboard_navigation();
                 if (user_action == UP_ARROW_BUTTON && row_position > 0) 
                     row_position--;
+
                 else if (user_action == DOWN_ARROW_BUTTON && row_position < 4)
                     row_position++;
+
                 else if (user_action == ENTER_BUTTON) {
                     switch (row_position) {
                         case READ_POS:
@@ -248,6 +250,7 @@ void execute_item(struct User* user, char action_type) {
                     if (row_position == READ_POS || row_position == DELETE_POS)
                         break;
                 }
+                
                 else if (user_action == F3_BUTTON) {
                     VGA_clrscr();
                     break;
@@ -269,9 +272,8 @@ void print_directory_data() {
     printf("Directory: [%s]\n%s%s%s", get_full_temp_name(), LINE, HEADER, LINE);
 
     int rows = 0;
-    if (rows++ == row_position) {
-        cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, UPPED_DIR);
-    } else printf(UPPED_DIR);
+    if (rows++ == row_position) cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, UPPED_DIR);
+    else printf(UPPED_DIR);
 
     struct Directory* currentDir = get_current_directory()->subDirectory;
     while (currentDir != NULL) {
@@ -304,8 +306,7 @@ void print_directory_data() {
         memset(file_size, ' ', COLUMN_WIDTH + 10);
         file_size[COLUMN_WIDTH + 10] = '\0';
 
-        char* file_size_str = fprintf_unsigned(-1, currentFile->sector_count * SECTOR_SIZE, 10, 0);
-        reverse(file_size_str, strlen(file_size_str));
+        char* file_size_str = itoa(currentFile->sector_count * SECTOR_SIZE);
         strcat(file_size_str, "B");
 
         int file_size_length = strlen(file_size_str);

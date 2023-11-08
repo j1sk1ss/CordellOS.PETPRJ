@@ -16,7 +16,7 @@ void shell() {
         if (file_exist("shell") == 1)
             currentPassword = read_file(find_file("shell"));
         else {
-            create_file(0, 0, 0, "shell", ATA_find_empty_sector(0));
+            create_file(0, 0, 0, "shell", ATA_find_empty_sector(SHELL_SECTOR));
 
             struct File* file = find_file("shell");
             write_file(file, "12345");
@@ -47,7 +47,7 @@ void shell() {
 
             if (user == NULL)
                 if (++attempts > MAX_ATTEMPT_COUNT) {
-                    cprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalità ospite.\n\r");
+                    cprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalita` ospite.\n\r");
                     user = (struct User*)malloc(sizeof(struct User*));
                     
                     user->read_access   = 6;
@@ -56,7 +56,7 @@ void shell() {
 
                     break;
                 }
-            else cprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalità ospite.\n\r");
+            else cprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalita` ospite.\n\r");
         }
 
     //
@@ -92,7 +92,7 @@ void shell_start_screen() {
     cprintf(FOREGROUND_LIGHT_GREEN, " Y8b  d8 `8b  d8' 88 `88. 88  .8D 88.     88booo. 88booo.   `8b  d8' db   8D \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, "  `Y88P'  `Y88P'  88   YD Y8888D' Y88888P Y88888P Y88888P    `Y88P'  `8888Y' \r\n");
 
-    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.1b | 07.11.2023] \r\n");
+    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.1c | 08.11.2023] \r\n");
 }
 
 ///////////////////////////////////////
@@ -269,7 +269,7 @@ void shell_start_screen() {
             }
             
             else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0)                
-                create_file(atoi(command_line[1]), atoi(command_line[2]), atoi(command_line[3]), command_line[4], ATA_find_empty_sector(0));      
+                create_file(atoi(command_line[1]), atoi(command_line[2]), atoi(command_line[3]), command_line[4], ATA_find_empty_sector(FILES_SECTOR_OFFSET));      
                              
             else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {    
                 struct File* file = find_file(command_line[1]);
@@ -337,13 +337,13 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_SNAKE_GAME) == 0) {
-                VGA_clrscr();
+                VGA_text_clrscr();
 
                 struct File* snake_save;
                 if (file_exist("snake-save") == 1)
                     snake_save = find_file("snake-save");
                 else {
-                    create_file(0, 0, 0, "snake-save", ATA_find_empty_sector(200));
+                    create_file(0, 0, 0, "snake-save", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
                     snake_save = find_file("snake-save");
                     write_file(snake_save, "0");
                 }
@@ -351,11 +351,14 @@ void shell_start_screen() {
                 int best_result = atoi(read_file(snake_save));
                 int current_result = snake_init(atoi(command_line[1]), best_result);
                 if (best_result < current_result) {
-                    char* result = fprintf_unsigned(-1, current_result, 10, 0);
-                    reverse(result, strlen(result));
-
+                    char* result = itoa(current_result);
                     write_file(snake_save, result);
                 }
+            }
+
+            else if (strstr(command_line[0], COMMAND_TETRIS_GAME) == 0) {
+                VGA_text_clrscr();
+                init_tetris();
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {

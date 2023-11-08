@@ -87,7 +87,8 @@ char get_character(char character) {
                             }
 
                             if (mode == VISIBLE_KEYBOARD)
-                                cprintf(color, "%c", currentCharacter);
+                                if (color != -1) cprintf(color, "%c", currentCharacter);
+                                else printf("%c", currentCharacter);
 
                             add_char_to_string(&input, ++input_size, currentCharacter);
                         }

@@ -65,7 +65,7 @@ void asm_executor(int *memory_array, int memory_index, struct User* user) {
 		switch (intermediate_table[i]->opcode) {
 			case 14:  
 				printf("\n\r");
-                memory_array[intermediate_table[i]->parameters[0]] = atoi(keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE));
+                memory_array[intermediate_table[i]->parameters[0]] = atoi(keyboard_read(VISIBLE_KEYBOARD, -1));
 			break; // READ Instruction //
 
 			case 1: 
@@ -92,7 +92,7 @@ void asm_executor(int *memory_array, int memory_index, struct User* user) {
 
 			case 18:
 				create_file(atoi(intermediate_table[i]->string_params[1]), user->write_access, user->edit_access, 
-				intermediate_table[i]->string_params[0], ATA_find_empty_sector(200));
+				intermediate_table[i]->string_params[0], ATA_find_empty_sector(FILES_SECTOR_OFFSET));
 			break;
 
 			case 19:
