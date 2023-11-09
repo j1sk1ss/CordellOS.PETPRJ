@@ -47,10 +47,6 @@ void open_file_manager(struct User* user) {
         
         VGA_text_clrscr();
         print_directory_data();
-
-        int delay = 9999999;
-        while (--delay > 0)
-            continue;
     }
 }
 
@@ -214,13 +210,14 @@ void execute_item(struct User* user, char action_type) {
                                 splitted = strtok(NULL, "\n");
                             }
 
-                            for (int i = 0; i < tokenCount; i++)
+                            for (int i = 0; i < tokenCount; i++) {
                                 execute_command(lines[i], 2);
+                                free(lines[i]);
+                            }
 
                             free(command_for_split);
                             free(sector_data);
-                            free(lines);
-
+                            
                             printf("\n\nPress [F3] to exit");
                             while (1) {
                                 user_action = keyboard_navigation();
@@ -302,7 +299,7 @@ void print_directory_data() {
         if (file_name_length <= COLUMN_WIDTH) strncpy(file_name, currentFile->name, file_name_length);
         else strncpy(file_name, currentFile->name, COLUMN_WIDTH - 3);
         
-        char file_size[COLUMN_WIDTH + 10 + 1];
+        char file_size[COLUMN_WIDTH + 11];
         memset(file_size, ' ', COLUMN_WIDTH + 10);
         file_size[COLUMN_WIDTH + 10] = '\0';
 
@@ -324,6 +321,7 @@ void print_directory_data() {
                 file_size);
 
         currentFile = currentFile->next;
+        free(file_size_str);
     }
 
     if (row_position > rows)

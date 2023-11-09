@@ -80,6 +80,7 @@ struct User* login(char* user_name, char* pass, int all) {
             users[position].edit_access = parsed_pass[2] - '0';
 
         if (strstr(parsed_name, user_name) == 0 && strstr(parsed_value, pass) == 0 && all != 1) {
+            free(lines[position]);
             free(lines);
             free(data);            
             return &users[position];
@@ -97,12 +98,14 @@ struct User* login(char* user_name, char* pass, int all) {
         position++;
     }
 
+    free(lines[position]);
     free(lines);
     free(data);
 
     if (all == 1)
         return users;
 
+    free(users);
     return NULL;
 }
 
@@ -128,4 +131,5 @@ void print_users_table() {
     }
 
     printf("|________________________________________________|\n");
+    free(users);
 } 

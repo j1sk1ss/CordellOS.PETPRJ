@@ -90,6 +90,9 @@
 
         strcat(previous_data, append_data);
         ATA_write_sector(lba, previous_data);
+
+        free(append_data);
+        free(previous_data);
     }
 
     // Function that clear sector
@@ -114,8 +117,8 @@
     bool ATA_is_sector_empty(const uint8_t* sector_data) {
         for (int i = 0; i < 512; i++) 
             if (sector_data[i] != 0x00) 
-                return false; 
-        
+                return false;
+            
         return true;
     }
 
@@ -127,8 +130,6 @@
 
             if (ATA_is_sector_empty((const uint8_t*)sector_data)) 
                 return lba;
-
-            free(sector_data);
         }
 
         return -1;

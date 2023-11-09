@@ -545,8 +545,8 @@ char* strncpy(char *dst, const char *src, size_t n) {
                 break;
             }
         } while (--n != 0);
-	    
     }
+
 	return (dst);
 }
 

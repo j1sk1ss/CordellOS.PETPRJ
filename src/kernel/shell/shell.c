@@ -353,6 +353,8 @@ void shell_start_screen() {
                 if (best_result < current_result) {
                     char* result = itoa(current_result);
                     write_file(snake_save, result);
+
+                    free(result);
                 }
             }
 

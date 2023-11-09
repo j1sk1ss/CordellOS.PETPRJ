@@ -171,5 +171,5 @@ void VGA_putc(char c) {
     if (_screenY >= SCREEN_HEIGHT)
         VGA_scrollback(1);
 
-    VGA_setcursor(_screenX , _screenY);
+    VGA_setcursor(_screenX, _screenY);
 }

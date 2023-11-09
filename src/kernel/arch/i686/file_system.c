@@ -23,17 +23,16 @@ void init_directory() {
                 strcat(file_system_data, sector_data);
 
                 token = strtok(NULL, " ");
-                free(sector_data);
             }
 
             int index = 0;
             memset(index, 0, sizeof(index));
             set_main_directory(load_directory(file_system_data, index));
+
             return;
         }
 
     create_directory("root");
-
     mainDirectory = currentDirectory;
 }
 
@@ -263,6 +262,7 @@ void init_directory() {
                 if (prev == NULL) currentDirectory->files = current->next;
                 else prev->next = current->next;
                 
+                free(current->name);
                 free(current);
                 
                 break;
@@ -371,7 +371,7 @@ void init_directory() {
         if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
             char* token = strtok(ATA_read_sector(FILE_SYSTEM_SECTOR), " ");
             while(token != NULL) {
-                ATA_clear_sector(itoa(token));
+                ATA_clear_sector(atoi(token));
                 token = strtok(NULL, " ");
             }
         }
@@ -449,6 +449,8 @@ void init_directory() {
                     result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
                     strcat(result, "S");
                 }
+
+                free(sector_address);
             }
             
             file = file->next;

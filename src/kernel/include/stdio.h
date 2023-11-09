@@ -13,7 +13,7 @@ void printf(const char* fmt, ...);
 void cprintf(uint8_t color, const char* fmt, ...);
 void print_buffer(const char* msg, const void* buffer, uint32_t count);
 
-char* fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radix, int color);
+void fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radix, int color);
 
 void fputc(char c, fileDescriptorId file, int color);
 void cputc(char c, uint8_t color);

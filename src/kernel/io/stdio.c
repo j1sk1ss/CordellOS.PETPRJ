@@ -43,8 +43,8 @@ void set_color(int color) {
 
 const char _HexChars[] = "0123456789abcdef";
 
-char* fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radix, int color) {
-    char* buffer = (char*)malloc(32);
+void fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radix, int color) {
+    char buffer[32];
     int pos = 0;
 
     // convert number to ASCII
@@ -58,8 +58,6 @@ char* fprintf_unsigned(fileDescriptorId file, unsigned long long number, int rad
     if (file > 0)
         while (--pos >= 0)
             fputc(buffer[pos], file, color);
-
-    return buffer;
 }
 
 void fprintf_signed(fileDescriptorId file, long long number, int radix, int color) {
