@@ -23,12 +23,14 @@ void init_directory() {
                 strcat(file_system_data, sector_data);
 
                 token = strtok(NULL, " ");
+                free(sector_data);
             }
 
             int index = 0;
             memset(index, 0, sizeof(index));
             set_main_directory(load_directory(file_system_data, index));
 
+            free(loaded_data);
             return;
         }
 
@@ -181,8 +183,11 @@ void init_directory() {
         char* read_file(struct File* file) {
             char* data = (char*)malloc(512 * file->sector_count);
 
-            for (size_t i = 0; i < file->sector_count; i++) 
-                strcat(data, ATA_read_sector(file->sectors[i]));
+            for (size_t i = 0; i < file->sector_count; i++) {
+                char* sector_data = ATA_read_sector(file->sectors[i]);
+                strcat(data, sector_data);
+                free(sector_data);
+            }
 
             return data;
         }
@@ -343,7 +348,8 @@ void init_directory() {
             temp_name = strcat(temp_name, current->name);
             temp_name = strcat(temp_name, "/");
 
-            name    = temp_name;
+            free(name);
+            name = temp_name;
             current = current->upDirectory;
         }
 
@@ -369,11 +375,14 @@ void init_directory() {
 
     void save_file_system() {
         if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
-            char* token = strtok(ATA_read_sector(FILE_SYSTEM_SECTOR), " ");
+            char* sector_data = ATA_read_sector(FILE_SYSTEM_SECTOR);
+            char* token = strtok(sector_data, " ");
             while(token != NULL) {
                 ATA_clear_sector(atoi(token));
                 token = strtok(NULL, " ");
             }
+
+            free(sector_data);
         }
 
         ATA_clear_sector(FILE_SYSTEM_SECTOR);

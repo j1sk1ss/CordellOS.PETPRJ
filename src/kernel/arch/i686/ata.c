@@ -91,7 +91,6 @@
         strcat(previous_data, append_data);
         ATA_write_sector(lba, previous_data);
 
-        free(append_data);
         free(previous_data);
     }
 
@@ -107,9 +106,13 @@
 
     // Function to check if a sector (by LBA) is empty (all bytes are zero)
     bool ATA_is_current_sector_empty(uint32_t LBA) {
-        if (ATA_is_sector_empty(ATA_read_sector(LBA))) 
+        char* sector_data = ATA_read_sector(LBA);
+        if (ATA_is_sector_empty(sector_data)) {
+            free(sector_data);
             return true;
+        }
 
+        free(sector_data);
         return false;
     }
 
@@ -128,8 +131,12 @@
             if (sector_data == NULL) 
                 continue;
 
-            if (ATA_is_sector_empty((const uint8_t*)sector_data)) 
+            if (ATA_is_sector_empty((const uint8_t*)sector_data)) {
+                free(sector_data);
                 return lba;
+            }
+                
+            free(sector_data);
         }
 
         return -1;

@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "../include/file_manager.h"
 
 int row_position = 1;
@@ -69,11 +71,15 @@ void execute_item(struct User* user, char action_type) {
 
                 printf("\nDelete? (Y/N): ");
                 while (1) {
-                    if (strcmp(keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE), "y") == 0) {
+                    char* answer = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                    if (strcmp(answer, "y") == 0) {
                         delete_directory(currentDir->name);
+                        free(answer);
                         break;
                     }
-                    else break;
+                    
+                    free(answer);
+                    break;
                 }
             }
 
@@ -121,6 +127,8 @@ void execute_item(struct User* user, char action_type) {
                         currentFile->edit_level     = new_file_type[2] - '0';
 
                         save_file_system();
+                        free(new_file_name);
+                        free(new_file_type);
                         break;
                     }
                 
@@ -233,9 +241,12 @@ void execute_item(struct User* user, char action_type) {
                                     char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
                                     if (strcmp(user_choose, "y") == 0) {
                                         delete_file(currentFile->name);
+                                        free(user_choose);
                                         break;
                                     }
-                                    else break;
+
+                                    free(user_choose);
+                                    break;
                                 }
                             }
                             
@@ -266,7 +277,9 @@ void execute_item(struct User* user, char action_type) {
 
 void print_directory_data() {
     set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-    printf("Directory: [%s]\n%s%s%s", get_full_temp_name(), LINE, HEADER, LINE);
+    char* directory_name = get_full_temp_name();  // Mem leak?
+    printf("Directory: [%s]\n%s%s%s", directory_name, LINE, HEADER, LINE);
+    free(directory_name);  // Mem leak?
 
     int rows = 0;
     if (rows++ == row_position) cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, UPPED_DIR);
@@ -303,7 +316,7 @@ void print_directory_data() {
         memset(file_size, ' ', COLUMN_WIDTH + 10);
         file_size[COLUMN_WIDTH + 10] = '\0';
 
-        char* file_size_str = itoa(currentFile->sector_count * SECTOR_SIZE);
+        char* file_size_str = itoa(currentFile->sector_count * SECTOR_SIZE); // Mem leak?
         strcat(file_size_str, "B");
 
         int file_size_length = strlen(file_size_str);
@@ -321,14 +334,15 @@ void print_directory_data() {
                 file_size);
 
         currentFile = currentFile->next;
-        free(file_size_str);
+        free(file_size_str);  // Mem leak?
     }
 
     if (row_position > rows)
         row_position = rows - 1;
 
-    for (int i = 0; i < 16 - rows; i++)
+    for (int i = 0; i < 15 - rows; i++)
         printf(EMPTY);
 
-    printf("%s[F1 - CREATE DIR]   [F2 - CREATE FILE]   [F3 - EXIT]   [F4 - EDIT]\n[ENTER - INTERACT]   [BACKSPACE - DELETE]", LINE);
+    printf("%s[F1 - CREATE DIR]   [F2 - CREATE FILE]   [F3 - EXIT]   [F4 - EDIT]\n[ENTER - INTERACT]   [BACKSPACE - DELETE]\n", LINE);
+    printf("Memory used: %uB\n", get_memory());
 }

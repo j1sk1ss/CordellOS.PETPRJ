@@ -8,7 +8,7 @@ void shell() {
     shell_start_screen();
     init_directory(); 
     init_users();
-    
+
     /////////////
     //  SHELL CORDELL PASSWORD
     //
@@ -71,7 +71,7 @@ void shell() {
         cprintf(FOREGROUND_GREEN, "\r\n[CORDELL OS]");
         printf(" $%s> ", path);
 
-        char *command = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
+        char* command = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
         if (strstr(command, "cordell") == 0)
             execute_command(command + strlen("cordell") + 1, CORDELL_DERICTIVE);
         else
@@ -372,7 +372,9 @@ void shell_start_screen() {
                     VGA_clrscr();
                     printf("Stai modificando il file. Utilizzare [F3] per uscire.\r\n\r\n");
 
-                    write_file(file, keyboard_edit(read_file(file), FOREGROUND_WHITE));
+                    char* data = keyboard_edit(read_file(file), FOREGROUND_WHITE);
+                    write_file(file, data);
+                    free(data);
                 } 
                 else printf("\nYou don`t have permissions to do this.");
             }
