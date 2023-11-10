@@ -96,6 +96,7 @@
 
     // Function that clear sector
     void ATA_clear_sector(uint32_t LBA) {
+        if (LBA == BOOT_SECTOR) return;
         char buffer[512];  // Assuming 512-byte sectors
         memset(buffer, 0, sizeof(buffer));
 

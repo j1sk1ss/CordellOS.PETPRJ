@@ -5,6 +5,7 @@
 #include "string.h"
 #include "stdio.h"
 
+#define BOOT_SECTOR     0
 #define SECTOR_SIZE     512
 #define SECTOR_COUNT    1000
 
