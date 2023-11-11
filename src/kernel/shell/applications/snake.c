@@ -120,7 +120,7 @@ void loop(char map[V][H]) {
 	int dead = 0;
 
 	do {
-		gotoxy(0, 0);
+		VGA_setcursor(0, 0);
 
 		show(map);
 		input(map, &dead);
@@ -222,8 +222,4 @@ void intro_data2(char map[V][H]) {
 		map[snk[i].y][snk[i].x] = snk[i].imagen;
 	
 	map[frt.y][frt.x] = 'M';
-}
-
-void gotoxy(int x, int y) { 
-    VGA_setcursor(x, y);
 }

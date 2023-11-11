@@ -192,7 +192,7 @@ int getAddress(char *variable_name) {
 				temp[i] = variable_name[i];
 				i++;
 			}
-
+			
 			temp[i] = '\0'; 
 			//
 		}

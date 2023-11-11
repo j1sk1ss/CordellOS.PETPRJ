@@ -348,7 +348,10 @@ void shell_start_screen() {
                     write_file(snake_save, "0");
                 }
 
-                int best_result = atoi(read_file(snake_save));
+                char* file_data = ead_file(snake_save);
+                int best_result = atoi(file_data);
+                free(file_data);
+                
                 int current_result = snake_init(atoi(command_line[1]), best_result);
                 if (best_result < current_result) {
                     char* result = itoa(current_result);

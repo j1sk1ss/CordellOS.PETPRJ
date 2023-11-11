@@ -6,7 +6,7 @@
 //
 
     // Function to read a sector from the disk.
-    char* ATA_read_sector(uint32_t LBA) {
+    char* ATA_read_sector(uint32_t lba) {
         ATA_ata_wait();
         char* buffer = (char*)malloc(SECTOR_SIZE);
         if (buffer == NULL) 
@@ -15,16 +15,16 @@
         uint8_t slavebit = 0;
         uint8_t sectorCount = 1;
 
-        outportb(0x1F6, 0xE0 | (slavebit << 4) | ((LBA >> 24) & 0x0F));
-        outportb(0x1F1, 0x00);
-        outportb(0x1F2, sectorCount);
-        outportb(0x1F3, (uint8_t)(LBA & 0xFF));
-        outportb(0x1F4, (uint8_t)((LBA >> 8) & 0xFF));
-        outportb(0x1F5, (uint8_t)((LBA >> 16) & 0xFF));
-        outportb(0x1F7, 0x20);
+        outportb(DRIVE_REGISTER, 0xE0 | (slavebit << 4) | ((lba >> 24) & 0x0F));
+        outportb(FEATURES_REGISTER, 0x00);
+        outportb(SECTOR_COUNT_REGISTER, sectorCount);
+        outportb(LBA_ADRESS_REGISTER, (uint8_t)(lba & 0xFF));
+        outportb(CYLINDER_LOW_REGISTER, (uint8_t)((lba >> 8) & 0xFF));
+        outportb(CYLINDER_HIGH_REGISTER, (uint8_t)((lba >> 16) & 0xFF));
+        outportb(STATUS_REGISTER, ATA_CMD_READ_PIO);
 
         int timeout = 9999999;
-        while ((inportb(0x1F7) & 0x8) == 0) {
+        while ((inportb(STATUS_REGISTER) & ATA_SR_BSY) == 0) {
             if (--timeout < 0)
                 return NULL;
 
@@ -32,7 +32,7 @@
         }
 
         for (int n = 0; n < 256; n++) {
-            uint16_t value = inportw(0x1F0);
+            uint16_t value = inportw(DATA_REGISTER);
             buffer[n * 2] = value & 0xFF;
             buffer[n * 2 + 1] = value >> 8;
         }
@@ -50,17 +50,19 @@
 
     // Function to write a sector on the disk.
     int ATA_write_sector(uint32_t lba, const uint8_t* buffer) {
+        if (lba == BOOT_SECTOR) return;
+
         ATA_ata_wait();
-        outportb(0x1F6, 0xE0 | ((lba >> 24) & 0x0F));
-        outportb(0x1F1, 0x00);
-        outportb(0x1F2, 1);
-        outportb(0x1F3, (uint8_t)lba);
-        outportb(0x1F4, (uint8_t)(lba >> 8));
-        outportb(0x1F5, (uint8_t)(lba >> 16));
-        outportb(0x1F7, 0x30);
+        outportb(DRIVE_REGISTER, 0xE0 | ((lba >> 24) & 0x0F));
+        outportb(FEATURES_REGISTER, 0x00);
+        outportb(SECTOR_COUNT_REGISTER, 1);
+        outportb(LBA_ADRESS_REGISTER, (uint8_t)lba);
+        outportb(CYLINDER_LOW_REGISTER, (uint8_t)(lba >> 8));
+        outportb(CYLINDER_HIGH_REGISTER, (uint8_t)(lba >> 16));
+        outportb(STATUS_REGISTER, ATA_CMD_WRITE_PIO);
 
         int timeout = 9999999;
-        while ((inportb(0x1F7) & 0x8) == 0) {
+        while ((inportb(STATUS_REGISTER) & ATA_SR_BSY) == 0) {
             if (--timeout < 0)
                 return -1;
 
@@ -70,7 +72,7 @@
         // Write the sector data from the buffer.
         for (int i = 0; i < 256; i++) {
             uint16_t data = *((uint16_t*)(buffer + i * 2));
-            outportw(0x1F0, data);
+            outportw(DATA_REGISTER, data);
         }
 
         return 1;
@@ -95,19 +97,18 @@
     }
 
     // Function that clear sector
-    void ATA_clear_sector(uint32_t LBA) {
-        if (LBA == BOOT_SECTOR) return;
+    void ATA_clear_sector(uint32_t lba) {
         char buffer[512];  // Assuming 512-byte sectors
         memset(buffer, 0, sizeof(buffer));
 
         // Write the buffer to the specified sector
-        if (ATA_write_sector(LBA, buffer) == -1) 
+        if (ATA_write_sector(lba, buffer) == -1) 
             printf("\n\rPulizia del settore non completata!");
     }
 
     // Function to check if a sector (by LBA) is empty (all bytes are zero)
-    bool ATA_is_current_sector_empty(uint32_t LBA) {
-        char* sector_data = ATA_read_sector(LBA);
+    bool ATA_is_current_sector_empty(uint32_t lba) {
+        char* sector_data = ATA_read_sector(lba);
         if (ATA_is_sector_empty(sector_data)) {
             free(sector_data);
             return true;
