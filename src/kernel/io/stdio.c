@@ -8,10 +8,8 @@
 
 
 void fputc(char c, fileDescriptorId file, int color) {
-    if (color == 1)
-        cputc(c, file);
-    else
-        VFS_Write(file, &c, sizeof(c));
+    if (color == 1) cputc(c, file);
+    else VFS_Write(file, &c, sizeof(c));
 }
 
 void cputc(char c, uint8_t color) {

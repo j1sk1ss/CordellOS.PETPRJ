@@ -34,10 +34,6 @@
         #define COMMAND_ECHO                            "eco"
         #define COMMAND_USERS                           "users"
 
-        #define COMMAND_GET_HDD_SECTOR                  "rsector"
-        #define COMMAND_SET_HDD_SECTOR                  "wsector"
-        #define COMMAND_CLEAR_SECTOR                    "clsector"
-
         #define COMMAND_CREATE_DIR                      "mkdir"
         #define COMMAND_DELETE_DIR                      "rmdir"
 
@@ -58,7 +54,6 @@
         #define COMMAND_CALCULATOR                      "calc"
         #define COMMAND_SNAKE_GAME                      "snake"
         #define COMMAND_TETRIS_GAME                     "tetris"
-        #define COMMAND_SPLIT_LINE                      "diviso"
 
     //  COMMANDS
     /////////////////

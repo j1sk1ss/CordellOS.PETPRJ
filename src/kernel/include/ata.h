@@ -18,7 +18,7 @@
 #define DRIVE_REGISTER              0x1F6
 #define STATUS_REGISTER             0x1F7
 
-#define ATA_SR_BSY                  0x80    // Busy
+#define ATA_SR_BSY                  0x8    // Busy
 
 #define ATA_CMD_READ_PIO            0x20
 #define ATA_CMD_WRITE_PIO           0x30

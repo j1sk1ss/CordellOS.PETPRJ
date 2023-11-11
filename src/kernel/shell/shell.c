@@ -202,48 +202,6 @@ void shell_start_screen() {
         //
         ///////////////////////////////////////////////////////////////////////////////////////////
         //
-        //  ATA COMMANDS
-        //
-        //
-        
-            else if (strstr(command_line[0], COMMAND_GET_HDD_SECTOR) == 0) {
-                if (cordell_derictive == CORDELL_DERICTIVE) {
-                    char* loaded_data = ATA_read_sector(atoi(command_line[1]));
-                    
-                    if (loaded_data != NULL) printf("\r\n%s", loaded_data);
-                    else printf("\n\rErrore durante la lettura dal disco. Per favore riprova");
-
-                    free(loaded_data);
-                }
-                else cprintf(FOREGROUND_RED, CORDELL_ATTENTION);
-            }
-
-            else if (strstr(command_line[0], COMMAND_SET_HDD_SECTOR) == 0) {
-                if (cordell_derictive == CORDELL_DERICTIVE) {
-                    char* text =            
-                        command             
-                        + strlen(command_line[0])          
-                        + strlen(command_line[1])           
-                        + 2;
-
-                    if (ATA_write_sector(atoi(command_line[1]), text) == -1) printf("\n\rErrore durante la scrittura su disco. Per favore riprova");
-                }
-                else cprintf(FOREGROUND_RED, CORDELL_ATTENTION);
-            }
-
-            else if (strstr(command_line[0], COMMAND_CLEAR_SECTOR) == 0) {
-                if (cordell_derictive == CORDELL_DERICTIVE) 
-                    ATA_clear_sector(atoi(command_line[1]));
-                else cprintf(FOREGROUND_RED, CORDELL_ATTENTION);
-            }
-
-        //
-        //
-        //
-        //  ATA COMMANDS
-        //
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        //
         //  FILE SYSTEM COMMANDS
         //
         //
@@ -348,7 +306,7 @@ void shell_start_screen() {
                     write_file(snake_save, "0");
                 }
 
-                char* file_data = ead_file(snake_save);
+                char* file_data = read_file(snake_save);
                 int best_result = atoi(file_data);
                 free(file_data);
                 
@@ -363,7 +321,27 @@ void shell_start_screen() {
 
             else if (strstr(command_line[0], COMMAND_TETRIS_GAME) == 0) {
                 VGA_text_clrscr();
-                init_tetris();
+
+                struct File* tetris_save;
+                if (file_exist("tetris-save") == 1)
+                    tetris_save = find_file("tetris-save");
+                else {
+                    create_file(0, 0, 0, "tetris-save", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
+                    tetris_save = find_file("tetris-save");
+                    write_file(tetris_save, "0");
+                }
+
+                char* file_data = read_file(tetris_save);
+                int best_result = atoi(file_data);
+                free(file_data);
+                
+                int current_result = init_tetris(best_result);
+                if (best_result < current_result) {
+                    char* result = itoa(current_result);
+                    write_file(tetris_save, result);
+
+                    free(result);
+                }
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {
@@ -424,10 +402,6 @@ void shell_start_screen() {
                 }
                 else printf("\nYou don`t have permissions to do this.");
             }
-
-            else if (strstr(command_line[0], COMMAND_SPLIT_LINE) == 0) 
-                for (int i = 1; i < 100; i++)
-                    printf(" [%s] ", command_line[i]);
 
         //
         //

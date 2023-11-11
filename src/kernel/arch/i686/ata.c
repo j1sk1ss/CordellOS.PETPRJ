@@ -50,7 +50,7 @@
 
     // Function to write a sector on the disk.
     int ATA_write_sector(uint32_t lba, const uint8_t* buffer) {
-        if (lba == BOOT_SECTOR) return;
+        if (lba == BOOT_SECTOR) return -1;
 
         ATA_ata_wait();
         outportb(DRIVE_REGISTER, 0xE0 | ((lba >> 24) & 0x0F));
@@ -61,7 +61,7 @@
         outportb(CYLINDER_HIGH_REGISTER, (uint8_t)(lba >> 16));
         outportb(STATUS_REGISTER, ATA_CMD_WRITE_PIO);
 
-        int timeout = 9999999;
+        int timeout = 10000000;
         while ((inportb(STATUS_REGISTER) & ATA_SR_BSY) == 0) {
             if (--timeout < 0)
                 return -1;
@@ -146,7 +146,7 @@
 
     // Delay for working with ATA
     void ATA_ata_wait() {
-        int delay = 99999;
+        int delay = 150000;
         while (--delay > 0)
             continue;
     }

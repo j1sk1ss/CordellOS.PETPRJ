@@ -229,7 +229,7 @@ void* __rawmemchr (const void* s, int c_in) {
   longword_ptr = (unsigned long int *) char_ptr;
 
   if (sizeof (longword) != 4 && sizeof (longword) != 8)
-    abort ();
+    abort();
 
 #if LONG_MAX <= LONG_MAX_32_BITS
   magic_bits = 0x7efefeff;

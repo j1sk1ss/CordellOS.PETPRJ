@@ -10,4 +10,4 @@
 #define WIDTH   10
 #define HEIGHT  20
 
-int init_tetris();
+int init_tetris(int previous_score);

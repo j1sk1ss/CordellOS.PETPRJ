@@ -3,14 +3,16 @@
 
 int rand_r(int seed) {
 	seed = seed * 1103515245 + 12345;
-	return (seed & RAND_MAX);
+	return ((srand_r() * seed) & RAND_MAX);
 }
+
+int global_seed = 1;
 
 int srand_r() {
     datetime_read_rtc();
 
-	int seed = datetime_second * datetime_hour * 1103515245 + 12345;
-	return (seed & RAND_MAX);
+	int seed = datetime_second * datetime_hour * 11015245 + 12345;
+	return ((++global_seed * seed) & RAND_MAX);
 }
 
 static int rand(unsigned long *ctx) {
