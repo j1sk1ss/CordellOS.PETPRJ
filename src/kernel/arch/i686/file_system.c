@@ -4,6 +4,12 @@
 struct Directory* mainDirectory     = NULL;
 struct Directory* currentDirectory  = NULL;
 
+//  _____ ___ _     _____    ______   ______ _____ _____ __  __ 
+// |  ___|_ _| |   | ____|  / ___\ \ / / ___|_   _| ____|  \/  |
+// | |_   | || |   |  _|    \___ \\ V /\___ \ | | |  _| | |\/| |
+// |  _|  | || |___| |___    ___) || |  ___) || | | |___| |  | |
+// |_|   |___|_____|_____|  |____/ |_| |____/ |_| |_____|_|  |_|
+                                                              
 //
 //  In sector(FILE_SYSTEM_SECTOR) placed LBA of sectors (13 23 ... n), that contains data about FS. 
 //  Every file contains list of data of sectors, that contains file data

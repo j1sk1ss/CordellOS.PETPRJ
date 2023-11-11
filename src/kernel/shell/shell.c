@@ -1,5 +1,11 @@
 #include "include/shell.h"
 
+//   ____  _   _ _____ _     _     
+//  / ___|| | | | ____| |   | |    
+//  \___ \| |_| |  _| | |   | |    
+//   ___) |  _  | |___| |___| |___ 
+//  |____/|_| |_|_____|_____|_____|
+                                
 
 char* currentPassword;
 struct User* user = NULL;
@@ -92,7 +98,7 @@ void shell_start_screen() {
     cprintf(FOREGROUND_LIGHT_GREEN, " Y8b  d8 `8b  d8' 88 `88. 88  .8D 88.     88booo. 88booo.   `8b  d8' db   8D \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, "  `Y88P'  `Y88P'  88   YD Y8888D' Y88888P Y88888P Y88888P    `Y88P'  `8888Y' \r\n");
 
-    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.1c | 08.11.2023] \r\n");
+    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.2a | 11.11.2023] \r\n");
 }
 
 ///////////////////////////////////////
@@ -118,7 +124,7 @@ void shell_start_screen() {
                     free(password);
 
                     password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
-                    if (++tries >= MAX_ATTEMPT_COUNT)
+                    if (++tries >= MAX_ATTEMPT_COUNT) 
                         return;
                 }
 
@@ -185,12 +191,8 @@ void shell_start_screen() {
 
             else if (strstr(command_line[0], COMMAND_TIME) == 0) {
                 datetime_read_rtc();
-                printf("\r\nGiorno: %i/%i/%i\tTempo: %i:%i:%i", datetime_day, 
-                                                                datetime_month, 
-                                                                datetime_year, 
-                                                                datetime_hour, 
-                                                                datetime_minute, 
-                                                                datetime_second);
+                printf("\r\nGiorno: %i/%i/%i\tTempo: %i:%i:%i", datetime_day, datetime_month, datetime_year, 
+                                                                datetime_hour, datetime_minute, datetime_second);
             }
 
             else if (strstr(command_line[0], COMMAND_USERS) == 0) 

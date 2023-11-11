@@ -23,13 +23,10 @@
         outportb(CYLINDER_HIGH_REGISTER, (uint8_t)((lba >> 16) & 0xFF));
         outportb(STATUS_REGISTER, ATA_CMD_READ_PIO);
 
-        int timeout = 9999999;
-        while ((inportb(STATUS_REGISTER) & ATA_SR_BSY) == 0) {
-            if (--timeout < 0)
-                return NULL;
-
-            continue;
-        }
+        int timeout = 9000000;
+        while ((inportb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
+            if (--timeout < 0) return NULL;
+            else continue;
 
         for (int n = 0; n < 256; n++) {
             uint16_t value = inportw(DATA_REGISTER);
@@ -61,14 +58,11 @@
         outportb(CYLINDER_HIGH_REGISTER, (uint8_t)(lba >> 16));
         outportb(STATUS_REGISTER, ATA_CMD_WRITE_PIO);
 
-        int timeout = 10000000;
-        while ((inportb(STATUS_REGISTER) & ATA_SR_BSY) == 0) {
-            if (--timeout < 0)
-                return -1;
-
-            continue;
-        }
-
+        int timeout = 9000000;
+        while ((inportb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
+            if (--timeout < 0) return -1;
+            else continue;
+        
         // Write the sector data from the buffer.
         for (int i = 0; i < 256; i++) {
             uint16_t data = *((uint16_t*)(buffer + i * 2));

@@ -1,11 +1,11 @@
-#include "../../libs/core/shared/include/allocator.h"
 #include "../include/string.h"
 
-#include <stdint.h>
-#include <stddef.h>
-#include <stdbool.h>
-
-#define DOUBLE_STR_BUFFER_SIZE 64
+//   ____ _____ ____  ___ _   _  ____ 
+//  / ___|_   _|  _ \|_ _| \ | |/ ___|
+//  \___ \ | | | |_) || ||  \| | |  _ 
+//   ___) || | |  _ < | || |\  | |_| |
+//  |____/ |_| |_| \_\___|_| \_|\____|
+                                   
 
 int isdigit(int c) {
     return (c >= '0' && c <= '9');
@@ -34,7 +34,6 @@ int strstr(const char* haystack, const char* needle) {
         return 0;
     
     int position = 0;       // Initialize the position to 0.
-
     while (*haystack) {
         const char* hay_ptr     = haystack;
         const char* needle_ptr  = needle;
@@ -59,9 +58,7 @@ int strstr(const char* haystack, const char* needle) {
 
 char* strcpy(char* dst, const char* src) {
     char* origDst = dst;
-
-    if (dst == NULL)
-        return NULL;
+    if (dst == NULL) return NULL;
 
     if (src == NULL) {
         *dst = '\0';
@@ -90,11 +87,7 @@ unsigned strlen(const char* str) {
 }
 
 int strcmp(const char* firstStr, const char* secondStr) {
-    if (firstStr == NULL && secondStr == NULL)
-        return 0;
-
-    if (firstStr == NULL || secondStr == NULL)
-        return -10;
+    if (firstStr == NULL || secondStr == NULL) return -1;
 
     while (*firstStr && *secondStr && *firstStr == *secondStr) {
         ++firstStr;
@@ -104,7 +97,7 @@ int strcmp(const char* firstStr, const char* secondStr) {
     return (*firstStr) - (*secondStr);
 }
 
-void reverse(char* str, int len) {
+void reverse(char* str, int len) {    
     int start = 0;
     int end = len - 1;
     char temp;
@@ -292,15 +285,13 @@ size_t strspn(const char* s, const char* accept) {
   const char *a;
   size_t count = 0;
 
-  for (p = s; *p != '\0'; ++p) {
-    for (a = accept; *a != '\0'; ++a)
-	    if (*p == *a)
-	        break;
+    for (p = s; *p != '\0'; ++p) {
+        for (a = accept; *a != '\0'; ++a)
+            if (*p == *a)
+                break;
 
-    if (*a == '\0')
-        return count;
-    else
-        ++count;
+        if (*a == '\0') return count;
+        else ++count;
     }
 
   return count;
@@ -382,14 +373,6 @@ cont:
 }
 
 void backspace_string(char** str, size_t size) {
-    VGA_putchr(VGA_cursor_get_x() - 1, VGA_cursor_get_y(), NULL);
-
-    if (*str[size] == '\n') {
-        VGA_setcursor(80U, VGA_cursor_get_y() - 1);
-        VGA_cursor_place_to_line(); 
-    } else 
-        VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y()); 
-
     char* buffer = (char*)malloc(size);
     memset(buffer, 0, sizeof(buffer));
 
@@ -424,24 +407,17 @@ void add_string_to_string(char** str, char* string) {
     if (str == NULL || string == NULL) 
         return;
 
-
-    // Calculate the new size for the concatenated string
-    
-    // Calculate the new size for the concatenated string
     size_t new_size = strlen(*str) + strlen(string) + 1;
 
     char* buffer = (char*)malloc(new_size);
     if (buffer == NULL) 
         return;
 
-
-    // Copy the old string (*str) into the buffer
-    
-    // Copy the old string (*str) into the buffer
     strcpy(buffer, *str);
     strcat(buffer, string);
 
     free(*str);
+    free(string);
 
     *str = buffer;
 }
@@ -485,13 +461,9 @@ char* codepoint_to_utf8(int codePoint, char* stringOutput) {
 }
 
 int	atoi(char *str) {
-	int neg;
-	int num;
-	int i;
-
-	i = 0;
-	neg = 1;
-	num = 0;
+	int neg = 1;
+	int num = 0;
+	int i   = 0;
 
 	while (str[i] <= ' ')
 		i++;

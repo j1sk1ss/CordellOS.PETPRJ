@@ -3,7 +3,15 @@
 #include "math.h"
 #include "stdio.h"
 
+#include "../../libs/core/shared/include/allocator.h"
+
+#include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
+
+
+#define DOUBLE_STR_BUFFER_SIZE 64
+
 
 int isdigit(int c);
 int isspace(int c);

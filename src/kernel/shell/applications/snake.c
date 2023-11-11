@@ -19,6 +19,8 @@ int hardnes_level = 20000000;
 int snake_size;
 int max_score;
 
+int dead;
+
 int snake_init(int hard, int score) {
     switch (hard) {
         case 0:
@@ -43,8 +45,10 @@ int snake_init(int hard, int score) {
     }
 
 	char map[V][H];
-	snake_size = 4;
-	max_score = score;
+	
+	snake_size 	= 4;
+	max_score 	= score;
+	dead 		= 0;
 
 	begin(map);
 	show(map);
@@ -60,8 +64,8 @@ void begin(char map[V][H]) {
 	snk[0].x = 32;
 	snk[0].y = 10; // V
 
-	frt.x = srand_r() % (H - 2) + 1; // automatic position of fruit
-	frt.y = srand_r() % (V - 2) + 1;
+	frt.x = srand_r() % (H - 4) + 1; // automatic position of fruit
+	frt.y = srand_r() % (V - 4) + 1;
 
 	for (i = 0; i < snake_size; i++) {
 		snk[i].movX = 1;
@@ -117,14 +121,12 @@ void intro_data(char map[V][H]) {
 }
 
 void loop(char map[V][H]) {
-	int dead = 0;
-
 	do {
 		VGA_setcursor(0, 0);
 
 		show(map);
 		input(map, &dead);
-		update(map); // automatic
+		update(map);
 
         int delay = hardnes_level;
         while (--delay > 0)
@@ -132,7 +134,7 @@ void loop(char map[V][H]) {
 	} while (dead == 0);
 }
 
-int input(char map[V][H], int *dead) {
+int input(char map[V][H]) {
 	int i;
 	char key;
 
@@ -140,12 +142,12 @@ int input(char map[V][H], int *dead) {
 
 	// CHECK GAME CONDITIONS
 
-	if (snk[0].x == 0 || snk[0].x == H - 1 || snk[0].y == 0 || snk[0].y == V - 1)  // 0 es la cabeza de la serpiente, solo evaluaremos cuando la cabeza choque.
-		*dead = 1;
+	if (snk[0].x == 0 || snk[0].x == H - 1 || snk[0].y == 0 || snk[0].y == V - 1)  
+		dead = 1;
 
-	for (i = 1; i < snake_size && *dead == 0; i++) 
+	for (i = 1; i < snake_size && dead == 0; i++) 
 		if (snk[0].x == snk[i].x && snk[0].y == snk[i].y) 
-			*dead = 1;
+			dead = 1;
 
 	// CHECK FRUIT, IF HEAD GET CLOSE, EAT IT!
 
@@ -167,7 +169,7 @@ int input(char map[V][H], int *dead) {
 
 	// IF DEAD IS ZERO WE CAN KEEP GOING
 
-	if (*dead == 0) {
+	if (dead == 0) {
         if (i686_inb(0x64) & 0x1) {
             key = i686_inb(0x60);
             key = get_character(key);
@@ -193,7 +195,7 @@ int input(char map[V][H], int *dead) {
 			}
 
             if (key == F3_BUTTON) {
-				*dead = 1;
+				dead = 1;
 				return;
 			}
 		}
