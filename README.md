@@ -55,8 +55,11 @@ The motherboard was originally planned as a board based on an 8086 processor, in
 - RAM detection
 - CPP kernel
 - Working with files (create/edit/delete) (Completed)
-- USER switching
-- С/CPP in-build compiler
+- USER switching (Completed)
+- С or CPP in-build compiler
+- Write some simple games on C or CPP in OS
+- ASM compiler  (Completed)
+- Switch to 64bit kernel (WIP)
 - Prepare for non-emulator device
 - Print case
 - Assemble
