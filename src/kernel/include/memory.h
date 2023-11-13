@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define SEG(seg)                (seg >> 16)
 #define OFF(off)                (off & 0xFFFF)
@@ -9,5 +10,6 @@
 void* memcpy(void* destination, const void* source, uint16_t num);
 void* memset(void* pointer, int value, uint16_t num);
 int memcmp(const void* firstPointer, const void* secondPointer, uint16_t num);
+void* memmove(void *dest, const void *src, size_t len);
 
 void* seg_offset_to_linear(void* address);

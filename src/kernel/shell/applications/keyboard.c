@@ -88,9 +88,12 @@ char get_character(char character) {
                         char currentCharacter = alphabet[character];
                         if (currentCharacter != ENTER_BUTTON) {
                             if (currentCharacter == BACKSPACE_BUTTON) {
-                                if (strlen(input) > 0 && input_size > 0)
+                                if (strlen(input) > 0 && input_size > 0) {
                                     backspace_string(&input, --input_size);
-                                
+                                    VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
+                                    VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), NULL);
+                                }
+
                                 continue;
                             }
 
@@ -111,80 +114,6 @@ char get_character(char character) {
 ////
 ////    
 ////
-////
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-//   _____ ____ ___ _____ ___  ____    _  _________   ______   ___    _    ____  ____  
-//  | ____|  _ \_ _|_   _/ _ \|  _ \  | |/ / ____\ \ / / __ ) / _ \  / \  |  _ \|  _ \ 
-//  |  _| | | | | |  | || | | | |_) | | ' /|  _|  \ V /|  _ \| | | |/ _ \ | |_) | | | |
-//  | |___| |_| | |  | || |_| |  _ <  | . \| |___  | | | |_) | |_| / ___ \|  _ <| |_| |
-//  |_____|____/___| |_| \___/|_| \_\ |_|\_\_____| |_| |____/ \___/_/   \_\_| \_\____/ 
-
-
-        char* keyboard_edit(char* previous_data, int color) {
-            char* input = (char*)malloc(strlen(previous_data));
-            memset(input, 0, sizeof(input));
-            strcpy(input, previous_data);
-
-            cprintf(color, "%s", input);
-
-            size_t input_size = strlen(input);
-
-            while (1) {
-                if (i686_inb(0x64) & 0x1) {
-                    char character = i686_inb(0x60);
-
-                    if (!(character & 0x80)) {
-                        char currentCharacter = alphabet[character];
-                        if (currentCharacter != F3_BUTTON) {
-                            if (currentCharacter == LEFT_ARROW_BUTTON) { // Left
-                                VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y()); 
-                                continue;
-                            }
-                            else if (currentCharacter == RIGHT_ARROW_BUTTON) { // Right
-                                if (VGA_getchr(VGA_cursor_get_x() + 1, VGA_cursor_get_y()) != NULL)
-                                    VGA_setcursor(VGA_cursor_get_x() + 1, VGA_cursor_get_y()); 
-
-                                continue;
-                            } 
-                            else if (currentCharacter == DOWN_ARROW_BUTTON) { // Down
-                                if (VGA_getchr(VGA_cursor_get_x(), VGA_cursor_get_y() + 1) != NULL)
-                                    VGA_setcursor(VGA_cursor_get_x(), VGA_cursor_get_y() + 1); 
-
-                                continue;
-                            }
-                            else if (currentCharacter == UP_ARROW_BUTTON) { // Up
-                                if (VGA_getchr(VGA_cursor_get_x(), VGA_cursor_get_y() - 1) != NULL)
-                                    VGA_setcursor(VGA_cursor_get_x(), VGA_cursor_get_y() - 1); 
-
-                                continue;
-                            }
-                            else if (currentCharacter == BACKSPACE_BUTTON) {
-                                if (strlen(input) > 0 && input_size > 0) 
-                                    backspace_string(&input, --input_size);
-                                
-                                continue;
-                            }
-                            else if (currentCharacter == ENTER_BUTTON) {
-                                cprintf(color, "\n");                        
-                                add_char_to_string(&input, ++input_size, '\n');
-                            }
-                            else {
-                                cprintf(color, "%c", currentCharacter);
-                                add_char_to_string(&input, ++input_size, currentCharacter);
-                            }
-                        }
-                        else break;
-                    }
-                }
-            }
-
-            return input;
-        }
-
-////
-////
-////    
 ////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////

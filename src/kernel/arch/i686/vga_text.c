@@ -159,7 +159,7 @@ void VGA_putc(char c) {
 
         default:                                            // Write character
             VGA_putchr(_screenX , _screenY, c);
-                _screenX += 1;
+            _screenX += 1;
         break;
     }
 

@@ -9,8 +9,9 @@
 #include "keyboard.h"
 #include "user.h"
 #include "file_manager.h"
-#include "snake.h"
-#include "tetris.h"
+#include "text_editor.h"
+// #include "snake.h"
+// #include "tetris.h"
 
 #include "../libs/core/shared/include/x86.h"
 

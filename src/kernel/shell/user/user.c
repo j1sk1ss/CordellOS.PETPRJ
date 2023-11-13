@@ -90,10 +90,8 @@ struct User* login(char* user_name, char* pass, int all) {
         free(parsed_pass);
         free(parsed_value);
 
-        if (all != 1) {
+        if (all != 1) 
             free(users[position].name);
-            free(users[position]);
-        }
 
         position++;
     }

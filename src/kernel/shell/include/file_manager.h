@@ -4,6 +4,7 @@
 
 #include "keyboard.h"
 #include "user.h"
+#include "text_editor.h"
 // #include "shell.h"
 
 

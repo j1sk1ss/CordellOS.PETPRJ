@@ -296,69 +296,13 @@ void shell_start_screen() {
                 printf("\r\n> Risposta: %s", calculator(tokens, tokenCount));
             }
 
-            else if (strstr(command_line[0], COMMAND_SNAKE_GAME) == 0) {
-                VGA_text_clrscr();
-
-                struct File* snake_save;
-                if (file_exist("snake-save") == 1)
-                    snake_save = find_file("snake-save");
-                else {
-                    create_file(0, 0, 0, "snake-save", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
-                    snake_save = find_file("snake-save");
-                    write_file(snake_save, "0");
-                }
-
-                char* file_data = read_file(snake_save);
-                int best_result = atoi(file_data);
-                free(file_data);
-                
-                int current_result = snake_init(atoi(command_line[1]), best_result);
-                if (best_result < current_result) {
-                    char* result = itoa(current_result);
-                    write_file(snake_save, result);
-
-                    free(result);
-                }
-            }
-
-            else if (strstr(command_line[0], COMMAND_TETRIS_GAME) == 0) {
-                VGA_text_clrscr();
-
-                struct File* tetris_save;
-                if (file_exist("tetris-save") == 1)
-                    tetris_save = find_file("tetris-save");
-                else {
-                    create_file(0, 0, 0, "tetris-save", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
-                    tetris_save = find_file("tetris-save");
-                    write_file(tetris_save, "0");
-                }
-
-                char* file_data = read_file(tetris_save);
-                int best_result = atoi(file_data);
-                free(file_data);
-                
-                int current_result = init_tetris(best_result);
-                if (best_result < current_result) {
-                    char* result = itoa(current_result);
-                    write_file(tetris_save, result);
-
-                    free(result);
-                }
-            }
-
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {
                 struct File* file = find_file(command_line[1]);
                 if (file == NULL)
                     return;
                 
-                if (file->write_level >= user->write_access) {
-                    VGA_clrscr();
-                    printf("Stai modificando il file. Utilizzare [F3] per uscire.\r\n\r\n");
-
-                    char* data = keyboard_edit(read_file(file), FOREGROUND_WHITE);
-                    write_file(file, data);
-                    free(data);
-                } 
+                if (file->write_level >= user->write_access) 
+                    text_editor_init(file, FOREGROUND_WHITE + BACKGROUND_BLACK);
                 else printf("\nYou don`t have permissions to do this.");
             }
 

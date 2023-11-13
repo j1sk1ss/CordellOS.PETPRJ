@@ -389,6 +389,38 @@ void backspace_string(char** str, size_t size) {
     *str = buffer;   
 }
 
+void fit_string(char* str, size_t size, char character) {
+    char *src, *dst;
+    memset(src, 0, sizeof(str));
+    memset(dst, 0, sizeof(dst));
+    
+    for (src = dst = str; *src != '\0'; src++) {
+        *dst = *src;
+        if (*dst != character) dst++;
+    }
+
+    *dst = '\0';
+}
+
+char place_char_in_text(char* text, char character, int x_position, int y_position) {
+    int current_y_position = 0;
+    int current_x_position = 0;
+    int pos = -1;
+
+    while (current_y_position <= y_position) {
+        if (current_x_position == x_position && current_y_position == y_position) break;
+        if (text[++pos] == '\n') {
+            current_x_position = 0;
+            current_y_position++;
+        } else current_x_position++;
+    }
+
+    char replaced_character = text[pos];
+    text[pos] = character;
+
+    return replaced_character;
+}
+
 void add_char_to_string(char** str, size_t size, char character) {
     char* buffer = (char*)malloc(size + 1);
     if (buffer == NULL) 

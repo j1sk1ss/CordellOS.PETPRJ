@@ -179,13 +179,9 @@ void execute_item(struct User* user, char action_type) {
                         break;
 
                         case EDIT_POS:
-                            if (user->write_access <= currentFile->write_level) {
-                                VGA_clrscr();
-                                set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-
-                                printf("%s\nFile: [%s]   [F3 - EXIT]\n%s", LINE, currentFile->name, LINE);
-                                write_file(currentFile, keyboard_edit(read_file(currentFile), BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE));
-                            }
+                            if (user->write_access <= currentFile->write_level) 
+                                text_editor_init(currentFile, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                            
                         break;
 
                         case ASM_POS:
