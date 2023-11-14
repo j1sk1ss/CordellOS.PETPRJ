@@ -30,9 +30,8 @@ void display_intermediate_table() {
 
 void display_block_table() {
 	printf("\n---------------Block Table is ----------\n");
-	for (int i = 0; i < blocks_index; i++){
+	for (int i = 0; i < blocks_index; i++)
 		printf("\n Label is : %s and address is : %d ", block_tab[i]->name, block_tab[i]->instr_no);
-	}
 
 	printf("\n");
 	return;
@@ -40,28 +39,37 @@ void display_block_table() {
 
 int check_condition(int operand1, int operand2, int opcode){
 	switch(opcode){
-	case 8: if (operand1 == operand2)
-			   return 1;
-			break;
-	case 9: if (operand1 < operand2)
-			   return 1;
-			break;
-	case 10: if (operand1 > operand2)
-			   return 1;
-			 break;
-	case 11: if (operand1 <= operand2)
+		case 8: 
+			if (operand1 == operand2)
 				return 1;
-			 break;
-	case 12: if (operand1 >= operand2)
+		break;
+
+		case 9: 
+			if (operand1 < operand2)
 				return 1;
-			 break;
+		break;
+
+		case 10: 
+			if (operand1 > operand2)
+				return 1;
+		break;
+
+		case 11: 
+			if (operand1 <= operand2)
+				return 1;
+		break;
+
+		case 12: 
+			if (operand1 >= operand2)
+				return 1;
+		break;
 	}
+	
 	return 0;
 }
 
 void asm_executor(int *memory_array, int memory_index, struct User* user) {
-	for (int i = 0; i < intermediate_index;){  // iterating on the intermediate language table
-
+	for (int i = 0; i < intermediate_index;) {  // iterating on the intermediate language table
 		switch (intermediate_table[i]->opcode) {
 			case 14:  
 				printf("\n\r");
@@ -91,7 +99,7 @@ void asm_executor(int *memory_array, int memory_index, struct User* user) {
 	    	break;  // PRINTS Instruction //
 
 			case 18:
-				create_file(atoi(intermediate_table[i]->string_params[1]), user->write_access, user->edit_access, 
+				create_file(user->read_access, user->write_access, user->edit_access, 
 				intermediate_table[i]->string_params[0], ATA_find_empty_sector(FILES_SECTOR_OFFSET));
 			break;
 
@@ -119,7 +127,7 @@ void asm_executor(int *memory_array, int memory_index, struct User* user) {
 
 			case 7: 
                 if (check_condition(memory_array[intermediate_table[i]->parameters[0]], memory_array[intermediate_table[i]->parameters[1]],
-                    intermediate_table[i]->parameters[2])==0) {
+                    intermediate_table[i]->parameters[2]) == 0) {
                     i = intermediate_table[i]->parameters[3] - 1;  // IF Instruction //
                     continue;
                 }
