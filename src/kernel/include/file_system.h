@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "../../libs/core/shared/include/math.h"
+
 #include "string.h"
 #include "ata.h"
 #include "memory.h"

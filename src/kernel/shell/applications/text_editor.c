@@ -79,7 +79,7 @@ char* keyboard_edit(char* previous_data, int color) {
                     }
 
                     else if (currentCharacter == RIGHT_ARROW_BUTTON) { // Right
-                        if (VGA_getchr(VGA_cursor_get_x() + 1, VGA_cursor_get_y()) != NULL && VGA_cursor_get_x() + 1 < 80) {
+                        if (VGA_getchr(VGA_cursor_get_x(), VGA_cursor_get_y()) != NULL && VGA_cursor_get_x() < 80) {
                             VGA_setcursor(VGA_cursor_get_x() + 1, VGA_cursor_get_y()); 
                             x_cursor++;
                         }

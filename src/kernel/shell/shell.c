@@ -23,7 +23,6 @@ void shell() {
             currentPassword = read_file(find_file("shell"));
         else {
             create_file(0, 0, 0, "shell", ATA_find_empty_sector(SHELL_SECTOR));
-
             struct File* file = find_file("shell");
             write_file(file, "12345");
             currentPassword = read_file(file);

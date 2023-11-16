@@ -104,9 +104,9 @@ void init_directory() {
         newFile->name = malloc(strlen(name));
         strcpy(newFile->name, name);
 
-        newFile->read_level     = read;
-        newFile->write_level    = write;
-        newFile->edit_level     = edit;
+        newFile->read_level     = max(min(9, read), 0);
+        newFile->write_level    = max(min(9, write), 0);
+        newFile->edit_level     = max(min(9, edit), 0);
 
         newFile->sectors = (uint32_t*)malloc(sizeof(uint32_t));
         newFile->sector_count++;
@@ -433,9 +433,12 @@ void init_directory() {
         }
 
         struct File* file = directory->files;
-        if (file != NULL) {
+        if (file != NULL && directory->subDirectory == NULL) {
             result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
             strcat(result, "N");
+        } else if (file != NULL && directory->subDirectory != NULL) {
+            result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
+            strcat(result, "#");
         }
 
         while (file != NULL) {
@@ -550,50 +553,94 @@ void init_directory() {
         directory->upDirectory  = NULL;
         directory->next         = NULL;
 
-        if (input[*index] == 'D') {
-            (*index)++;
-            int start = *index;
-            while (input[*index] != '\0' && input[*index] != '@' && input[*index] != '#' && input[*index] != 'N') 
-                (*index)++;
-
-            char dirName[256];
-            memset(dirName, 0, sizeof(dirName));
-
-            strncpy(dirName, input + start, *index - start);
-            dirName[*index - start] = '\0';
-            directory->name = strdup(dirName);
-        }
-
-        while (input[*index] == 'N') {
-            (*index)++;
+        ////////////////////
+        //  DIR NAME
+        //
 
             if (input[*index] == 'D') {
-                directory->subDirectory = load_directory(input, index);
-                directory->subDirectory->upDirectory = directory;
+                (*index)++;
+                int start = *index;
+                while (input[*index] != '\0' && input[*index] != '@' && input[*index] != '#' && input[*index] != 'N') 
+                    (*index)++;
+
+                char dirName[256];
+                memset(dirName, 0, sizeof(dirName));
+
+                strncpy(dirName, input + start, *index - start);
+                dirName[*index - start] = '\0';
+                directory->name = strdup(dirName);
             }
 
-            if (input[*index] == 'F') 
-                directory->files = load_temp_file(input, index);
+        //
+        //  DIR NAME
+        ////////////////////
+
+        if (input[*index] == '@') {
+            (*index)++;
+            return directory;
         }
+
+        ////////////////////
+        //  SUB FILES \ DIRS
+        //
+
+            while (input[*index] == 'N') {
+                (*index)++;
+
+                if (input[*index] == 'D') {
+                    directory->subDirectory = load_directory(input, index);
+                    directory->subDirectory->upDirectory = directory;
+                }
+
+                if (input[*index] == 'F') 
+                    directory->files = load_temp_file(input, index);
+            }
+
+        //
+        //  SUB FILES \ DIRS
+        ////////////////////
+
+        if (input[*index] == '@') {
+            (*index)++;
+            return directory;
+        }
+
+        ////////////////////
+        //  ADDITIONAL FILES \ DIRS
+        //
+
+            while (input[*index] == '#') {
+                (*index)++;
+
+                if (input[*index] == 'D') {
+                    struct Directory* end_dir = directory->subDirectory;
+                    while (end_dir->next != NULL)
+                        end_dir = end_dir->next;
+
+                    end_dir->next = load_directory(input, index);
+                    end_dir->next->upDirectory = directory;
+                }
+
+                if (input[*index] == 'F') {
+                    struct File* end_file = directory->files;
+                    if (end_file == NULL) {
+                        directory->files = load_temp_file(input, index);
+                        continue;
+                    }
+                    else
+                        while (end_file->next != NULL)
+                            end_file = end_file->next;
+
+                    end_file->next = load_temp_file(input, index);
+                }
+            }
+
+        //
+        //  ADDITIONAL FILES \ DIRS
+        ////////////////////
 
         if (input[*index] == '@') 
             (*index)++;
-
-        while (input[*index] == '#') {
-            (*index)++;
-            if (input[*index] == 'D') {
-                directory->next = load_directory(input, index);
-                directory->next->upDirectory = directory;
-            }
-
-            if (input[*index] == 'F') {
-                struct File* end_file = directory->files;
-                while (end_file->next != NULL)
-                    end_file = end_file->next;
-
-                end_file->next = load_temp_file(input, index);
-            }
-        }
 
         return directory;
     }
