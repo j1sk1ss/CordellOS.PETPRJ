@@ -51,6 +51,7 @@ char* keyboard_edit(char* previous_data, int color) {
     char* input = (char*)malloc(strlen(previous_data));
     memset(input, 0, sizeof(input));
     strcpy(input, previous_data);
+    free(previous_data);
 
     y_cursor, x_cursor = 0;
     get_start_positions(input, &x_cursor, &y_cursor);

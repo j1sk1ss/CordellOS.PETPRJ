@@ -19,7 +19,7 @@ void display_symbol_table() {
 void display_intermediate_table() {
 	printf("\n---------------Instruction Table is ----------\n");
 	for (int i = 0; i < intermediate_index; i++){
-		printf("\n%d : %d : ", intermediate_table[i]->instruc_no, intermediate_table[i]->opcode);
+		printf("\n%d : %d : ", intermediate_table[i]->instruction_position, intermediate_table[i]->opcode);
 		for (int j = 0; intermediate_table[i]->parameters[j] != -1; j++)
 			printf(" %d", intermediate_table[i]->parameters[j]);
 	}
@@ -39,28 +39,33 @@ void display_block_table() {
 
 int check_condition(int operand1, int operand2, int opcode){
 	switch(opcode){
-		case 8: 
+		case EQ_INSTRUCTION: 
 			if (operand1 == operand2)
 				return 1;
 		break;
 
-		case 9: 
+		case LT_INSTRUCTION:
 			if (operand1 < operand2)
 				return 1;
 		break;
 
-		case 10: 
+		case GT_INSTRUCTION: 
 			if (operand1 > operand2)
 				return 1;
 		break;
 
-		case 11: 
+		case LTEQ_INSTRUCTION: 
 			if (operand1 <= operand2)
 				return 1;
 		break;
 
-		case 12: 
+		case GTEQ_INSTRUCTION: 
 			if (operand1 >= operand2)
+				return 1;
+		break;
+
+		case NEQ_INSTRUCTION: 
+			if (operand1 != operand2)
 				return 1;
 		break;
 	}
@@ -68,55 +73,64 @@ int check_condition(int operand1, int operand2, int opcode){
 	return 0;
 }
 
-void asm_executor(int *memory_array, int memory_index, struct User* user) {
-	for (int i = 0; i < intermediate_index;) {  // iterating on the intermediate language table
+void asm_executor(int *memory_array, int memory_index, int start, int end, struct User* user) {
+	for (int i = start; i < end;) {  // iterating on the intermediate language table
 		switch (intermediate_table[i]->opcode) {
-			case 14:  
+			case READ_INSTRUCTION:  
 				printf("\n\r");
                 memory_array[intermediate_table[i]->parameters[0]] = atoi(keyboard_read(VISIBLE_KEYBOARD, -1));
 			break; // READ Instruction //
 
-			case 1: 
+			case MOV_INSTRUCTION: 
                 memory_array[intermediate_table[i]->parameters[0]] = memory_array[intermediate_table[i]->parameters[1]]; 
 		    break; // MOVE Instruction //
 
-			case 3: 
+			case ADD_INSTRUCTION:
                 memory_array[intermediate_table[i]->parameters[0]] = memory_array[intermediate_table[i]->parameters[1]] +
 																		 memory_array[intermediate_table[i]->parameters[2]];
 			break; // ADD Instruction //
 
-			case 4: 
+			case SUB_INSTRUCTION:
                 memory_array[intermediate_table[i]->parameters[0]] = memory_array[intermediate_table[i]->parameters[1]] -
 																		 memory_array[intermediate_table[i]->parameters[2]];
 		    break; // SUB Instruction //
 
-			case 13: 
+			case MUL_INSTRUCTION:
+                memory_array[intermediate_table[i]->parameters[0]] = memory_array[intermediate_table[i]->parameters[1]] *
+																		 memory_array[intermediate_table[i]->parameters[2]];
+		    break; // MUL Instruction //
+
+			case PRINT_INSTRUCTION: 
                 printf("\n%d\n", memory_array[intermediate_table[i]->parameters[0]]);
 	    	break;  // PRINT Instruction //
 
-			case 17: 
-                printf("\n%s\n", intermediate_table[i]->string);
+			case PRINTS_INSTRUCTION: 
+                printf("%s", intermediate_table[i]->string);
 	    	break;  // PRINTS Instruction //
 
-			case 18:
+			case PRINTL_INSTRUCTION:
+                printf("\n%s", intermediate_table[i]->string);
+	    	break;  // PRINTL Instruction //
+
+			case MKFILE_INSTRUCTION:
 				create_file(user->read_access, user->write_access, user->edit_access, 
 				intermediate_table[i]->string_params[0], ATA_find_empty_sector(FILES_SECTOR_OFFSET));
 			break;
 
-			case 19:
+			case RMFILE_INSTRUCTION:
 				if (file_exist(intermediate_table[i]->string) == 1)
 					if (user->edit_access <= find_file(intermediate_table[i]->string)->edit_level)
 						delete_file(intermediate_table[i]->string);
 			break;
 
-			case 20:
+			case WFILE_INSTRUCTION:
 				struct File* wfile = find_file(intermediate_table[i]->string_params[0]);
 				if (wfile != NULL)
 					if (user->write_access <= wfile->write_level)
 						write_file(wfile, intermediate_table[i]->string_params[1]);
 			break;
 
-			case 21:
+			case RFILE_INSTRUCTION:
 				struct File* rfile = find_file(intermediate_table[i]->string);
 				if (rfile != NULL)
 					if (user->read_access <= rfile->read_level) {
@@ -125,7 +139,7 @@ void asm_executor(int *memory_array, int memory_index, struct User* user) {
 					}
 			break;
 
-			case 7: 
+			case IF_INSTRUCTION: 
                 if (check_condition(memory_array[intermediate_table[i]->parameters[0]], memory_array[intermediate_table[i]->parameters[1]],
                     intermediate_table[i]->parameters[2]) == 0) {
                     i = intermediate_table[i]->parameters[3] - 1;  // IF Instruction //
@@ -133,7 +147,26 @@ void asm_executor(int *memory_array, int memory_index, struct User* user) {
                 }
             break;
 
-			case 6:  
+			case FOR_INSTRUCTION:
+				for (int j = 0; j < memory_array[intermediate_table[i]->parameters[0]]; j++) 
+					asm_executor(memory_array, memory_index, i + 1, intermediate_table[i]->parameters[3] - 1, user);
+
+				i = intermediate_table[i]->parameters[3] - 1;
+			break;
+
+			case WHILE_INSTRUCTION:
+				while (check_condition(memory_array[intermediate_table[i]->parameters[0]], memory_array[intermediate_table[i]->parameters[1]],
+                    intermediate_table[i]->parameters[2]) != 0) 
+					asm_executor(memory_array, memory_index, i + 1, intermediate_table[i]->parameters[3] - 1, user);
+
+				i = intermediate_table[i]->parameters[3] - 1;
+			break;
+
+			case CLEAR_INSTRUCTION:
+				VGA_text_clrscr();
+			break;
+
+			case JMP_INSTRUCTION:  
                 i = intermediate_table[i]->parameters[0] - 1; // JUMP or ELSE Instruction //
                 continue;
             break;
