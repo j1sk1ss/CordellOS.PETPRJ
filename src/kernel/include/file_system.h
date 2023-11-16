@@ -10,7 +10,8 @@
 
 #define FILE_SYSTEM_SECTOR          300
 #define USERS_SECTOR                301
-#define SHELL_SECTOR                302
+#define GROUPS_SECTOR               302
+#define SHELL_SECTOR                303
 
 #define FILES_SECTOR_OFFSET         450
 #define SYS_FILES_SECTOR_OFFSET     250

@@ -104,9 +104,9 @@ void init_directory() {
         newFile->name = malloc(strlen(name));
         strcpy(newFile->name, name);
 
-        newFile->read_level = read;
-        newFile->write_level = write;
-        newFile->edit_level = edit;
+        newFile->read_level     = read;
+        newFile->write_level    = write;
+        newFile->edit_level     = edit;
 
         newFile->sectors = (uint32_t*)malloc(sizeof(uint32_t));
         newFile->sector_count++;
@@ -296,9 +296,8 @@ void init_directory() {
 
     struct File* find_file(char* name) {
         struct File* current = currentDirectory->files;
-
         while (current != NULL) {
-            if (strcmp(current->name, name) == 0) 
+            if (strstr(current->name, name) == 0) 
                 return current;
             
             current = current->next;
@@ -311,7 +310,7 @@ void init_directory() {
         struct Directory* current = currentDirectory->subDirectory;
 
         while (current != NULL) {
-            if (strcmp(current->name, name) == 0) 
+            if (strstr(current->name, name) == 0) 
                 return current;
 
             current = current->next;
