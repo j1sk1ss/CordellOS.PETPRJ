@@ -58,9 +58,7 @@ void init_directory() {
         struct Directory* newDirectory = malloc(sizeof(struct Directory));
         memset(newDirectory, 0, sizeof(newDirectory));
 
-        newDirectory->name = malloc(strlen(name));
-        strcpy(newDirectory->name, name);
-        
+        strncpy(newDirectory->name, name, 11);
         newDirectory->files         = NULL;
         newDirectory->next          = NULL;
         newDirectory->subDirectory  = NULL;
@@ -92,7 +90,7 @@ void init_directory() {
 //  CREATES TEMP FILE WITH NAME <NAME> IN CURRENT DIRECTORY
 //
 
-    void create_file(int read, int write, int edit, char* name, uint8_t* head_sector) {
+    void create_file(int read, int write, int edit, char* name, char* extension, uint8_t* head_sector) {
         if (find_file(name) != NULL) {
             printf("Il file esiste gia'.");
             return;
@@ -101,8 +99,8 @@ void init_directory() {
         struct File* newFile = malloc(sizeof(struct File));
         memset(newFile, 0, sizeof(newFile));
 
-        newFile->name = malloc(strlen(name));
-        strcpy(newFile->name, name);
+        strncpy(newFile->name, name, 11);
+        strncpy(newFile->extension, extension, 3);
 
         newFile->read_level     = max(min(9, read), 0);
         newFile->write_level    = max(min(9, write), 0);
@@ -241,9 +239,7 @@ void init_directory() {
                 if (prev == NULL) currentDirectory->subDirectory = current->next;
                 else prev->next = current->next;
                 
-                free(current->name);
                 free(current);
-
                 break;
             }
 
@@ -273,9 +269,7 @@ void init_directory() {
                 if (prev == NULL) currentDirectory->files = current->next;
                 else prev->next = current->next;
                 
-                free(current->name);
                 free(current);
-                
                 break;
             }
 
@@ -494,8 +488,6 @@ void init_directory() {
 
     struct File* load_temp_file(const char* input, int* index) {
         struct File* file = (struct File*)malloc(sizeof(struct File));
-
-        file->name          = NULL;
         file->sector_count  = 0;
         
         if (input[*index] == 'F') {
@@ -507,7 +499,6 @@ void init_directory() {
 
             int length = *index - start;
             if (length > 0) {
-                file->name = (char*)malloc(length + 1);
                 strncpy(file->name, input + start, length);
                 file->name[length] = '\0';
             }
@@ -547,7 +538,6 @@ void init_directory() {
     struct Directory* load_directory(const char* input, int* index) {
         struct Directory* directory = (struct Directory*)malloc(sizeof(struct Directory));
 
-        directory->name         = NULL;
         directory->files        = NULL;
         directory->subDirectory = NULL;
         directory->upDirectory  = NULL;
@@ -563,12 +553,12 @@ void init_directory() {
                 while (input[*index] != '\0' && input[*index] != '@' && input[*index] != '#' && input[*index] != 'N') 
                     (*index)++;
 
-                char dirName[256];
+                char dirName[12];
                 memset(dirName, 0, sizeof(dirName));
 
                 strncpy(dirName, input + start, *index - start);
                 dirName[*index - start] = '\0';
-                directory->name = strdup(dirName);
+                strncpy(directory->name, dirName, 11);
             }
 
         //

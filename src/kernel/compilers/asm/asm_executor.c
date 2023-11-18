@@ -114,7 +114,7 @@ void asm_executor(int *memory_array, int memory_index, int start, int end, struc
 
 			case MKFILE_INSTRUCTION:
 				create_file(user->read_access, user->write_access, user->edit_access, 
-				intermediate_table[i]->string_params[0], ATA_find_empty_sector(FILES_SECTOR_OFFSET));
+				intermediate_table[i]->string_params[0], "txt", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
 			break;
 
 			case RMFILE_INSTRUCTION:

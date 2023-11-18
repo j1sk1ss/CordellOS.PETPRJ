@@ -15,7 +15,7 @@ void init_users() {
             }
         }
         else {
-            create_file(0, 0, 0, "users", USERS_SECTOR);
+            create_file(0, 0, 0, "users", "txt", USERS_SECTOR);
             write_file(find_file("users"), "admin[000[0\nguest[666[123\n");
             continue;
         }
@@ -28,7 +28,7 @@ void init_users() {
             }
         }
         else {
-            create_file(0, 0, 0, "groups", GROUPS_SECTOR);
+            create_file(0, 0, 0, "groups", "txt", GROUPS_SECTOR);
             write_file(find_file("groups"), "default[000[admin[guest\n");
             continue;
         }

@@ -24,7 +24,9 @@ struct File {
     int write_level;
     int edit_level;
 
-    char* name;
+    char name[11];
+    char extension[3];
+
     uint32_t* sectors;
     size_t sector_count;
     
@@ -32,7 +34,7 @@ struct File {
 };
 
 struct Directory  {
-    char* name;
+    char name[11];
 
     struct File* files;
 
@@ -48,7 +50,7 @@ char* get_full_temp_name();
 
 void init_directory();
 void create_directory(char* name);
-void create_file(int read, int write, int edit, char* name, uint8_t* head_sector);
+void create_file(int read, int write, int edit, char* name, char* extension, uint8_t* head_sector);
 void delete_directory(char* name);
 void delete_file(char* name);
 

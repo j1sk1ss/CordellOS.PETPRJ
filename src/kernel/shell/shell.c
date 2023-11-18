@@ -22,7 +22,7 @@ void shell() {
         if (file_exist("shell") == 1)
             currentPassword = read_file(find_file("shell"));
         else {
-            create_file(0, 0, 0, "shell", ATA_find_empty_sector(SHELL_SECTOR));
+            create_file(0, 0, 0, "shell", "txt", ATA_find_empty_sector(SHELL_SECTOR));
             struct File* file = find_file("shell");
             write_file(file, "12345");
             currentPassword = read_file(file);
@@ -97,7 +97,7 @@ void shell_start_screen() {
     cprintf(FOREGROUND_LIGHT_GREEN, " Y8b  d8 `8b  d8' 88 `88. 88  .8D 88.     88booo. 88booo.   `8b  d8' db   8D \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, "  `Y88P'  `Y88P'  88   YD Y8888D' Y88888P Y88888P Y88888P    `Y88P'  `8888Y' \r\n");
 
-    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.2c | 16.11.2023] \r\n");
+    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.3a | 18.11.2023] \r\n");
 }
 
 ///////////////////////////////////////
@@ -228,7 +228,7 @@ void shell_start_screen() {
             }
             
             else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0)                
-                create_file(atoi(command_line[1]), atoi(command_line[2]), atoi(command_line[3]), command_line[4], ATA_find_empty_sector(FILES_SECTOR_OFFSET));      
+                create_file(atoi(command_line[1]), atoi(command_line[2]), atoi(command_line[3]), command_line[4], command_line[5], ATA_find_empty_sector(FILES_SECTOR_OFFSET));      
                              
             else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {    
                 struct File* file = find_file(command_line[1]);
