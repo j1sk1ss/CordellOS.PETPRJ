@@ -218,8 +218,7 @@ void execute_item(struct User* user, char action_type) {
                                     break;
                                 }
 
-                                if (row_position == DELETE_POS || row_position == RENAME_POS)
-                                    return;
+                                return;
                             }
                             
                             else if (user_action == F3_BUTTON) {

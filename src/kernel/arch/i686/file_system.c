@@ -464,6 +464,9 @@ void init_directory() {
                 free(sector_address);
             }
             
+            strcat(result, "E");
+            strcat(result, file->extension);
+
             file = file->next;
             if (file != NULL) {
                 result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
@@ -529,6 +532,18 @@ void init_directory() {
                         file->sectors[file->sector_count - 1] = (uint32_t)sector;
                     }
                 }
+            }
+
+            if (input[*index] == 'E') {
+                (*index)++;
+
+                start = *index;
+                while (input[*index] != '\0' && input[*index] != '@' && input[*index] != '#') 
+                    (*index)++;
+
+                length = *index - start;
+                if (length > 0) 
+                    strncpy(file->extension, input + start, min(length, 3));
             }
         }
 

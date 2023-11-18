@@ -28,7 +28,7 @@
             if (--timeout < 0) return NULL;
             else continue;
 
-        for (int n = 0; n < 256; n++) {
+        for (int n = 0; n < SECTOR_SIZE / 2; n++) {
             uint16_t value = inportw(DATA_REGISTER);
             buffer[n * 2] = value & 0xFF;
             buffer[n * 2 + 1] = value >> 8;
@@ -64,7 +64,7 @@
             else continue;
         
         // Write the sector data from the buffer.
-        for (int i = 0; i < 256; i++) {
+        for (int i = 0; i < SECTOR_SIZE / 2; i++) {
             uint16_t data = *((uint16_t*)(buffer + i * 2));
             outportw(DATA_REGISTER, data);
         }
@@ -92,7 +92,7 @@
 
     // Function that clear sector
     void ATA_clear_sector(uint32_t lba) {
-        char buffer[512];  // Assuming 512-byte sectors
+        char buffer[SECTOR_SIZE];  // Assuming 512-byte sectors
         memset(buffer, 0, sizeof(buffer));
 
         // Write the buffer to the specified sector
@@ -114,7 +114,7 @@
 
     // Function to check if a sector is empty (contains all zeros).
     bool ATA_is_sector_empty(const uint8_t* sector_data) {
-        for (int i = 0; i < 512; i++) 
+        for (int i = 0; i < SECTOR_SIZE; i++) 
             if (sector_data[i] != 0x00) 
                 return false;
             
