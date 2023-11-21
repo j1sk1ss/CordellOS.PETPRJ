@@ -88,7 +88,7 @@ char get_character(char character) {
                         char currentCharacter = alphabet[character];
                         if (currentCharacter != ENTER_BUTTON) {
                             if (currentCharacter == BACKSPACE_BUTTON) {
-                                if (strlen(input) > 0 && input_size > 0) {
+                                if (input_size > 0) {
                                     backspace_string(&input, --input_size);
                                     VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
                                     VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), NULL);

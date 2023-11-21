@@ -17,6 +17,39 @@ const char* strchr(const char* str, char chr) {
     return NULL;
 }
 
+char* strcat(char* dest, const char* src) {
+    strcpy(dest + strlen(dest), src);
+    return dest;
+}
+
+int strstr(const char* haystack, const char* needle) {
+    if (*needle == '\0')    // If the needle is an empty string, return 0 (position 0).
+        return 0;
+    
+    int position = 0;       // Initialize the position to 0.
+
+    while (*haystack) {
+        const char* hay_ptr     = haystack;
+        const char* needle_ptr  = needle;
+
+        // Compare characters in the haystack and needle.
+        while (*hay_ptr == *needle_ptr && *needle_ptr) {
+            hay_ptr++;
+            needle_ptr++;
+        }
+
+        // If we reached the end of the needle, we found a match.
+        if (*needle_ptr == '\0') 
+            return position;
+
+        // Move to the next character in the haystack.
+        haystack++;
+        position++;
+    }
+
+    return -1;  // Needle not found, return -1 to indicate that.
+}
+
 char* strcpy(char* dst, const char* src) {
     char* origDst = dst;
 
@@ -50,11 +83,8 @@ unsigned strlen(const char* str) {
 }
 
 int strcmp(const char* firstStr, const char* secondStr) {
-    if (firstStr == NULL && secondStr == NULL)
-        return 0;
-
-    if (firstStr == NULL || secondStr == NULL)
-        return -10;
+    if (firstStr == NULL && secondStr == NULL) return 0;
+    if (firstStr == NULL || secondStr == NULL) return -10;
 
     while (*firstStr && *secondStr && *firstStr == *secondStr) {
         ++firstStr;

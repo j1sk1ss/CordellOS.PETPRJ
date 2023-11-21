@@ -111,11 +111,6 @@ void VGA_set_color(uint8_t color) {
     for (int y = 0; y < SCREEN_HEIGHT; y++)
         for (int x = 0; x < SCREEN_WIDTH; x++) 
             VGA_putcolor(x, y, color);
-
-    _screenX = 0;
-    _screenY = 0;
-
-    VGA_setcursor(_screenX, _screenY);
 }
 
 //

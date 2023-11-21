@@ -17,6 +17,7 @@ int abs(int x);
 int sgn(int x);
 
 float sqrt(float number);
+double pow(double base, int exponent);
 
 //function for calculating the cos.
 double cos(double x);

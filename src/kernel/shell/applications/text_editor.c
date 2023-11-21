@@ -159,11 +159,11 @@ char* keyboard_edit(char* previous_data, int color) {
 
 void text_editor_init(struct File* file, int color) {
     VGA_clrscr();
-    set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 
     edit_file = file;
     char* file_text = read_file(edit_file);
     printf("%sFile: [%s]   [F1 - SAVE]   [F3 - EXIT]\n%s", LINE, edit_file->name, LINE);
+    set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
     write_file(file, keyboard_edit(file_text, color));
     
     free(file_text);

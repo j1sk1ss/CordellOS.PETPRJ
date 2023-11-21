@@ -1,9 +1,9 @@
 #pragma once
 
-#include "math.h"
 #include "stdio.h"
 
 #include "../../libs/core/shared/include/allocator.h"
+#include "../../libs/core/shared/include/math.h"
 
 #include <stdint.h>
 #include <stddef.h>

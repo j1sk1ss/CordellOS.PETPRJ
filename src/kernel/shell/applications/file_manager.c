@@ -184,10 +184,6 @@ void execute_item(struct User* user, char action_type) {
                                                 currentFile->edit_level     = new_file_type[2] - '0';
 
                                                 save_file_system();
-                                                free(new_file_name);
-                                                free(new_file_type);
-                                                free(new_file_extension);
-                                                break;
                                             }
                                             
                                             free(new_file_name);
@@ -200,17 +196,11 @@ void execute_item(struct User* user, char action_type) {
                                     case DELETE_POS:
                                         if (user->edit_access <= currentFile->edit_level) {
                                             printf("\nDelete? (Y/N): ");
-                                            while (1) {
-                                                char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-                                                if (strcmp(user_choose, "y") == 0) {
-                                                    delete_file(currentFile->name);
-                                                    free(user_choose);
-                                                    break;
-                                                }
+                                            
+                                            char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                                            if (strcmp(user_choose, "y") == 0) delete_file(currentFile->name);
 
-                                                free(user_choose);
-                                                break;
-                                            }
+                                            free(user_choose);
                                         }
                                         
                                         VGA_clrscr();
@@ -239,14 +229,12 @@ void execute_item(struct User* user, char action_type) {
                     if (strstr(currentFile->extension, "txt") == 0) {
                         if (user->read_access <= currentFile->read_level) {
                             VGA_clrscr();
+                            printf("%sFile: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, read_file(currentFile), LINE);
                             set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 
-                            printf("%sFile: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, read_file(currentFile), LINE);
-                            while (1) {
-                                char user_action = keyboard_navigation();
-                                if (user_action == F3_BUTTON)
-                                    break;
-                            }
+                            char user_action = keyboard_navigation();
+                            if (user_action == F3_BUTTON)
+                                break;
                         }
 
                         break;
@@ -254,8 +242,8 @@ void execute_item(struct User* user, char action_type) {
 
                     else if (strstr(currentFile->extension, "asm") == 0) {
                         VGA_clrscr();
-                        set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
                         asm_execute(read_file(currentFile));
+                        set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 
                         printf("\n\nPress [F3] to exit");
                         while (1) {
@@ -319,7 +307,6 @@ void execute_item(struct User* user, char action_type) {
 }
 
 void print_directory_data() {
-    set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
     char* directory_name = get_full_temp_name();  // Mem leak?
     printf("Directory: [%s]\n%s%s%s", directory_name, LINE, HEADER, LINE);
     free(directory_name);  // Mem leak?
@@ -338,9 +325,8 @@ void print_directory_data() {
         if (name_length <= COLUMN_WIDTH) strncpy(name, currentDir->name, name_length);
         else strncpy(name, currentDir->name, COLUMN_WIDTH - 3);
 
-        if (rows++ == row_position) {
-            cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, "| %s | Dir               | N/A       | N/A       | N/A           |\n", name);
-        } else printf("| %s | Dir               | N/A       | N/A       | N/A           |\n", name);
+        if (rows++ == row_position) cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, "| %s | Dir               | N/A       | N/A       | N/A           |\n", name);
+        else printf("| %s | Dir               | N/A       | N/A       | N/A           |\n", name);
 
         currentDir = currentDir->next;
     }
@@ -398,25 +384,18 @@ void print_directory_data() {
         //  FILE SIZE PREPARATIONS
         ////////////////
 
-        if (rows++ == row_position) {
-            cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, "| %s | File              | %d %d %d     | %s | %s |\n",
-                file_name,
-                currentFile->read_level, currentFile->write_level, currentFile->edit_level, file_extension,
-                file_size);
-        } else printf("| %s | File              | %d %d %d     | %s | %s |\n",
-                file_name,
-                currentFile->read_level, currentFile->write_level, currentFile->edit_level, file_extension,
-                file_size);
+        if (rows++ == row_position) cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, "| %s | File              | %d %d %d     | %s | %s |\n",
+                file_name, currentFile->read_level, currentFile->write_level, currentFile->edit_level, file_extension, file_size);
+        else printf("| %s | File              | %d %d %d     | %s | %s |\n",
+                file_name, currentFile->read_level, currentFile->write_level, currentFile->edit_level, file_extension, file_size);
 
         currentFile = currentFile->next;
         free(file_size_str);  // Mem leak?
     }
 
-    if (row_position > rows)
-        row_position = rows - 1;
+    if (row_position > rows) row_position = rows - 1;
 
-    for (int i = 0; i < 15 - rows; i++)
-        printf(EMPTY);
-
+    for (int i = 0; i < 15 - rows; i++) printf(EMPTY);
     printf("%s[F1 - CREATE DIR]   [F2 - CREATE FILE]   [F3 - EXIT]   [F4 - EDIT]\n[ENTER - INTERACT]   [BACKSPACE - DELETE]\n", LINE);
+    set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 }
