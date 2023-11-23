@@ -207,8 +207,6 @@ void init_users() {
                         strcpy(users[position].group, group->name);
                     }
 
-                    free(group->name);
-                    free(group);
                 //
                 //  GROUP
                 /////////////////
@@ -226,8 +224,11 @@ void init_users() {
                 return &users[position];
             }
 
-            if (all != 1) 
+            if (all != 1) {
                 free(users[position].name);
+                free(group->name);
+                free(group);
+            }
 
             free(lines[position++]);
         }
@@ -276,5 +277,12 @@ void print_users_table() {
     }
 
     printf("|_______________________________________________________________|\n");
+
+    for (int i = 0; i < users->users_count; i++) {
+        free(users[i].group->name);
+        free(users[i].group);
+        free(users[i].name);
+    }
+
     free(users);
 } 
