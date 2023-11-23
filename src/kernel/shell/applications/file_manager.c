@@ -307,6 +307,7 @@ void execute_item(struct User* user, char action_type) {
 }
 
 void print_directory_data() {
+    set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
     char* directory_name = get_full_temp_name();  // Mem leak?
     printf("Directory: [%s]\n%s%s%s", directory_name, LINE, HEADER, LINE);
     free(directory_name);  // Mem leak?
@@ -397,5 +398,4 @@ void print_directory_data() {
 
     for (int i = 0; i < 15 - rows; i++) printf(EMPTY);
     printf("%s[F1 - CREATE DIR]   [F2 - CREATE FILE]   [F3 - EXIT]   [F4 - EDIT]\n[ENTER - INTERACT]   [BACKSPACE - DELETE]\n", LINE);
-    set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 }
