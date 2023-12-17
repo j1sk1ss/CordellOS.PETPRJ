@@ -291,8 +291,6 @@ void execute_item(struct User* user, char action_type) {
 }
 
 void print_directory_data() {
-    set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-
     char* directory_name = get_full_temp_name();  // Mem leak?
     printf("Directory: [%s]\n%s%s%s", directory_name, LINE, HEADER, LINE);
     free(directory_name);  // Mem leak?
