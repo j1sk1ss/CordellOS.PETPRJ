@@ -129,6 +129,14 @@ char get_character(char character) {
                     return alphabet[i686_inb(0x60)];
         }
 
+        void keyboard_wait(char symbol) {
+            while (1) {
+                char user_action = keyboard_navigation();
+                if (user_action == symbol)
+                    break;
+            }
+        }
+
 ////
 ////    
 ////

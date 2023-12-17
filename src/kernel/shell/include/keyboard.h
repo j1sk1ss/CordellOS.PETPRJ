@@ -30,5 +30,6 @@ char get_character(char character);
 
 char* keyboard_read(int mode, int color);
 char keyboard_navigation();
+void keyboard_wait(char symbol);
 
 void __attribute__((cdecl)) x86_init_keyboard();

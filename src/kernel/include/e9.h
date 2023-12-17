@@ -1,3 +1,3 @@
-#pragma once
+// #pragma once
 
-void e9_print(char c);
+// void e9_print(char c);

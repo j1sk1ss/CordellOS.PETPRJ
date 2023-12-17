@@ -15,21 +15,21 @@
         uint8_t slavebit = 0;
         uint8_t sectorCount = 1;
 
-        outportb(DRIVE_REGISTER, 0xE0 | (slavebit << 4) | ((lba >> 24) & 0x0F));
-        outportb(FEATURES_REGISTER, 0x00);
-        outportb(SECTOR_COUNT_REGISTER, sectorCount);
-        outportb(LBA_ADRESS_REGISTER, (uint8_t)(lba & 0xFF));
-        outportb(CYLINDER_LOW_REGISTER, (uint8_t)((lba >> 8) & 0xFF));
-        outportb(CYLINDER_HIGH_REGISTER, (uint8_t)((lba >> 16) & 0xFF));
-        outportb(STATUS_REGISTER, ATA_CMD_READ_PIO);
+        x86_outb(DRIVE_REGISTER, 0xE0 | (slavebit << 4) | ((lba >> 24) & 0x0F));
+        x86_outb(FEATURES_REGISTER, 0x00);
+        x86_outb(SECTOR_COUNT_REGISTER, sectorCount);
+        x86_outb(LBA_ADRESS_REGISTER, (uint8_t)(lba & 0xFF));
+        x86_outb(CYLINDER_LOW_REGISTER, (uint8_t)((lba >> 8) & 0xFF));
+        x86_outb(CYLINDER_HIGH_REGISTER, (uint8_t)((lba >> 16) & 0xFF));
+        x86_outb(STATUS_REGISTER, ATA_CMD_READ_PIO);
 
         int timeout = 9000000;
-        while ((inportb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
+        while ((x86_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
             if (--timeout < 0) return NULL;
             else continue;
 
         for (int n = 0; n < SECTOR_SIZE / 2; n++) {
-            uint16_t value = inportw(DATA_REGISTER);
+            uint16_t value = x86_inw(DATA_REGISTER);
             buffer[n * 2] = value & 0xFF;
             buffer[n * 2 + 1] = value >> 8;
         }
@@ -50,23 +50,23 @@
         if (lba == BOOT_SECTOR) return -1;
 
         ATA_ata_wait();
-        outportb(DRIVE_REGISTER, 0xE0 | ((lba >> 24) & 0x0F));
-        outportb(FEATURES_REGISTER, 0x00);
-        outportb(SECTOR_COUNT_REGISTER, 1);
-        outportb(LBA_ADRESS_REGISTER, (uint8_t)lba);
-        outportb(CYLINDER_LOW_REGISTER, (uint8_t)(lba >> 8));
-        outportb(CYLINDER_HIGH_REGISTER, (uint8_t)(lba >> 16));
-        outportb(STATUS_REGISTER, ATA_CMD_WRITE_PIO);
+        x86_outb(DRIVE_REGISTER, 0xE0 | ((lba >> 24) & 0x0F));
+        x86_outb(FEATURES_REGISTER, 0x00);
+        x86_outb(SECTOR_COUNT_REGISTER, 1);
+        x86_outb(LBA_ADRESS_REGISTER, (uint8_t)lba);
+        x86_outb(CYLINDER_LOW_REGISTER, (uint8_t)(lba >> 8));
+        x86_outb(CYLINDER_HIGH_REGISTER, (uint8_t)(lba >> 16));
+        x86_outb(STATUS_REGISTER, ATA_CMD_WRITE_PIO);
 
         int timeout = 9000000;
-        while ((inportb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
+        while ((x86_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
             if (--timeout < 0) return -1;
             else continue;
         
         // Write the sector data from the buffer.
         for (int i = 0; i < SECTOR_SIZE / 2; i++) {
             uint16_t data = *((uint16_t*)(buffer + i * 2));
-            outportw(DATA_REGISTER, data);
+            x86_outw(DATA_REGISTER, data);
         }
 
         return 1;

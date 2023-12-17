@@ -3,15 +3,12 @@
 #include <include/date_time.h>
 #include <include/file_system.h>
 #include <include/ata.h>
-#include <include/util.h>
 #include <include/asm_compiler.h>
 
 #include "keyboard.h"
 #include "user.h"
 #include "file_manager.h"
 #include "text_editor.h"
-// #include "snake.h"
-// #include "tetris.h"
 
 #include "../libs/core/shared/include/x86.h"
 

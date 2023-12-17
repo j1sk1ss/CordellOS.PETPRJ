@@ -7,7 +7,7 @@
 //  |____/|_| |_|_____|_____|_____|
                                 
 
-char* currentPassword;
+struct File* currentPassword;
 struct User* user = NULL;
 
 void shell() {
@@ -19,14 +19,11 @@ void shell() {
     //  SHELL CORDELL PASSWORD
     //
 
-        if (file_exist("shell") == 1)
-            currentPassword = read_file(find_file("shell"));
-        else {
+        if (file_exist("shell") != 1) {
             create_file(0, 0, 0, "shell", "txt", ATA_find_empty_sector(SHELL_SECTOR));
-            struct File* file = find_file("shell");
-            write_file(file, "12345");
-            currentPassword = read_file(file);
-        }
+            currentPassword = find_file("shell");
+            write_file(currentPassword, "12345");
+        } else currentPassword = find_file("shell");
 
     //
     //  SHELL CORDELL PASSWORD
@@ -97,7 +94,7 @@ void shell_start_screen() {
     cprintf(FOREGROUND_LIGHT_GREEN, " Y8b  d8 `8b  d8' 88 `88. 88  .8D 88.     88booo. 88booo.   `8b  d8' db   8D \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, "  `Y88P'  `Y88P'  88   YD Y8888D' Y88888P Y88888P Y88888P    `Y88P'  `8888Y' \r\n");
 
-    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.3b | 21.11.2023] \r\n");
+    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.4a | 18.12.2023] \r\n");
 }
 
 ///////////////////////////////////////
@@ -118,9 +115,11 @@ void shell_start_screen() {
                 char* password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
                 int tries = 0;
 
-                while (strcmp(password, currentPassword) != 0) {
+                char* pass = read_file(currentPassword);
+                while (strcmp(password, pass) != 0) {
                     cprintf(FOREGROUND_RED, "\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
                     free(password);
+                    free(pass);
 
                     password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
                     if (++tries >= MAX_ATTEMPT_COUNT) 
@@ -128,6 +127,7 @@ void shell_start_screen() {
                 }
 
                 free(password);
+                free(pass);
             }
 
             if (cordell_derictive == SUPER_DERICTIVE)
@@ -207,19 +207,19 @@ void shell_start_screen() {
         //
         //
 
-            else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0)                              // Create new dir
-                create_directory(command_line[1]);                                                  // Name placed as second arg
+            else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0)
+                create_directory(command_line[1]);
             
             else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0)                      
                 open_file_manager(user);                                             
 
-            else if (strstr(command_line[0], COMMAND_IN_DIR) == 0)                                  // Move to dir           
-                move_to_directory(command_line[1]);                                                 //
+            else if (strstr(command_line[0], COMMAND_IN_DIR) == 0)     
+                move_to_directory(command_line[1]);
             
-            else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0)                                 // Up from dir
-                up_from_directory();                                                                //
+            else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0)
+                up_from_directory();
             
-            else if (strstr(command_line[0], COMMAND_DELETE_DIR) == 0) {                            // Delete dir
+            else if (strstr(command_line[0], COMMAND_DELETE_DIR) == 0) {
                 struct Directory* directory = find_directory(command_line[1]);
                 if (directory->subDirectory != NULL || directory->files != NULL) 
                     if (user->edit_access = 0) delete_directory(command_line[1]); 
@@ -239,27 +239,27 @@ void shell_start_screen() {
                 else printf("\nYou don`t have permissions to do this.");
             }
 
-            else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {                              // List of all files
-                struct Directory* current_dir = get_current_directory()->subDirectory;              // Print dirs
-                if (current_dir != NULL) {                                                          //
-                    printf("\r\n\t%s", current_dir->name);                                          //
+            else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {                              
+                struct Directory* current_dir = get_current_directory()->subDirectory;
+                if (current_dir != NULL) {
+                    printf("\r\n\t%s", current_dir->name);
             
-                    while (current_dir->next != NULL) {                                             //
-                        current_dir = current_dir->next;                                            //
-                        printf("\t%s", current_dir->name);                                          //
-                    }                                                                               //
-                }                                                                                   //
+                    while (current_dir->next != NULL) {
+                        current_dir = current_dir->next;
+                        printf("\t%s", current_dir->name);
+                    }
+                }
             
-                struct File* current = get_current_directory()->files;                              // Print files
-                if (current != NULL) {                                                              //
-                    printf("\r\n\t%s", current->name);                                              //
+                struct File* current = get_current_directory()->files;
+                if (current != NULL) {
+                    printf("\r\n\t%s", current->name);
             
-                    while (current->next != NULL) {                                                 //
-                        current = current->next;                                                    //
-                        printf("\t%s", current->name);                                              //
-                    }                                                                               //
-                }                                                                                   //
-            }                                                                                       //
+                    while (current->next != NULL) {
+                        current = current->next;
+                        printf("\t%s", current->name);
+                    }
+                }
+            }
 
             else if (strstr(command_line[0], COMMAND_FILE_VIEW) == 0) {
                 struct File* file = find_file(command_line[1]);

@@ -1,5 +1,5 @@
 #include "../../include/date_time.h"
-#include "../../include/util.h"
+#include "../libs/core/shared/include/x86.h"
 
 // Change this each year as needed.
 // This is only used if the century register doesn't exist.
@@ -21,13 +21,13 @@ enum {
 };
  
 int get_update_in_progress_flag() {
-    outportb(cmos_address, 0x0A);
-    return (inportb(cmos_data) & 0x80);
+    x86_outb(cmos_address, 0x0A);
+    return (x86_inb(cmos_data) & 0x80);
 }
  
 unsigned char get_RTC_register(int reg) {
-      outportb(cmos_address, reg);
-      return inportb(cmos_data);
+      x86_outb(cmos_address, reg);
+      return x86_inb(cmos_data);
 }
  
 void datetime_read_rtc() {
@@ -41,10 +41,7 @@ void datetime_read_rtc() {
     unsigned char last_century;
     unsigned char registerB;
 
-    // Note: This uses the "read registers until you get the same values twice in a row" technique
-    //       to avoid getting dodgy/inconsistent values due to RTC updates
-
-    while (get_update_in_progress_flag()); // Make sure an update isn't in progress
+    while (get_update_in_progress_flag());
     datetime_second = get_RTC_register(0x00);
     datetime_minute = get_RTC_register(0x02);
     datetime_hour   = get_RTC_register(0x04);
@@ -64,7 +61,7 @@ void datetime_read_rtc() {
         last_year       = datetime_year;
         last_century    = century;
 
-        while (get_update_in_progress_flag()); // Make sure an update isn't in progress
+        while (get_update_in_progress_flag());
         datetime_second = get_RTC_register(0x00);
         datetime_minute = get_RTC_register(0x02);
         datetime_hour   = get_RTC_register(0x04);
