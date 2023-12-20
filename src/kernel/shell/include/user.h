@@ -27,4 +27,3 @@ struct Group {
 
 void init_users();
 struct User* login(char* user_name, char* pass, int all);
-void print_users_table();

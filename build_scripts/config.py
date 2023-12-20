@@ -2,5 +2,5 @@
 #arch           = 'i686'
 image_type        = 'disk'
 image_file_system = 'fat32'
-image_size        = '15m'
+image_size        = '25m'
 toolchain         = 'tool_chain'

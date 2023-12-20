@@ -45,7 +45,8 @@
         "hal.h": "c",
         "*.def": "c",
         "cstdio": "c",
-        "io_context": "c"
+        "io_context": "c",
+        "gdt.h": "c"
     },
     "git.ignoreLimitWarning": true,
     "C_Cpp.errorSquiggles": "disabled"

@@ -194,9 +194,6 @@ void shell_start_screen() {
                                                                 datetime_hour, datetime_minute, datetime_second);
             }
 
-            else if (strstr(command_line[0], COMMAND_USERS) == 0) 
-                print_users_table();
-
         //
         //
         //  DEFAULT SHELL COMMANDS CLEAR, ECHO AND HELP
