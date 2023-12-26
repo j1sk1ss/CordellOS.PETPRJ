@@ -66,11 +66,9 @@ void shell() {
     //
     ////////////////////////////////////////////////////
 
-    open_file_manager(user);
-
     while (1) {
         char* path = get_full_temp_name();
-        cprintf(FOREGROUND_GREEN, "\r\n[CORDELL OS]");
+        cprintf(FOREGROUND_GREEN, "\r\n[%s: CORDELL OS]", user->name);
         printf(" $%s> ", path);
 
         char* command = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
@@ -94,7 +92,7 @@ void shell_start_screen() {
     cprintf(FOREGROUND_LIGHT_GREEN, " Y8b  d8 `8b  d8' 88 `88. 88  .8D 88.     88booo. 88booo.   `8b  d8' db   8D \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, "  `Y88P'  `Y88P'  88   YD Y8888D' Y88888P Y88888P Y88888P    `Y88P'  `8888Y' \r\n");
 
-    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.4a | 18.12.2023] \r\n");
+    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.4b | 26.12.2023] \r\n");
 }
 
 ///////////////////////////////////////

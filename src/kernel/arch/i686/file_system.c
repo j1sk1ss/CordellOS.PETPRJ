@@ -342,11 +342,10 @@ void init_directory() {
                 return NULL;
             }
 
-            strcpy(temp_name, name);
-
-            temp_name = strcat(temp_name, current->name);
+            strcpy(temp_name, current->name);
             temp_name = strcat(temp_name, "/");
-
+            temp_name = strcat(temp_name, name);
+        
             free(name);
             name = temp_name;
             current = current->upDirectory;
