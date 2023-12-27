@@ -1,0 +1,3 @@
+/home/j1sk1ss/Desktop/CordellOS.EXMPL/cmake-build-debug/CMakeFiles/CordellOS_EXMPL.dir
+/home/j1sk1ss/Desktop/CordellOS.EXMPL/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/j1sk1ss/Desktop/CordellOS.EXMPL/cmake-build-debug/CMakeFiles/rebuild_cache.dir

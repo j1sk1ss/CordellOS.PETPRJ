@@ -75,9 +75,9 @@ size_t FATFile::Read(uint8_t* data, size_t byteCount) {
 
         Memory::Copy(data, _Buffer + _Position % SectorSize, take);
 
-        data        += take;
+        data       += take;
         _Position  += take;
-        byteCount   -= take;
+        byteCount  -= take;
 
         if (leftInBuffer == take) {
             if (_IsRootDirectory) {

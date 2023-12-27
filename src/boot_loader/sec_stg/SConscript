@@ -31,6 +31,7 @@ headers = glob_recursive(env, '*.h') + \
           glob_recursive(env, '*.hpp') + \
           glob_recursive(env, '*.inc')
 
+
 objects = env.Object(sources)
 
 obj_crti = objects.pop(find_index(objects, lambda item: is_file_name(item, 'crti.o')))
