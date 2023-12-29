@@ -25,8 +25,7 @@ env.Append(
 # Add boot.s to the sources
 sources = glob_recursive(env, '*.c') + \
           glob_recursive(env, '*.cpp') + \
-          glob_recursive(env, '*.asm') + \
-          ['boot.s']
+          glob_recursive(env, '*.asm')
 
 objects = env.Object(sources)
 obj_crti = objects.pop(find_index(objects, lambda item: is_file_name(item, 'crti.o')))

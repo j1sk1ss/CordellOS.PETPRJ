@@ -17,12 +17,10 @@ struct Directory* currentDirectory  = NULL;
 
 void init_directory() {
     char* loaded_data = ATA_read_sector(FILE_SYSTEM_SECTOR);
-    
-    if (loaded_data != NULL)
+    if (loaded_data != NULL) 
         if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
             char* token = strtok(loaded_data, " ");
             char* file_system_data = NULL;
-
             while(token != NULL) {
                 char* sector_data = ATA_read_sector(atoi(token));
                 file_system_data = (char*)realloc(file_system_data, strlen(sector_data) * sizeof(char));
