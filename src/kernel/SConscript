@@ -11,7 +11,7 @@ env = TARGET_ENVIRONMENT.Clone()
 env.Append(
     LINKFLAGS = [
         '-Wl,-T', env.File('linker.ld').srcnode().path,
-        '-Wl,-Map=' + env.File('kernel.map').path
+        '-Wl,-Map=' + env.File('kernel.map').path,
     ],
 
     CPPPATH = [ 
@@ -22,9 +22,11 @@ env.Append(
     ASFLAGS = [ '-I', env.Dir('.').srcnode(), '-f', 'elf' ]
 )
 
+# Add boot.s to the sources
 sources = glob_recursive(env, '*.c') + \
           glob_recursive(env, '*.cpp') + \
-          glob_recursive(env, '*.asm')
+          glob_recursive(env, '*.asm') + \
+          ['boot.s']
 
 objects = env.Object(sources)
 obj_crti = objects.pop(find_index(objects, lambda item: is_file_name(item, 'crti.o')))

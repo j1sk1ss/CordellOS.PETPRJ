@@ -5,7 +5,8 @@ phys = 0x01000000;
 SECTIONS {
      . = phys;
 
-     .text              : { __text_start = .;        *(.text)    }
+     .text              : { __text_start = .;                *(.multiboot)
+        *(.text)   }
      .data              : { __data_start = .;        *(.data)    }
      .rodata            : { __rodata_start = .;      *(.rodata)  }
      .bss               : { __bss_start = .;         *(.bss)     }

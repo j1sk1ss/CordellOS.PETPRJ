@@ -300,11 +300,11 @@ def build_disk(image, fst_stg, sec_stg, kernel, files, env):
 
     # install fst_stg
     print(f"> installing fst_stg...")
-    install_fst_stg(image, fst_stg, offset=partition_offset, boot_data_lba=1)
+    # install_fst_stg(image, fst_stg, offset=partition_offset, boot_data_lba=1)
  
     # install sec_stg
     print(f"> installing sec_stg...")
-    install_sec_stg(image, sec_stg, offset=2, boot_data_lba=1, limit=partition_offset)
+    # install_sec_stg(image, sec_stg, offset=2, boot_data_lba=1, limit=partition_offset)
 
     tempdir_name = 'tmp_mount_{0}'.format(int(time.time()))
     tempdir = os.path.join(os.path.dirname(image), tempdir_name)

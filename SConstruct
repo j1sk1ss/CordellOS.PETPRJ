@@ -148,10 +148,10 @@ variantDir = 'build/{0}_{1}'.format(TARGET_ENVIRONMENT['arch'], TARGET_ENVIRONME
 variantDirStage1 = variantDir + '/fst_stg_{0}'.format(TARGET_ENVIRONMENT['image_file_system'])
 
 SConscript('src/libs/core/SConscript', variant_dir=variantDir + '/libs/core', duplicate=0)
-SConscript('src/boot_loader/fst_stg/SConscript', variant_dir=variantDirStage1, duplicate=0)
-SConscript('src/boot_loader/sec_stg/SConscript', variant_dir=variantDir + '/sec_stg', duplicate=0)
+# SConscript('src/boot/SConscript', variant_dir=variantDir + '/kernel', duplicate=0)
+# SConscript('src/boot_loader/sec_stg/SConscript', variant_dir=variantDir + '/sec_stg', duplicate=0)
 SConscript('src/kernel/SConscript', variant_dir=variantDir + '/kernel', duplicate=0)
-SConscript('image/SConscript', variant_dir=variantDir, duplicate=0)
+# SConscript('image/SConscript', variant_dir=variantDir, duplicate=0)
 
-Import('fst_stg', 'sec_stg', 'kernel', 'image')
-Default(fst_stg, sec_stg, kernel, image)
+Import('kernel')
+Default(kernel)

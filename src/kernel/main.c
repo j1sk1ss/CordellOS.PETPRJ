@@ -11,9 +11,10 @@
 
 #include "shell/include/shell.h"
 
+
 extern void _init();
 
-void start(BootParams* bootParams) {
+void kernel_main(void) {
     _init();                            // global constructors
     mm_init(0x00200000);                // Kernel loads in 0x40000 and kernel size is 0x00010000. Malloc start in 0x50000 + 0x1000
     HAL_initialize();
