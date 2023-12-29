@@ -1,11 +1,11 @@
-#include <include/stdio.h>
-#include <include/string.h>
-#include <include/date_time.h>
-#include <include/file_system.h>
-#include <include/ata.h>
-#include <include/asm_compiler.h>
+#include "../../../kernel/include/stdio.h"
+#include "../../../kernel/include/string.h"
+#include "../../../kernel/include/date_time.h"
+#include "../../../kernel/include/file_system.h"
+#include "../../../kernel/include/ata.h"
+#include "../../../kernel/include/asm_compiler.h"
+#include "../../../kernel/include/keyboard.h"
 
-#include "keyboard.h"
 #include "user.h"
 #include "file_manager.h"
 #include "text_editor.h"

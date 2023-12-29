@@ -92,7 +92,7 @@ void shell_start_screen() {
     cprintf(FOREGROUND_LIGHT_GREEN, " Y8b  d8 `8b  d8' 88 `88. 88  .8D 88.     88booo. 88booo.   `8b  d8' db   8D \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, "  `Y88P'  `Y88P'  88   YD Y8888D' Y88888P Y88888P Y88888P    `Y88P'  `8888Y' \r\n");
 
-    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.4a | 18.12.2023] \r\n");
+    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.5a | 30.12.2023] \r\n");
 }
 
 ///////////////////////////////////////
@@ -288,6 +288,56 @@ void shell_start_screen() {
                 }
 
                 printf("\r\n> Risposta: %s", calculator(tokens, tokenCount));
+            }
+
+            else if (strstr(command_line[0], COMMAND_SNAKE_GAME) == 0) {
+                VGA_text_clrscr();
+
+                struct File* snake_save;
+                if (file_exist("snake-save") == 1)
+                    snake_save = find_file("snake-save");
+                else {
+                    create_file(0, 0, 0, "snake-save", "obj", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
+                    snake_save = find_file("snake-save");
+                    write_file(snake_save, "0");
+                }
+
+                char* file_data = read_file(snake_save);
+                int best_result = atoi(file_data);
+                free(file_data);
+                
+                int current_result = snake_init(atoi(command_line[1]), best_result);
+                if (best_result < current_result) {
+                    char* result = itoa(current_result);
+                    write_file(snake_save, result);
+
+                    free(result);
+                }
+            }
+
+            else if (strstr(command_line[0], COMMAND_TETRIS_GAME) == 0) {
+                VGA_text_clrscr();
+
+                struct File* tetris_save;
+                if (file_exist("tetris-save") == 1)
+                    tetris_save = find_file("tetris-save");
+                else {
+                    create_file(0, 0, 0, "tetris-save", "obj", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
+                    tetris_save = find_file("tetris-save");
+                    write_file(tetris_save, "0");
+                }
+
+                char* file_data = read_file(tetris_save);
+                int best_result = atoi(file_data);
+                free(file_data);
+                
+                int current_result = init_tetris(best_result);
+                if (best_result < current_result) {
+                    char* result = itoa(current_result);
+                    write_file(tetris_save, result);
+
+                    free(result);
+                }
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {

@@ -5,8 +5,8 @@
 #include "file_system.h"
 #include "ata.h"
 
-#include "../shell/include/keyboard.h"
-#include "../shell/include/user.h"
+#include "keyboard.h"
+#include "../../user_land/shell/include/user.h"
 
 #define STACK_SIZE              100
 #define MEMORY_SIZE             100

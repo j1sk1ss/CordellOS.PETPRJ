@@ -1,11 +1,10 @@
 #pragma once
 
-#include <include/file_system.h>
+#include "../../../kernel/include/file_system.h"
+#include "../../../kernel/include/keyboard.h"
 
-#include "keyboard.h"
 #include "user.h"
 #include "text_editor.h"
-// #include "shell.h"
 
 
 #define COLUMN_WIDTH 15

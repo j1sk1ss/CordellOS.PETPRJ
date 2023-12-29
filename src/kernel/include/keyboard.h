@@ -1,13 +1,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../../../libs/core/shared/include/allocator.h"
+#include "../../libs/core/shared/include/allocator.h"
 
-#include "../../include/stdio.h"
-#include "../../include/string.h"
-#include "../../include/memory.h"
-#include "../../include/io.h"
-#include "../../include/vga_text.h"
+#include "stdio.h"
+#include "string.h"
+#include "memory.h"
+#include "io.h"
+#include "vga_text.h"
 
 #define HIDDEN_KEYBOARD         0
 #define VISIBLE_KEYBOARD        1

@@ -1,6 +1,5 @@
-#include "keyboard.h"
-
-#include "../../include/file_system.h"
+#include "../../../kernel/include/keyboard.h"
+#include "../../../kernel/include/file_system.h"
 
 #define LINE "+-----------------+-------------------+-----------+---------------------------+\n"
 
