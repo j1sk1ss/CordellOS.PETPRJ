@@ -18,3 +18,4 @@ __pycache__/
 *.ninja
 *.log
 cmake-build-debug/CMakeFiles/3.26.4/CompilerIdC/CMakeCCompilerId.c
+.vscode/settings.json
