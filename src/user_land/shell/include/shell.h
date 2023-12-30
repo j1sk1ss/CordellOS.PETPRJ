@@ -10,7 +10,7 @@
 #include "file_manager.h"
 #include "text_editor.h"
 
-#include "../libs/core/shared/include/x86.h"
+#include "../libs/include/x86.h"
 
 #define SUPER_DERICTIVE        0
 #define CORDELL_DERICTIVE      1
@@ -27,6 +27,7 @@
     //  COMMANDS
 
         #define COMMAND_HELP                            "aiuto"
+        #define COMMAND_VERSION                         "ver"
         #define COMMAND_CLEAR                           "clear" 
         #define COMMAND_TIME                            "date"
         #define COMMAND_ECHO                            "eco"

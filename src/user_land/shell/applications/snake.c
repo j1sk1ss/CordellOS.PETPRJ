@@ -82,7 +82,10 @@ void show(char map[V][H]) {
 
 	for (i = 0; i < V; i++) {
 		for (j = 0; j < H; j++) 
-			printf("%c", map[i][j]);
+			if (strstr(map[i][j], "C") == 0) 
+				cprintf(FOREGROUND_GREEN, "%c", map[i][j]);
+			else
+				printf("%c", map[i][j]);
 		
 		printf("\n");
 	}
@@ -117,7 +120,7 @@ void intro_data(char map[V][H]) {
 	for (i = 0; i < snake_size; i++)
 		map[snk[i].y][snk[i].x] = snk[i].imagen;
 	
-	map[frt.y][frt.x] = 'M'; // fruit
+	map[frt.y][frt.x] = 'C'; // fruit
 }
 
 void loop(char map[V][H]) {
@@ -223,5 +226,5 @@ void intro_data2(char map[V][H]) {
 	for (i = 0; i < snake_size; i++) 
 		map[snk[i].y][snk[i].x] = snk[i].imagen;
 	
-	map[frt.y][frt.x] = 'M';
+	map[frt.y][frt.x] = 'C';
 }

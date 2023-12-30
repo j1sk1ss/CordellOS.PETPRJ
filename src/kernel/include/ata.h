@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include "../../libs/core/shared/include/x86.h"
+#include "../../libs/include/x86.h"
 
 #include "memory.h"
 #include "string.h"

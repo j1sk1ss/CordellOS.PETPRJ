@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../libs/core/shared/include/math.h"
+#include "../../../libs/include/math.h"
 #include "../../../kernel/include/file_system.h"
 
 #define GUEST_ACCESS    9

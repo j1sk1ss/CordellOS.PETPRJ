@@ -23,7 +23,7 @@
         x86_outb(CYLINDER_HIGH_REGISTER, (uint8_t)((lba >> 16) & 0xFF));
         x86_outb(STATUS_REGISTER, ATA_CMD_READ_PIO);
 
-        int timeout = 900000000;
+        int timeout = 9000000;
         while ((x86_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
             if (--timeout < 0) return NULL;
             else continue;
@@ -58,7 +58,7 @@
         x86_outb(CYLINDER_HIGH_REGISTER, (uint8_t)(lba >> 16));
         x86_outb(STATUS_REGISTER, ATA_CMD_WRITE_PIO);
 
-        int timeout = 900000000;
+        int timeout = 9000000;
         while ((x86_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
             if (--timeout < 0) return -1;
             else continue;

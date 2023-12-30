@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../../libs/core/shared/include/math.h"
+#include "../../libs/include/math.h"
 
 #include "string.h"
 #include "ata.h"
@@ -12,10 +12,10 @@
 
 #define GRUB_OFFSET                 10000
 
-#define FILE_SYSTEM_SECTOR          330 + GRUB_OFFSET
-#define USERS_SECTOR                331 + GRUB_OFFSET
-#define GROUPS_SECTOR               332 + GRUB_OFFSET
-#define SHELL_SECTOR                333 + GRUB_OFFSET
+#define FILE_SYSTEM_SECTOR          346 + GRUB_OFFSET
+#define USERS_SECTOR                347 + GRUB_OFFSET
+#define GROUPS_SECTOR               348 + GRUB_OFFSET
+#define SHELL_SECTOR                349 + GRUB_OFFSET
 
 #define FILES_SECTOR_OFFSET         450 + GRUB_OFFSET
 #define SYS_FILES_SECTOR_OFFSET     350 + GRUB_OFFSET

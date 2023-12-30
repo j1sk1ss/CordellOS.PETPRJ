@@ -146,7 +146,8 @@ Export('TARGET_ENVIRONMENT')
 
 variantDir = 'build/CordellOS/boot'
 
-SConscript('src/libs/core/SConscript', variant_dir=variantDir + '/libs/core', duplicate=0)
+SConscript('src/libs/SConscript', variant_dir=variantDir + '/libs', duplicate=0)
+SConscript('src/user_land/SConscript', variant_dir=variantDir + '/user_land', duplicate=0)
 SConscript('src/kernel/SConscript', variant_dir=variantDir + '/kernel', duplicate=0)
 
 Import('kernel')

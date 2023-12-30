@@ -377,6 +377,8 @@ void print_directory_data() {
             foreground_color = FOREGROUND_GREY;
         else if (strstr(file_extension, "shl") == 0)
             foreground_color = FOREGROUND_GREEN;
+        else if (strstr(file_extension, "obj") == 0)
+            foreground_color = FOREGROUND_BLACK;
 
         if (rows++ == row_position) cprintf(BACKGROUND_RED + foreground_color, "| %s | File              | %d %d %d     | %s | %s |\n",
                 file_name, currentFile->read_level, currentFile->write_level, currentFile->edit_level, file_extension, file_size);

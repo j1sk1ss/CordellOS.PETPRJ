@@ -46,8 +46,7 @@ typedef union {
 
 // Return the absolute value of a.
 // Note LLINT_MIN cannot be negated.
-arith64_s64 __absvdi2(arith64_s64 a)
-{
+arith64_s64 __absvdi2(arith64_s64 a) {
     return arith64_abs(a);
 }
 
@@ -135,14 +134,17 @@ arith64_u64 __divmoddi4(arith64_u64 a, arith64_u64 b, arith64_u64 *c) {
         if (c) *c = a;                          // remainder = numerator
         return 0;                               // quotient = 0
     }
+
     if (!arith64_hi(b)) {                       // division is 32 bite
         if (b == 0) {                           // Dividing by 0
             volatile char x = 0; x = 1 / x;     // force an exception
         }
+
         if (b == 1) {                           // Divide by 1
             if (c) *c = 0;                      // remainder = 0
             return a;                           // quotient = numerator
         }
+
         if (!arith64_hi(a)) {
             if (c)                              // use generic 32-bit operators
                 *c = arith64_lo(a) % arith64_lo(b);

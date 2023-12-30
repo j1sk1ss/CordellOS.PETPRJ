@@ -83,7 +83,7 @@ void shell() {
 }
 
 void shell_start_screen() {
-    printf("\n");
+    printf("\n\n");
 
     cprintf(FOREGROUND_LIGHT_GREEN, "  .o88b.  .d88b.  d8888b. d8888b. d88888b db      db         .d88b.  .d8888. \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, " d8P  Y8 .8P  Y8. 88  `8D 88  `8D 88'     88      88        .8P  Y8. 88'  YP \r\n");
@@ -167,6 +167,8 @@ void shell_start_screen() {
                 printf("\r\n> Utilizza la [%s] per i calcoli (+, -, * e /)",            COMMAND_CALCULATOR);
                 printf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
 
+                printf("\r\n> Utilizza la [%s] per vista versione",                     COMMAND_VERSION);
+
                 printf("\r\n> Usa [%s] <nome> per cretore dir",                         COMMAND_CREATE_DIR);
                 printf("\r\n> Usa [%s] <accesso> <nome> per cretore file",              COMMAND_CREATE_FILE);
                 printf("\r\n> Usa [%s] <nome> per elimita dir",                         COMMAND_DELETE_FILE);
@@ -179,6 +181,9 @@ void shell_start_screen() {
                 printf("\r\n> Usa [%s] per modifica data in file",                      COMMAND_FILE_EDIT);
                 printf("\r\n> Usa [%s] per run file",                                   COMMAND_FILE_RUN);
             }
+
+            else if (strstr(command_line[0], COMMAND_VERSION) == 0)
+                shell_start_screen();
 
             else if (strstr(command_line[0], COMMAND_CLEAR) == 0) 
                 VGA_clrscr();

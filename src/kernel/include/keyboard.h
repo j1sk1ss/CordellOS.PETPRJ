@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../../libs/core/shared/include/allocator.h"
+#include "../../libs/include/allocator.h"
 
 #include "stdio.h"
 #include "string.h"
