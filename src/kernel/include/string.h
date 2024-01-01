@@ -21,6 +21,7 @@ int strstr(const char* haystack, const char* needle);
 char* strcpy(char* dst, const char* src);
 unsigned strlen(const char* str);
 int strcmp(const char* firstStr, const char* secondStr);
+int strncmp(const char* str1, const char* str2, size_t n);
 char* strcat(char* dest, const char* src);
 
 char* strtok(char* s, const char* delim);
@@ -44,3 +45,5 @@ char* itoa(int n);
 
 char* strncpy(char *dst, const char *src, size_t n);
 char* strdup(const char *src);
+
+void str_uppercase(char* str);

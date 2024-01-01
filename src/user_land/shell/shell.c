@@ -61,6 +61,8 @@ void shell() {
             else cprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalita` ospite.\n\r");
         }
 
+        printf("\n");
+
     //
     //  USER LOGIN
     //

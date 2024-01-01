@@ -97,6 +97,14 @@ int strcmp(const char* firstStr, const char* secondStr) {
     return (*firstStr) - (*secondStr);
 }
 
+int strncmp(const char* str1, const char* str2, size_t n) {
+    for (size_t i = 0; i < n; ++i) 
+        if (str1[i] != str2[i] || str1[i] == '\0' || str2[i] == '\0') 
+            return (unsigned char)str1[i] - (unsigned char)str2[i];
+        
+    return 0;
+}
+
 void reverse(char* str, int len) {    
     int start = 0;
     int end = len - 1;
@@ -575,4 +583,22 @@ char* strdup(const char *src) {
 	new[i] = '\0';
 
 	return (new);
+}
+
+int str_islower(int c) {
+    return c >= 'a' && c <= 'z';
+}
+
+int str_toupper(int c) {
+    if (str_islower(c)) return c - 'a' + 'A';
+    else return c;
+}
+
+void str_uppercase(char* str) {
+    if (str == NULL) 
+        return;
+
+    for (int i = 0; str[i] != '\0'; i++) {
+        str[i] = str_toupper((unsigned char)str[i]);
+    }
 }

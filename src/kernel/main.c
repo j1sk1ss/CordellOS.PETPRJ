@@ -2,7 +2,7 @@
 #include <include/hal.h>
 
 #include "../user_land/include/user_land.h"
-
+#include "include/fat.h"
 
 extern void _init();
 
@@ -12,8 +12,8 @@ void kernel_main(void) {
     HAL_initialize();
     x86_init_keyboard();
 
-    user_land_entry();
-    //shell();
+    //user_land_entry();
+    FATInitialize();
 
 end:
     for (;;);

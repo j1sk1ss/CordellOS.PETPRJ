@@ -3,7 +3,7 @@
 
 // Change this each year as needed.
 // This is only used if the century register doesn't exist.
-#define CURRENT_YEAR 2023
+#define CURRENT_YEAR 2024
  
 unsigned char datetime_second;
 unsigned char datetime_minute;
