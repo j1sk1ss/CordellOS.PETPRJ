@@ -7,14 +7,59 @@
 extern void _init();
 
 void kernel_main(void) {
-    _init();                            // global constructors
-    mm_init(0x00200000);                // Kernel loads in 0x40000 and kernel size is 0x00010000. Malloc start in 0x50000 + 0x1000
-    HAL_initialize();
-    x86_init_keyboard();
 
-    //user_land_entry();
-    FATInitialize();
+    ///////////////////////
+    // GLOBAL CONSTRUCTORS
 
+        _init();
+
+    ///////////////////////
+
+    ////////////////////////////////////
+    // Heap allocator initialization
+    // - Initializing first memory block
+
+        mm_init(0x00200000);
+
+    ////////////////////////////////////
+    
+    ///////////////////////
+    // HAL initialization
+    // - IRQ initialization
+    // - GDT initialization
+    // - IDT initialization
+    // - ISR initialization
+
+        HAL_initialize();
+
+    ///////////////////////
+
+    //////////////////////////
+    // Keyboard initialization
+    // - Keyboard activation
+
+        x86_init_keyboard();
+
+    //////////////////////////
+
+    /////////////////////
+    // FAT initialization
+    // - Boot sector 
+    // - Cluster data
+
+        FATInitialize();
+
+    //////////////////////
+
+    //////////////////////////////////
+    // User land part
+    // - Shell
+    // - File system (current version)
+
+        user_land_entry();
+
+    //////////////////////////////////
+    
 end:
     for (;;);
 }

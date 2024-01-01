@@ -94,7 +94,7 @@ void shell_start_screen() {
     cprintf(FOREGROUND_LIGHT_GREEN, " Y8b  d8 `8b  d8' 88 `88. 88  .8D 88.     88booo. 88booo.   `8b  d8' db   8D \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, "  `Y88P'  `Y88P'  88   YD Y8888D' Y88888P Y88888P Y88888P    `Y88P'  `8888Y' \r\n");
 
-    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.5a | 30.12.2023] \r\n");
+    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.6a | 01.01.2024] \r\n");
 }
 
 ///////////////////////////////////////
@@ -170,6 +170,7 @@ void shell_start_screen() {
                 printf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
 
                 printf("\r\n> Utilizza la [%s] per vista versione",                     COMMAND_VERSION);
+                printf("\r\n> Utilizza la [%s] per vista disk-data informazione",       COMMAND_DISK_DATA);
 
                 printf("\r\n> Usa [%s] <nome> per cretore dir",                         COMMAND_CREATE_DIR);
                 printf("\r\n> Usa [%s] <accesso> <nome> per cretore file",              COMMAND_CREATE_FILE);
@@ -186,6 +187,15 @@ void shell_start_screen() {
 
             else if (strstr(command_line[0], COMMAND_VERSION) == 0)
                 shell_start_screen();
+
+            else if (strstr(command_line[0], COMMAND_DISK_DATA) == 0) {
+                printf("\r\nDisk-data utility ver 0.1\n");
+                printf("SECTORS ALL: [%i]\n", ATA_global_sector_count());
+                printf("FULLY-EMPTY SECTORS: [%i]\n", ATA_global_sector_empty());
+
+                printf("FAT TYPE: [%i]\n", fat_type);
+                printf("TOTAL CLUSTERS x32: [%i]\n", total_clusters);
+            }
 
             else if (strstr(command_line[0], COMMAND_CLEAR) == 0) 
                 VGA_clrscr();

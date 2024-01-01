@@ -1,15 +1,23 @@
 #include "../../include/fat.h"
 
 //Global variables
+unsigned int fat_size;
 unsigned int fat_type;
+
 unsigned int first_fat_sector;
 unsigned int first_data_sector;
+
+unsigned int total_sectors;
 unsigned int total_clusters;
-fat_BS_t bootsect;
+
+int bytes_per_sector;
+int sectors_per_cluster;
+
+int ext_root_cluster;
 
 //Initializes struct "bootsect" to store critical data from the boot sector of the volume
 int FATInitialize() {
-    char* cluster_data = ATA_read_sector(0);
+    char* cluster_data = ATA_read_sector(0, 1);
 	if (cluster_data == NULL) {
 		printf("Function FATInitialize: Error reading the first sector of FAT!\n");
 		return -1;
@@ -17,31 +25,36 @@ int FATInitialize() {
 
 	fat_BS_t* bootstruct = (fat_BS_t*)cluster_data;
 
-	total_clusters = bootstruct->total_sectors_16 / bootstruct->sectors_per_cluster;
-    printf("%i", total_clusters);
+    total_sectors = (bootstruct->total_sectors_16 == 0)? bootstruct->total_sectors_32 : bootstruct->total_sectors_16;
+    fat_size = bootstruct->table_size_16;
 
-	// if (total_clusters == 0) {
-	// 	total_clusters = bootstruct->total_sectors_32 / bootstruct->sectors_per_cluster;
-	// }
+    int root_dir_sectors = ((bootstruct->root_entry_count * 32) + (bootstruct->bytes_per_sector - 1)) / bootstruct->bytes_per_sector;
+    int data_sectors = total_sectors - (bootstruct->reserved_sector_count + (bootstruct->table_count * fat_size) + root_dir_sectors);
 
-	// if (total_clusters < 4085) {
-	// 	fat_type = 12;
-	// 	first_data_sector = bootstruct->reserved_sector_count + bootstruct->table_count * bootstruct->table_size_16 + (bootstruct->root_entry_count * 32 + bootstruct->bytes_per_sector - 1) / bootstruct->bytes_per_sector; //Explanation: the first data sector is after the reserved sectors, the FAT table sectors, and the root directory sectors. The size of the root directory is found by multiplying the amount of root entries by the size of each entry (32 bytes), then adding bytes per sector - 1 so that when divided by bytes per sector, the calculation starts at 1 sector, not zero, while also maintaining 1 sector when there are exactly 512 bytes worth of entries.
-	// }
-	// else {
-	// 	if (total_clusters < 65525) {
-	// 		fat_type = 16;
-	// 		first_data_sector = bootstruct->reserved_sector_count + bootstruct->table_count * bootstruct->table_size_16 + (bootstruct->root_entry_count * 32 + bootstruct->bytes_per_sector - 1) / bootstruct->bytes_per_sector; //Explanation: the first data sector is after the reserved sectors, the FAT table sectors, and the root directory sectors. The size of the root directory is found by multiplying the amount of root entries by the size of each entry (32 bytes), then adding bytes per sector - 1 so that when divided by bytes per sector, the calculation starts at 1 sector, not zero, while also maintaining 1 sector when there are exactly 512 bytes worth of entries.
-	// 	}
-	// 	else {
-	// 		fat_type = 32;
-	// 		first_data_sector = bootstruct->reserved_sector_count + bootstruct->table_count * ((fat_extBS_32_t*)(bootstruct->extended_section))->table_size_32;
-	// 	}
-	// }
+    total_clusters = data_sectors / bootstruct->sectors_per_cluster;
+	if (total_clusters == 0) {
+		total_clusters = bootstruct->total_sectors_32 / bootstruct->sectors_per_cluster;
+	}
 
-	// memcpy(&bootsect, bootstruct, 512);
+	if (total_clusters < 4085) {
+		fat_type = 12;
+		first_data_sector = bootstruct->reserved_sector_count + bootstruct->table_count * bootstruct->table_size_16 + (bootstruct->root_entry_count * 32 + bootstruct->bytes_per_sector - 1) / bootstruct->bytes_per_sector; 
+	}
+	else {
+		if (total_clusters < 65525) {
+			fat_type = 16;
+			first_data_sector = bootstruct->reserved_sector_count + bootstruct->table_count * bootstruct->table_size_16 + (bootstruct->root_entry_count * 32 + bootstruct->bytes_per_sector - 1) / bootstruct->bytes_per_sector;
+		}
+		else {
+			fat_type = 32;
+			first_data_sector = bootstruct->reserved_sector_count + bootstruct->table_count * ((fat_extBS_32_t*)(bootstruct->extended_section))->table_size_32;
+            ext_root_cluster = ((fat_extBS_32_t*)bootstruct->extended_section)->root_cluster;
+		}
+	}
 
-	// first_fat_sector = bootstruct->reserved_sector_count;
+	sectors_per_cluster = bootstruct->sectors_per_cluster;
+    bytes_per_sector    = bootstruct->bytes_per_sector;
+	first_fat_sector    = bootstruct->reserved_sector_count;
 
 	return 0;
 }
@@ -55,19 +68,21 @@ int FATRead(unsigned int clusterNum) {
 	}
 
 	if (fat_type == 32) {
-		unsigned int cluster_size = bootsect.bytes_per_sector * bootsect.sectors_per_cluster;
+		unsigned int cluster_size = bytes_per_sector * sectors_per_cluster;
 		unsigned char FAT_table[32 * 1024] = { '\0' }; //Takes into consideration the largest standard cluster size (32kB) since arrays can't be dynamically allocated without "new" :/
 		unsigned int fat_offset = clusterNum * 4;
 		unsigned int fat_sector = first_fat_sector + (fat_offset / cluster_size);
 		unsigned int ent_offset = fat_offset % cluster_size;
 
 		//at this point you need to read from sector "fat_sector" on the disk into "FAT_table".
-		if (ATA_read_sector(fat_sector) == NULL) {
+        char* cluster_data = ATA_read_sector(fat_sector, 1);
+		if (cluster_data == NULL) {
 			printf("Function FATRead: Could not read sector that contains FAT32 table entry needed.\n");
 			return -1;
 		}
 
-		memcpy(&FAT_table, (char*)DISK_READ_LOCATION, bootsect.bytes_per_sector);
+		memcpy(&FAT_table, cluster_data, bytes_per_sector);
+        free(cluster_data);
 
 		//remember to ignore the high 4 bits.
 		unsigned int table_value = *(unsigned int*)&FAT_table[ent_offset] & 0x0FFFFFFF;
@@ -75,26 +90,30 @@ int FATRead(unsigned int clusterNum) {
 		//the variable "table_value" now has the information you need about the next cluster in the chain.
 		return table_value;
 	}
+
 	else if (fat_type == 16) {
-		unsigned int cluster_size = bootsect.bytes_per_sector * bootsect.sectors_per_cluster;
+		unsigned int cluster_size = bytes_per_sector * sectors_per_cluster;
 		unsigned char FAT_table[32 * 1024]; //Takes into consideration the largest standard cluster size (32kB) since arrays can't be dynamically allocated without "new" :/
 		unsigned int fat_offset = clusterNum * 2;
 		unsigned int fat_sector = first_fat_sector + (fat_offset / cluster_size);
 		unsigned int ent_offset = fat_offset % cluster_size;
 
 		//at this point you need to read from sector "fat_sector" on the disk into "FAT_table".
-		if (ATA_read_sector(fat_sector) == NULL) {
+        char* cluster_data = ATA_read_sector(fat_sector, 1);
+		if (cluster_data == NULL) {
 			printf("Function FATRead: Could not read sector that contains FAT16 table entry needed.\n");
 			return -1;
 		}
 
-		memcpy(&FAT_table, (char*)DISK_READ_LOCATION, bootsect.bytes_per_sector);
+		memcpy(&FAT_table, cluster_data, bytes_per_sector);
+        free(cluster_data);
 
 		unsigned short table_value = *(unsigned short*)&FAT_table[ent_offset];
 
 		//the variable "table_value" now has the information you need about the next cluster in the chain.
 		return table_value;
 	}
+    
 	else {
 		printf("Function FATRead: Invalid fat_type value. The value was: %i\n", fat_type);
 		return -1;
@@ -110,63 +129,65 @@ int FATWrite(unsigned int clusterNum, unsigned int clusterVal) {
 	}
 
 	if (fat_type == 32) {
-		unsigned int cluster_size = bootsect.bytes_per_sector * bootsect.sectors_per_cluster;
+		unsigned int cluster_size = bytes_per_sector * sectors_per_cluster;
 		unsigned char FAT_table[32 * 1024] = { '\0' }; //Takes into consideration the largest standard cluster size (32kB) since arrays can't be dynamically allocated without "new" :/
 		unsigned int fat_offset = clusterNum * 4;
 		unsigned int fat_sector = first_fat_sector + (fat_offset / cluster_size);
 		unsigned int ent_offset = fat_offset % cluster_size;
 
 		//at this point you need to read from sector "fat_sector" on the disk into "FAT_table".
-        char* sector_data = ATA_read_sector(fat_sector);
-		if (ATA_read_sector(fat_sector) == NULL) {
+        char* sector_data = ATA_read_sector(fat_sector, 1);
+		if (ATA_read_sector(fat_sector, 1) == NULL) {
 			printf("Function FATWrite: Could not read sector that contains FAT32 table entry needed.\n");
 			return -1;
 		}
 
-		memcpy(&FAT_table, sector_data, bootsect.bytes_per_sector);
+		memcpy(&FAT_table, sector_data, bytes_per_sector);
         free(sector_data);
 
 		//copy clusterVal into FAT_table
 		*(unsigned int*)&FAT_table[ent_offset] = clusterVal;
 
 		//send modified FAT_table back to disk
-		memcpy((char*)DISK_WRITE_LOCATION, &FAT_table, bootsect.bytes_per_sector);
-		if (ATA_write_sector(fat_sector, (char*)(DISK_WRITE_LOCATION + bootsect.bytes_per_sector)) != 1) {
+		memcpy((char*)DISK_WRITE_LOCATION, &FAT_table, bytes_per_sector);
+		if (ATA_write_sector(fat_sector, 1, (char*)(DISK_WRITE_LOCATION + bytes_per_sector)) != 1) {
 			printf("Function FATWrite: Could not write new FAT32 cluster number to sector.\n");
 			return -1;
 		}
 
 		return 0;
 	}
+
 	else if (fat_type == 16) {
-		unsigned int cluster_size = bootsect.bytes_per_sector * bootsect.sectors_per_cluster;
+		unsigned int cluster_size = bytes_per_sector * sectors_per_cluster;
 		unsigned char FAT_table[32 * 1024]; //Takes into consideration the largest standard cluster size (32kB) since arrays can't be dynamically allocated without "new" :/
 		unsigned int fat_offset = clusterNum * 2;
 		unsigned int fat_sector = first_fat_sector + (fat_offset / cluster_size);
 		unsigned int ent_offset = fat_offset % cluster_size;
 
 		//at this point you need to read from sector "fat_sector" on the disk into "FAT_table".
-        char* sector_data = ATA_read_sector(fat_sector);
+        char* sector_data = ATA_read_sector(fat_sector, 1);
 		if (sector_data == NULL) {
 			printf("Function FATWrite: Could not read sector that contains FAT16 table entry needed.\n");
 			return -1;
 		}
 
-		memcpy(&FAT_table, sector_data, bootsect.bytes_per_sector);
+		memcpy(&FAT_table, sector_data, bytes_per_sector);
         free(sector_data);
 
 		//copy clusterVal into FAT_table
 		*(unsigned short*)&FAT_table[ent_offset] = (unsigned short)clusterVal;
 
 		//send modified FAT_table back to disk
-		memcpy((char*)DISK_WRITE_LOCATION, &FAT_table, bootsect.bytes_per_sector);
-		if (ATA_write_sector(fat_sector, (char*)(DISK_WRITE_LOCATION + bootsect.bytes_per_sector)) != 1) {
+		memcpy((char*)DISK_WRITE_LOCATION, &FAT_table, bytes_per_sector);
+		if (ATA_write_sector(fat_sector, 1, (char*)(DISK_WRITE_LOCATION + bytes_per_sector)) != 1) {
 			printf("Function FATWrite: Could not write new FAT16 cluster number to sector.\n");
 			return -1;
 		}
 
 		return 0;
 	}
+
 	else {
 		printf("Function FATWrite: Invalid fat_type value. The value was: %i\n", fat_type);
 		return -1;
@@ -181,19 +202,19 @@ unsigned int allocateFreeFAT() {
 
 	//Associate the generic variables with the appropriate values depending on FAT type.
 	if (fat_type == 32) {
-		free_cluster = FREE_CLUSTER_32;
-		bad_cluster = BAD_CLUSTER_32;
-		end_cluster = END_CLUSTER_32;
+		free_cluster    = FREE_CLUSTER_32;
+		bad_cluster     = BAD_CLUSTER_32;
+		end_cluster     = END_CLUSTER_32;
 	}
 	else if (fat_type == 16) {
-		free_cluster = FREE_CLUSTER_16;
-		bad_cluster = BAD_CLUSTER_16;
-		end_cluster = END_CLUSTER_16;
+		free_cluster    = FREE_CLUSTER_16;
+		bad_cluster     = BAD_CLUSTER_16;
+		end_cluster     = END_CLUSTER_16;
 	}
 	else if (fat_type == 12) {
-		free_cluster = FREE_CLUSTER_12;
-		bad_cluster = BAD_CLUSTER_12;
-		end_cluster = END_CLUSTER_12;
+		free_cluster    = FREE_CLUSTER_12;
+		bad_cluster     = BAD_CLUSTER_12;
+		end_cluster     = END_CLUSTER_12;
 	}
 	else {
 		printf("Function allocateFreeFAT: fat_type is not valid!\n");
@@ -235,8 +256,8 @@ char* clusterRead(unsigned int clusterNum, unsigned int clusterOffset) {
 		return NULL;
 	}
 
-	unsigned int start_sect = (clusterNum - 2) * (unsigned short)bootsect.sectors_per_cluster + first_data_sector;
-    char* cluster_data = ATA_read_sector(start_sect);
+	unsigned int start_sect = (clusterNum - 2) * (unsigned short)sectors_per_cluster + first_data_sector;
+    char* cluster_data = ATA_read_sector(start_sect, 1);
     if (cluster_data == NULL) {
         printf("Function clusterRead: An error occurred with ATA_read_sector\n");
         return NULL;
@@ -249,31 +270,26 @@ char* clusterRead(unsigned int clusterNum, unsigned int clusterOffset) {
 //contentSize: contains how big contentsToWrite's data is (in bytes)
 //contentBuffOffset: sets how far offset from DISK_WRITE_LOCATION to place the data from contentsToWrite in preparation for writing to disk (in clusters)
 //clusterNum: Specifies the on-disk cluster to write the data to
-int clusterWrite(void* contentsToWrite, unsigned int contentSize, unsigned int contentBuffOffset, unsigned int clusterNum)
-{
-	if (clusterNum < 2 || clusterNum >= total_clusters)
-	{
+int clusterWrite(void* contentsToWrite, unsigned int contentSize, unsigned int contentBuffOffset, unsigned int clusterNum) {
+	if (clusterNum < 2 || clusterNum >= total_clusters) {
 		printf("Function clusterWrite: Invalid cluster number!\n");
 		return -1;
 	}
 
 	//not sure how to error-check contnetBuffOffset, leave it to int13h_write_o to error check for me.
 
-	unsigned int byteOffset = contentBuffOffset * (unsigned short)bootsect.sectors_per_cluster * (unsigned short)bootsect.bytes_per_sector; //converts cluster memory offset into bytes
+	unsigned int byteOffset = contentBuffOffset * (unsigned short)sectors_per_cluster * (unsigned short)bytes_per_sector; //converts cluster memory offset into bytes
 
 	//copy contents to be written to disk to the memory write location
 	memcpy((char*)DISK_WRITE_LOCATION + byteOffset, contentsToWrite, contentSize);
 
-	unsigned int start_sect = (clusterNum - 2) * (unsigned short)bootsect.sectors_per_cluster + first_data_sector; //Explanation: Since the root cluster is cluster 2, but data starts at first_data_sector, subtract 2 to get the proper cluster offset from zero.
+	unsigned int start_sect = (clusterNum - 2) * (unsigned short)sectors_per_cluster + first_data_sector; //Explanation: Since the root cluster is cluster 2, but data starts at first_data_sector, subtract 2 to get the proper cluster offset from zero.
 
-    if (ATA_write_sector(start_sect, byteOffset) == -1) {
+    if (ATA_write_sector(start_sect, contentSize, contentsToWrite) == -1) {
         printf("Function clusterWrite: An error occurred with ATA_write_sector, the area in sector ");
-        printf(" through to sector ");
-        printf(" are now in an unknown state.\n");
         return -1;
     }
-	else
-		return 0;
+	else return 0;
 }
 
 //. and .. entries not supported yet!
@@ -313,25 +329,16 @@ int directoryList(const unsigned int cluster, unsigned char attributesToAdd, BOO
 			break;
 		}
 		else if (strncmp(file_metadata->file_name, "..", 2) == 0 || strncmp(file_metadata->file_name, ".", 1) == 0) {
-			if (file_metadata->file_name[1] == '.')
-				printf("..");
-			else
-				printf(".");
+			if (file_metadata->file_name[1] == '.') printf("..");
+			else printf(".");
 
-			printf("\t");
-			printf("\t");
-			printf("\t");
-			printf("DIR");
-
-			printf("\n");
+			printf("\t\t\tDIR\n");
 
 			file_metadata++;
 			meta_pointer_iterator_count++;
 		}
-		else if (((file_metadata->file_name)[0] == ENTRY_FREE) || ((file_metadata->attributes & FILE_LONG_NAME) == FILE_LONG_NAME) || ((file_metadata->attributes & attributes_to_hide) != 0)) //if the entry is a free entry, a long name, or it contains an attribute not wanted
-		{	
-			if (meta_pointer_iterator_count < bootsect.bytes_per_sector * bootsect.sectors_per_cluster / sizeof(directory_entry_t) - 1) //if the pointer hasn't iterated outside of what that cluster can hold (the 1 is to prevent the comparisons from the line above from reading past the cluster boundary)
-			{
+		else if (((file_metadata->file_name)[0] == ENTRY_FREE) || ((file_metadata->attributes & FILE_LONG_NAME) == FILE_LONG_NAME) || ((file_metadata->attributes & attributes_to_hide) != 0)) {	
+			if (meta_pointer_iterator_count < bytes_per_sector * sectors_per_cluster / sizeof(directory_entry_t) - 1) {
 				file_metadata++;
 				meta_pointer_iterator_count++;
 			}
@@ -350,22 +357,18 @@ int directoryList(const unsigned int cluster, unsigned char attributesToAdd, BOO
 					return directoryList(next_cluster, attributesToAdd, exclusive); //search next cluster
 			}
 		}
-		else
-		{
+		else {
 			char conversion [13];
 			convertFromFATFormat((char*)file_metadata->file_name, conversion);
 			printf(conversion);
 			printf("\t");
-			if ((file_metadata->attributes & FILE_DIRECTORY) != FILE_DIRECTORY)
-				printf("%u", file_metadata->file_size);
-			else
-				printf("\t");
-			printf("\t");
-			if ((file_metadata->attributes & FILE_DIRECTORY) == FILE_DIRECTORY)
-			{
-				printf("DIR");
-			}
 
+			if ((file_metadata->attributes & FILE_DIRECTORY) != FILE_DIRECTORY) printf("%u", file_metadata->file_size);
+			else printf("\t");
+
+			printf("\t");
+			if ((file_metadata->attributes & FILE_DIRECTORY) == FILE_DIRECTORY) printf("DIR");
+			
 			printf("\n");
 
 			file_metadata++;
@@ -411,7 +414,7 @@ int directorySearch(const char* filepart, const unsigned int cluster, directory_
 			break;
 		else if (strncmp((char*)file_metadata->file_name, searchName, 11) != 0) //if the file doesn't match 
 		{
-			if (meta_pointer_iterator_count < bootsect.bytes_per_sector * bootsect.sectors_per_cluster / sizeof(directory_entry_t) - 1) //if the pointer hasn't iterated outside of what that cluster can hold (the 1 is to prevent strncmp from the line above from reading past the cluster boundary)
+			if (meta_pointer_iterator_count < bytes_per_sector * sectors_per_cluster / sizeof(directory_entry_t) - 1) //if the pointer hasn't iterated outside of what that cluster can hold (the 1 is to prevent strncmp from the line above from reading past the cluster boundary)
 			{
 				file_metadata++;
 				meta_pointer_iterator_count++;
@@ -472,7 +475,7 @@ int directoryAdd(const unsigned int cluster, directory_entry_t* file_to_add) {
 	while (1) {
 		if (file_metadata->file_name[0] != ENTRY_FREE && file_metadata->file_name[0] != ENTRY_END) //if the file directory slot isn't free
 		{
-			if (meta_pointer_iterator_count < bootsect.bytes_per_sector * bootsect.sectors_per_cluster / sizeof(directory_entry_t) - 1) //if the pointer hasn't iterated outside of what that cluster can hold (the 1 is to prevent strncmp from the line above from reading past the cluster boundary)
+			if (meta_pointer_iterator_count < bytes_per_sector * sectors_per_cluster / sizeof(directory_entry_t) - 1) //if the pointer hasn't iterated outside of what that cluster can hold (the 1 is to prevent strncmp from the line above from reading past the cluster boundary)
 			{
 				file_metadata++;
 				meta_pointer_iterator_count++;
@@ -550,7 +553,7 @@ int directoryAdd(const unsigned int cluster, directory_entry_t* file_to_add) {
 			//copy data to empty location
 			memcpy(file_metadata, file_to_add, sizeof(directory_entry_t));
 
-			if (clusterWrite((void *)DISK_WRITE_LOCATION, bootsect.bytes_per_sector * bootsect.sectors_per_cluster, 0, cluster) != 0)
+			if (clusterWrite((void *)DISK_WRITE_LOCATION, bytes_per_sector * sectors_per_cluster, 0, cluster) != 0)
 			{
 				printf("Function directoryAdd: Writing new directory entry failed. Aborting...\n");
 				return -1;
@@ -575,7 +578,7 @@ int getFile(const char* filePath, char** fileContents, directory_entry_t* fileMe
 	unsigned short start = 3; //starting at 3 to skip the "C:\" bit
 	unsigned int active_cluster;
 	if (fat_type == 32)
-		active_cluster = ((fat_extBS_32_t*)bootsect.extended_section)->root_cluster; //holds the cluster to be searched for directory entries related to the path
+		active_cluster = ext_root_cluster; //holds the cluster to be searched for directory entries related to the path
 	else {
 		printf("Function getFile: FAT16 and FAT12 are not supported!\n");
 		return -1;
@@ -610,7 +613,7 @@ int getFile(const char* filePath, char** fileContents, directory_entry_t* fileMe
 	*fileMeta = file_info; //copy fileinfo over
 
 	if ((file_info.attributes & FILE_DIRECTORY) != FILE_DIRECTORY) {
-		if (readInOffset < 1 || (readInOffset * (unsigned short)bootsect.bytes_per_sector * (unsigned short)bootsect.sectors_per_cluster) + file_info.file_size > 262144) //prevent offsets that extend into FATRead's working range or outside the allocated BIOS int13h space
+		if (readInOffset < 1 || (readInOffset * (unsigned short)bytes_per_sector * (unsigned short)sectors_per_cluster) + file_info.file_size > 262144) //prevent offsets that extend into FATRead's working range or outside the allocated BIOS int13h space
 			return -3; //you cannot have an offset below 1, nor can you read in more than 256kB
 
 		int cluster = GET_CLUSTER_FROM_ENTRY(file_info); //initialize file read-in with first cluster of file
@@ -655,7 +658,6 @@ int getFile(const char* filePath, char** fileContents, directory_entry_t* fileMe
 int putFile(const char* filePath, char** fileContents, directory_entry_t* fileMeta) {
 	if (testIfFATFormat(fileMeta->file_name) != 0) {
 		printf(fileMeta->file_name);
-		printf("\n");
 		printf("\nFunction putFile: Invalid file name!\n");
 		return -2;
 	}
@@ -665,7 +667,7 @@ int putFile(const char* filePath, char** fileContents, directory_entry_t* fileMe
 	unsigned short start = 3; //starting at 3 to skip the "C:\" bit
 	unsigned int active_cluster; //holds the cluster to be searched for directory entries related to the path
 	if (fat_type == 32)
-		active_cluster = ((fat_extBS_32_t*)bootsect.extended_section)->root_cluster;
+		active_cluster = ext_root_cluster;
 	else {
 		printf("Function putFile: FAT16 and FAT12 are not supported!\n");
 		return -1;
@@ -677,7 +679,7 @@ int putFile(const char* filePath, char** fileContents, directory_entry_t* fileMe
 	unsigned int iterator = 3;
 	if (strcmp(filePath, "C:\\") == 0) {
 		if (fat_type == 32) {
-			active_cluster = ((fat_extBS_32_t*)bootsect.extended_section)->root_cluster;
+			active_cluster = ext_root_cluster;
 			file_info.attributes = FILE_DIRECTORY | FILE_VOLUME_ID;
 			file_info.file_size = 0;
 			file_info.high_bits = GET_ENTRY_HIGH_BITS(active_cluster);
@@ -758,8 +760,8 @@ int putFile(const char* filePath, char** fileContents, directory_entry_t* fileMe
 			// d_printhex(dataLeftToWrite, 8);
 			printf("\n");
 			unsigned int dataWrite = 0;
-			if (dataLeftToWrite >= bootsect.bytes_per_sector * bootsect.sectors_per_cluster)
-				dataWrite = bootsect.bytes_per_sector * bootsect.sectors_per_cluster + 1;
+			if (dataLeftToWrite >= bytes_per_sector * sectors_per_cluster)
+				dataWrite = bytes_per_sector * sectors_per_cluster + 1;
 			else
 				dataWrite = dataLeftToWrite;
 
@@ -900,8 +902,7 @@ char* convertToFATFormat(char* input) {
 //Return Codes:
 // -1: bad characters
 // -2: Lowercase
-BOOL testIfFATFormat(char * input)
-{
+BOOL testIfFATFormat(char * input) {
 	short retVal = 0;
 
 	//Invalid Values:
@@ -909,40 +910,37 @@ BOOL testIfFATFormat(char * input)
 		 0x22, 0x2A, 0x2B, 0x2C, 0x2E, 0x2F, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, 0x5B, 0x5C, 0x5D,
 		and 0x7C.*/
 	unsigned short iterator;
-	for (iterator = 0; iterator < 11; iterator++)
-	{
-		if (input[iterator] < 0x20 && input[iterator] != 0x05)
-			{
-				retVal = retVal | BAD_CHARACTER;
-			}
+	for (iterator = 0; iterator < 11; iterator++) {
+		if (input[iterator] < 0x20 && input[iterator] != 0x05) {
+            retVal = retVal | BAD_CHARACTER;
+        }
 		
-		switch (input[iterator])
-		{
-		case 0x2E:
-		{
-			if ((retVal & NOT_CONVERTED_YET) == NOT_CONVERTED_YET) //a previous dot has already triggered this case
-				retVal |= TOO_MANY_DOTS;
+		switch (input[iterator]) {
+            case 0x2E: {
+                if ((retVal & NOT_CONVERTED_YET) == NOT_CONVERTED_YET) //a previous dot has already triggered this case
+                    retVal |= TOO_MANY_DOTS;
 
-			retVal ^= NOT_CONVERTED_YET; //remove NOT_CONVERTED_YET flag if already set
+                retVal ^= NOT_CONVERTED_YET; //remove NOT_CONVERTED_YET flag if already set
 
-			break;
-		}
-		case 0x22:
-		case 0x2A:
-		case 0x2B:
-		case 0x2C:
-		case 0x2F:
-		case 0x3A:
-		case 0x3B:
-		case 0x3C:
-		case 0x3D:
-		case 0x3E:
-		case 0x3F:
-		case 0x5B:
-		case 0x5C:
-		case 0x5D:
-		case 0x7C:
-			retVal = retVal | BAD_CHARACTER;
+                break;
+            }
+
+            case 0x22:
+            case 0x2A:
+            case 0x2B:
+            case 0x2C:
+            case 0x2F:
+            case 0x3A:
+            case 0x3B:
+            case 0x3C:
+            case 0x3D:
+            case 0x3E:
+            case 0x3F:
+            case 0x5B:
+            case 0x5C:
+            case 0x5D:
+            case 0x7C:
+                retVal = retVal | BAD_CHARACTER;
 		}
 
 		if (input[iterator] >= 'a' && input[iterator] <= 'z')
@@ -951,21 +949,13 @@ BOOL testIfFATFormat(char * input)
 			}
 	}
 
-	//if (input[11] != '\0')
-		//retVal = retVal | BAD_TERMINATION;
-
 	return retVal;
 }
 
 //Converts the file name stored in a FAT directory entry into a more human-sensible format
-void convertFromFATFormat(char* input, char* output)
-{
-
-	//If the entry passed in is one of the dot special entries, just return them unchanged.
-	if (input[0] == '.')
-	{
-		if (input[1] == '.')
-		{
+void convertFromFATFormat(char* input, char* output) {
+	if (input[0] == '.') {
+		if (input[1] == '.') {
 			strcpy (output, "..");
 			return;
 		}
@@ -975,12 +965,8 @@ void convertFromFATFormat(char* input, char* output)
 	}
 
 	unsigned short counter = 0;
-
-	//iterate through the 8 letter file name, adding a dot when the end is reached
-	for ( counter = 0; counter < 8; counter++)
-	{
-		if (input[counter] == 0x20)
-		{
+	for ( counter = 0; counter < 8; counter++) {
+		if (input[counter] == 0x20) {
 			output[counter] = '.';
 			break;
 		}
@@ -988,30 +974,23 @@ void convertFromFATFormat(char* input, char* output)
 		output[counter] = input[counter];
 	}
 
-	//if the entire 8 letters of the file name were used, tack a dot onto the end
-	if (counter == 8)
-	{
+	if (counter == 8) 
 		output[counter] = '.';
-	}
 
 	unsigned short counter2 = 8;
-
-	//iterate through the three-letter extension, adding it on. (Note: if the input is a directory (which has no extension) it erases the dot put in previously)
-	for (counter2 = 8; counter2 < 11; counter2++)
-	{
+	for (counter2 = 8; counter2 < 11; counter2++) {
 		++counter;
-		if (input[counter2] == 0x20 || input[counter2] == 0x20)
-		{
-			if (counter2 == 8) //there is no extension, the dot added earlier must be removed
-				counter -= 2; //it's minus two because the for loop above iterates the loop as well
+		if (input[counter2] == 0x20 || input[counter2] == 0x20) {
+			if (counter2 == 8)
+				counter -= 2;
+
 			break;
 		}
 		output[counter] = input[counter2];		
 	}
 
 	++counter;
-	while (counter < 12)
-	{
+	while (counter < 12) {
 		output[counter] = ' ';
 		++counter;
 	}
@@ -1019,21 +998,3 @@ void convertFromFATFormat(char* input, char* output)
 	output[12] = '\0'; //ensures proper termination regardless of program operation previously
 	return;
 }
-
-// // print a number in hexadecimal format
-// void d_printhex( unsigned long num, int digits ) {
-
-//    int i, buf;
-
-//    for ( i = 0; i < digits; i++ ) {
-   
-//       buf = ( num >> ( ( digits - i - 1 ) * 4 ) ) & 0xF;
-//       if ( buf < 10 )
-//          buf += '0';
-//       else
-//          buf += 'A' - 10;
-//       drawtext( buf );
-   
-//    }
-   
-// }

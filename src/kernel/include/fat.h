@@ -5,44 +5,46 @@
 #include "ata.h"
 #include "memory.h"
 
-#define END_CLUSTER_32 0x0FFFFFF8
-#define BAD_CLUSTER_32 0x0FFFFFF7
-#define FREE_CLUSTER_32 0x00000000
-#define END_CLUSTER_16 0xFFF8
-#define BAD_CLUSTER_16 0xFFF7
-#define FREE_CLUSTER_16 0x0000
-#define END_CLUSTER_12 0xFF8
-#define BAD_CLUSTER_12 0xFF7
-#define FREE_CLUSTER_12 0x000
+#define END_CLUSTER_32      0x0FFFFFF8
+#define BAD_CLUSTER_32      0x0FFFFFF7
+#define FREE_CLUSTER_32     0x00000000
+#define END_CLUSTER_16      0xFFF8
+#define BAD_CLUSTER_16      0xFFF7
+#define FREE_CLUSTER_16     0x0000
+#define END_CLUSTER_12      0xFF8
+#define BAD_CLUSTER_12      0xFF7
+#define FREE_CLUSTER_12     0x000
 
 #define CLEAN_EXIT_BMASK_16 0x8000
-#define HARD_ERR_BMASK_16 0x4000
+#define HARD_ERR_BMASK_16   0x4000
 #define CLEAN_EXIT_BMASK_32 0x08000000
-#define HARD_ERR_BMASK_32 0x04000000
+#define HARD_ERR_BMASK_32   0x04000000
 
-#define FILE_READ_ONLY 0x01
-#define FILE_HIDDEN 0x02
-#define FILE_SYSTEM 0x04
-#define FILE_VOLUME_ID 0x08
-#define FILE_DIRECTORY 0x10
-#define FILE_ARCHIVE 0x20
+#define FILE_READ_ONLY      0x01
+#define FILE_HIDDEN         0x02
+#define FILE_SYSTEM         0x04
+#define FILE_VOLUME_ID      0x08
+#define FILE_DIRECTORY      0x10
+#define FILE_ARCHIVE        0x20
+
 #define FILE_LONG_NAME (FILE_READ_ONLY|FILE_HIDDEN|FILE_SYSTEM|FILE_VOLUME_ID)
 #define FILE_LONG_NAME_MASK (FILE_READ_ONLY|FILE_HIDDEN|FILE_SYSTEM|FILE_VOLUME_ID|FILE_DIRECTORY|FILE_ARCHIVE)
-#define FILE_LAST_LONG_ENTRY 0x40
-#define ENTRY_FREE 0xE5
-#define ENTRY_END 0x00
-#define ENTRY_JAPAN 0x05
-#define LAST_LONG_ENTRY 0x40
 
-#define LOWERCASE_ISSUE	0x01 //E.g.: "test    txt"
-#define BAD_CHARACTER	0x02 //E.g.: "tes&t   txt"
-#define BAD_TERMINATION 0x04 //missing null character at the end
-#define NOT_CONVERTED_YET 0x08 //still contains a dot: E.g."test.txt"
-#define TOO_MANY_DOTS 0x10 //E.g.: "test..txt"; may or may not have already been converted
+#define FILE_LAST_LONG_ENTRY    0x40
+#define ENTRY_FREE              0xE5
+#define ENTRY_END               0x00
+#define ENTRY_JAPAN             0x05
+#define LAST_LONG_ENTRY         0x40
 
-#define GET_CLUSTER_FROM_ENTRY(x) (x.low_bits | (x.high_bits << (fat_type / 2)))
-#define GET_ENTRY_LOW_BITS(x) (x & ((fat_type /2) -1))
-#define GET_ENTRY_HIGH_BITS(x) (x >> (fat_type / 2))
+#define LOWERCASE_ISSUE	        0x01 //E.g.: "test    txt"
+#define BAD_CHARACTER	        0x02 //E.g.: "tes&t   txt"
+#define BAD_TERMINATION         0x04 //missing null character at the end
+#define NOT_CONVERTED_YET       0x08 //still contains a dot: E.g."test.txt"
+#define TOO_MANY_DOTS           0x10 //E.g.: "test..txt"; may or may not have already been converted
+
+#define GET_CLUSTER_FROM_ENTRY(x)       (x.low_bits | (x.high_bits << (fat_type / 2)))
+#define GET_ENTRY_LOW_BITS(x)           (x & ((fat_type /2) -1))
+#define GET_ENTRY_HIGH_BITS(x)          (x >> (fat_type / 2))
 #define CONCAT_ENTRY_HL_BITS(high, low) ((high << (fat_type / 2)) | low)
 
 #ifndef NULL
@@ -70,7 +72,6 @@
 
 
 typedef struct fat_extBS_32 {
-	//extended fat32 stuff
 	unsigned int		table_size_32;
 	unsigned short		extended_flags;
 	unsigned short		fat_version;
@@ -95,8 +96,7 @@ typedef struct fat_extBS_16 {
 	unsigned char		volume_label[11];
 	unsigned char		fat_type_label[8];
 
-}
-__attribute__((packed)) fat_extBS_16_t;
+} __attribute__((packed)) fat_extBS_16_t;
 
 typedef struct fat_BS {
 	unsigned char 		bootjmp[3];
@@ -116,8 +116,7 @@ typedef struct fat_BS {
 
 	unsigned char		extended_section[54];
 
-}
-__attribute__((packed)) fat_BS_t;
+} __attribute__((packed)) fat_BS_t;
 
 /* from http://wiki.osdev.org/FAT */
 
@@ -134,8 +133,7 @@ typedef struct directory_entry {
 	unsigned short last_modification_date;
 	unsigned short low_bits;
 	unsigned int file_size;
-}
-__attribute__((packed)) directory_entry_t;
+} __attribute__((packed)) directory_entry_t;
 
 typedef struct fsInfo {
 	unsigned int lead_signature; //should contain 0x41615252
@@ -145,8 +143,7 @@ typedef struct fsInfo {
 	unsigned int last_written; //contains last-written cluster number to help FAT drivers find a free cluster. 0xFFFFFFFF indicates that cluster number is unknown.
 	unsigned char reserved2[12];
 	unsigned int trail_signature; //should contain 0xAA550000
-}
-__attribute__((packed)) FSInfo_t;
+} __attribute__((packed)) FSInfo_t;
 
 typedef struct long_entry {
 	unsigned char order;
@@ -157,8 +154,7 @@ typedef struct long_entry {
 	unsigned char next_six[12]; //next 6, 2-byte characters
 	unsigned short zero; //must be zero - otherwise meaningless
 	unsigned char last_two[4]; //last 2, 2-byte characters
-}
-__attribute__((packed)) long_entry_t;
+} __attribute__((packed)) long_entry_t;
 
 //Global variables
 extern unsigned int fat_type;

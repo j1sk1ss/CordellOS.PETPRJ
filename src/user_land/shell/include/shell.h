@@ -2,6 +2,7 @@
 #include "../../../kernel/include/string.h"
 #include "../../../kernel/include/date_time.h"
 #include "../../../kernel/include/file_system.h"
+#include "../../../kernel/include/fat.h"
 #include "../../../kernel/include/ata.h"
 #include "../../../kernel/include/asm_compiler.h"
 #include "../../../kernel/include/keyboard.h"
@@ -28,6 +29,7 @@
 
         #define COMMAND_HELP                            "aiuto"
         #define COMMAND_VERSION                         "ver"
+        #define COMMAND_DISK_DATA                       "disk-data"
         #define COMMAND_CLEAR                           "clear" 
         #define COMMAND_TIME                            "date"
         #define COMMAND_ECHO                            "eco"

@@ -16,13 +16,14 @@ struct Directory* currentDirectory  = NULL;
 //
 
 void init_directory() {
-    char* loaded_data = ATA_read_sector(FILE_SYSTEM_SECTOR);
+    // printf("[%i]", ATA_find_empty_sector(FILE_SYSTEM_SECTOR));
+    char* loaded_data = ATA_read_sector(FILE_SYSTEM_SECTOR, 1);
     if (loaded_data != NULL) 
         if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
             char* token = strtok(loaded_data, " ");
             char* file_system_data = NULL;
             while(token != NULL) {
-                char* sector_data = ATA_read_sector(atoi(token));
+                char* sector_data = ATA_read_sector(atoi(token), 1);
                 file_system_data = (char*)realloc(file_system_data, strlen(sector_data) * sizeof(char));
                 strcat(file_system_data, sector_data);
 
@@ -108,7 +109,7 @@ void init_directory() {
         newFile->sector_count++;
 
         newFile->sectors[0] = head_sector;
-        ATA_write_sector(head_sector, "\0");
+        ATA_write_sector(head_sector, 1, "\0");
 
         if (currentDirectory->files == NULL)
             currentDirectory->files = newFile;
@@ -145,7 +146,7 @@ void init_directory() {
 
                 // Copy the data into the sector's data buffer
                 strncpy(sector_data, data, bytes_to_write);
-                ATA_write_sector(file->sectors[i], sector_data);
+                ATA_write_sector(file->sectors[i], 1, sector_data);
 
                 data += bytes_to_write; // Move the data pointer to the next chunk
                 data_len -= bytes_to_write;
@@ -186,7 +187,7 @@ void init_directory() {
             char* data = (char*)malloc(512 * file->sector_count);
 
             for (size_t i = 0; i < file->sector_count; i++) {
-                char* sector_data = ATA_read_sector(file->sectors[i]);
+                char* sector_data = ATA_read_sector(file->sectors[i], 1);
                 strcat(data, sector_data);
                 free(sector_data);
             }
@@ -203,7 +204,7 @@ void init_directory() {
             memset(empty_data, 0, sizeof(empty_data));
 
             for (size_t i = 0; i < file->sector_count; i++) 
-                ATA_write_sector(file->sectors[i], empty_data);
+                ATA_write_sector(file->sectors[i], 1, empty_data);
         }
 
     //  CLEAR FILE
@@ -371,7 +372,7 @@ void init_directory() {
 
     void save_file_system() {
         if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
-            char* sector_data = ATA_read_sector(FILE_SYSTEM_SECTOR);
+            char* sector_data = ATA_read_sector(FILE_SYSTEM_SECTOR, 1);
             char* token = strtok(sector_data, " ");
             while(token != NULL) {
                 ATA_clear_sector(atoi(token));
@@ -392,7 +393,7 @@ void init_directory() {
 
             // Write the modified sector data back to the sector
             int sector = ATA_find_empty_sector(SYS_FILES_SECTOR_OFFSET);
-            ATA_write_sector(sector, result);
+            ATA_write_sector(sector, 1, result);
             ATA_append_sector(FILE_SYSTEM_SECTOR, itoa(sector));
             ATA_append_sector(FILE_SYSTEM_SECTOR, " ");
 

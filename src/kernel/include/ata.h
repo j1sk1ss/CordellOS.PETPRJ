@@ -8,7 +8,7 @@
 
 #define BOOT_SECTOR                 0
 #define SECTOR_SIZE                 512
-#define SECTOR_COUNT                15000
+#define SECTOR_COUNT                40000
 
 #define DATA_REGISTER               0x1F0
 #define FEATURES_REGISTER           0x1F1
@@ -30,10 +30,13 @@
 bool ATA_is_sector_empty(const uint8_t* sector_data);
 bool ATA_is_current_sector_empty(uint32_t LBA);
 
-char* ATA_read_sector(uint32_t LBA);
-int ATA_write_sector(uint32_t lba, const uint8_t* buffer);
+char* ATA_read_sector(uint32_t lba, uint8_t sector_count);
+int ATA_write_sector(uint32_t lba, uint8_t sector_count, const uint8_t* buffer);
 
 void ATA_append_sector(uint32_t lba, char* append_data);
 void ATA_clear_sector(uint32_t LBA);
 
 uint32_t ATA_find_empty_sector(uint32_t offset);
+
+int ATA_global_sector_count();
+int ATA_global_sector_empty();

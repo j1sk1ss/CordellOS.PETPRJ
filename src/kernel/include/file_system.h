@@ -10,15 +10,15 @@
 #include "stdio.h"
 
 
-#define GRUB_OFFSET                 10000
+#define GRUB_OFFSET                 12000
 
-#define FILE_SYSTEM_SECTOR          346 + GRUB_OFFSET
-#define USERS_SECTOR                347 + GRUB_OFFSET
-#define GROUPS_SECTOR               348 + GRUB_OFFSET
-#define SHELL_SECTOR                349 + GRUB_OFFSET
+#define FILE_SYSTEM_SECTOR          349 + GRUB_OFFSET
+#define USERS_SECTOR                350 + GRUB_OFFSET
+#define GROUPS_SECTOR               351 + GRUB_OFFSET
+#define SHELL_SECTOR                352 + GRUB_OFFSET
 
 #define FILES_SECTOR_OFFSET         450 + GRUB_OFFSET
-#define SYS_FILES_SECTOR_OFFSET     350 + GRUB_OFFSET
+#define SYS_FILES_SECTOR_OFFSET     360 + GRUB_OFFSET
 
 
 struct File {
