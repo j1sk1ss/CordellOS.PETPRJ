@@ -34,7 +34,7 @@ char* ATA_read_sector(uint32_t lba, uint8_t sector_count);
 int ATA_write_sector(uint32_t lba, uint8_t sector_count, const uint8_t* buffer);
 
 void ATA_append_sector(uint32_t lba, char* append_data);
-void ATA_clear_sector(uint32_t LBA);
+int ATA_clear_sector(uint32_t LBA);
 
 uint32_t ATA_find_empty_sector(uint32_t offset);
 

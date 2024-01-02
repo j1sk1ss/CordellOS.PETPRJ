@@ -12,18 +12,17 @@ struct User* user = NULL;
 
 void shell() {
     shell_start_screen();
-    init_directory(); 
     init_users();
-
+    
     /////////////
     //  SHELL CORDELL PASSWORD
     //
 
-        if (file_exist("shell") != 1) {
-            create_file(0, 0, 0, "shell", "txt", ATA_find_empty_sector(SHELL_SECTOR));
-            currentPassword = find_file("shell");
-            write_file(currentPassword, "12345");
-        } else currentPassword = find_file("shell");
+        if (FS_file_exist("/shell", NULL) != 1) {
+            FS_create_file(0, 0, 0, "/shell", "txt", ATA_find_empty_sector(SHELL_SECTOR), NULL);
+            currentPassword = FS_find_file("/shell", NULL);
+            FS_write_file(currentPassword, "12345");
+        } else currentPassword = FS_find_file("/shell", NULL);
 
     //
     //  SHELL CORDELL PASSWORD
@@ -69,7 +68,7 @@ void shell() {
     ////////////////////////////////////////////////////
 
     while (1) {
-        char* path = get_full_temp_name();
+        char* path = FS_get_full_temp_name();
         cprintf(FOREGROUND_GREEN, "\r\n[%s: CORDELL OS]", user->name);
         printf(" $%s> ", path);
 
@@ -94,7 +93,7 @@ void shell_start_screen() {
     cprintf(FOREGROUND_LIGHT_GREEN, " Y8b  d8 `8b  d8' 88 `88. 88  .8D 88.     88booo. 88booo.   `8b  d8' db   8D \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, "  `Y88P'  `Y88P'  88   YD Y8888D' Y88888P Y88888P Y88888P    `Y88P'  `8888Y' \r\n");
 
-    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.6a | 01.01.2024] \r\n");
+    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.6b | 02.01.2024] \r\n");
 }
 
 ///////////////////////////////////////
@@ -115,7 +114,7 @@ void shell_start_screen() {
                 char* password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
                 int tries = 0;
 
-                char* pass = read_file(currentPassword);
+                char* pass = FS_read_file(currentPassword);
                 while (strcmp(password, pass) != 0) {
                     cprintf(FOREGROUND_RED, "\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
                     free(password);
@@ -220,39 +219,40 @@ void shell_start_screen() {
         //
 
             else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0)
-                create_directory(command_line[1]);
+                FS_create_directory(command_line[1], FS_get_current_directory());
             
             else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0)                      
                 open_file_manager(user);                                             
 
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0)     
-                move_to_directory(command_line[1]);
+                FS_move_to_directory(command_line[1], FS_get_current_directory());
             
-            else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0)
-                up_from_directory();
+            else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0) 
+                FS_up_from_directory();
             
             else if (strstr(command_line[0], COMMAND_DELETE_DIR) == 0) {
-                struct Directory* directory = find_directory(command_line[1]);
+                struct Directory* directory = FS_find_directory(command_line[1], FS_get_current_directory());
                 if (directory->subDirectory != NULL || directory->files != NULL) 
-                    if (user->edit_access = 0) delete_directory(command_line[1]); 
+                    if (user->edit_access = 0) FS_delete_directory(command_line[1], FS_get_current_directory()); 
                     else printf("\r\nDirectory non vuota.\r\n");
-                else delete_directory(command_line[1]);                                              
+                else FS_delete_directory(command_line[1], FS_get_current_directory());                                              
             }
             
             else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0)                
-                create_file(atoi(command_line[1]), atoi(command_line[2]), atoi(command_line[3]), command_line[4], command_line[5], ATA_find_empty_sector(FILES_SECTOR_OFFSET));      
+                FS_create_file(atoi(command_line[1]), atoi(command_line[2]), atoi(command_line[3]), command_line[4], command_line[5], 
+                ATA_find_empty_sector(FILES_SECTOR_OFFSET), FS_get_current_directory());      
                              
             else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {    
-                struct File* file = find_file(command_line[1]);
+                struct File* file = FS_find_file(command_line[1], FS_get_current_directory());
                 if (file == NULL)
                     return;
 
-                if (file->edit_level >= user->edit_access) delete_file(command_line[1]);
+                if (file->edit_level >= user->edit_access) FS_delete_file(command_line[1], FS_get_current_directory());
                 else printf("\nYou don`t have permissions to do this.");
             }
 
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {                              
-                struct Directory* current_dir = get_current_directory()->subDirectory;
+                struct Directory* current_dir = FS_get_current_directory()->subDirectory;
                 if (current_dir != NULL) {
                     printf("\r\n\t%s", current_dir->name);
             
@@ -262,7 +262,7 @@ void shell_start_screen() {
                     }
                 }
             
-                struct File* current = get_current_directory()->files;
+                struct File* current = FS_get_current_directory()->files;
                 if (current != NULL) {
                     printf("\r\n\t%s", current->name);
             
@@ -274,11 +274,11 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_VIEW) == 0) {
-                struct File* file = find_file(command_line[1]);
+                struct File* file = FS_find_file(command_line[1], FS_get_current_directory());
                 if (file == NULL)
                     return;
                 
-                if (file->read_level >= user->read_access) printf("\r\n%s", read_file(file));
+                if (file->read_level >= user->read_access) printf("\r\n%s", FS_read_file(file));
                 else printf("\nYou don`t have permissions to do this.");
             }
 
@@ -311,22 +311,22 @@ void shell_start_screen() {
                 VGA_text_clrscr();
 
                 struct File* snake_save;
-                if (file_exist("snake-save") == 1)
-                    snake_save = find_file("snake-save");
+                if (FS_file_exist("snake-save", FS_get_main_directory()) == 1)
+                    snake_save = FS_find_file("snake-save", FS_get_main_directory());
                 else {
-                    create_file(0, 0, 0, "snake-save", "obj", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
-                    snake_save = find_file("snake-save");
-                    write_file(snake_save, "0");
+                    FS_create_file(0, 0, 0, "snake-save", "obj", ATA_find_empty_sector(FILES_SECTOR_OFFSET), FS_get_main_directory());
+                    snake_save = FS_find_file("snake-save", FS_get_main_directory());
+                    FS_write_file(snake_save, "0");
                 }
 
-                char* file_data = read_file(snake_save);
+                char* file_data = FS_read_file(snake_save);
                 int best_result = atoi(file_data);
                 free(file_data);
                 
                 int current_result = snake_init(atoi(command_line[1]), best_result);
                 if (best_result < current_result) {
                     char* result = itoa(current_result);
-                    write_file(snake_save, result);
+                    FS_write_file(snake_save, result);
 
                     free(result);
                 }
@@ -336,29 +336,29 @@ void shell_start_screen() {
                 VGA_text_clrscr();
 
                 struct File* tetris_save;
-                if (file_exist("tetris-save") == 1)
-                    tetris_save = find_file("tetris-save");
+                if (FS_file_exist("tetris-save", FS_get_main_directory()) == 1)
+                    tetris_save = FS_find_file("tetris-save", FS_get_main_directory());
                 else {
-                    create_file(0, 0, 0, "tetris-save", "obj", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
-                    tetris_save = find_file("tetris-save");
-                    write_file(tetris_save, "0");
+                    FS_create_file(0, 0, 0, "tetris-save", "obj", ATA_find_empty_sector(FILES_SECTOR_OFFSET), FS_get_main_directory());
+                    tetris_save = FS_find_file("tetris-save", FS_get_main_directory());
+                    FS_write_file(tetris_save, "0");
                 }
 
-                char* file_data = read_file(tetris_save);
+                char* file_data = FS_read_file(tetris_save);
                 int best_result = atoi(file_data);
                 free(file_data);
                 
                 int current_result = init_tetris(best_result);
                 if (best_result < current_result) {
                     char* result = itoa(current_result);
-                    write_file(tetris_save, result);
+                    FS_write_file(tetris_save, result);
 
                     free(result);
                 }
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {
-                struct File* file = find_file(command_line[1]);
+                struct File* file = FS_find_file(command_line[1], FS_get_main_directory());
                 if (file == NULL)
                     return;
                 
@@ -368,12 +368,12 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {
-                struct File* execute = find_file(command_line[1]);
+                struct File* execute = FS_find_file(command_line[1], FS_get_main_directory());
                 if (execute == NULL)
                     return;
                 
                 if (execute->edit_level >= user->edit_access) {
-                    char* sector_data = read_file(execute);
+                    char* sector_data = FS_read_file(execute);
                     char* command_for_split = (char*)malloc(strlen(sector_data));
                     strcpy(command_for_split, sector_data);
 
@@ -397,12 +397,12 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_ASM_RUN) == 0) {
-                struct File* execute = find_file(command_line[1]);
+                struct File* execute = FS_find_file(command_line[1], FS_get_main_directory());
                 if (execute == NULL)
                     return;
 
                 if (execute->edit_level >= user->edit_access) {
-                    char* sector_data = read_file(execute);
+                    char* sector_data = FS_read_file(execute);
                     asm_execute(sector_data, user);
 
                     free(sector_data);

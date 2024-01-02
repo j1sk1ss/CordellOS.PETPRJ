@@ -12,13 +12,13 @@
 
 #define GRUB_OFFSET                 12000
 
-#define FILE_SYSTEM_SECTOR          349 + GRUB_OFFSET
-#define USERS_SECTOR                350 + GRUB_OFFSET
-#define GROUPS_SECTOR               351 + GRUB_OFFSET
-#define SHELL_SECTOR                352 + GRUB_OFFSET
+#define FILE_SYSTEM_SECTOR          350 + GRUB_OFFSET
+#define USERS_SECTOR                351 + GRUB_OFFSET
+#define GROUPS_SECTOR               352 + GRUB_OFFSET
+#define SHELL_SECTOR                355 + GRUB_OFFSET
 
 #define FILES_SECTOR_OFFSET         450 + GRUB_OFFSET
-#define SYS_FILES_SECTOR_OFFSET     360 + GRUB_OFFSET
+#define SYS_FILES_SECTOR_OFFSET     354 + GRUB_OFFSET
 
 
 struct File {
@@ -46,30 +46,33 @@ struct Directory  {
     struct Directory* upDirectory;
 };
 
-struct Directory* get_current_directory();
+struct Directory* FS_get_current_directory();
 
-char* get_full_temp_name();
+char* FS_get_full_temp_name();
 
-void init_directory();
-void create_directory(char* name);
-void create_file(int read, int write, int edit, char* name, char* extension, uint8_t* head_sector);
-void delete_directory(char* name);
-void delete_file(char* name);
+void FS_init();
 
-void write_file(struct File* file, char* data);
-char* read_file(struct File* file);
-void clear_file(struct File* file);
-int file_exist(char* name);
+void FS_create_directory(char* name, struct Directory** directory);
+void FS_create_file(int read, int write, int edit, char* name, char* extension, uint8_t* head_sector, struct Directory** directory);
 
-struct File* find_file(char* name);
-struct Directory* find_directory(char* name);
+void FS_delete_directory(char* name, struct Directory* directory);
+void FS_delete_file(char* name, struct Directory* directory);
 
-void move_to_directory(char* name);
-void up_from_directory();
+void FS_write_file(struct File* file, char* data);
+char* FS_read_file(struct File* file);
+void FS_clear_file(struct File* file);
 
-void set_main_directory(struct Directory* directory);
-struct Directory* get_main_directory();
+int FS_file_exist(char* name, struct Directory* directory);
 
-char* save_directory(struct Directory* directory);
-struct Directory* load_directory(const char* input, int* index);
-void save_file_system();
+struct File* FS_global_find_file(char* path);
+struct Directory* FS_global_find_directory(char* path);
+
+int FS_move_to_directory(char* name, struct Directory* directory);
+void FS_up_from_directory();
+
+void FS_set_main_directory(struct Directory* directory);
+struct Directory* FS_get_main_directory();
+
+char* FS_save_directory(struct Directory* directory);
+struct Directory* FS_load_directory(const char* input, int* index);
+void FS_save_file_system();

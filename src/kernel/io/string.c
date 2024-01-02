@@ -29,6 +29,23 @@ const char* strchr(const char* str, char chr) {
     return NULL;
 }
 
+char* strrchr(const char *s, int c) {
+	int i;
+	const char* ini;
+
+	ini = s;
+	i = strlen(s);
+	s = (s + i);
+
+	while (*s != *ini && c != *s)
+		s--;
+
+	if (c == *s)
+		return ((char *)s);
+        
+	return (0);
+}
+
 int strstr(const char* haystack, const char* needle) {
     if (*needle == '\0')    // If the needle is an empty string, return 0 (position 0).
         return 0;

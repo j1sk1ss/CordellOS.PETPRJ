@@ -15,42 +15,224 @@ struct Directory* currentDirectory  = NULL;
 //  Every file contains list of data of sectors, that contains file data
 //
 
-void init_directory() {
-    // printf("[%i]", ATA_find_empty_sector(FILE_SYSTEM_SECTOR));
-    char* loaded_data = ATA_read_sector(FILE_SYSTEM_SECTOR, 1);
-    if (loaded_data != NULL) 
-        if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
-            char* token = strtok(loaded_data, " ");
-            char* file_system_data = NULL;
-            while(token != NULL) {
-                char* sector_data = ATA_read_sector(atoi(token), 1);
-                file_system_data = (char*)realloc(file_system_data, strlen(sector_data) * sizeof(char));
-                strcat(file_system_data, sector_data);
 
-                token = strtok(NULL, " ");
-                free(sector_data);
+void FS_init() {
+
+    if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
+        FS_load_file_system();
+        return;
+    }
+
+        ////////////////////////////
+        // STATUS CHECKING
+        // - FILE_SYSTEM_SECTOR
+        // - USERS_SECTOR
+        // - GROUPS_SECTOR
+        // - SHELL_SECTOR
+
+            if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == true)
+                cprintf(FOREGROUND_GREEN, "\r\nSETTORE FILE SYSTEM [%i] E` CHIARO", FILE_SYSTEM_SECTOR);
+            else {
+                cprintf(FOREGROUND_RED, "\r\nSETTORE FILE SYSTEM [%i] NON CHIARO \n TENTATIVO DI PULIRE...", FILE_SYSTEM_SECTOR);
+                if (ATA_clear_sector(FILE_SYSTEM_SECTOR) == 1) 
+                    cprintf(FOREGROUND_GREEN, "\r\nSETTORE FILE SYSTEM [%i] E` CANCELLATO", FILE_SYSTEM_SECTOR);
+                else cprintf(FOREGROUND_RED, "\r\nSETTORE FILE SYSTEM [%i] NON DISPONIBILE PER LA PULIZIA", FILE_SYSTEM_SECTOR);
             }
 
-            int index = 0;
-            memset(index, 0, sizeof(index));
-            set_main_directory(load_directory(file_system_data, index));
 
-            free(loaded_data);
-            return;
-        }
+            if (ATA_is_current_sector_empty(USERS_SECTOR) == true)
+                cprintf(FOREGROUND_GREEN, "\r\nSETTORE UTENTI [%i] E` CHIARO", USERS_SECTOR);
+            else {
+                cprintf(FOREGROUND_RED, "\r\nSETTORE UTENTI [%i] NON CHIARO \n TENTATIVO DI PULIRE...", USERS_SECTOR);
+                if (ATA_clear_sector(USERS_SECTOR) == 1)
+                    cprintf(FOREGROUND_GREEN, "\r\nSETTORE UTENTI [%i] E` CANCELLATO", USERS_SECTOR);
+                else cprintf(FOREGROUND_RED, "\r\nnSETTORE UTENTI [%i] NON DISPONIBILE PER LA PULIZIA", USERS_SECTOR);
+            }
 
-    create_directory("home");
+
+            if (ATA_is_current_sector_empty(GROUPS_SECTOR) == true)
+                cprintf(FOREGROUND_GREEN, "\r\nSETTORE GRUPPI [%i] E` CHIARO", GROUPS_SECTOR);
+            else {
+                cprintf(FOREGROUND_RED, "\r\nSETTORE GRUPPI [%i] NON CHIARO \n TENTATIVO DI PULIRE...", GROUPS_SECTOR);
+                if (ATA_clear_sector(GROUPS_SECTOR) == 1)
+                    cprintf(FOREGROUND_GREEN, "\r\nSETTORE GRUPPI [%i] E` CANCELLATO", GROUPS_SECTOR);
+                else cprintf(FOREGROUND_RED, "\r\nnSETTORE GRUPPI [%i] NON DISPONIBILE PER LA PULIZIA", GROUPS_SECTOR);
+            }
+
+
+            if (ATA_is_current_sector_empty(SHELL_SECTOR) == true)
+                cprintf(FOREGROUND_GREEN, "\r\nSETTORE GUSCIO [%i] E` CHIARO", SHELL_SECTOR);
+            else {
+                cprintf(FOREGROUND_RED, "\r\nSETTORE GUSCIO [%i] NON CHIARO \n TENTATIVO DI PULIRE...", SHELL_SECTOR);
+                if (ATA_clear_sector(SHELL_SECTOR) == 1)
+                    cprintf(FOREGROUND_GREEN, "\r\nSETTORE GUSCIO [%i] E` CANCELLATO", SHELL_SECTOR);
+                else cprintf(FOREGROUND_RED, "\r\nnSETTORE GUSCIO [%i] NON DISPONIBILE PER LA PULIZIA", SHELL_SECTOR);
+            }
+
+
+            printf("\n\nFAL FS Initialized\n\n");
+
+        ////////////////////////////
+
+    FS_create_directory("~", &currentDirectory);
     mainDirectory = currentDirectory;
 }
+
+void FS_load_file_system() {
+    char* loaded_data = ATA_read_sector(FILE_SYSTEM_SECTOR, 1);
+    if (loaded_data != NULL) {
+        char* token = strtok(loaded_data, " ");
+        char* file_system_data = NULL;
+        while(token != NULL) {
+            char* sector_data = ATA_read_sector(atoi(token), 1);
+            file_system_data = (char*)realloc(file_system_data, strlen(sector_data) * sizeof(char));
+            strcat(file_system_data, sector_data);
+
+            token = strtok(NULL, " ");
+            free(sector_data);
+        }
+
+        int index = 0;
+        memset(index, 0, sizeof(index));
+        FS_set_main_directory(FS_load_directory(file_system_data, index));
+
+        free(loaded_data);
+    }
+}
+
+void FS_unload_file_system(struct Directory* directory) {
+    struct File* current_file = directory->files;
+    struct File* next_file    = NULL;
+    while (current_file != NULL) {
+        free(current_file->sectors);
+
+        next_file = current_file->next;
+        free(current_file);
+        current_file = next_file;
+    }
+
+    if (directory->subDirectory != NULL)
+        FS_unload_file_system(directory->subDirectory);
+
+    if (directory->next != NULL) 
+        FS_unload_file_system(directory->next);
+
+    free(directory);
+    FS_set_main_directory(NULL);
+}
+
+////////////////////////////
+// FIND FILES AND DIRECTORIES
+
+    // Find file in directory
+    struct File* FS_find_file(char* name, struct Directory* directory) {
+        if (directory == NULL) return NULL;
+
+        struct File* current = directory->files;
+        while (current != NULL) {
+            if (strstr(current->name, name) == 0) 
+                return current;
+            
+            current = current->next;
+        }
+
+        return current;
+    }
+
+    // Find directory in direcotry
+    struct Directory* FS_find_directory(char* name, struct Directory* directory) {
+        if (directory == NULL) return NULL;
+
+        struct Directory* current = directory->subDirectory;
+        while (current != NULL) {
+            if (strstr(current->name, name) == 0) 
+                return current;
+
+            current = current->next;
+        }
+
+        return current;
+    }
+
+    // Find directory in all FS by path
+    struct Directory* FS_global_find_directory(char* path) {
+        char* token = strtok(path, "/");
+        struct Directory* current = mainDirectory;
+        if (current != NULL)
+            while(token != NULL) {
+                struct Directory* sub_directory = FS_find_directory(token, current);
+                if (sub_directory != NULL) 
+                    current = sub_directory;
+                else return NULL;
+
+                token = strtok(NULL, "/");
+            }
+        else return NULL;
+
+        return current;
+    }
+
+    // Find file in all FS by path
+    struct File* FS_global_find_file(char* path) {
+        char* dir_path = (char*)malloc(strlen(path));
+        strcpy(dir_path, path);
+
+        char* file_name = strrchr(path, '/');
+        file_name++;
+
+        char* token = strtok(dir_path, "/");
+        struct File* file = NULL;
+        struct Directory* current = mainDirectory;
+
+        while (token != NULL) {
+            if (current != NULL) 
+                if (strstr(token, file_name) != 0)
+                    current = FS_find_directory(token, current);
+                else break;
+            else break;
+
+            token = strtok(NULL, "/");
+        }
+
+        return FS_find_file(file_name, current);
+    }
+
+// FIND FILES AND DIRECTORIES
+////////////////////////////
 
 ////////////////////////////////////////////////
 //
 //  CREATES TEMP DIRECTORY <NAME> IN CURRENT DIRECTORY
 //
 
-    void create_directory(char* name) {
-        if (find_directory(name) != NULL) {
-            printf("La directory esiste gia'.");
+    void FS_create_directory(char* name, struct Directory** directory) {
+        if (name[0] == '/') {
+            char* dir_path = (char*)malloc(strlen(name));
+            strcpy(dir_path, name);
+
+            char* dir_name = strrchr(name, '/');
+            dir_name++;
+
+            char* token = strtok(dir_path, "/");
+            struct Directory* current = mainDirectory;
+
+            while (token != NULL) {
+                if (current != NULL) 
+                    if (strstr(token, dir_name) != 0)
+                        current = FS_find_directory(token, current);
+                    else break;
+                else break;
+
+                token = strtok(NULL, "/");
+            }
+
+            *directory = current;
+            name = dir_name;
+            free(dir_path);
+        }
+
+        if (FS_find_directory(name, *directory) != NULL) {
+            printf("La directory esiste gia'");
             return;
         }
 
@@ -62,15 +244,14 @@ void init_directory() {
         newDirectory->next          = NULL;
         newDirectory->subDirectory  = NULL;
 
-        if (currentDirectory == NULL)
-            currentDirectory = newDirectory;
+        if (*directory == NULL)
+            *directory = newDirectory;
         else {
-            newDirectory->upDirectory = currentDirectory;
-
-            if (currentDirectory->subDirectory == NULL) 
-                currentDirectory->subDirectory = newDirectory;
+            newDirectory->upDirectory = *directory;
+            if ((*directory)->subDirectory == NULL) 
+                (*directory)->subDirectory = newDirectory;
             else {
-                struct Directory* current = currentDirectory->subDirectory;
+                struct Directory* current = (*directory)->subDirectory;
                 while (current->next != NULL) 
                     current = current->next;
 
@@ -78,7 +259,7 @@ void init_directory() {
             }
         }  
 
-        save_file_system();
+        FS_save_file_system();
     }
 
 //
@@ -89,8 +270,33 @@ void init_directory() {
 //  CREATES TEMP FILE WITH NAME <NAME> IN CURRENT DIRECTORY
 //
 
-    void create_file(int read, int write, int edit, char* name, char* extension, uint8_t* head_sector) {
-        if (find_file(name) != NULL) {
+    void FS_create_file(int read, int write, int edit, char* name, char* extension, uint8_t* head_sector, struct Directory** directory) {
+        if (name[0] == '/') {
+            char* dir_path = (char*)malloc(strlen(name));
+            strcpy(dir_path, name);
+
+            char* file_name = strrchr(name, '/');
+            file_name++;
+
+            char* token = strtok(dir_path, "/");
+            struct Directory* current = mainDirectory;
+
+            while (token != NULL) {
+                if (current != NULL) 
+                    if (strstr(token, file_name) != 0)
+                        current = FS_find_directory(token, current);
+                    else break;
+                else break;
+
+                token = strtok(NULL, "/");
+            }
+
+            *directory = current;
+            name = file_name;
+            free(dir_path);
+        }
+        
+        if (FS_find_file(name, *directory) != NULL) {
             printf("Il file esiste gia'.");
             return;
         }
@@ -111,24 +317,24 @@ void init_directory() {
         newFile->sectors[0] = head_sector;
         ATA_write_sector(head_sector, 1, "\0");
 
-        if (currentDirectory->files == NULL)
-            currentDirectory->files = newFile;
+        if ((*directory)->files == NULL)
+            (*directory)->files = newFile;
         else {
-            struct File* current = currentDirectory->files;
+            struct File* current = (*directory)->files;
             while (current->next != NULL) 
                 current = current->next;
             
             current->next = newFile;
         }
 
-        save_file_system();
+        FS_save_file_system();
     }
 
     //  CREATE FILE
     ////////////
     //  WRITE TO FILE
 
-        void write_file(struct File* file, char* data) {
+        void FS_write_file(struct File* file, char* data) {
             int data_len = strlen(data);
 
             // Iterate through the sectors of the file and write the data
@@ -176,14 +382,14 @@ void init_directory() {
             file->sectors = realloc(file->sectors, file->sector_count * sizeof(uint32_t));
             
             // Save the file system
-            save_file_system();
+            FS_save_file_system();
         }
 
     //  WRITE TO FILE
     ////////////
     //  READ FROM FILE
 
-        char* read_file(struct File* file) {
+        char* FS_read_file(struct File* file) {
             char* data = (char*)malloc(512 * file->sector_count);
 
             for (size_t i = 0; i < file->sector_count; i++) {
@@ -199,7 +405,7 @@ void init_directory() {
     ////////////
     //  CLEAR FILE
 
-        void clear_file(struct File* file) {
+        void FS_clear_file(struct File* file) {
             char* empty_data[512];
             memset(empty_data, 0, sizeof(empty_data));
 
@@ -211,8 +417,12 @@ void init_directory() {
     ////////////
     //  CHECK FILE EXIST
 
-        int file_exist(char* name) {
-            if (find_file(name) == NULL)
+        int FS_file_exist(char* name, struct Directory* directory) {
+            if (name[0] == '/') 
+                if (FS_find_file(name, FS_global_find_file(name)) == NULL)
+                    return -1;
+
+            if (FS_find_file(name, directory) == NULL)
                 return -1;
 
             return 1;
@@ -229,13 +439,13 @@ void init_directory() {
 //  DELETE TEMP DIRECTORY
 //
 
-    void delete_directory(char* name) {
-        struct Directory* current   = currentDirectory->subDirectory;
+    void FS_delete_directory(char* name, struct Directory* directory) {
+        struct Directory* current   = directory->subDirectory;
         struct Directory* prev      = NULL;
 
         while (current != NULL) {
             if (strcmp(current->name, name) == 0) {
-                if (prev == NULL) currentDirectory->subDirectory = current->next;
+                if (prev == NULL) directory->subDirectory = current->next;
                 else prev->next = current->next;
                 
                 free(current);
@@ -246,7 +456,7 @@ void init_directory() {
             current = current->next;
         }
 
-        save_file_system();
+        FS_save_file_system();
     }
 
 //
@@ -257,15 +467,15 @@ void init_directory() {
 //  DELETE TEMP FILE
 //
 
-    void delete_file(char* name) {
-        struct File* current    = currentDirectory->files;
+    void FS_delete_file(char* name, struct Directory* directory) {
+        struct File* current    = directory->files;
         struct File* prev       = NULL;
 
         while (current != NULL) {
             if (strcmp(current->name, name) == 0) {
-                clear_file(current);
+                FS_clear_file(current);
 
-                if (prev == NULL) currentDirectory->files = current->next;
+                if (prev == NULL) directory->files = current->next;
                 else prev->next = current->next;
                 
                 free(current);
@@ -276,7 +486,7 @@ void init_directory() {
             current = current->next;
         }
 
-        save_file_system();
+        FS_save_file_system();
     }
 
 //
@@ -287,52 +497,31 @@ void init_directory() {
 //  OTHER FUNCTIONS
 //
 
-    struct File* find_file(char* name) {
-        struct File* current = currentDirectory->files;
-        while (current != NULL) {
-            if (strstr(current->name, name) == 0) 
-                return current;
-            
-            current = current->next;
-        }
-
-        return NULL;
-    }
-
-    struct Directory* find_directory(char* name) {
-        struct Directory* current = currentDirectory->subDirectory;
-
-        while (current != NULL) {
-            if (strstr(current->name, name) == 0) 
-                return current;
-
-            current = current->next;
-        }
-
-        return NULL;
-    }
-
-    void move_to_directory(char* name) {
-        struct Directory* neededDirectory = find_directory(name);
+    // Move to sub directory of current directory
+    int FS_move_to_directory(char* name, struct Directory* directory) {
+        struct Directory* neededDirectory;
+        if (name[0] == '/') neededDirectory = FS_global_find_directory(name);
+        else neededDirectory = FS_find_directory(name, directory);
+        
         if (neededDirectory != NULL) 
             currentDirectory = neededDirectory;
+        else return -1;
     }
 
-    void up_from_directory() {
-        if (currentDirectory->upDirectory != NULL)
+    void FS_up_from_directory() {
+        if (currentDirectory->upDirectory != NULL) 
             currentDirectory = currentDirectory->upDirectory;
     }
 
-    struct Directory* get_current_directory() {
+    struct Directory* FS_get_current_directory() {
         return currentDirectory;
     }
 
-    char* get_full_temp_name() {
+    char* FS_get_full_temp_name() {
         char* name = malloc(0);
         memset(name, 0, sizeof(name));
 
         struct Directory* current = currentDirectory;
-
         while (current != NULL) {
             char* temp_name = malloc(sizeof(name) + sizeof(current->name) + 1);
             memset(temp_name, 0, sizeof(temp_name));
@@ -353,12 +542,12 @@ void init_directory() {
         return name;
     }
 
-    void set_main_directory(struct Directory* directory) {
+    void FS_set_main_directory(struct Directory* directory) {
         mainDirectory    = directory;
         currentDirectory = directory;
     }
 
-    struct Directory* get_main_directory() {
+    struct Directory* FS_get_main_directory() {
         return mainDirectory;
     }
 
@@ -370,7 +559,7 @@ void init_directory() {
 //  SAVING DATA TO DISK
 //
 
-    void save_file_system() {
+    void FS_save_file_system() {
         if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
             char* sector_data = ATA_read_sector(FILE_SYSTEM_SECTOR, 1);
             char* token = strtok(sector_data, " ");
@@ -384,7 +573,7 @@ void init_directory() {
 
         ATA_clear_sector(FILE_SYSTEM_SECTOR);
 
-        char* result = save_directory(get_main_directory());
+        char* result = FS_save_directory(FS_get_main_directory());
         int data_len = strlen(result);
         while (data_len > 0) {
             int bytes_to_write = SECTOR_SIZE;
@@ -404,7 +593,7 @@ void init_directory() {
         free(result);
     }
 
-    char* save_directory(struct Directory* directory) {
+    char* FS_save_directory(struct Directory* directory) {
         char* result = (char*)malloc(sizeof(char));
         if (directory == NULL) 
             return;
@@ -419,7 +608,7 @@ void init_directory() {
             result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
             strcat(result, "N");
 
-            char* sub_result = save_directory(directory->subDirectory);
+            char* sub_result = FS_save_directory(directory->subDirectory);
             result = realloc(result, strlen(result) * sizeof(char) + strlen(sub_result) * sizeof(char));
             strcat(result, sub_result);
         }
@@ -479,7 +668,7 @@ void init_directory() {
             result = realloc(result, strlen(result) * sizeof(char) + sizeof(char));
             strcat(result, "#");
 
-            char* next_result = save_directory(directory->next);
+            char* next_result = FS_save_directory(directory->next);
             result = realloc(result, strlen(result) * sizeof(char) + strlen(next_result) * sizeof(char));
             strcat(result, next_result);
         }
@@ -487,7 +676,7 @@ void init_directory() {
         return result;
     }
 
-    struct File* load_temp_file(const char* input, int* index) {
+    struct File* FS_load_temp_file(const char* input, int* index) {
         struct File* file = (struct File*)malloc(sizeof(struct File));
         file->sector_count  = 0;
         
@@ -548,7 +737,7 @@ void init_directory() {
         return file;
     }
 
-    struct Directory* load_directory(const char* input, int* index) {
+    struct Directory* FS_load_directory(const char* input, int* index) {
         struct Directory* directory = (struct Directory*)malloc(sizeof(struct Directory));
 
         directory->files        = NULL;
@@ -591,12 +780,12 @@ void init_directory() {
                 (*index)++;
 
                 if (input[*index] == 'D') {
-                    directory->subDirectory = load_directory(input, index);
+                    directory->subDirectory = FS_load_directory(input, index);
                     directory->subDirectory->upDirectory = directory;
                 }
 
                 if (input[*index] == 'F') 
-                    directory->files = load_temp_file(input, index);
+                    directory->files = FS_load_temp_file(input, index);
             }
 
         //
@@ -620,21 +809,21 @@ void init_directory() {
                     while (end_dir->next != NULL)
                         end_dir = end_dir->next;
 
-                    end_dir->next = load_directory(input, index);
+                    end_dir->next = FS_load_directory(input, index);
                     end_dir->next->upDirectory = directory;
                 }
 
                 if (input[*index] == 'F') {
                     struct File* end_file = directory->files;
                     if (end_file == NULL) {
-                        directory->files = load_temp_file(input, index);
+                        directory->files = FS_load_temp_file(input, index);
                         continue;
                     }
                     else
                         while (end_file->next != NULL)
                             end_file = end_file->next;
 
-                    end_file->next = load_temp_file(input, index);
+                    end_file->next = FS_load_temp_file(input, index);
                 }
             }
 

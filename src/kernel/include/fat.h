@@ -4,6 +4,7 @@
 #include "string.h"
 #include "ata.h"
 #include "memory.h"
+#include "date_time.h"
 
 #define END_CLUSTER_32      0x0FFFFFF8
 #define BAD_CLUSTER_32      0x0FFFFFF7
@@ -157,40 +158,40 @@ typedef struct long_entry {
 } __attribute__((packed)) long_entry_t;
 
 //Global variables
+extern unsigned int fat_size;
 extern unsigned int fat_type;
+
 extern unsigned int first_fat_sector;
 extern unsigned int first_data_sector;
+
+extern unsigned int total_sectors;
 extern unsigned int total_clusters;
-extern fat_BS_t bootsect;
-//unsigned int fat_type;
-//unsigned int first_fat_sector;
-//unsigned int first_data_sector;
-//unsigned int total_clusters;
-//fat_BS_t bootsect;
+
+extern int bytes_per_sector;
+extern int sectors_per_cluster;
+
+extern int ext_root_cluster;
 
 //FAT functions (see the .c file for function descriptions)
-int FATInitialize(); 
-int FATRead(unsigned int clusterNum);
-int FATWrite(unsigned int clusterNum, unsigned int clusterVal);
-unsigned int allocateFreeFAT();
-char* clusterRead(unsigned int clusterNum, unsigned int clusterOffset);
-int clusterWrite(void* contentsToWrite, unsigned int contentSize, unsigned int contentBuffOffset, unsigned int clusterNum);
-int directoryList(const unsigned int cluster, unsigned char attributesToAdd, short exclusive);
-int directorySearch(const char* filepart, const unsigned int cluster, directory_entry_t* file, unsigned int* entryOffset);
-int directoryAdd(const unsigned int cluster, directory_entry_t* file_to_add);
-int getFile(const char* filePath, char** fileContents, directory_entry_t* fileMeta, unsigned int readInOffset);
-int putFile(const char* filePath, char** fileContents, directory_entry_t* fileMeta);
-unsigned short CurrentTime();
-unsigned char CurrentTimeTenths();
-unsigned short CurrentDate();
-unsigned char ChkSum(unsigned char *pFcbName);
-BOOL testIfFATFormat(char * input);
-char* convertToFATFormat(char* input);
-void convertFromFATFormat(char* input, char* output);
-
-void d_printhex( unsigned long num, int digits );
-void d_printss( char *s );
-void d_printsss( char *s, int n );
+int FAT_initialize(); 
+int FAT_read(unsigned int clusterNum);
+int FAT_write(unsigned int clusterNum, unsigned int clusterVal);
+unsigned int FAT_allocate_free();
+char* FAT_cluster_read(unsigned int clusterNum, unsigned int clusterOffset);
+int cluster_write(void* contentsToWrite, unsigned int contentSize, unsigned int contentBuffOffset, unsigned int clusterNum);
+int FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, short exclusive);
+int FAT_directory_search(const char* filepart, const unsigned int cluster, directory_entry_t* file, unsigned int* entryOffset);
+int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add);
+int FAT_get_file(const char* filePath, char** fileContents, directory_entry_t* fileMeta, unsigned int readInOffset);
+int FAT_put_file(const char* filePath, char** fileContents, directory_entry_t* fileMeta);
+int FAT_create_entry(directory_entry_t * entry, const char * filename,  const char * ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+unsigned short FAT_current_time();
+unsigned char FAT_current_time_temths();
+unsigned short FAT_current_date();
+unsigned char FAT_check_sum(unsigned char *pFcbName);
+BOOL FAT_name_check(char * input);
+char* FAT_name2fatname(char* input);
+void FAT_fatname2name(char* input, char* output);
 
 
 #endif

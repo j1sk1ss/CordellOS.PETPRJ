@@ -1,39 +1,36 @@
 #include "../include/user.h"
 
 void init_users() {
-    if (find_directory("security") == NULL) 
-        create_directory("security");
-    
-    move_to_directory("security");
+    if (FS_global_find_directory("/security") == NULL) 
+        FS_create_directory("/security", NULL);
 
     while (1) {
-        struct File* users_file = find_file("users");
+        struct File* users_file = FS_global_find_file("/security/users");
         if (users_file != NULL) {
             if (users_file->read_level != 0 || users_file->write_level != 0 || users_file->edit_level != 0) {
-                delete_file("users");
+                FS_delete_file("/security/users", NULL);
                 continue;
             }
         }
         else {
-            create_file(0, 0, 0, "users", "txt", USERS_SECTOR);
-            write_file(find_file("users"), "admin[000[0\nguest[666[123\n");
+            FS_create_file(0, 0, 0, "/security/users", "txt", USERS_SECTOR, NULL);
+            FS_write_file(FS_global_find_file("/security/users"), "admin[000[0\nguest[666[123\n");
             continue;
         }
 
-        struct File* groups_file = find_file("groups");
+        struct File* groups_file = FS_global_find_file("/security/groups");
         if (groups_file != NULL) {
             if (groups_file->read_level != 0 || groups_file->write_level != 0 || groups_file->edit_level != 0) {
-                delete_file("groups");
+                FS_delete_file("/security/groups", NULL);
                 continue;
             }
         }
         else {
-            create_file(0, 0, 0, "groups", "txt", GROUPS_SECTOR);
-            write_file(find_file("groups"), "default[000[admin[guest\n");
+            FS_create_file(0, 0, 0, "/security/groups", "txt", GROUPS_SECTOR, NULL);
+            FS_write_file(FS_global_find_file("/security/groups"), "default[000[admin[guest\n");
             continue;
         }
 
-        up_from_directory();
         return;
     }
 }
@@ -46,9 +43,7 @@ void init_users() {
 //   \____|_| \_\\___/ \___/|_|  
 
     struct Group* login_group(char* user_name) {
-        move_to_directory("security");
-        char* groups = read_file(find_file("groups"));
-        up_from_directory();
+        char* groups = FS_read_file(FS_global_find_file("/security/groups"));
 
         int num_lines = 0;
         char* newline_pos = groups;
@@ -126,9 +121,7 @@ void init_users() {
 //   \___/|____/|_____|_| \_\
 
     struct User* login(char* user_name, char* pass, int all) {
-        move_to_directory("security");
-        char* data = read_file(find_file("users"));
-        up_from_directory();
+        char* data = FS_read_file(FS_global_find_file("/security/users"));
 
         // Determine the number of lines (count the newline characters)
         int num_lines = 0;

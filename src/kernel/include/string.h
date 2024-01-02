@@ -17,6 +17,7 @@ int isdigit(int c);
 int isspace(int c);
 
 const char* strchr(const char* str, char chr);
+char* strrchr(const char *s, int c);
 int strstr(const char* haystack, const char* needle);
 char* strcpy(char* dst, const char* src);
 unsigned strlen(const char* str);

@@ -90,13 +90,17 @@
     }
 
     // Function that clear sector
-    void ATA_clear_sector(uint32_t lba) {
+    int ATA_clear_sector(uint32_t lba) {
         char buffer[SECTOR_SIZE];  // Assuming 512-byte sectors
         memset(buffer, 0, sizeof(buffer));
 
         // Write the buffer to the specified sector
-        if (ATA_write_sector(lba, 1, buffer) == -1) 
+        if (ATA_write_sector(lba, 1, buffer) == -1) {
             printf("\n\rPulizia del settore non completata!");
+            return -1;
+        }
+
+        return 1;
     }
 
     // Function to check if a sector (by LBA) is empty (all bytes are zero)

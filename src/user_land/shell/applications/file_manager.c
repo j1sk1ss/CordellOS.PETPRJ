@@ -23,7 +23,8 @@ void open_file_manager(struct User* user) {
             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nDir name: ");
             char* dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
             
-            create_directory(dir_name);   
+            struct Directory* directory = FS_get_current_directory();
+            FS_create_directory(dir_name, &directory);   
             free(dir_name); 
         }
 
@@ -37,7 +38,8 @@ void open_file_manager(struct User* user) {
             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\t\tFile extension: ");
             char* file_extension = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 
-            create_file(file_type[0] - '0', file_type[1] - '0', file_type[2] - '0', file_name, file_extension, ATA_find_empty_sector(FILES_SECTOR_OFFSET));  
+            struct Directory* directory = FS_get_current_directory();
+            FS_create_file(file_type[0] - '0', file_type[1] - '0', file_type[2] - '0', file_name, file_extension, ATA_find_empty_sector(FILES_SECTOR_OFFSET), &directory);  
             free(file_name);
             free(file_type);
             free(file_extension);
@@ -52,7 +54,7 @@ void open_file_manager(struct User* user) {
 
 void execute_item(struct User* user, char action_type) {
     if (row_position == 0 && action_type != BACKSPACE_BUTTON) {
-        up_from_directory();
+        FS_up_from_directory();
         return;
     }
     
@@ -61,11 +63,11 @@ void execute_item(struct User* user, char action_type) {
     //
 
         int rows = 1;
-        struct Directory* currentDir = get_current_directory()->subDirectory;
+        struct Directory* currentDir = FS_get_current_directory()->subDirectory;
         while (currentDir != NULL) {
             if (rows++ == row_position) {
                 if (action_type == ENTER_BUTTON)
-                    move_to_directory(currentDir->name);
+                    FS_move_to_directory(currentDir->name, FS_get_current_directory());
 
                 else if (action_type == BACKSPACE_BUTTON) {       
                     if ((currentDir->subDirectory != NULL || currentDir->files != NULL) && user->edit_access != 0)
@@ -75,7 +77,8 @@ void execute_item(struct User* user, char action_type) {
                     while (1) {
                         char* answer = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
                         if (strcmp(answer, "y") == 0) {
-                            delete_directory(currentDir->name);
+                            struct Directory* directory = FS_get_current_directory();
+                            FS_delete_directory(currentDir->name, &directory);
                             free(answer);
                             break;
                         }
@@ -88,11 +91,11 @@ void execute_item(struct User* user, char action_type) {
                 else if (action_type == F4_BUTTON) { 
                     cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nNew dir name: ");
                     char* new_dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-                    if (find_directory(new_dir_name) == NULL) {
+                    if (FS_find_directory(new_dir_name) == NULL) {
                         memset(currentDir->name, ' ', sizeof(currentDir->name));
                         strncpy(currentDir->name, new_dir_name, 11);
 
-                        save_file_system();
+                        FS_save_file_system();
                         break;
                     }
 
@@ -113,7 +116,7 @@ void execute_item(struct User* user, char action_type) {
     //  SELECTED FILE
     //
 
-        struct File* currentFile = get_current_directory()->files;
+        struct File* currentFile = FS_get_current_directory()->files;
         while (currentFile != NULL) {
             if (rows++ == row_position) {
                 row_position = 1;
@@ -166,7 +169,7 @@ void execute_item(struct User* user, char action_type) {
                                             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nNew file extension: ");
                                             char* new_file_extension = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 
-                                            if (file_exist(new_file_name) != 1) {
+                                            if (FS_file_exist(new_file_name, FS_get_current_directory()) != 1) {
                                                 memset(currentFile->name, ' ', sizeof(currentFile->name));
                                                 strncpy(currentFile->name, new_file_name, 11);
 
@@ -177,7 +180,7 @@ void execute_item(struct User* user, char action_type) {
                                                 currentFile->write_level    = new_file_type[1] - '0';
                                                 currentFile->edit_level     = new_file_type[2] - '0';
 
-                                                save_file_system();
+                                                FS_save_file_system();
                                             }
                                             
                                             free(new_file_name);
@@ -192,7 +195,10 @@ void execute_item(struct User* user, char action_type) {
                                             printf("\nDelete? (Y/N): ");
                                             
                                             char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-                                            if (strcmp(user_choose, "y") == 0) delete_file(currentFile->name);
+                                            if (strcmp(user_choose, "y") == 0) {
+                                                struct Directory* directory = FS_get_current_directory();
+                                                FS_delete_file(currentFile->name, &directory);
+                                            }
 
                                             free(user_choose);
                                         }
@@ -223,7 +229,7 @@ void execute_item(struct User* user, char action_type) {
                     if (strstr(currentFile->extension, "txt") == 0) {
                         if (user->read_access <= currentFile->read_level) {
                             VGA_clrscr();
-                            printf("%sFile: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, read_file(currentFile), LINE);
+                            printf("%sFile: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, FS_read_file(currentFile), LINE);
                             set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 
                             keyboard_wait(F3_BUTTON);
@@ -234,7 +240,7 @@ void execute_item(struct User* user, char action_type) {
 
                     else if (strstr(currentFile->extension, "asm") == 0) {
                         VGA_clrscr();
-                        asm_execute(read_file(currentFile));
+                        asm_execute(FS_read_file(currentFile));
                         set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 
                         printf("\n\nPress [F3] to exit");
@@ -247,7 +253,7 @@ void execute_item(struct User* user, char action_type) {
                         VGA_clrscr();
                         set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
                         
-                        char* sector_data = read_file(currentFile);
+                        char* sector_data = FS_read_file(currentFile);
                         char* command_for_split = (char*)malloc(strlen(sector_data));
                         strcpy(command_for_split, sector_data);
 
@@ -293,7 +299,7 @@ void execute_item(struct User* user, char action_type) {
 void print_directory_data() {
     set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 
-    char* directory_name = get_full_temp_name();  // Mem leak?
+    char* directory_name = FS_get_full_temp_name();  // Mem leak?
     printf("Directory: [%s]\n%s%s%s", directory_name, LINE, HEADER, LINE);
     free(directory_name);  // Mem leak?
 
@@ -301,7 +307,7 @@ void print_directory_data() {
     if (rows++ == row_position) cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, UPPED_DIR);
     else printf(UPPED_DIR);
 
-    struct Directory* currentDir = get_current_directory()->subDirectory;
+    struct Directory* currentDir = FS_get_current_directory()->subDirectory;
     while (currentDir != NULL) {
         char name[COLUMN_WIDTH + 1];
         memset(name, ' ', COLUMN_WIDTH);
@@ -317,7 +323,7 @@ void print_directory_data() {
         currentDir = currentDir->next;
     }
 
-    struct File* currentFile = get_current_directory()->files;
+    struct File* currentFile = FS_get_current_directory()->files;
     while (currentFile != NULL) {
         ////////////////
         //  FILE NAME PREPARATIONS

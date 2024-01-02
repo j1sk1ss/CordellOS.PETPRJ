@@ -113,28 +113,28 @@ void asm_executor(int *memory_array, int memory_index, int start, int end, struc
 	    	break;  // PRINTL Instruction //
 
 			case MKFILE_INSTRUCTION:
-				create_file(user->read_access, user->write_access, user->edit_access, 
-				intermediate_table[i]->string_params[0], "txt", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
+				FS_create_file(user->read_access, user->write_access, user->edit_access, 
+				intermediate_table[i]->string_params[0], "txt", ATA_find_empty_sector(FILES_SECTOR_OFFSET), NULL);
 			break;
 
 			case RMFILE_INSTRUCTION:
-				if (file_exist(intermediate_table[i]->string) == 1)
-					if (user->edit_access <= find_file(intermediate_table[i]->string)->edit_level)
-						delete_file(intermediate_table[i]->string);
+				if (FS_file_exist(intermediate_table[i]->string, NULL) == 1)
+					if (user->edit_access <= FS_global_find_file(intermediate_table[i]->string)->edit_level)
+						FS_delete_file(intermediate_table[i]->string, NULL);
 			break;
 
 			case WFILE_INSTRUCTION:
-				struct File* wfile = find_file(intermediate_table[i]->string_params[0]);
+				struct File* wfile = FS_global_find_file(intermediate_table[i]->string_params[0]);
 				if (wfile != NULL)
 					if (user->write_access <= wfile->write_level)
-						write_file(wfile, intermediate_table[i]->string_params[1]);
+						FS_write_file(wfile, intermediate_table[i]->string_params[1]);
 			break;
 
 			case RFILE_INSTRUCTION:
-				struct File* rfile = find_file(intermediate_table[i]->string);
+				struct File* rfile = FS_global_find_file(intermediate_table[i]->string);
 				if (rfile != NULL)
 					if (user->read_access <= rfile->read_level) {
-						int data = atoi(read_file(rfile));
+						int data = atoi(FS_read_file(rfile));
 						memory_array[intermediate_table[i]->parameters[0]] = data; 
 					}
 			break;
