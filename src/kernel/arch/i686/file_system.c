@@ -74,7 +74,7 @@ void FS_init() {
 
         ////////////////////////////
 
-    FS_create_directory("~", &currentDirectory);
+    FS_create_directory("~");
     mainDirectory = currentDirectory;
 }
 
@@ -205,7 +205,8 @@ void FS_unload_file_system(struct Directory* directory) {
 //  CREATES TEMP DIRECTORY <NAME> IN CURRENT DIRECTORY
 //
 
-    void FS_create_directory(char* name, struct Directory** directory) {
+    void FS_create_directory(char* name) {
+        struct Directory** directory = &currentDirectory;
         if (name[0] == '/') {
             char* dir_path = (char*)malloc(strlen(name));
             strcpy(dir_path, name);
@@ -226,11 +227,11 @@ void FS_unload_file_system(struct Directory* directory) {
                 token = strtok(NULL, "/");
             }
 
-            *directory = current;
+            directory = &current;
             name = dir_name;
             free(dir_path);
         }
-
+        
         if (FS_find_directory(name, *directory) != NULL) {
             printf("La directory esiste gia'");
             return;
@@ -244,7 +245,7 @@ void FS_unload_file_system(struct Directory* directory) {
         newDirectory->next          = NULL;
         newDirectory->subDirectory  = NULL;
 
-        if (*directory == NULL)
+        if (*directory == NULL) 
             *directory = newDirectory;
         else {
             newDirectory->upDirectory = *directory;
@@ -270,7 +271,8 @@ void FS_unload_file_system(struct Directory* directory) {
 //  CREATES TEMP FILE WITH NAME <NAME> IN CURRENT DIRECTORY
 //
 
-    void FS_create_file(int read, int write, int edit, char* name, char* extension, uint8_t* head_sector, struct Directory** directory) {
+    void FS_create_file(int read, int write, int edit, char* name, char* extension, uint8_t* head_sector) {
+        struct Directory** directory = &currentDirectory;
         if (name[0] == '/') {
             char* dir_path = (char*)malloc(strlen(name));
             strcpy(dir_path, name);
@@ -291,7 +293,7 @@ void FS_unload_file_system(struct Directory* directory) {
                 token = strtok(NULL, "/");
             }
 
-            *directory = current;
+            directory = &current;
             name = file_name;
             free(dir_path);
         }
@@ -417,12 +419,12 @@ void FS_unload_file_system(struct Directory* directory) {
     ////////////
     //  CHECK FILE EXIST
 
-        int FS_file_exist(char* name, struct Directory* directory) {
+        int FS_file_exist(char* name) {
             if (name[0] == '/') 
-                if (FS_find_file(name, FS_global_find_file(name)) == NULL)
+                if (FS_global_find_file(name) == NULL)
                     return -1;
 
-            if (FS_find_file(name, directory) == NULL)
+            if (FS_find_file(name, FS_get_current_directory()) == NULL)
                 return -1;
 
             return 1;

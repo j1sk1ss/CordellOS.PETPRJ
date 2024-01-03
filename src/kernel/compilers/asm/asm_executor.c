@@ -114,13 +114,13 @@ void asm_executor(int *memory_array, int memory_index, int start, int end, struc
 
 			case MKFILE_INSTRUCTION:
 				FS_create_file(user->read_access, user->write_access, user->edit_access, 
-				intermediate_table[i]->string_params[0], "txt", ATA_find_empty_sector(FILES_SECTOR_OFFSET), NULL);
+				intermediate_table[i]->string_params[0], "txt", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
 			break;
 
 			case RMFILE_INSTRUCTION:
-				if (FS_file_exist(intermediate_table[i]->string, NULL) == 1)
+				if (FS_file_exist(intermediate_table[i]->string) == 1)
 					if (user->edit_access <= FS_global_find_file(intermediate_table[i]->string)->edit_level)
-						FS_delete_file(intermediate_table[i]->string, NULL);
+						FS_delete_file(intermediate_table[i]->string, FS_get_current_directory());
 			break;
 
 			case WFILE_INSTRUCTION:

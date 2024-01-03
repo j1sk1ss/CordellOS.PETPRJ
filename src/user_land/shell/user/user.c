@@ -2,18 +2,18 @@
 
 void init_users() {
     if (FS_global_find_directory("/security") == NULL) 
-        FS_create_directory("/security", NULL);
+        FS_create_directory("/security");
 
     while (1) {
         struct File* users_file = FS_global_find_file("/security/users");
         if (users_file != NULL) {
             if (users_file->read_level != 0 || users_file->write_level != 0 || users_file->edit_level != 0) {
-                FS_delete_file("/security/users", NULL);
+                FS_delete_file("/security/users", FS_global_find_directory("/security"));
                 continue;
             }
         }
         else {
-            FS_create_file(0, 0, 0, "/security/users", "txt", USERS_SECTOR, NULL);
+            FS_create_file(0, 0, 0, "/security/users", "txt", USERS_SECTOR);
             FS_write_file(FS_global_find_file("/security/users"), "admin[000[0\nguest[666[123\n");
             continue;
         }
@@ -21,12 +21,12 @@ void init_users() {
         struct File* groups_file = FS_global_find_file("/security/groups");
         if (groups_file != NULL) {
             if (groups_file->read_level != 0 || groups_file->write_level != 0 || groups_file->edit_level != 0) {
-                FS_delete_file("/security/groups", NULL);
+                FS_delete_file("/security/groups", FS_global_find_directory("/security"));
                 continue;
             }
         }
         else {
-            FS_create_file(0, 0, 0, "/security/groups", "txt", GROUPS_SECTOR, NULL);
+            FS_create_file(0, 0, 0, "/security/groups", "txt", GROUPS_SECTOR);
             FS_write_file(FS_global_find_file("/security/groups"), "default[000[admin[guest\n");
             continue;
         }

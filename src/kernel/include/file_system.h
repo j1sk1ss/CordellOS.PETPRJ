@@ -52,8 +52,8 @@ char* FS_get_full_temp_name();
 
 void FS_init();
 
-void FS_create_directory(char* name, struct Directory** directory);
-void FS_create_file(int read, int write, int edit, char* name, char* extension, uint8_t* head_sector, struct Directory** directory);
+void FS_create_directory(char* name);
+void FS_create_file(int read, int write, int edit, char* name, char* extension, uint8_t* head_sector);
 
 void FS_delete_directory(char* name, struct Directory* directory);
 void FS_delete_file(char* name, struct Directory* directory);
@@ -62,7 +62,7 @@ void FS_write_file(struct File* file, char* data);
 char* FS_read_file(struct File* file);
 void FS_clear_file(struct File* file);
 
-int FS_file_exist(char* name, struct Directory* directory);
+int FS_file_exist(char* name);
 
 struct File* FS_global_find_file(char* path);
 struct Directory* FS_global_find_directory(char* path);

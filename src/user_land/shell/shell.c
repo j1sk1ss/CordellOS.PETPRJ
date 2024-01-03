@@ -18,8 +18,8 @@ void shell() {
     //  SHELL CORDELL PASSWORD
     //
 
-        if (FS_file_exist("/shell", NULL) != 1) {
-            FS_create_file(0, 0, 0, "/shell", "txt", ATA_find_empty_sector(SHELL_SECTOR), NULL);
+        if (FS_file_exist("/shell") != 1) {
+            FS_create_file(0, 0, 0, "/shell", "txt", ATA_find_empty_sector(SHELL_SECTOR));
             currentPassword = FS_find_file("/shell", NULL);
             FS_write_file(currentPassword, "12345");
         } else currentPassword = FS_find_file("/shell", NULL);
@@ -93,7 +93,7 @@ void shell_start_screen() {
     cprintf(FOREGROUND_LIGHT_GREEN, " Y8b  d8 `8b  d8' 88 `88. 88  .8D 88.     88booo. 88booo.   `8b  d8' db   8D \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, "  `Y88P'  `Y88P'  88   YD Y8888D' Y88888P Y88888P Y88888P    `Y88P'  `8888Y' \r\n");
 
-    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.6b | 02.01.2024] \r\n");
+    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.7a | 03.01.2024] \r\n");
 }
 
 ///////////////////////////////////////
@@ -162,26 +162,32 @@ void shell_start_screen() {
         //
 
             if (strstr(command_line[0], COMMAND_HELP) == 0) {
-                printf("\r\n> Usa [%s] per ottenere aiuto",                             COMMAND_HELP);
-                printf("\r\n> Utilizzare [%s] per la pulizia dello schermo",            COMMAND_CLEAR);
-                printf("\r\n> Usa [%s] per l'eco",                                      COMMAND_ECHO);
-                printf("\r\n> Utilizza la [%s] per i calcoli (+, -, * e /)",            COMMAND_CALCULATOR);
+                printf("\r\n> Usa [%s] per ottenere aiuto",                                     COMMAND_HELP);
+                printf("\r\n> Utilizzare [%s] per la pulizia dello schermo",                    COMMAND_CLEAR);
+                printf("\r\n> Usa [%s] per l'eco",                                              COMMAND_ECHO);
+                printf("\r\n> Utilizza la [%s] per i calcoli (+, -, * e /)",                    COMMAND_CALCULATOR);
                 printf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
 
-                printf("\r\n> Utilizza la [%s] per vista versione",                     COMMAND_VERSION);
-                printf("\r\n> Utilizza la [%s] per vista disk-data informazione",       COMMAND_DISK_DATA);
 
-                printf("\r\n> Usa [%s] <nome> per cretore dir",                         COMMAND_CREATE_DIR);
-                printf("\r\n> Usa [%s] <accesso> <nome> per cretore file",              COMMAND_CREATE_FILE);
-                printf("\r\n> Usa [%s] <nome> per elimita dir",                         COMMAND_DELETE_FILE);
-                printf("\r\n> Usa [%s] in dir per ottenere tutte le informazioni",      COMMAND_GO_TO_MANAGER);
-                printf("\r\n> Usa [%s] <nome> per entranto dir",                        COMMAND_IN_DIR);
-                printf("\r\n> Usa [%s] per uscire di dir",                              COMMAND_OUT_DIR);
-                printf("\r\n> Usa [%s] per guardare tutto cosa in dir",                 COMMAND_LIST_DIR);
+                printf("\r\n> Utilizza la [%s] per vista versione",                             COMMAND_VERSION);
+                printf("\r\n> Utilizza la [%s] per vista disk-data informazione",               COMMAND_DISK_DATA);
 
-                printf("\r\n> Usa [%s] per guardare tutto data in file",                COMMAND_FILE_VIEW);
-                printf("\r\n> Usa [%s] per modifica data in file",                      COMMAND_FILE_EDIT);
-                printf("\r\n> Usa [%s] per run file",                                   COMMAND_FILE_RUN);
+
+                printf("\r\n> Usa [%s] <nome> per cretore dir",                                 COMMAND_CREATE_DIR);
+                printf("\r\n> Usa [%s] <nome> <path> per elimita dir",                          COMMAND_DELETE_DIR);
+
+                printf("\r\n> Usa [%s] <accesso [x x x]> <nome> <extension> per cretore file",  COMMAND_CREATE_FILE);
+                printf("\r\n> Usa [%s] <nome> <path> per elimita file",                         COMMAND_DELETE_FILE);
+
+                printf("\r\n> Usa [%s] in dir per ottenere tutte le informazioni",              COMMAND_GO_TO_MANAGER);
+                printf("\r\n> Usa [%s] <nome> per entranto dir",                                COMMAND_IN_DIR);
+                printf("\r\n> Usa [%s] per uscire di dir",                                      COMMAND_OUT_DIR);
+                printf("\r\n> Usa [%s] per guardare tutto cosa in dir",                         COMMAND_LIST_DIR);
+
+
+                printf("\r\n> Usa [%s] per guardare tutto data in file",                        COMMAND_FILE_VIEW);
+                printf("\r\n> Usa [%s] per modifica data in file",                              COMMAND_FILE_EDIT);
+                printf("\r\n> Usa [%s] per run file",                                           COMMAND_FILE_RUN);
             }
 
             else if (strstr(command_line[0], COMMAND_VERSION) == 0)
@@ -219,7 +225,7 @@ void shell_start_screen() {
         //
 
             else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0)
-                FS_create_directory(command_line[1], FS_get_current_directory());
+                FS_create_directory(command_line[1]);
             
             else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0)                      
                 open_file_manager(user);                                             
@@ -231,23 +237,23 @@ void shell_start_screen() {
                 FS_up_from_directory();
             
             else if (strstr(command_line[0], COMMAND_DELETE_DIR) == 0) {
-                struct Directory* directory = FS_find_directory(command_line[1], FS_get_current_directory());
+                struct Directory* directory = FS_find_directory(command_line[1], FS_global_find_directory(command_line[2]));
                 if (directory->subDirectory != NULL || directory->files != NULL) 
-                    if (user->edit_access = 0) FS_delete_directory(command_line[1], FS_get_current_directory()); 
+                    if (user->edit_access = 0) FS_delete_directory(command_line[1], FS_global_find_directory(command_line[2])); 
                     else printf("\r\nDirectory non vuota.\r\n");
-                else FS_delete_directory(command_line[1], FS_get_current_directory());                                              
+                else FS_delete_directory(command_line[1], FS_global_find_directory(command_line[2]));                                              
             }
             
             else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0)                
                 FS_create_file(atoi(command_line[1]), atoi(command_line[2]), atoi(command_line[3]), command_line[4], command_line[5], 
-                ATA_find_empty_sector(FILES_SECTOR_OFFSET), FS_get_current_directory());      
+                ATA_find_empty_sector(FILES_SECTOR_OFFSET));      
                              
             else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {    
-                struct File* file = FS_find_file(command_line[1], FS_get_current_directory());
+                struct File* file = FS_global_find_file(command_line[1]);
                 if (file == NULL)
                     return;
 
-                if (file->edit_level >= user->edit_access) FS_delete_file(command_line[1], FS_get_current_directory());
+                if (file->edit_level >= user->edit_access) FS_delete_file(command_line[1], FS_global_find_directory(command_line[2]));
                 else printf("\nYou don`t have permissions to do this.");
             }
 
@@ -311,11 +317,11 @@ void shell_start_screen() {
                 VGA_text_clrscr();
 
                 struct File* snake_save;
-                if (FS_file_exist("snake-save", FS_get_main_directory()) == 1)
-                    snake_save = FS_find_file("snake-save", FS_get_main_directory());
+                if (FS_file_exist("/snake-save") == 1)
+                    snake_save = FS_global_find_file("/snake-save");
                 else {
-                    FS_create_file(0, 0, 0, "snake-save", "obj", ATA_find_empty_sector(FILES_SECTOR_OFFSET), FS_get_main_directory());
-                    snake_save = FS_find_file("snake-save", FS_get_main_directory());
+                    FS_create_file(0, 0, 0, "/snake-save", "obj", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
+                    snake_save = FS_global_find_file("/snake-save");
                     FS_write_file(snake_save, "0");
                 }
 
@@ -336,11 +342,11 @@ void shell_start_screen() {
                 VGA_text_clrscr();
 
                 struct File* tetris_save;
-                if (FS_file_exist("tetris-save", FS_get_main_directory()) == 1)
-                    tetris_save = FS_find_file("tetris-save", FS_get_main_directory());
+                if (FS_file_exist("/tetris-save") == 1)
+                    tetris_save = FS_global_find_file("/tetris-save");
                 else {
-                    FS_create_file(0, 0, 0, "tetris-save", "obj", ATA_find_empty_sector(FILES_SECTOR_OFFSET), FS_get_main_directory());
-                    tetris_save = FS_find_file("tetris-save", FS_get_main_directory());
+                    FS_create_file(0, 0, 0, "/tetris-save", "obj", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
+                    tetris_save = FS_global_find_file("/tetris-save");
                     FS_write_file(tetris_save, "0");
                 }
 

@@ -23,8 +23,7 @@ void open_file_manager(struct User* user) {
             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nDir name: ");
             char* dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
             
-            struct Directory* directory = FS_get_current_directory();
-            FS_create_directory(dir_name, &directory);   
+            FS_create_directory(dir_name);
             free(dir_name); 
         }
 
@@ -38,8 +37,7 @@ void open_file_manager(struct User* user) {
             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\t\tFile extension: ");
             char* file_extension = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 
-            struct Directory* directory = FS_get_current_directory();
-            FS_create_file(file_type[0] - '0', file_type[1] - '0', file_type[2] - '0', file_name, file_extension, ATA_find_empty_sector(FILES_SECTOR_OFFSET), &directory);  
+            FS_create_file(file_type[0] - '0', file_type[1] - '0', file_type[2] - '0', file_name, file_extension, ATA_find_empty_sector(FILES_SECTOR_OFFSET));  
             free(file_name);
             free(file_type);
             free(file_extension);
@@ -77,8 +75,7 @@ void execute_item(struct User* user, char action_type) {
                     while (1) {
                         char* answer = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
                         if (strcmp(answer, "y") == 0) {
-                            struct Directory* directory = FS_get_current_directory();
-                            FS_delete_directory(currentDir->name, &directory);
+                            FS_delete_directory(currentDir->name, FS_get_current_directory());
                             free(answer);
                             break;
                         }
@@ -169,7 +166,7 @@ void execute_item(struct User* user, char action_type) {
                                             cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nNew file extension: ");
                                             char* new_file_extension = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 
-                                            if (FS_file_exist(new_file_name, FS_get_current_directory()) != 1) {
+                                            if (FS_file_exist(new_file_name) != 1) {
                                                 memset(currentFile->name, ' ', sizeof(currentFile->name));
                                                 strncpy(currentFile->name, new_file_name, 11);
 
@@ -195,10 +192,8 @@ void execute_item(struct User* user, char action_type) {
                                             printf("\nDelete? (Y/N): ");
                                             
                                             char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-                                            if (strcmp(user_choose, "y") == 0) {
-                                                struct Directory* directory = FS_get_current_directory();
-                                                FS_delete_file(currentFile->name, &directory);
-                                            }
+                                            if (strcmp(user_choose, "y") == 0) 
+                                                FS_delete_file(currentFile->name, FS_get_current_directory());
 
                                             free(user_choose);
                                         }
