@@ -1,1 +1,0 @@
-CMakeLists.txt not found in /home/j1sk1ss/Desktop/CordellOS.EXMPL Select CMakeLists.txt
