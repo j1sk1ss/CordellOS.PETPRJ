@@ -11,10 +11,8 @@
         char* buffer = (char*)malloc(SECTOR_SIZE * sector_count);
         if (buffer == NULL) 
             return NULL;
-        
-        uint8_t slavebit = 0;
 
-        x86_outb(DRIVE_REGISTER, 0xE0 | (slavebit << 4) | ((lba >> 24) & 0x0F));
+        x86_outb(DRIVE_REGISTER, 0xE0 | (0x00 << 4) | ((lba >> 24) & 0x0F));
         x86_outb(FEATURES_REGISTER, 0x00);
         x86_outb(SECTOR_COUNT_REGISTER, sector_count);
         x86_outb(LBA_ADRESS_REGISTER, (uint8_t)(lba & 0xFF));
@@ -24,7 +22,10 @@
 
         int timeout = 9000000;
         while ((x86_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
-            if (--timeout < 0) return NULL;
+            if (--timeout < 0) {
+                free(buffer);
+                return NULL;
+            }
             else continue;
 
         for (int n = 0; n < (SECTOR_SIZE / 2) * sector_count; n++) {

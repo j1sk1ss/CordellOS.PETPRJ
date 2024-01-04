@@ -1,8 +1,8 @@
 # Set the paths and filenames
-ISO_PATH="build/os_image.iso"
+ISO_PATH="build/os_image.img"
 GRUB_FOLDER="build/CordellOS"
 EMPTY_SPACE_FILE="empty.img"
-COMBINED_ISO="build/final_os_image.iso"
+COMBINED_ISO="build/final_os_image.img"
 
 # Create the GRUB configuration file (grub.cfg) if it doesn't exist
 if [ ! -f "${GRUB_FOLDER}/boot/grub/grub.cfg" ]; then
@@ -32,4 +32,5 @@ else
 fi
 
 # Run QEMU with the combined ISO image
-qemu-system-i386 -debugcon stdio -hda "${COMBINED_ISO}" -vga std
+qemu-system-i386 -debugcon stdio -hda "${COMBINED_ISO}" -vga std -d int
+
