@@ -10,48 +10,58 @@ unsigned int first_data_sector;
 unsigned int total_sectors;
 unsigned int total_clusters;
 
-int bytes_per_sector;
-int sectors_per_cluster;
+unsigned int bytes_per_sector;
+unsigned int sectors_per_cluster;
 
-int ext_root_cluster;
-
+unsigned int ext_root_cluster;
 
 //Initializes struct "bootsect" to store critical data from the boot sector of the volume
 int FAT_initialize() {
-    char* cluster_data = ATA_read_sector(0, 1);
+    uint8_t* cluster_data = ATA_read_sector(0, 1);
 	if (cluster_data == NULL) {
 		printf("Function FAT_initialize: Error reading the first sector of FAT!\n");
 		return -1;
 	}
 
-	fat_BS_t* bootstruct = (fat_BS_t*)cluster_data;
+	struct fat_bpb* bootstruct = (struct fat_bpb*)cluster_data;
+    total_sectors = (bootstruct->num_total_sectors_16 == 0)? bootstruct->num_total_sectors_32 : bootstruct->num_total_sectors_16;
+    fat_size = bootstruct->sectors_per_fat_16 * bootstruct->bytes_per_sector;
 
-    total_sectors = (bootstruct->total_sectors_16 == 0)? bootstruct->total_sectors_32 : bootstruct->total_sectors_16;
-    fat_size = bootstruct->table_size_16;
-
-    int root_dir_sectors = ((bootstruct->root_entry_count * 32) + (bootstruct->bytes_per_sector - 1)) >> 5;
-    int data_sectors = total_sectors - (bootstruct->reserved_sector_count + (bootstruct->table_count * fat_size) + root_dir_sectors);
+    int root_dir_sectors = ((bootstruct->num_root_entries * 32) + (bootstruct->bytes_per_sector - 1)) >> 5;
+    int data_sectors = total_sectors - (bootstruct->num_reserved_sectors + (bootstruct->num_fats * fat_size) + root_dir_sectors);
 
     total_clusters = data_sectors / bootstruct->sectors_per_cluster;
 	if (total_clusters == 0) 
-		total_clusters = bootstruct->total_sectors_32 / bootstruct->sectors_per_cluster;
+		total_clusters = bootstruct->num_total_sectors_32 / bootstruct->sectors_per_cluster;
 	else if (total_clusters < 4085) {
 		fat_type = 12;
-		first_data_sector = bootstruct->reserved_sector_count + bootstruct->table_count * bootstruct->table_size_16 + root_dir_sectors; 
+		first_data_sector = bootstruct->num_reserved_sectors + bootstruct->num_fats * (bootstruct->bytes_per_sector * bootstruct->sectors_per_fat_16) + root_dir_sectors; 
 	}
 	else if (total_clusters < 65525) {
 		fat_type = 16;
-		first_data_sector = bootstruct->reserved_sector_count + bootstruct->table_count * bootstruct->table_size_16 + root_dir_sectors;
+		first_data_sector = bootstruct->num_reserved_sectors + bootstruct->num_fats * (bootstruct->bytes_per_sector * bootstruct->sectors_per_fat_16) + root_dir_sectors;
 	}
 	else {
 		fat_type = 32;
-		first_data_sector = bootstruct->reserved_sector_count + bootstruct->table_count * ((fat_extBS_32_t*)(bootstruct->extended_section))->table_size_32 + root_dir_sectors;
-		ext_root_cluster = ((fat_extBS_32_t*)bootstruct->extended_section)->root_cluster;
+		first_data_sector = bootstruct->num_reserved_sectors + bootstruct->num_fats * (bootstruct->bytes_per_sector * bootstruct->version_specific.fat32.sectors_per_fat_32) + root_dir_sectors;
+		ext_root_cluster = bootstruct->version_specific.fat32.root_cluster;
 	}
 
 	sectors_per_cluster = bootstruct->sectors_per_cluster;
 	bytes_per_sector    = bootstruct->bytes_per_sector;
-	first_fat_sector    = bootstruct->reserved_sector_count;
+	first_fat_sector = bootstruct->num_reserved_sectors + bootstruct->num_fats * fat_size / bootstruct->bytes_per_sector;
+
+	printf("[%u]\n", sectors_per_cluster);
+	printf("[%u]\n", bytes_per_sector);
+	printf("[%u]\n", first_fat_sector);
+	printf("[%u]\n", total_clusters);
+	printf("[%u]\n", bootstruct->num_reserved_sectors);
+	printf("[%u]\n", fat_size);
+	printf("[%i]\n", bootstruct->num_fats);
+	printf("[%u]\n", fat_type);
+
+	printf("[%s]\n", bootstruct->version_specific.fat32.fstype);
+	printf("[%s]\n", bootstruct->version_specific.fat12_or_fat16.fstype);
 
 	free(bootstruct);
 	return 0;

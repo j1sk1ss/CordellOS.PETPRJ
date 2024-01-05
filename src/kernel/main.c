@@ -50,11 +50,6 @@ void kernel_main(void) {
     // - FS Clusters 
 
         FAT_initialize();
-        // char* fileContents;
-        // directory_entry_t fileMeta;
-        // FAT_get_file("C:\\", &fileContents, &fileMeta, 1);
-        //FAT_directory_list(2, NULL, FALSE);
-        //FS_init();
 
     //////////////////////
 
