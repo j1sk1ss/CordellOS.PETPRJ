@@ -13,7 +13,7 @@ void init_users() {
             }
         }
         else {
-            FS_create_file(0, 0, 0, "/security/users", "txt", USERS_SECTOR);
+            FS_create_file(0, 0, 0, "/security/users", "txt", ATA_find_empty_sector(SYS_FILES_SECTOR_OFFSET));
             FS_write_file(FS_global_find_file("/security/users"), "admin[000[0\nguest[666[123\n");
             continue;
         }
@@ -26,7 +26,7 @@ void init_users() {
             }
         }
         else {
-            FS_create_file(0, 0, 0, "/security/groups", "txt", GROUPS_SECTOR);
+            FS_create_file(0, 0, 0, "/security/groups", "txt", ATA_find_empty_sector(SYS_FILES_SECTOR_OFFSET));
             FS_write_file(FS_global_find_file("/security/groups"), "default[000[admin[guest\n");
             continue;
         }

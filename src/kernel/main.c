@@ -3,6 +3,7 @@
 
 #include "../user_land/include/user_land.h"
 #include "include/fat.h"
+#include "include/iso9660.h"
 #include "include/file_system.h"
 
 extern void _init();
@@ -49,7 +50,9 @@ void kernel_main(void) {
     // - Cluster data
     // - FS Clusters 
 
-        FAT_initialize();
+        //FAT_initialize();
+        FS_init();
+        //ISO_init();
 
     //////////////////////
 

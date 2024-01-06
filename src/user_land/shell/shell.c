@@ -19,7 +19,7 @@ void shell() {
     //
 
         if (FS_file_exist("/shell") != 1) {
-            FS_create_file(0, 0, 0, "/shell", "txt", ATA_find_empty_sector(SHELL_SECTOR));
+            FS_create_file(0, 0, 0, "/shell", "txt", ATA_find_empty_sector(SYS_FILES_SECTOR_OFFSET));
             currentPassword = FS_find_file("/shell", NULL);
             FS_write_file(currentPassword, "12345");
         } else currentPassword = FS_find_file("/shell", NULL);

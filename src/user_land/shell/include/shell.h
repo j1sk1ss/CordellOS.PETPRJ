@@ -11,7 +11,7 @@
 #include "file_manager.h"
 #include "text_editor.h"
 
-#include "../libs/include/x86.h"
+// #include "../libs/include/x86.h"
 
 #define SUPER_DERICTIVE        0
 #define CORDELL_DERICTIVE      1

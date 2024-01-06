@@ -13,9 +13,6 @@
 #define GRUB_OFFSET                 12000
 
 #define FILE_SYSTEM_SECTOR          350 + GRUB_OFFSET
-#define USERS_SECTOR                351 + GRUB_OFFSET
-#define GROUPS_SECTOR               352 + GRUB_OFFSET
-#define SHELL_SECTOR                355 + GRUB_OFFSET
 
 #define FILES_SECTOR_OFFSET         450 + GRUB_OFFSET
 #define SYS_FILES_SECTOR_OFFSET     354 + GRUB_OFFSET

@@ -17,7 +17,6 @@ struct Directory* currentDirectory  = NULL;
 
 
 void FS_init() {
-
     if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
         FS_load_file_system();
         return;
@@ -38,37 +37,6 @@ void FS_init() {
                     cprintf(FOREGROUND_GREEN, "\r\nSETTORE FILE SYSTEM [%i] E` CANCELLATO", FILE_SYSTEM_SECTOR);
                 else cprintf(FOREGROUND_RED, "\r\nSETTORE FILE SYSTEM [%i] NON DISPONIBILE PER LA PULIZIA", FILE_SYSTEM_SECTOR);
             }
-
-
-            if (ATA_is_current_sector_empty(USERS_SECTOR) == true)
-                cprintf(FOREGROUND_GREEN, "\r\nSETTORE UTENTI [%i] E` CHIARO", USERS_SECTOR);
-            else {
-                cprintf(FOREGROUND_RED, "\r\nSETTORE UTENTI [%i] NON CHIARO \n TENTATIVO DI PULIRE...", USERS_SECTOR);
-                if (ATA_clear_sector(USERS_SECTOR) == 1)
-                    cprintf(FOREGROUND_GREEN, "\r\nSETTORE UTENTI [%i] E` CANCELLATO", USERS_SECTOR);
-                else cprintf(FOREGROUND_RED, "\r\nnSETTORE UTENTI [%i] NON DISPONIBILE PER LA PULIZIA", USERS_SECTOR);
-            }
-
-
-            if (ATA_is_current_sector_empty(GROUPS_SECTOR) == true)
-                cprintf(FOREGROUND_GREEN, "\r\nSETTORE GRUPPI [%i] E` CHIARO", GROUPS_SECTOR);
-            else {
-                cprintf(FOREGROUND_RED, "\r\nSETTORE GRUPPI [%i] NON CHIARO \n TENTATIVO DI PULIRE...", GROUPS_SECTOR);
-                if (ATA_clear_sector(GROUPS_SECTOR) == 1)
-                    cprintf(FOREGROUND_GREEN, "\r\nSETTORE GRUPPI [%i] E` CANCELLATO", GROUPS_SECTOR);
-                else cprintf(FOREGROUND_RED, "\r\nnSETTORE GRUPPI [%i] NON DISPONIBILE PER LA PULIZIA", GROUPS_SECTOR);
-            }
-
-
-            if (ATA_is_current_sector_empty(SHELL_SECTOR) == true)
-                cprintf(FOREGROUND_GREEN, "\r\nSETTORE GUSCIO [%i] E` CHIARO", SHELL_SECTOR);
-            else {
-                cprintf(FOREGROUND_RED, "\r\nSETTORE GUSCIO [%i] NON CHIARO \n TENTATIVO DI PULIRE...", SHELL_SECTOR);
-                if (ATA_clear_sector(SHELL_SECTOR) == 1)
-                    cprintf(FOREGROUND_GREEN, "\r\nSETTORE GUSCIO [%i] E` CANCELLATO", SHELL_SECTOR);
-                else cprintf(FOREGROUND_RED, "\r\nnSETTORE GUSCIO [%i] NON DISPONIBILE PER LA PULIZIA", SHELL_SECTOR);
-            }
-
 
             printf("\n\nFAL FS Initialized\n\n");
 
