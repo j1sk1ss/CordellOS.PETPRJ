@@ -48,3 +48,4 @@ char* strncpy(char *dst, const char *src, size_t n);
 char* strdup(const char *src);
 
 void str_uppercase(char* str);
+int str_toupper(int c);

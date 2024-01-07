@@ -50,8 +50,31 @@ void kernel_main(void) {
     // - Cluster data
     // - FS Clusters 
 
-        //FAT_initialize();
-        FS_init();
+
+        FAT_initialize();
+        
+        char* fileContents;
+        directory_entry_t fileMeta;
+        FAT_get_file("boot", &fileContents, &fileMeta, 1);
+        FAT_directory_list(GET_CLUSTER_FROM_ENTRY(fileMeta), NULL, FALSE);
+        
+        directory_entry_t new_file;
+        printf("\nADD FILE\n");
+        FAT_create_entry(&new_file, "TST", "TXT", FALSE, FAT_allocate_free(), 10);
+        if (FAT_name_check(new_file.file_name) != 0)
+		    FAT_name2fatname(new_file.file_name);
+
+        printf("FILE ENTRY CREATED!: [%s]\n", new_file.file_name);
+        FAT_put_file("boot", "help help", &new_file);
+
+        printf("\n\n");
+
+        char* file1Contents;
+        directory_entry_t file1Meta;
+        FAT_get_file("boot", &file1Contents, &file1Meta, 1);
+        FAT_directory_list(GET_CLUSTER_FROM_ENTRY(fileMeta), NULL, FALSE);
+
+        //FS_init();
         //ISO_init();
 
     //////////////////////

@@ -198,8 +198,8 @@ void shell_start_screen() {
                 printf("SECTORS ALL: [%i]\n", ATA_global_sector_count());
                 printf("FULLY-EMPTY SECTORS: [%i]\n", ATA_global_sector_empty());
 
-                printf("FAT TYPE: [%i]\n", fat_type);
-                printf("TOTAL CLUSTERS x32: [%i]\n", total_clusters);
+                // printf("FAT TYPE: [%i]\n", fat_type);
+                // printf("TOTAL CLUSTERS x32: [%i]\n", total_clusters);
             }
 
             else if (strstr(command_line[0], COMMAND_CLEAR) == 0) 

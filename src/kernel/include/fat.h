@@ -73,50 +73,56 @@
 
 /* Bpb taken from grub2 fat.c */
 
-struct fat_bpb {
-  uint8_t jmp_boot[3];
-  uint8_t oem_name[8];
-  uint16_t bytes_per_sector;
-  uint8_t sectors_per_cluster;
-  uint16_t num_reserved_sectors;
-  uint8_t num_fats;
-  uint16_t num_root_entries;
-  uint16_t num_total_sectors_16;
-  uint8_t media;
-  uint16_t sectors_per_fat_16;
-  uint16_t sectors_per_track;
-  uint16_t num_heads;
-  uint32_t num_hidden_sectors;
-  uint32_t num_total_sectors_32;
+//FAT directory and bootsector structures
+typedef struct fat_extBS_32 {
+	//extended fat32 stuff
+	unsigned int		table_size_32;
+	unsigned short		extended_flags;
+	unsigned short		fat_version;
+	unsigned int		root_cluster;
+	unsigned short		fat_info;
+	unsigned short		backup_BS_sector;
+	unsigned char 		reserved_0[12];
+	unsigned char		drive_number;
+	unsigned char 		reserved_1;
+	unsigned char		boot_signature;
+	unsigned int 		volume_id;
+	unsigned char		volume_label[11];
+	unsigned char		fat_type_label[8];
 
-  union {
-    struct {
-		uint8_t num_ph_drive;
-		uint8_t reserved;
-		uint8_t boot_sig;
-		uint32_t num_serial;
-		uint8_t label[11];
-		uint8_t fstype[8];
-	} __attribute__ ((packed)) fat12_or_fat16;
+} __attribute__((packed)) fat_extBS_32_t;
 
-    struct {
-      uint32_t sectors_per_fat_32;
-      uint16_t extended_flags;
-      uint16_t fs_version;
-      uint32_t root_cluster;
-      uint16_t fs_info;
-      uint16_t backup_boot_sector;
-      uint8_t reserved[12];
-      uint8_t num_ph_drive;
-      uint8_t reserved1;
-      uint8_t boot_sig;
-      uint32_t num_serial;
-      uint8_t label[11];
-      uint8_t fstype[8];
-    } __attribute__ ((packed)) fat32;
-  } __attribute__ ((packed)) version_specific;
+typedef struct fat_extBS_16 {
+	//extended fat12 and fat16 stuff
+	unsigned char		bios_drive_num;
+	unsigned char		reserved1;
+	unsigned char		boot_signature;
+	unsigned int		volume_id;
+	unsigned char		volume_label[11];
+	unsigned char		fat_type_label[8];
 
-} __attribute__ ((packed));
+} __attribute__((packed)) fat_extBS_16_t;
+
+typedef struct fat_BS {
+	unsigned char 		bootjmp[3];
+	unsigned char 		oem_name[8];
+	unsigned short 	    bytes_per_sector;
+	unsigned char		sectors_per_cluster;
+	unsigned short		reserved_sector_count;
+	unsigned char		table_count;
+	unsigned short		root_entry_count;
+	unsigned short		total_sectors_16;
+	unsigned char		media_type;
+	unsigned short		table_size_16;
+	unsigned short		sectors_per_track;
+	unsigned short		head_side_count;
+	unsigned int 		hidden_sector_count;
+	unsigned int 		total_sectors_32;
+
+	//this will be cast to it's specific type once the driver actually knows what type of FAT this is.
+	unsigned char		extended_section[54];
+
+} __attribute__((packed)) fat_BS_t;
 
 /* from http://wiki.osdev.org/FAT */
 
@@ -183,7 +189,7 @@ int FAT_directory_search(const char* filepart, const unsigned int cluster, direc
 int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add);
 int FAT_get_file(const char* filePath, char** fileContents, directory_entry_t* fileMeta, unsigned int readInOffset);
 int FAT_put_file(const char* filePath, char** fileContents, directory_entry_t* fileMeta);
-int FAT_create_entry(directory_entry_t * entry, const char * filename,  const char * ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+int FAT_create_entry(directory_entry_t* entry, const char* filename,  const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
 unsigned short FAT_current_time();
 unsigned char FAT_current_time_temths();
 unsigned short FAT_current_date();
