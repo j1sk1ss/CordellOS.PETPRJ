@@ -44,6 +44,8 @@
 #define TOO_MANY_DOTS           0x10 //E.g.: "test..txt"; may or may not have already been converted
 
 #define GET_CLUSTER_FROM_ENTRY(x)       (x.low_bits | (x.high_bits << (fat_type / 2)))
+#define GET_CLUSTER_FROM_PENTRY(x)      (x->low_bits | (x->high_bits << (fat_type / 2)))
+
 #define GET_ENTRY_LOW_BITS(x)           (x & ((fat_type /2) -1))
 #define GET_ENTRY_HIGH_BITS(x)          (x >> (fat_type / 2))
 #define CONCAT_ENTRY_HL_BITS(high, low) ((high << (fat_type / 2)) | low)
@@ -214,17 +216,22 @@ int FAT_initialize();
 int FAT_read(unsigned int clusterNum);
 int FAT_write(unsigned int clusterNum, unsigned int clusterVal);
 
-unsigned int FAT_allocate_free();
+unsigned int FAT_cluster_allocate();
+int FAT_cluster_deallocate(const unsigned int cluster);
 
 char* FAT_cluster_read(unsigned int clusterNum);
-int FAT_cluster_write(void* contentsToWrite, unsigned int contentSize, unsigned int clusterNum);
+int FAT_cluster_write(void* contentsToWrite, unsigned int clusterNum);
 
 struct FATDirectory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, short exclusive);
 int FAT_directory_search(const char* filepart, const unsigned int cluster, directory_entry_t* file, unsigned int* entryOffset);
 int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add);
+int FAT_directory_remove(const unsigned int cluster, const char* fileName);
 
+int FAT_content_exists(const char* filePath);
 struct FATContent* FAT_get_content(const char* filePath, unsigned int readInOffset);
 int FAT_put_content(const char* filePath, struct FATContent* content);
+int FAT_delete_content(const char* filePath, const char* name);
+struct FATContent* FAT_create_content(char* name, BOOL directory, char* extension);
 
 struct directory_entry* FAT_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
 
@@ -238,5 +245,7 @@ char* FAT_name2fatname(char* input);
 void FAT_fatname2name(char* input, char* output);
 
 void FAT_unload_directories_system(struct FATDirectory* directory);
+void FAT_unload_files_system(struct FATFile* file);
+void FAT_unload_content_system(struct FATContent* content);
 
 #endif
