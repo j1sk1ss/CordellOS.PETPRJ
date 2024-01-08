@@ -71,7 +71,7 @@
 #define DISK_WRITE_LOCATION 0x40000
 #endif
 
-/* Bpb taken from grub2 fat.c */
+/* Bpb taken from http://wiki.osdev.org/FAT */
 
 //FAT directory and bootsector structures
 typedef struct fat_extBS_32 {
@@ -162,6 +162,38 @@ typedef struct long_entry {
 	unsigned char last_two[4]; //last 2, 2-byte characters
 } __attribute__((packed)) long_entry_t;
 
+/* From file_system.h (CordellOS brunch FS_based_on_FAL) */
+
+struct FATFile {
+	directory_entry_t file_meta;
+
+    int read_level;
+    int write_level;
+    int edit_level;
+    
+	char* data;
+	char extension[4];
+	char name[11];
+
+    struct File* next;
+};
+
+struct FATDirectory {
+	directory_entry_t directory_meta;
+
+	char name[11];
+
+    struct File* files;
+
+    struct FATDirectory* next;
+    struct FATDirectory* subDirectory;
+};
+
+struct FATContent {
+	struct FATDirectory* directory;
+	struct FATFile* file;
+};
+
 //Global variables
 extern unsigned int fat_size;
 extern unsigned int fat_type;
@@ -181,22 +213,30 @@ extern unsigned int ext_root_cluster;
 int FAT_initialize(); 
 int FAT_read(unsigned int clusterNum);
 int FAT_write(unsigned int clusterNum, unsigned int clusterVal);
+
 unsigned int FAT_allocate_free();
-char* FAT_cluster_read(unsigned int clusterNum, unsigned int clusterOffset);
-int cluster_write(void* contentsToWrite, unsigned int contentSize, unsigned int contentBuffOffset, unsigned int clusterNum);
-int FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, short exclusive);
+
+char* FAT_cluster_read(unsigned int clusterNum);
+int FAT_cluster_write(void* contentsToWrite, unsigned int contentSize, unsigned int clusterNum);
+
+struct FATDirectory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, short exclusive);
 int FAT_directory_search(const char* filepart, const unsigned int cluster, directory_entry_t* file, unsigned int* entryOffset);
 int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add);
-int FAT_get_file(const char* filePath, char** fileContents, directory_entry_t* fileMeta, unsigned int readInOffset);
-int FAT_put_file(const char* filePath, char** fileContents, directory_entry_t* fileMeta);
-int FAT_create_entry(directory_entry_t* entry, const char* filename,  const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+
+struct FATContent* FAT_get_content(const char* filePath, unsigned int readInOffset);
+int FAT_put_content(const char* filePath, struct FATContent* content);
+
+struct directory_entry* FAT_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+
 unsigned short FAT_current_time();
 unsigned char FAT_current_time_temths();
 unsigned short FAT_current_date();
 unsigned char FAT_check_sum(unsigned char *pFcbName);
+
 BOOL FAT_name_check(char * input);
 char* FAT_name2fatname(char* input);
 void FAT_fatname2name(char* input, char* output);
 
+void FAT_unload_directories_system(struct FATDirectory* directory);
 
 #endif

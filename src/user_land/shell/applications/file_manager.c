@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 #include "../include/file_manager.h"
-
+// TODO: fat.c
 int row_position = 1;
 
 void open_file_manager(struct User* user) {

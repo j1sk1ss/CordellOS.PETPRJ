@@ -47,12 +47,12 @@ void FS_init() {
 }
 
 void FS_load_file_system() {
-    char* loaded_data = ATA_read_sector(FILE_SYSTEM_SECTOR, 1);
+    char* loaded_data = ATA_read_sector(FILE_SYSTEM_SECTOR);
     if (loaded_data != NULL) {
         char* token = strtok(loaded_data, " ");
         char* file_system_data = NULL;
         while(token != NULL) {
-            char* sector_data = ATA_read_sector(atoi(token), 1);
+            char* sector_data = ATA_read_sector(atoi(token));
             file_system_data = (char*)realloc(file_system_data, strlen(sector_data) * sizeof(char));
             strcat(file_system_data, sector_data);
 
@@ -213,8 +213,7 @@ void FS_unload_file_system(struct Directory* directory) {
         newDirectory->next          = NULL;
         newDirectory->subDirectory  = NULL;
 
-        if (*directory == NULL) 
-            *directory = newDirectory;
+        if (*directory == NULL) *directory = newDirectory;
         else {
             newDirectory->upDirectory = *directory;
             if ((*directory)->subDirectory == NULL) 
@@ -285,7 +284,7 @@ void FS_unload_file_system(struct Directory* directory) {
         newFile->sector_count++;
 
         newFile->sectors[0] = head_sector;
-        ATA_write_sector(head_sector, 1, "\0");
+        ATA_write_sector(head_sector, "\0");
 
         if ((*directory)->files == NULL)
             (*directory)->files = newFile;
@@ -322,7 +321,7 @@ void FS_unload_file_system(struct Directory* directory) {
 
                 // Copy the data into the sector's data buffer
                 strncpy(sector_data, data, bytes_to_write);
-                ATA_write_sector(file->sectors[i], 1, sector_data);
+                ATA_write_sector(file->sectors[i], sector_data);
 
                 data += bytes_to_write; // Move the data pointer to the next chunk
                 data_len -= bytes_to_write;
@@ -330,7 +329,6 @@ void FS_unload_file_system(struct Directory* directory) {
                 sectors_written++;
                 // If there's more data and we have exceeded the existing sectors, allocate a new sector
                 if (data_len <= 0) break;
-                
                 if (data_len > 0 && i == (file->sector_count - 1)) {
                     int new_sector = ATA_find_empty_sector(FILES_SECTOR_OFFSET);
                     if (new_sector != -1) {
@@ -338,13 +336,12 @@ void FS_unload_file_system(struct Directory* directory) {
                         file->sectors[file->sector_count] = new_sector;
                         file->sector_count++;
                     } else {
-                        // Handle the case where you couldn't find an empty sector
-                        free(sector_data); // Free the allocated memory
+                        free(sector_data);
                         return;
                     }
                 }
 
-                free(sector_data); // Free the allocated memory for sector_data
+                free(sector_data);
             }
 
             // Update the file's sector count and memory allocation
@@ -363,7 +360,7 @@ void FS_unload_file_system(struct Directory* directory) {
             char* data = (char*)malloc(512 * file->sector_count);
 
             for (size_t i = 0; i < file->sector_count; i++) {
-                char* sector_data = ATA_read_sector(file->sectors[i], 1);
+                char* sector_data = ATA_read_sector(file->sectors[i]);
                 strcat(data, sector_data);
                 free(sector_data);
             }
@@ -380,7 +377,7 @@ void FS_unload_file_system(struct Directory* directory) {
             memset(empty_data, 0, sizeof(empty_data));
 
             for (size_t i = 0; i < file->sector_count; i++) 
-                ATA_write_sector(file->sectors[i], 1, empty_data);
+                ATA_write_sector(file->sectors[i], empty_data);
         }
 
     //  CLEAR FILE
@@ -531,7 +528,7 @@ void FS_unload_file_system(struct Directory* directory) {
 
     void FS_save_file_system() {
         if (ATA_is_current_sector_empty(FILE_SYSTEM_SECTOR) == false) {
-            char* sector_data = ATA_read_sector(FILE_SYSTEM_SECTOR, 1);
+            char* sector_data = ATA_read_sector(FILE_SYSTEM_SECTOR);
             char* token = strtok(sector_data, " ");
             while(token != NULL) {
                 ATA_clear_sector(atoi(token));
@@ -552,7 +549,7 @@ void FS_unload_file_system(struct Directory* directory) {
 
             // Write the modified sector data back to the sector
             int sector = ATA_find_empty_sector(SYS_FILES_SECTOR_OFFSET);
-            ATA_write_sector(sector, 1, result);
+            ATA_write_sector(sector, result);
             ATA_append_sector(FILE_SYSTEM_SECTOR, itoa(sector));
             ATA_append_sector(FILE_SYSTEM_SECTOR, " ");
 

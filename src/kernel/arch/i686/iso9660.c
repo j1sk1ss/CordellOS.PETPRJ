@@ -2,7 +2,7 @@
 
 void ISO_init() {
     printf("ISO inits\n");
-    struct grub_iso9660_susp_entry* bootsect = (struct grub_iso9660_susp_entry*)ATA_read_sector(0, 1);
+    struct grub_iso9660_susp_entry* bootsect = (struct grub_iso9660_susp_entry*)ATA_read_sector(0);
 
     printf("TYPE: [%i]\n", bootsect->sig);
     printf("Identifier: [%i]\n", bootsect->len);

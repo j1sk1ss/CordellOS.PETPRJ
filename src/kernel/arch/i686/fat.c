@@ -17,7 +17,7 @@ unsigned int ext_root_cluster;
 
 //Initializes struct "bootsect" to store critical data from the boot sector of the volume
 int FAT_initialize() {
-    uint8_t* cluster_data = ATA_read_sector(0, 1);
+    uint8_t* cluster_data = ATA_read_sector(0);
 	if (cluster_data == NULL) {
 		printf("Function FAT_initialize: Error reading the first sector of FAT!\n");
 		return -1;
@@ -39,7 +39,7 @@ int FAT_initialize() {
 	}
 	else if (total_clusters < 65525) {
 		fat_type = 16;
-			first_data_sector = bootstruct->reserved_sector_count + bootstruct->table_count * bootstruct->table_size_16 + (bootstruct->root_entry_count * 32 + bootstruct->bytes_per_sector - 1) / bootstruct->bytes_per_sector;
+		first_data_sector = bootstruct->reserved_sector_count + bootstruct->table_count * bootstruct->table_size_16 + (bootstruct->root_entry_count * 32 + bootstruct->bytes_per_sector - 1) / bootstruct->bytes_per_sector;
 	}
 	else {
 		fat_type = 32;
@@ -66,18 +66,20 @@ int FAT_read(unsigned int clusterNum) {
 
 	if (fat_type == 32 || fat_type == 16) {
 		unsigned int cluster_size 	= bytes_per_sector * sectors_per_cluster;
-		unsigned int fat_offset 	= clusterNum * 4;
+		unsigned int fat_offset 	= clusterNum * (fat_type == 16 ? 2 : 4);
 		unsigned int fat_sector 	= first_fat_sector + (fat_offset / cluster_size);
 		unsigned int ent_offset 	= fat_offset % cluster_size;
 
 		//at this point you need to read from sector "fat_sector" on the disk into "FAT_table".
-        char* cluster_data = ATA_read_sector(fat_sector, sectors_per_cluster);
+		
+        char* cluster_data = ATA_read_sectors(fat_sector, sectors_per_cluster);
 		if (cluster_data == NULL) {
 			printf("Function FAT_read: Could not read sector that contains FAT32 table entry needed.\n");
 			return -1;
 		}
 
-		unsigned int table_value = cluster_data[ent_offset] & 0x0FFFFFFF;
+		unsigned int table_value = *(unsigned int*)&cluster_data[ent_offset];
+		if (fat_type == 32) table_value &= 0x0FFFFFFF;
 
 		//the variable "table_value" now has the information you need about the next cluster in the chain.
 		free(cluster_data);
@@ -99,18 +101,18 @@ int FAT_write(unsigned int clusterNum, unsigned int clusterVal) {
 
 	if (fat_type == 32 || fat_type == 16) {
 		unsigned int cluster_size 	= bytes_per_sector * sectors_per_cluster;
-		unsigned int fat_offset 	= clusterNum * 4;
+		unsigned int fat_offset 	= clusterNum * (fat_type == 16 ? 2 : 4);
 		unsigned int fat_sector 	= first_fat_sector + (fat_offset / cluster_size);
 		unsigned int ent_offset 	= fat_offset % cluster_size;
 
-        char* sector_data = ATA_read_sector(fat_sector, sectors_per_cluster);
+        char* sector_data = ATA_read_sectors(fat_sector, sectors_per_cluster);
 		if (sector_data == NULL) {
 			printf("Function FAT_write: Could not read sector that contains FAT32 table entry needed.\n");
 			return -1;
 		}
 
-		sector_data[ent_offset] = clusterVal;
-		if (ATA_write_sector(fat_sector, sectors_per_cluster, sector_data) != 1) {
+		*(unsigned int*)&sector_data[ent_offset] = clusterVal;
+		if (ATA_write_sectors(fat_sector, sector_data, sectors_per_cluster) != 1) {
 			printf("Function FAT_write: Could not write new FAT32 cluster number to sector.\n");
 			return -1;
 		}
@@ -175,14 +177,14 @@ unsigned int FAT_allocate_free() {
 
 //Reads one cluster and dumps it to DISK_READ_LOCATION, offset "cluster_size" number of bytes from DISK_READ_LOCATION
 //This function deals in absolute data clusters
-char* FAT_cluster_read(unsigned int clusterNum, unsigned int clusterOffset) {
+char* FAT_cluster_read(unsigned int clusterNum) {
 	if (clusterNum < 2 || clusterNum >= total_clusters) {
 		printf("Function FAT_cluster_read: Invalid cluster number! [%u]\n", clusterNum);
 		return NULL;
 	}
 
 	unsigned int start_sect = (clusterNum - 2) * (unsigned short)sectors_per_cluster + first_data_sector;
-    char* cluster_data = ATA_read_sector(start_sect, sectors_per_cluster);
+    char* cluster_data = ATA_read_sectors(start_sect, sectors_per_cluster);
     if (cluster_data == NULL) {
         printf("Function FAT_cluster_read: An error occurred with ATA_read_sector [%u]\n", start_sect);
         return NULL;
@@ -192,16 +194,15 @@ char* FAT_cluster_read(unsigned int clusterNum, unsigned int clusterOffset) {
 //Deals in absolute clusters
 //contentsToWrite: contains a pointer to the data to be written to disk
 //contentSize: contains how big contentsToWrite's data is (in bytes)
-//contentBuffOffset: sets how far offset from DISK_WRITE_LOCATION to place the data from contentsToWrite in preparation for writing to disk (in clusters)
 //clusterNum: Specifies the on-disk cluster to write the data to
-int FAT_cluster_write(void* contentsToWrite, unsigned int contentSize, unsigned int contentBuffOffset, unsigned int clusterNum) {
+int FAT_cluster_write(void* contentsToWrite, unsigned int contentSize, unsigned int clusterNum) {
 	if (clusterNum < 2 || clusterNum >= total_clusters) {
 		printf("Function FAT_cluster_write: Invalid cluster number!\n");
 		return -1;
 	}
 
 	unsigned int start_sect = (clusterNum - 2) * (unsigned short)sectors_per_cluster + first_data_sector;
-    if (ATA_write_sector(start_sect, sectors_per_cluster, contentsToWrite) == -1) {
+    if (ATA_write_sectors(start_sect, contentsToWrite, sectors_per_cluster) == -1) {
         printf("Function FAT_cluster_write: An error occurred with ATA_write_sector, the area in sector ");
         return -1;
     } else return 0;
@@ -211,10 +212,11 @@ int FAT_cluster_write(void* contentsToWrite, unsigned int contentSize, unsigned 
 
 //receives the cluster to list, and will list all regular entries and directories, plus whatever attributes are passed in
 //returns: -1 is a general error
-int FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, BOOL exclusive) {
+struct FATDirectory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, BOOL exclusive) {
+	struct FATDirectory* currentDirectory = malloc(sizeof(struct FATDirectory));
 	if (cluster < 2 || cluster >= total_clusters) {
 		printf("Function FAT_directory_list: Invalid cluster number! [%u]\n", cluster);
-		return -1;
+		return NULL;
 	}
 
 	const unsigned char default_hidden_attributes = (FILE_HIDDEN | FILE_SYSTEM); //FILE_LONG_NAME is ALWAYS hidden.
@@ -223,24 +225,32 @@ int FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd
 	if (exclusive == FALSE) attributes_to_hide &= (~attributesToAdd);
 	else if (exclusive == TRUE) attributes_to_hide = (~attributesToAdd);
 
-    char* cluster_data = FAT_cluster_read(cluster, 0);
+    char* cluster_data = FAT_cluster_read(cluster);
 	if (cluster_data == NULL) {
 		printf("Function FAT_directory_list: FAT_cluster_read encountered an error. Aborting...\n");
-		return -1;
+		return NULL;
 	}
 
 	directory_entry_t* file_metadata = (directory_entry_t*)cluster_data;
-	unsigned int meta_pointer_iterator_count = 0; //holds how many directories have been looked at
-
+	unsigned int meta_pointer_iterator_count = 0;
 	while (1) {
-		if (file_metadata->file_name[0] == ENTRY_END) {
-			break;
-		}
+		if (file_metadata->file_name[0] == ENTRY_END) break;
 		else if (strncmp(file_metadata->file_name, "..", 2) == 0 || strncmp(file_metadata->file_name, ".", 1) == 0) {
-			if (file_metadata->file_name[1] == '.') printf("..");
-			else printf(".");
+			struct FATDirectory* upperDir = malloc(sizeof(struct FATDirectory));
+			upperDir->directory_meta = *file_metadata;
 
-			printf("\t\t\tDIR\n");
+			char* name = malloc(strlen(file_metadata->file_name));
+			strcpy(name, file_metadata->file_name);
+			strncpy(upperDir->name, strtok(name, " "), 11);
+
+			if (currentDirectory->subDirectory == NULL) currentDirectory->subDirectory = upperDir;
+			else {
+				struct FATDirectory* current = currentDirectory->subDirectory;
+				while (current->next != NULL) 
+					current = current->next;
+	
+				current->next = upperDir;
+			}
 
 			file_metadata++;
 			meta_pointer_iterator_count++;
@@ -250,41 +260,64 @@ int FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd
 				file_metadata++;
 				meta_pointer_iterator_count++;
 			}
-			else //search next cluster in directory
-			{
+			else {
 				unsigned int next_cluster = FAT_read(cluster);
-
 				if ((next_cluster >= END_CLUSTER_32 && fat_type == 32) || (next_cluster >= END_CLUSTER_16 && fat_type == 16) || (next_cluster >= END_CLUSTER_12 && fat_type == 12))
 					break;
-				else if (next_cluster < 0)
-				{
+
+				else if (next_cluster < 0) {
 					printf("Function FAT_directory_list: FAT_read encountered an error. Aborting...\n");
-					return -1;
+					return NULL;
 				}
-				else
-					return FAT_directory_list(next_cluster, attributesToAdd, exclusive); //search next cluster
+				else return FAT_directory_list(next_cluster, attributesToAdd, exclusive);
 			}
 		}
 		else {
-			char conversion [13];
-			FAT_fatname2name((char*)file_metadata->file_name, conversion);
-			printf(conversion);
-			printf("\t");
+			if ((file_metadata->attributes & FILE_DIRECTORY) != FILE_DIRECTORY) {
+				struct FATFile* file = malloc(sizeof(struct FATFile));
+				file->file_meta = *file_metadata;
 
-			if ((file_metadata->attributes & FILE_DIRECTORY) != FILE_DIRECTORY) printf("%u", file_metadata->file_size);
-			else printf("\t");
+				char* name = malloc(strlen(file_metadata->file_name));
+				strcpy(name, file_metadata->file_name);
 
-			printf("\t");
-			if ((file_metadata->attributes & FILE_DIRECTORY) == FILE_DIRECTORY) printf("DIR");
+				strncpy(file->name, strtok(name, " "), 11);
+				strncpy(file->extension, strtok(NULL, " "), 4);
+
+				if (currentDirectory->files == NULL) currentDirectory->files = file;
+				else {
+					struct FATFile* current = currentDirectory->files;
+					while (current->next != NULL) 
+						current = current->next;
+		
+					current->next = file;
+				}
+			}
+			else {
+				if ((file_metadata->attributes & FILE_DIRECTORY) == FILE_DIRECTORY) {
+					struct FATDirectory* upperDir = malloc(sizeof(struct FATDirectory));
+					upperDir->directory_meta = *file_metadata;
+
+					char* name = malloc(strlen(file_metadata->file_name));
+					strcpy(name, file_metadata->file_name);
+					strncpy(upperDir->name, strtok(name, " "), 11);
+
+					if (currentDirectory->subDirectory == NULL) currentDirectory->subDirectory = upperDir;
+					else {
+						struct FATDirectory* current = currentDirectory->subDirectory;
+						while (current->next != NULL) 
+							current = current->next;
 			
-			printf("\n");
+						current->next = upperDir;
+					}
+				}
+			}
 
 			file_metadata++;
 			meta_pointer_iterator_count++;
 		}
 	}
 
-	return 0; //done searching
+	return currentDirectory;
 }
 
 //receives the cluster to read for a directory and the requested file, and will iterate through the directory's clusters - returning the entry for the searched file/subfolder, or no file/subfolder
@@ -300,12 +333,10 @@ int FAT_directory_search(const char* filepart, const unsigned int cluster, direc
 	char searchName[13] = { '\0' };
 	strcpy(searchName, filepart);
 
-	//the file path piece sent in is not in FAT format; convert.
 	if (FAT_name_check(searchName) != 0)
 		FAT_name2fatname(searchName);
 
-	//read cluster of the directory/subdirectory
-    char* cluster_data = FAT_cluster_read(cluster, 0);
+    char* cluster_data = FAT_cluster_read(cluster);
 	if (cluster_data == NULL) {
 		printf("Function FAT_directory_search: FAT_cluster_read encountered an error. Aborting...\n");
 		return -1;
@@ -313,7 +344,6 @@ int FAT_directory_search(const char* filepart, const unsigned int cluster, direc
 
 	directory_entry_t* file_metadata = (directory_entry_t*)cluster_data;
 	unsigned int meta_pointer_iterator_count = 0;
-
 	while (1) {
 		if (file_metadata->file_name[0] == ENTRY_END) break;
 		else if (strncmp((char*)file_metadata->file_name, searchName, 11) != 0) {
@@ -323,25 +353,24 @@ int FAT_directory_search(const char* filepart, const unsigned int cluster, direc
 			}
 			else {
 				int next_cluster = FAT_read(cluster);
-
 				if ((next_cluster >= END_CLUSTER_32 && fat_type == 32) || (next_cluster >= END_CLUSTER_16 && fat_type == 16) || (next_cluster >= END_CLUSTER_12 && fat_type == 12))
 					break;
+
 				else if (next_cluster < 0) {
 					printf("Function FAT_directory_search: FAT_read encountered an error. Aborting...\n");
 					return -1;
-				}
-				else return FAT_directory_search(filepart, next_cluster, file, entryOffset); //search next cluster
+				} else return FAT_directory_search(filepart, next_cluster, file, entryOffset);
 			}
 		}
 		else {
-			if (file != NULL) memcpy(file, file_metadata, sizeof(directory_entry_t)); //copy found data to file
+			if (file != NULL) memcpy(file, file_metadata, sizeof(directory_entry_t));
 			if (entryOffset != NULL) *entryOffset = meta_pointer_iterator_count;
 
 			return 0;
 		}
 	}
 
-	return -2; //nothing found, return error.
+	return -2;
 }
 
 //pass in the cluster to write the directory to and the directory struct to write.
@@ -352,7 +381,7 @@ int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add
 		return -1;
 	}
 
-    char* cluster_data = FAT_cluster_read(cluster, 0);
+    char* cluster_data = FAT_cluster_read(cluster);
 	if (cluster_data == NULL) {
 		printf("Function FAT_directory_add: FAT_cluster_read encountered an error. Aborting...\n");
 		return -1;
@@ -360,7 +389,6 @@ int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add
 
 	directory_entry_t* file_metadata = (directory_entry_t*)cluster_data;
 	unsigned int meta_pointer_iterator_count = 0;
-
 	while (1) {
 		if (file_metadata->file_name[0] != ENTRY_FREE && file_metadata->file_name[0] != ENTRY_END) {
 			if (meta_pointer_iterator_count < bytes_per_sector * sectors_per_cluster / sizeof(directory_entry_t) - 1) {
@@ -373,18 +401,18 @@ int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add
 					next_cluster = FAT_allocate_free();
 					if ((next_cluster == BAD_CLUSTER_32 && fat_type == 32) || (next_cluster == BAD_CLUSTER_16 && fat_type == 16) || (next_cluster == BAD_CLUSTER_12 && fat_type == 12)) {
 						printf("Function FAT_directory_add: allocation of new cluster failed. Aborting...\n");
-						free(file_metadata);
+						free(cluster_data);
 						return -1;
 					}
 
 					if (FAT_write(cluster, next_cluster) != 0) {
 						printf("Function FAT_directory_add: extension of the cluster chain with new cluster failed. Aborting...\n");
-						free(file_metadata);
+						free(cluster_data);
 						return -1;
 					}
 				}
 
-				free(file_metadata);
+				free(cluster_data);
 				return FAT_directory_add(next_cluster, file_to_add);
 			}
 		}
@@ -393,7 +421,7 @@ int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add
 			for (dot_checker = 0; dot_checker < 11; dot_checker++) 
 				if (file_to_add->file_name[dot_checker] == '.') {
 					printf("Function FAT_directory_add: Invalid file name!");
-					free(file_metadata);
+					free(cluster_data);
 					return -1;
 				}
 			
@@ -405,45 +433,46 @@ int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add
 			file_to_add->last_modification_time = file_to_add->creation_time;
 
 			unsigned int new_cluster = FAT_allocate_free();
-			if ((new_cluster == BAD_CLUSTER_32 && fat_type == 32) || (new_cluster == BAD_CLUSTER_16 && fat_type ==16) || (new_cluster == BAD_CLUSTER_12 && fat_type == 12)) {
+			if ((new_cluster == BAD_CLUSTER_32 && fat_type == 32) ||
+				(new_cluster == BAD_CLUSTER_16 && fat_type == 16) || 
+				(new_cluster == BAD_CLUSTER_12 && fat_type == 12)) {
 				printf("Function FAT_directory_add: allocation of new cluster failed. Aborting...\n");
-				free(file_metadata);
+				free(cluster_data);
+
 				return -1;
 			}
 
-			file_to_add->low_bits = GET_ENTRY_LOW_BITS(new_cluster);
-			file_to_add->high_bits = GET_ENTRY_HIGH_BITS(new_cluster);
+			file_to_add->low_bits 	= GET_ENTRY_LOW_BITS(new_cluster);
+			file_to_add->high_bits 	= GET_ENTRY_HIGH_BITS(new_cluster);
 
 			memcpy(file_metadata, file_to_add, sizeof(directory_entry_t));
-			if (FAT_cluster_write((void *)DISK_WRITE_LOCATION, bytes_per_sector * sectors_per_cluster, 0, cluster) != 0) {
+			if (FAT_cluster_write(cluster_data, bytes_per_sector * sectors_per_cluster, cluster) != 0) {
 				printf("Function FAT_directory_add: Writing new directory entry failed. Aborting...\n");
-				free(file_metadata);
+				free(cluster_data);
 				return -1;
 			}
 
-			free(file_metadata);
+			free(cluster_data);
 			return 0;
 		}
 	}
 
-	free(file_metadata);
+	free(cluster_data);
 	return -1; //return error.
 }
 
 //retrieves a specified file from the File System (readInOffset is in clusters)
 //Returns: -1 is general error, -2 is directory not found, -3 is path specified is a directory instead of a file
-int FAT_get_file(const char* filePath, char** fileContents, directory_entry_t* fileMeta, unsigned int readInOffset) {
-	if (fileContents == NULL || fileMeta == NULL) {
-		printf("Function FAT_get_file: an argument was invalid!\n");
-		return -1;
-	}
-
-	char fileNamePart[256]; //holds the part of the path to be searched
-	unsigned short start = 0; //starting at 3 to skip the "C:\" bit
+struct FATContent* FAT_get_content(const char* filePath, unsigned int readInOffset) {
+	struct FATContent* fatContent = malloc(sizeof(struct FATContent));
+	char fileNamePart[256];
+	unsigned short start = 0;
 	unsigned int active_cluster;
-	if (fat_type == 32) active_cluster = ext_root_cluster; //holds the cluster to be searched for directory entries related to the path
+
+	if (fat_type == 32) active_cluster = ext_root_cluster;
 	else {
-		printf("Function FAT_get_file: FAT16 and FAT12 are not supported!\n");
+		printf("Function FAT_get_content: FAT16 and FAT12 are not supported!\n");
+		free(fatContent);
 		return -1;
 	}
 
@@ -454,9 +483,14 @@ int FAT_get_file(const char* filePath, char** fileContents, directory_entry_t* f
 			memcpy(fileNamePart, filePath + start, iterator - start);
 
 			int retVal = FAT_directory_search(fileNamePart, active_cluster, &file_info, NULL);
-			if (retVal == -2) return -2;
+			if (retVal == -2) {
+				free(fatContent);
+				return -2;
+			}
+
 			else if (retVal == -1) {
-				printf("Function FAT_get_file: An error occurred in FAT_directory_search. Aborting...\n");
+				printf("Function FAT_get_content: An error occurred in FAT_directory_search. Aborting...\n");
+				free(fatContent);
 				return retVal;
 			}
 
@@ -465,43 +499,69 @@ int FAT_get_file(const char* filePath, char** fileContents, directory_entry_t* f
 		}
 	}
 
-	*fileMeta = file_info;
+	fatContent->directory 					= malloc(sizeof(struct FATDirectory)); 
+	fatContent->directory->directory_meta 	= file_info;
+
+	char* name = malloc(strlen(file_info.file_name));
+	strcpy(name, file_info.file_name);
+	strncpy(fatContent->directory->name, strtok(name, " "), 11);
+
+	fatContent->file = NULL;
+
+	fatContent->directory->directory_meta = file_info;
 	if ((file_info.attributes & FILE_DIRECTORY) != FILE_DIRECTORY) {
-		if (readInOffset < 1 || (readInOffset * (unsigned short)bytes_per_sector * (unsigned short)sectors_per_cluster) + file_info.file_size > 262144)
+		if (readInOffset < 1 || (readInOffset * (unsigned short)bytes_per_sector * (unsigned short)sectors_per_cluster) + file_info.file_size > 262144) {
+			free(fatContent);
 			return -3;
+		}
+
+		fatContent->directory 	= NULL; // Mark that this content is noa a directory
+		fatContent->file 		= malloc(sizeof(struct FATFile));
 
 		int cluster = GET_CLUSTER_FROM_ENTRY(file_info);
-		unsigned int clusterReadCount = 0;
-
-        char* content;
+        char* content = NULL;
 		while (cluster < END_CLUSTER_32) {
-			char* content_part = FAT_cluster_read(cluster, clusterReadCount + readInOffset);
+			char* content_part = FAT_cluster_read(cluster);
             char* new_content = (char*)malloc(strlen(content) + strlen(content_part));
-            new_content = strcat(content, content_part);
+			
+            new_content = strcat(new_content, content);
+			new_content = strcat(new_content, content_part);
 
             free(content);
-            content = (char*)malloc(strlen(content) + strlen(content_part));
+            content = (char*)malloc(strlen(new_content));
             strcpy(content, new_content);
 
             free(new_content);
+			free(content_part);
 
-			clusterReadCount++;
 			cluster = FAT_read(cluster);
 			if (cluster == BAD_CLUSTER_32) {
-				printf("Function FAT_get_file: the cluster chain is corrupted with a bad cluster. Aborting...\n");
+				printf("Function FAT_get_content: the cluster chain is corrupted with a bad cluster. Aborting...\n");
+				free(fatContent);
 				return -1;
 			}
 			else if (cluster == -1 ) {
-				printf("Function FAT_get_file: an error occurred in FAT_read. Aborting...\n");
+				printf("Function FAT_get_content: an error occurred in FAT_read. Aborting...\n");
+				free(fatContent);
 				return -1;
 			}
 		}
 		
-		*fileContents = content;
+		fatContent->file->data = (char*)malloc(strlen(content));
+		strcpy(fatContent->file->data, content);
+		free(content);
 
-		return 0; //file successfully found
+		fatContent->file->file_meta = file_info;
+
+		char* name = malloc(strlen(fatContent->file->file_meta.file_name));
+		strcpy(name, fatContent->file->file_meta.file_name);
+
+		strncpy(fatContent->file->name, strtok(name, " "), 11);
+		strncpy(fatContent->file->extension, strtok(NULL, " "), 4);
+
+		return fatContent; //file successfully found
 	}
-	else return -4; //the path specified was a directory
+	else return fatContent;
 }
 
 // TODO: FIX
@@ -510,127 +570,169 @@ int FAT_get_file(const char* filePath, char** fileContents, directory_entry_t* f
 //filecontents: contains the char array to the data that will be written
 //fileMeta: contains the metadata that will be written. struct should only have a file name, attributes, and size. the rest will be filled in automatically
 //returns: -1 is general error, -2 indicates a bad path/file name, -3 indicates file with same name already exists, -4 indicates file size error
-int FAT_put_file(const char* filePath, char** fileContents, directory_entry_t* fileMeta) {
-	if (FAT_name_check(fileMeta->file_name) != 0) {
-		printf("\nFunction FAT_put_file: Invalid file name!\n");
-		return -2;
-	}
+int FAT_put_content(const char* filePath, struct FATContent* content) {
 
-	char fileNamePart[256]; //holds the part of the path to be searched
-	unsigned short start = 0; //starting at 3 to skip the "C:\" bit
-	unsigned int active_cluster; //holds the cluster to be searched for directory entries related to the path
+	//////////////////////
+	// NAME ERROR HANDLING
 
-	if (fat_type == 32) active_cluster = ext_root_cluster;
-	else {
-		printf("Function FAT_put_file: FAT16 and FAT12 are not supported!\n");
-		return -1;
-	}
+		if (content->directory != NULL)
+			if (FAT_name_check(content->directory->directory_meta.file_name) != 0) {
+				printf("\nFunction FAT_put_content: Invalid directory name!\n");
+				return -2;
+			}
+		else if (content->file != NULL)
+			if (FAT_name_check(content->file->file_meta.file_name) != 0) {
+				printf("\nFunction FAT_put_content: Invalid file name!\n");
+				return -2;
+			}
 
-	directory_entry_t file_info; //holds found directory info
-	if (strlen(filePath) == 0) {
-		if (fat_type == 32) {
-			active_cluster = ext_root_cluster;
-			file_info.attributes = FILE_DIRECTORY | FILE_VOLUME_ID;
-			file_info.file_size = 0;
-			file_info.high_bits = GET_ENTRY_HIGH_BITS(active_cluster);
-			file_info.low_bits = GET_ENTRY_LOW_BITS(active_cluster);
+	// NAME ERROR HANDLING
+	//////////////////////
+
+	//////////////////////
+	// CONTENT META SAVING
+
+		directory_entry_t content_meta;
+		if (content->directory != NULL)
+			content_meta = content->directory->directory_meta;
+		else if (content->file != NULL)
+			content_meta = content->file->file_meta;
+
+	// CONTENT META SAVING
+	//////////////////////
+		
+	char fileNamePart[256];
+	unsigned short start = 0;
+	unsigned int active_cluster;
+
+	//////////////////////
+	//	FAT ACTIVE CLUSTER CHOOSING
+
+		if (fat_type == 32) active_cluster = ext_root_cluster;
+		else {
+			printf("Function FAT_put_content: FAT16 and FAT12 are not supported!\n");
+			return -1;
+		}
+
+	//	FAT ACTIVE CLUSTER CHOOSING
+	//////////////////////
+
+	//////////////////////
+	//	FINDING DIR BY PATH
+
+		directory_entry_t file_info; //holds found directory info
+		if (strlen(filePath) == 0) {
+			if (fat_type == 32) {
+				active_cluster 			= ext_root_cluster;
+				file_info.attributes 	= FILE_DIRECTORY | FILE_VOLUME_ID;
+				file_info.file_size 	= 0;
+				file_info.high_bits 	= GET_ENTRY_HIGH_BITS(active_cluster);
+				file_info.low_bits 		= GET_ENTRY_LOW_BITS(active_cluster);
+			}
+			else {
+				printf("Function FAT_put_content: FAT16 and FAT12 are not supported!\n");
+				return -1;
+			}
 		}
 		else {
-			printf("Function FAT_put_file: FAT16 and FAT12 are not supported!\n");
+			for (unsigned int iterator = 0; iterator <= strlen(filePath); iterator++) 
+				if (filePath[iterator] == '\\' || filePath[iterator] == '\0') {
+					memset(fileNamePart, '\0', 256);
+					memcpy(fileNamePart, filePath + start, iterator - start);
+
+					int retVal = FAT_directory_search(fileNamePart, active_cluster, &file_info, NULL);
+					switch (retVal) {
+						case -2:
+							printf("Function FAT_put_content: No matching directory found. Aborting...\n");
+						return -2;
+
+						case -1:
+							printf("Function FAT_put_content: An error occurred in FAT_directory_search. Aborting...\n");
+						return retVal;
+					}
+
+					start = iterator + 1;
+					active_cluster = GET_CLUSTER_FROM_ENTRY(file_info); //prep for next search
+				}
+		}
+
+	//	FINDING DIR\FILE BY PATH
+	//////////////////////
+
+	//////////////////////
+	// CHECK IF FILE EXIST
+	// A.i.: directory to receive the file is now found, and its cluster 
+	// is stored in active_cluster. Search the directory to ensure the 
+	// specified file name is not already in use
+	
+		char output[13];
+		FAT_fatname2name((char*)content_meta.file_name, output);
+		int retVal = FAT_directory_search(output, active_cluster, NULL, NULL);
+		if (retVal == -1) {
+			printf("Function putFile: directorySearch encountered an error. Aborting...\n");
 			return -1;
 		}
-	}
+		else if (retVal != -2) {
+			printf("Function putFile: a file matching the name given already exists. Aborting...\n");
+			return -3;
+		}
 
-	else {
-		for (unsigned int iterator = 0; iterator <= strlen(filePath); iterator++) 
-			if (filePath[iterator] == '\\' || filePath[iterator] == '\0') {
-				memset(fileNamePart, '\0', 256);
-				memcpy(fileNamePart, filePath + start, iterator - start);
-
-				int retVal = FAT_directory_search(fileNamePart, active_cluster, &file_info, NULL);
-				switch (retVal) {
-					case -2:
-						printf("Function FAT_put_file: No matching directory found. Aborting...\n");
-					return -2;
-
-					case -1:
-						printf("Function FAT_put_file: An error occurred in FAT_directory_search. Aborting...\n");
-					return retVal;
-				}
-
-				start = iterator + 1;
-				active_cluster = GET_CLUSTER_FROM_ENTRY(file_info); //prep for next search
-			}
-	}
-
-	//directory to receive the file is now found, and its cluster is stored in active_cluster. Search the directory to ensure the specified file name is not already in use
-	char output[13];
-	FAT_fatname2name((char *)fileMeta->file_name, output);
-	
-	int retVal = FAT_directory_search(output, active_cluster, NULL, NULL);
-	if (retVal == -1) {
-		printf("Function putFile: directorySearch encountered an error. Aborting...\n");
-		return -1;
-	}
-	else if (retVal != -2) {
-		printf("Function putFile: a file matching the name given already exists. Aborting...\n");
-		return -3;
-	}
+	// CHECK IF FILE EXIST
+	//////////////////////
 
 	if ((file_info.attributes & FILE_DIRECTORY) == FILE_DIRECTORY) {
-		if (FAT_directory_add(active_cluster, fileMeta) != 0) {
-			printf("Function FAT_put_file: FAT_directory_add encountered an error. Aborting...\n");
+		if (FAT_directory_add(active_cluster, &content_meta) != 0) {
+			printf("Function FAT_put_content: FAT_directory_add encountered an error. Aborting...\n");
 			return -1;
 		}
 
-		//now filling file_info with the information of the file directory entry
-		char output[13];
-		FAT_fatname2name((char *)fileMeta->file_name, output);
+		//////////////////////
+		// CHECK IF FILE EXIST AFTER ADD
+		// A.i.: now filling file_info with the information of the file directory entry
 
-		int retVal = FAT_directory_search(output, active_cluster, &file_info, NULL);
-		if (retVal == -2) {
-			printf("Function FAT_put_file: FAT_directory_add did not properly write the new file's entry to disk. Aborting...\n");
-			return -2;
-		}
-		else if (retVal != 0) {
-			printf("Function FAT_put_file: FAT_directory_search has encountered an error. Aborting...\n");
-			return -1;
-		}
+			char output[13];
+			FAT_fatname2name((char *)content_meta.file_name, output);
+			int retVal = FAT_directory_search(output, active_cluster, &file_info, NULL);
+			if (retVal == -2) {
+				printf("Function FAT_put_content: FAT_directory_add did not properly write the new file's entry to disk. Aborting...\n");
+				return -2;
+			}
+			else if (retVal != 0) {
+				printf("Function FAT_put_content: FAT_directory_search has encountered an error. Aborting...\n");
+				return -1;
+			}
+
+		// CHECK IF FILE EXIST AFTER ADD
+		//////////////////////
 
 		active_cluster = GET_CLUSTER_FROM_ENTRY(file_info);
-		unsigned int dataLeftToWrite = fileMeta->file_size;
-
-		//start writing information to disk
+		unsigned int dataLeftToWrite = content_meta.file_size;
 		while (dataLeftToWrite > 0) {
 			unsigned int dataWrite = 0;
 			if (dataLeftToWrite >= bytes_per_sector * sectors_per_cluster) dataWrite = bytes_per_sector * sectors_per_cluster + 1;
 			else dataWrite = dataLeftToWrite;
 
-			//Always offset by at least one, so any file operations happening exactly at DISK_READ_LOCATION (e.g. FAT Table lookups) don't overwrite the data (this is essentially backwards compatibility with previously written code)
-			if (FAT_cluster_write(*fileContents + (fileMeta->file_size - dataLeftToWrite), dataWrite, 1, active_cluster) != 0) {
-				printf("Function FAT_put_file: FAT_cluster_write encountered an error. Aborting...\n");
+			if (FAT_cluster_write(content->file->data, strlen(content->file->data), active_cluster) != 0) {
+				printf("Function FAT_put_content: FAT_cluster_write encountered an error. Aborting...\n");
 				return -1;
 			}
 
-			dataLeftToWrite -= dataWrite; //subtract the bytes that were just written
-
-			//if there's no data left to write, exit
+			dataLeftToWrite -= dataWrite;
 			if (dataLeftToWrite == 0) break;
 			else if (dataLeftToWrite < 0) {
-				printf("Function FAT_put_file: An undefined value has been detected. Aborting...\n");
+				printf("Function FAT_put_content: An undefined value has been detected. Aborting...\n");
 				return -1;
 			}
 
 			//there's more data to write, so allocate new cluster, change fat of current cluster to point to new cluster, and change active cluster to new cluster
 
 			unsigned int new_cluster = FAT_allocate_free();
-
 			if ((new_cluster == BAD_CLUSTER_32 && fat_type == 32) || (new_cluster == BAD_CLUSTER_16 && fat_type == 16) || (new_cluster == BAD_CLUSTER_12 && fat_type == 12)) {
-				printf("Function FAT_put_file: FAT_allocate_free encountered an error. Aborting...\n");
+				printf("Function FAT_put_content: FAT_allocate_free encountered an error. Aborting...\n");
 				return -1;
 			}
 			if (FAT_write(active_cluster, new_cluster) != 0) {
-				printf("Function FAT_put_file: FAT_write encountered an error. Aborting...\n");
+				printf("Function FAT_put_content: FAT_write encountered an error. Aborting...\n");
 				return -1;
 			}
 
@@ -640,7 +742,7 @@ int FAT_put_file(const char* filePath, char** fileContents, directory_entry_t* f
 		return 0; //file successfully written
 	}
 	else {
-		printf ("Function FAT_put_file: Invalid path!\n");
+		printf ("Function FAT_put_content: Invalid path!\n");
 		return -2; //invalid path!
 	}
 }
@@ -688,7 +790,7 @@ char* FAT_name2fatname(char* input) {
 
 	str_uppercase(input);
 
-	char searchName[13] = { '\0' };
+	char* searchName = (char*)malloc(13);
 	unsigned short dotPos = 0;
 
 	counter = 0;
@@ -774,9 +876,8 @@ BOOL FAT_name_check(char * input) {
                 retVal = retVal | BAD_CHARACTER;
 		}
 
-		if (input[iterator] >= 'a' && input[iterator] <= 'z') {
+		if (input[iterator] >= 'a' && input[iterator] <= 'z') 
 			retVal = retVal | LOWERCASE_ISSUE;
-		}
 	}
 
 	return retVal;
@@ -829,46 +930,59 @@ void FAT_fatname2name(char* input, char* output) {
 	return;
 }
 
-/* description: pass in a entry and this properly formats the
- * "firstCluster" from the 2 byte segments in the file structure
- */
-uint32_t FAT_build_cluster_address(directory_entry_t* entry) {
-    uint32_t addr = 0x00000000;
-
-    addr |=  entry->high_bits << (fat_type / 2);
-    addr |=  entry->low_bits;
-    return addr;
-}
-
 // createEntry(&newDirEntry, dirName, extention, TRUE, beginNewDirClusterChain, 0, FALSE, FALSE);
 /* description: takes a directory entry and all the necesary info
 	and populates the entry with the info in a correct format for
 	insertion into a disk.
 */
-int FAT_create_entry(directory_entry_t* entry, const char* filename,  const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize) {
-    entry->reserved0 				= 0; 
-	entry->creation_time_tenths 	= 0;
-	entry->creation_time 			= 0;
-	entry->creation_date 			= 0;
-	entry->last_modification_date 	= 0;
+struct directory_entry* FAT_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize) {
+	struct directory_entry* data = malloc(sizeof(struct directory_entry));
 
-	strcpy(entry->file_name, filename);
+    data->reserved0 				= 0; 
+	data->creation_time_tenths 		= 0;
+	data->creation_time 			= 0;
+	data->creation_date 			= 0;
+	data->last_modification_date 	= 0;
 
+	char* file_name = (char*)malloc(25);
+	strcpy(file_name, filename);
     if (ext) {
-    	strcat(entry->file_name, " ");
-    	strcat(entry->file_name, ext);
+    	strcat(file_name, ".");
+    	strcat(file_name, ext);
     }
     
-    entry->low_bits = firstCluster;
-	entry->high_bits = firstCluster >> 16;  
+    data->low_bits 	= firstCluster;
+	data->high_bits = firstCluster >> 16;  
 
     if(isDir == TRUE) {
-        entry->file_size = 0;
-        entry->attributes = FILE_DIRECTORY;
+        data->file_size 	= 0;
+        data->attributes 	= FILE_DIRECTORY;
 	} else {
-        entry->file_size = filesize;
-        entry->attributes = FILE_ARCHIVE;
+        data->file_size 	= filesize;
+        data->attributes 	= FILE_ARCHIVE;
 	}
 
-    return 0; 
+	if (FAT_name_check(file_name) != 0)
+		FAT_name2fatname(file_name);
+
+	strncpy(data->file_name, file_name, min(11, strlen(file_name)));
+    return data; 
+}
+
+void FAT_unload_directories_system(struct FATDirectory* directory) {
+    struct FATFile* current_file = directory->files;
+    struct FATFile* next_file    = NULL;
+    while (current_file != NULL) {
+        next_file = current_file->next;
+        free(current_file);
+        current_file = next_file;
+    }
+
+    if (directory->subDirectory != NULL)
+        FAT_unload_directories_system(directory->subDirectory);
+
+    if (directory->next != NULL) 
+        FAT_unload_directories_system(directory->next);
+
+    free(directory);
 }

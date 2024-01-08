@@ -5,16 +5,15 @@
 //  READ SECTOR FROM DISK BY LBA ADRESS
 //
 
-    // Function to read a sector from the disk.
-    char* ATA_read_sector(uint32_t lba, uint8_t sector_count) {
+    char* ATA_read_sector(uint32_t lba) {
         ATA_ata_wait();
-        char* buffer = (char*)malloc(SECTOR_SIZE * sector_count);
+        char* buffer = (char*)malloc(SECTOR_SIZE);
         if (buffer == NULL) 
             return NULL;
 
         x86_outb(DRIVE_REGISTER, 0xE0 | (0x00 << 4) | ((lba >> 24) & 0x0F));
         x86_outb(FEATURES_REGISTER, 0x00);
-        x86_outb(SECTOR_COUNT_REGISTER, sector_count);
+        x86_outb(SECTOR_COUNT_REGISTER, 1);
         x86_outb(LBA_ADRESS_REGISTER, (uint8_t)(lba & 0xFF));
         x86_outb(CYLINDER_LOW_REGISTER, (uint8_t)((lba >> 8) & 0xFF));
         x86_outb(CYLINDER_HIGH_REGISTER, (uint8_t)((lba >> 16) & 0xFF));
@@ -28,10 +27,32 @@
             }
             else continue;
 
-        for (int n = 0; n < (SECTOR_SIZE / 2) * sector_count; n++) {
+        for (int n = 0; n < SECTOR_SIZE / 2; n++) {
             uint16_t value = x86_inw(DATA_REGISTER);
             buffer[n * 2] = value & 0xFF;
             buffer[n * 2 + 1] = value >> 8;
+        }
+
+        return buffer;
+    }
+
+    // Function to read a sectors from the disk.
+    char* ATA_read_sectors(uint32_t lba, uint32_t sector_count) {
+        ATA_ata_wait();
+        char* buffer = (char*)malloc(SECTOR_SIZE * sector_count);
+        if (buffer == NULL) 
+            return NULL;
+
+        for (uint32_t i = 0; i < sector_count; i++) {
+            char* sector_data = ATA_read_sector(lba + i);
+            if (sector_data == NULL) {
+                free(buffer);
+                return NULL;
+            }
+
+            // Copy the sector data to the buffer
+            memcpy(buffer + i * SECTOR_SIZE, sector_data, SECTOR_SIZE);
+            free(sector_data);
         }
 
         return buffer;
@@ -45,14 +66,13 @@
 //  WRITE DATA TO SECTOR ON DISK BY LBA ADRESS
 //
 
-    // Function to write a sector on the disk.
-    int ATA_write_sector(uint32_t lba, uint8_t sector_count, const uint8_t* buffer) {
+    int ATA_write_sector(uint32_t lba, const uint8_t* buffer) {
         if (lba == BOOT_SECTOR) return -1;
 
         ATA_ata_wait();
         x86_outb(DRIVE_REGISTER, 0xE0 | ((lba >> 24) & 0x0F));
         x86_outb(FEATURES_REGISTER, 0x00);
-        x86_outb(SECTOR_COUNT_REGISTER, sector_count);
+        x86_outb(SECTOR_COUNT_REGISTER, 1);
         x86_outb(LBA_ADRESS_REGISTER, (uint8_t)lba);
         x86_outb(CYLINDER_LOW_REGISTER, (uint8_t)(lba >> 8));
         x86_outb(CYLINDER_HIGH_REGISTER, (uint8_t)(lba >> 16));
@@ -64,9 +84,22 @@
             else continue;
         
         // Write the sector data from the buffer.
-        for (int i = 0; i < (SECTOR_SIZE / 2) * sector_count; i++) {
+        for (int i = 0; i < SECTOR_SIZE / 2; i++) {
             uint16_t data = *((uint16_t*)(buffer + i * 2));
             x86_outw(DATA_REGISTER, data);
+        }
+
+        return 1;
+    }
+
+    // Function to write a sector on the disk.
+    char* ATA_write_sectors(uint32_t lba, const uint8_t* buffer, uint32_t sector_count) {
+        ATA_ata_wait();
+        for(uint32_t i = 0; i < sector_count; i++) {
+            if (ATA_write_sector(lba + i, buffer) == -1) 
+                return -1;
+            
+            buffer += SECTOR_SIZE;
         }
 
         return 1;
@@ -82,10 +115,10 @@
 
     // Function that add data to sector
     void ATA_append_sector(uint32_t lba, char* append_data) {
-        char* previous_data = ATA_read_sector(lba, 1);
+        char* previous_data = ATA_read_sectors(lba, 1);
 
         strcat(previous_data, append_data);
-        ATA_write_sector(lba, 1, previous_data);
+        ATA_write_sector(lba, previous_data);
 
         free(previous_data);
     }
@@ -96,7 +129,7 @@
         memset(buffer, 0, sizeof(buffer));
 
         // Write the buffer to the specified sector
-        if (ATA_write_sector(lba, 1, buffer) == -1) {
+        if (ATA_write_sector(lba, buffer) == -1) {
             printf("\n\rPulizia del settore non completata!");
             return -1;
         }
@@ -106,7 +139,7 @@
 
     // Function to check if a sector (by LBA) is empty (all bytes are zero)
     bool ATA_is_current_sector_empty(uint32_t lba) {
-        char* sector_data = ATA_read_sector(lba, 1);
+        char* sector_data = ATA_read_sector(lba);
         if (ATA_is_sector_empty(sector_data)) {
             free(sector_data);
             return true;
@@ -128,7 +161,7 @@
     // Function that find first empty sector
     uint32_t ATA_find_empty_sector(uint32_t offset) {
         for (uint32_t lba = offset; lba <= SECTOR_COUNT; lba++) {
-            char* sector_data = ATA_read_sector(lba, 1);
+            char* sector_data = ATA_read_sector(lba);
             if (sector_data == NULL) 
                 continue;
 
@@ -154,7 +187,7 @@
     int ATA_global_sector_count() {
         int sectors = 0;
         for (uint32_t lba = 0; lba < SECTOR_COUNT; lba++) {
-            char* sector_data = ATA_read_sector(lba, 1);
+            char* sector_data = ATA_read_sector(lba);
             if (sector_data != NULL) {
                 sectors++;
                 free(sector_data);
@@ -168,7 +201,7 @@
     int ATA_global_sector_empty() {
         int sectors = 0;
         for (uint32_t lba = 0; lba < SECTOR_COUNT; lba++) {
-            char* sector_data = ATA_read_sector(lba, 1);
+            char* sector_data = ATA_read_sector(lba);
             if (sector_data != NULL) {
                 if (ATA_is_sector_empty(sector_data))
                     sectors++;

@@ -1,5 +1,5 @@
 #include "include/shell.h"
-
+// TODO: fat.c
 //   ____  _   _ _____ _     _     
 //  / ___|| | | | ____| |   | |    
 //  \___ \| |_| |  _| | |   | |    
@@ -11,6 +11,15 @@ struct File* currentPassword;
 struct User* user = NULL;
 
 void shell() {
+    user = (struct User*)malloc(sizeof(struct User*));                 
+    user->read_access   = 6;
+    user->write_access  = 6;
+    user->edit_access   = 6;
+
+    open_file_manager(user);
+
+    return;
+
     shell_start_screen();
     init_users();
     
