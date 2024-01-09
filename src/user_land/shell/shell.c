@@ -360,56 +360,46 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {
-                struct File* file = FS_find_file(command_line[1], FS_get_main_directory());
-                if (file == NULL)
-                    return;
-                
-                if (file->write_level >= user->write_access) 
-                    text_editor_init(file, FOREGROUND_WHITE + BACKGROUND_BLACK);
-                else printf("\nYou don`t have permissions to do this.");
+                text_editor_init(command_line[1], FOREGROUND_WHITE + BACKGROUND_BLACK);
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {
-                struct File* execute = FS_find_file(command_line[1], FS_get_main_directory());
-                if (execute == NULL)
+                struct FATContent* content = FAT_get_content(command_line[1]);
+                if (content->file == NULL)
                     return;
-                
-                if (execute->edit_level >= user->edit_access) {
-                    char* sector_data = FS_read_file(execute);
-                    char* command_for_split = (char*)malloc(strlen(sector_data));
-                    strcpy(command_for_split, sector_data);
 
-                    char* lines[100];
-                    int tokenCount = 0;
+                char* sector_data = content->file->data;
+                char* command_for_split = (char*)malloc(strlen(sector_data));
+                strcpy(command_for_split, sector_data);
 
-                    char* splitted = strtok(command_for_split, "\n");
-                    while(splitted) {
-                        lines[tokenCount++] = splitted;
-                        splitted = strtok(NULL, "\n");
-                    }
+                char* lines[100];
+                int tokenCount = 0;
 
-                    for (int i = 0; i < tokenCount; i++)
-                        if (cordell_derictive == CORDELL_DERICTIVE) execute_command(lines[i], SUPER_DERICTIVE);
-                        else execute_command(lines[i], DEFAULT_DERICTIVE);
-
-                    free(command_for_split);
-                    free(sector_data);
+                char* splitted = strtok(command_for_split, "\n");
+                while(splitted) {
+                    lines[tokenCount++] = splitted;
+                    splitted = strtok(NULL, "\n");
                 }
-                else printf("\nYou don`t have permissions to do this.");
+
+                for (int i = 0; i < tokenCount; i++)
+                    if (cordell_derictive == CORDELL_DERICTIVE) execute_command(lines[i], SUPER_DERICTIVE);
+                    else execute_command(lines[i], DEFAULT_DERICTIVE);
+
+                free(command_for_split);
+                free(sector_data);
+                FAT_unload_content_system(content);
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_ASM_RUN) == 0) {
-                struct File* execute = FS_find_file(command_line[1], FS_get_main_directory());
-                if (execute == NULL)
+                struct FATContent* content = FAT_get_content(command_line[1]);
+                if (content->file == NULL)
                     return;
 
-                if (execute->edit_level >= user->edit_access) {
-                    char* sector_data = FS_read_file(execute);
-                    asm_execute(sector_data, user);
+                char* sector_data = content->file->data;
+                asm_execute(sector_data, user);
 
-                    free(sector_data);
-                }
-                else printf("\nYou don`t have permissions to do this.");
+                free(sector_data);
+                FAT_unload_content_system(content);
             }
 
         //

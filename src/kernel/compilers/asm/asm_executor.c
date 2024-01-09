@@ -113,30 +113,29 @@ void asm_executor(int *memory_array, int memory_index, int start, int end, struc
 	    	break;  // PRINTL Instruction //
 
 			case MKFILE_INSTRUCTION:
-				FS_create_file(user->read_access, user->write_access, user->edit_access, 
-				intermediate_table[i]->string_params[0], "txt", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
+				struct FATContent* content = FAT_create_content(intermediate_table[i]->string_params[0], FALSE, "txt");
+				FAT_put_content(intermediate_table[i]->string_params[1], content);
+				FAT_unload_content_system(content);
 			break;
 
 			case RMFILE_INSTRUCTION:
-				if (FS_file_exist(intermediate_table[i]->string) == 1)
-					if (user->edit_access <= FS_global_find_file(intermediate_table[i]->string)->edit_level)
-						FS_delete_file(intermediate_table[i]->string, FS_get_current_directory());
+				if (FAT_content_exists(intermediate_table[i]->string) == 1)
+					FAT_delete_content(intermediate_table[i]->string_params[1], intermediate_table[i]->string_params[0]);
 			break;
 
 			case WFILE_INSTRUCTION:
-				struct File* wfile = FS_global_find_file(intermediate_table[i]->string_params[0]);
-				if (wfile != NULL)
-					if (user->write_access <= wfile->write_level)
-						FS_write_file(wfile, intermediate_table[i]->string_params[1]);
+				if (FAT_content_exists(intermediate_table[i]->string_params[0]) == 1)
+						FAT_edit_content(intermediate_table[i]->string_params[0], intermediate_table[i]->string_params[1]);
 			break;
 
 			case RFILE_INSTRUCTION:
-				struct File* rfile = FS_global_find_file(intermediate_table[i]->string);
-				if (rfile != NULL)
-					if (user->read_access <= rfile->read_level) {
-						int data = atoi(FS_read_file(rfile));
-						memory_array[intermediate_table[i]->parameters[0]] = data; 
-					}
+				if (FAT_content_exists(intermediate_table[i]->string_params[0]) == 1) {
+					struct FATContent* content = FAT_get_content(intermediate_table[i]->string_params[0]);
+					int data = atoi(content->file->data);
+					memory_array[intermediate_table[i]->parameters[0]] = data; 
+
+					FAT_unload_content_system(content);
+				}
 			break;
 
 			case IF_INSTRUCTION: 
