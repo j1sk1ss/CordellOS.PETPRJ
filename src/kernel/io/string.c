@@ -30,20 +30,13 @@ const char* strchr(const char* str, char chr) {
 }
 
 char* strrchr(const char *s, int c) {
-	int i;
-	const char* ini;
+    int i = strlen(s);
 
-	ini = s;
-	i = strlen(s);
-	s = (s + i);
+    while (i >= 0 && s[i] != c) 
+        i--;
 
-	while (*s != *ini && c != *s)
-		s--;
-
-	if (c == *s)
-		return ((char *)s);
-        
-	return (0);
+    if (i >= 0) return ((char *)&s[i]);
+    return NULL;
 }
 
 int strstr(const char* haystack, const char* needle) {

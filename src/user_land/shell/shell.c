@@ -7,18 +7,9 @@
 //  |____/|_| |_|_____|_____|_____|
                                 
 
-struct File* currentPassword;
 struct User* user = NULL;
 
 void shell() {
-    user = (struct User*)malloc(sizeof(struct User*));                 
-    user->read_access   = 6;
-    user->write_access  = 6;
-    user->edit_access   = 6;
-
-    open_file_manager(user);
-
-    return;
 
     shell_start_screen();
     init_users();
@@ -27,11 +18,10 @@ void shell() {
     //  SHELL CORDELL PASSWORD
     //
 
-        if (FS_file_exist("/shell") != 1) {
-            FS_create_file(0, 0, 0, "/shell", "txt", ATA_find_empty_sector(SYS_FILES_SECTOR_OFFSET));
-            currentPassword = FS_find_file("/shell", NULL);
-            FS_write_file(currentPassword, "12345");
-        } else currentPassword = FS_find_file("/shell", NULL);
+        if (FAT_content_exists("boot\\shell.txt") == 0) {
+            FAT_put_content("boot", FAT_create_content("shell", FALSE, "txt"));
+            FAT_edit_content("boot\\shell.txt", "12345");
+        }
 
     //
     //  SHELL CORDELL PASSWORD
@@ -77,9 +67,8 @@ void shell() {
     ////////////////////////////////////////////////////
 
     while (1) {
-        char* path = FS_get_full_temp_name();
         cprintf(FOREGROUND_GREEN, "\r\n[%s: CORDELL OS]", user->name);
-        printf(" $%s> ", path);
+        printf(" $%s> ", FAT_get_current_path());
 
         char* command = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
         if (strstr(command, "cordell") == 0)
@@ -87,7 +76,6 @@ void shell() {
         else
             execute_command(command, DEFAULT_DERICTIVE);
 
-        free(path);
         free(command);
     }
 }
@@ -95,14 +83,13 @@ void shell() {
 void shell_start_screen() {
     printf("\n\n");
 
-    cprintf(FOREGROUND_LIGHT_GREEN, "  .o88b.  .d88b.  d8888b. d8888b. d88888b db      db         .d88b.  .d8888. \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, " d8P  Y8 .8P  Y8. 88  `8D 88  `8D 88'     88      88        .8P  Y8. 88'  YP \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, " 8P      88    88 88oobY' 88   88 88ooooo 88      88        88    88 `8bo.   \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, " 8b      88    88 88`8b   88   88 88~~~~~ 88      88        88    88   `Y8b. \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, " Y8b  d8 `8b  d8' 88 `88. 88  .8D 88.     88booo. 88booo.   `8b  d8' db   8D \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, "  `Y88P'  `Y88P'  88   YD Y8888D' Y88888P Y88888P Y88888P    `Y88P'  `8888Y' \r\n");
+    cprintf(FOREGROUND_LIGHT_GREEN, "     .aMMMb  .aMMMb  dMMMMb  dMMMMb  dMMMMMP dMP     dMP        .aMMMb  .dMMMb \r\n");
+    cprintf(FOREGROUND_LIGHT_GREEN, "    dMP'VMP dMP'dMP dMP.dMP dMP VMP dMP     dMP     dMP        dMP'dMP dMP' VP \r\n");
+    cprintf(FOREGROUND_LIGHT_GREEN, "   dMP     dMP dMP dMMMMK' dMP dMP dMMMP   dMP     dMP        dMP dMP  VMMMb   \r\n");
+    cprintf(FOREGROUND_LIGHT_GREEN, "  dMP.aMP dMP.aMP dMP'AMF dMP.aMP dMP     dMP     dMP        dMP.aMP dP .dMP   \r\n");
+    cprintf(FOREGROUND_LIGHT_GREEN, "  VMMMP'  VMMMP' dMP dMP dMMMMP' dMMMMMP dMMMMMP dMMMMMP     VMMMP'  VMMMP'    \r\n");
 
-    cprintf(FOREGROUND_AQUA, "\r\n Questo sistema operativo 'e in costruzione. [ver. 0.5.7a | 03.01.2024] \r\n");
+    cprintf(FOREGROUND_LIGHT_AQUA, "\r\n\t Questo sistema operativo 'e in costruzione. [ver. 1.0.0a | 09.01.2024] \r\n");
 }
 
 ///////////////////////////////////////
@@ -123,11 +110,10 @@ void shell_start_screen() {
                 char* password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
                 int tries = 0;
 
-                char* pass = FS_read_file(currentPassword);
+                char* pass = FAT_get_content("boot\\shell.txt")->file->data;
                 while (strcmp(password, pass) != 0) {
                     cprintf(FOREGROUND_RED, "\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
                     free(password);
-                    free(pass);
 
                     password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
                     if (++tries >= MAX_ATTEMPT_COUNT) 
@@ -233,68 +219,119 @@ void shell_start_screen() {
         //
         //
 
-            else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0)
-                FS_create_directory(command_line[1]);
-            
+            else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0) {
+                struct FATContent* content = FAT_create_content(command_line[1], TRUE, NULL);
+                FAT_put_content(FAT_get_current_path(), content);
+
+                FAT_unload_content_system(content);
+            }
+
             else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0)                      
                 open_file_manager(user);                                             
 
-            else if (strstr(command_line[0], COMMAND_IN_DIR) == 0)     
-                FS_move_to_directory(command_line[1], FS_get_current_directory());
+            else if (strstr(command_line[0], COMMAND_IN_DIR) == 0) {
+                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
+                if (FAT_content_exists(FAT_get_current_path()) == 0) {
+                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                    printf("\nDirectory not exists.");
+                }
+
+                else if (FAT_get_content(FAT_get_current_path())->file != NULL) {
+                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                    printf("\nThis is no a Directory.");
+                }
+            }
             
-            else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0) 
-                FS_up_from_directory();
+            else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0) {
+                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                if (strlen(FAT_get_current_path()) <= 1)
+                    FAT_set_current_path("BOOT");
+            }
             
             else if (strstr(command_line[0], COMMAND_DELETE_DIR) == 0) {
-                struct Directory* directory = FS_find_directory(command_line[1], FS_global_find_directory(command_line[2]));
-                if (directory->subDirectory != NULL || directory->files != NULL) 
-                    if (user->edit_access = 0) FS_delete_directory(command_line[1], FS_global_find_directory(command_line[2])); 
-                    else printf("\r\nDirectory non vuota.\r\n");
-                else FS_delete_directory(command_line[1], FS_global_find_directory(command_line[2]));                                              
-            }
-            
-            else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0)                
-                FS_create_file(atoi(command_line[1]), atoi(command_line[2]), atoi(command_line[3]), command_line[4], command_line[5], 
-                ATA_find_empty_sector(FILES_SECTOR_OFFSET));      
-                             
-            else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {    
-                struct File* file = FS_global_find_file(command_line[1]);
-                if (file == NULL)
+                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
+                if (FAT_content_exists(FAT_get_current_path()) == 0) {
+                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                    printf("Content not exists.\n");
                     return;
+                } else if (FAT_get_content(FAT_get_current_path())->directory == NULL) {
+                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                    printf("Content is not a directory exists.\n");
+                    return;
+                }
 
-                if (file->edit_level >= user->edit_access) FS_delete_file(command_line[1], FS_global_find_directory(command_line[2]));
-                else printf("\nYou don`t have permissions to do this.");
+                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                FAT_delete_content(FAT_get_current_path(), command_line[1]);
+            }
+            
+            else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0) {
+                struct FATContent* content = FAT_create_content(command_line[1], FALSE, command_line[2]);
+                FAT_put_content(FAT_get_current_path(), content);
+
+                FAT_unload_content_system(content);
             }
 
-            else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {                              
-                struct Directory* current_dir = FS_get_current_directory()->subDirectory;
-                if (current_dir != NULL) {
-                    printf("\r\n\t%s", current_dir->name);
-            
-                    while (current_dir->next != NULL) {
-                        current_dir = current_dir->next;
-                        printf("\t%s", current_dir->name);
-                    }
+            else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {    
+                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
+                if (FAT_content_exists(FAT_get_current_path()) == 0) {
+                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                    printf("Content not exists.\n");
+                    return;
+                } else if (FAT_get_content(FAT_get_current_path())->file == NULL) {
+                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                    printf("Content is not a directory exists.\n");
+                    return;
                 }
-            
-                struct File* current = FS_get_current_directory()->files;
-                if (current != NULL) {
-                    printf("\r\n\t%s", current->name);
-            
-                    while (current->next != NULL) {
-                        current = current->next;
-                        printf("\t%s", current->name);
+
+                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                FAT_delete_content(FAT_get_current_path(), command_line[1]);
+            }
+
+            else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {
+                struct FATContent* content = FAT_get_content(FAT_get_current_path());
+                if (content->directory != NULL) {
+                    struct FATDirectory* directory = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(content->directory->directory_meta), NULL, FALSE);
+                    struct FATDirectory* current_dir = directory->subDirectory;
+                    struct FATFile* current_file = directory->files;
+
+                    if (current_dir != NULL) {
+                        printf("\r\n\t%s", current_dir->name);
+                
+                        while (current_dir->next != NULL) {
+                            current_dir = current_dir->next;
+                            printf("\t%s", current_dir->name);
+                        }
                     }
+
+                    if (current_file != NULL) {
+                        printf("\r\n\t%s", current_file->name);
+                
+                        while (current_file->next != NULL) {
+                            current_file = current_file->next;
+                            printf("\t%s.%s", current_file->name, current_file->extension);
+                        }
+                    }
+
+                    FAT_unload_files_system(current_file);
+                    FAT_unload_directories_system(current_dir);
+                    FAT_unload_directories_system(directory);
                 }
+
+                FAT_unload_content_system(content);
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_VIEW) == 0) {
-                struct File* file = FS_find_file(command_line[1], FS_get_current_directory());
-                if (file == NULL)
+                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
+                struct FATContent* content = FAT_get_content(FAT_get_current_path());
+                struct FATFile* file = content->file;
+                if (file == NULL) {
+                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
                     return;
+                }
                 
-                if (file->read_level >= user->read_access) printf("\r\n%s", FS_read_file(file));
-                else printf("\nYou don`t have permissions to do this.");
+                printf("\r\n%s", file->data);
+                FAT_unload_content_system(content);
+                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
             }
 
         //
@@ -320,56 +357,6 @@ void shell_start_screen() {
                 }
 
                 printf("\r\n> Risposta: %s", calculator(tokens, tokenCount));
-            }
-
-            else if (strstr(command_line[0], COMMAND_SNAKE_GAME) == 0) {
-                VGA_text_clrscr();
-
-                struct File* snake_save;
-                if (FS_file_exist("/snake-save") == 1)
-                    snake_save = FS_global_find_file("/snake-save");
-                else {
-                    FS_create_file(0, 0, 0, "/snake-save", "obj", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
-                    snake_save = FS_global_find_file("/snake-save");
-                    FS_write_file(snake_save, "0");
-                }
-
-                char* file_data = FS_read_file(snake_save);
-                int best_result = atoi(file_data);
-                free(file_data);
-                
-                int current_result = snake_init(atoi(command_line[1]), best_result);
-                if (best_result < current_result) {
-                    char* result = itoa(current_result);
-                    FS_write_file(snake_save, result);
-
-                    free(result);
-                }
-            }
-
-            else if (strstr(command_line[0], COMMAND_TETRIS_GAME) == 0) {
-                VGA_text_clrscr();
-
-                struct File* tetris_save;
-                if (FS_file_exist("/tetris-save") == 1)
-                    tetris_save = FS_global_find_file("/tetris-save");
-                else {
-                    FS_create_file(0, 0, 0, "/tetris-save", "obj", ATA_find_empty_sector(FILES_SECTOR_OFFSET));
-                    tetris_save = FS_global_find_file("/tetris-save");
-                    FS_write_file(tetris_save, "0");
-                }
-
-                char* file_data = FS_read_file(tetris_save);
-                int best_result = atoi(file_data);
-                free(file_data);
-                
-                int current_result = init_tetris(best_result);
-                if (best_result < current_result) {
-                    char* result = itoa(current_result);
-                    FS_write_file(tetris_save, result);
-
-                    free(result);
-                }
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {

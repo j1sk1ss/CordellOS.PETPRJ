@@ -1,9 +1,9 @@
 #include "../include/text_editor.h"
 
-struct File* edit_file;
+char* edit_file;
 void update_screen(char* data, int x_position, int y_position) {
     VGA_text_clrscr();
-    printf("%sFile: [%s]   [F1 - SAVE]   [F3 - EXIT]\n%s", LINE, edit_file->name, LINE);
+    printf("%sFile: [%s]   [F1 - SAVE]   [F3 - EXIT]\n%s", LINE, edit_file, LINE);
     printf("%s", data);
 
     VGA_setcursor(x_position, y_position);
@@ -157,14 +157,14 @@ char* keyboard_edit(char* previous_data, int color) {
     return input;
 }
 
-void text_editor_init(struct File* file, int color) {
+void text_editor_init(char* path, int color) {
     VGA_clrscr();
 
-    edit_file = file;
-    char* file_text = FS_read_file(edit_file);
-    printf("%sFile: [%s]   [F1 - SAVE]   [F3 - EXIT]\n%s", LINE, edit_file->name, LINE);
+    edit_file = path;
+    char* file_text = FAT_get_content(path)->file->data;
+    printf("%sFile: [%s]   [F1 - SAVE]   [F3 - EXIT]\n%s", LINE, path, LINE);
     set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-    FS_write_file(file, keyboard_edit(file_text, color));
+    FAT_edit_content(path, keyboard_edit(file_text, color));
     
     free(file_text);
 }

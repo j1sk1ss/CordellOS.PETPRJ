@@ -4,9 +4,9 @@
 #include "../user_land/include/user_land.h"
 #include "include/fat.h"
 #include "include/keyboard.h"
-//#include "include/file_system.h"
 
 extern void _init();
+
 
 void kernel_main(void) {
 
@@ -59,7 +59,7 @@ void kernel_main(void) {
     // - Shell
     // - File system (current version)
 
-        //user_land_entry();
+        user_land_entry();
 
     //////////////////////////////////
     

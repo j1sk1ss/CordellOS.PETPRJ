@@ -115,7 +115,7 @@
 
     // Function that add data to sector
     void ATA_append_sector(uint32_t lba, char* append_data) {
-        char* previous_data = ATA_read_sectors(lba, 1);
+        char* previous_data = ATA_read_sector(lba);
 
         strcat(previous_data, append_data);
         ATA_write_sector(lba, previous_data);

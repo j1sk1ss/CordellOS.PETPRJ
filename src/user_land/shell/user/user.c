@@ -1,34 +1,27 @@
 #include "../include/user.h"
 
 void init_users() {
-    if (FS_global_find_directory("/security") == NULL) 
-        FS_create_directory("/security");
+    if (FAT_content_exists("boot\\security") == 0) {
+        struct FATContent* content = FAT_create_content("security", TRUE, NULL);
+        FAT_put_content("boot", content);
+        FAT_unload_content_system(content);
+    }
 
     while (1) {
-        struct File* users_file = FS_global_find_file("/security/users");
-        if (users_file != NULL) {
-            if (users_file->read_level != 0 || users_file->write_level != 0 || users_file->edit_level != 0) {
-                FS_delete_file("/security/users", FS_global_find_directory("/security"));
-                continue;
-            }
-        }
-        else {
-            FS_create_file(0, 0, 0, "/security/users", "txt", ATA_find_empty_sector(SYS_FILES_SECTOR_OFFSET));
-            FS_write_file(FS_global_find_file("/security/users"), "admin[000[0\nguest[666[123\n");
-            continue;
+        if (FAT_content_exists("boot\\security\\users.txt") == 0) {
+            struct FATContent* content = FAT_create_content("users", FALSE, "txt");
+            FAT_put_content("boot\\security", content);
+            FAT_unload_content_system(content);
+
+            FAT_edit_content("boot\\security\\users.txt", "admin[000[0\nguest[666[123\n");
         }
 
-        struct File* groups_file = FS_global_find_file("/security/groups");
-        if (groups_file != NULL) {
-            if (groups_file->read_level != 0 || groups_file->write_level != 0 || groups_file->edit_level != 0) {
-                FS_delete_file("/security/groups", FS_global_find_directory("/security"));
-                continue;
-            }
-        }
-        else {
-            FS_create_file(0, 0, 0, "/security/groups", "txt", ATA_find_empty_sector(SYS_FILES_SECTOR_OFFSET));
-            FS_write_file(FS_global_find_file("/security/groups"), "default[000[admin[guest\n");
-            continue;
+        if (FAT_content_exists("boot\\security\\groups.txt") == 0) {
+            struct FATContent* content = FAT_create_content("groups", FALSE, "txt");
+            FAT_put_content("boot\\security", content);
+            FAT_unload_content_system(content);
+
+            FAT_edit_content("boot\\security\\groups.txt", "default[000[admin[guest\n");
         }
 
         return;
@@ -43,7 +36,7 @@ void init_users() {
 //   \____|_| \_\\___/ \___/|_|  
 
     struct Group* login_group(char* user_name) {
-        char* groups = FS_read_file(FS_global_find_file("/security/groups"));
+        char* groups = FAT_get_content("boot\\security\\groups.txt")->file->data;
 
         int num_lines = 0;
         char* newline_pos = groups;
@@ -121,7 +114,7 @@ void init_users() {
 //   \___/|____/|_____|_| \_\
 
     struct User* login(char* user_name, char* pass, int all) {
-        char* data = FS_read_file(FS_global_find_file("/security/users"));
+        char* data = FAT_get_content("boot\\security\\users.txt")->file->data;
 
         // Determine the number of lines (count the newline characters)
         int num_lines = 0;
