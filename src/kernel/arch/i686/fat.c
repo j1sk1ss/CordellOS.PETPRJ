@@ -218,7 +218,7 @@
 //
 // This function allocates free FAT cluster (FREE not mean empty. Allocated cluster free in FAT table)
 
-	unsigned int lastAllocatedCluster = 2;
+	unsigned int lastAllocatedCluster = SECTOR_OFFSET;
 
 	unsigned int FAT_cluster_allocate() {
 		unsigned int free_cluster 	= BAD_CLUSTER_12;
@@ -250,10 +250,9 @@
 
 		while (cluster < total_clusters) {
 			clusterStatus = FAT_read(cluster);
-			if (FAT_cluster_free(clusterStatus, fat_type) == TRUE) {
+			if (clusterStatus == free_cluster) {
 				if (FAT_write(cluster, end_cluster) == 0) {
 					lastAllocatedCluster = cluster;
-					FAT_cluster_clear(cluster);
 					return cluster;
 				}
 				else {
@@ -574,9 +573,9 @@
 				}
 				else {
 					unsigned int next_cluster = FAT_read(cluster);
-					if ((next_cluster >= END_CLUSTER_32 && fat_type == 32) || (next_cluster >= END_CLUSTER_16 && fat_type == 16) || (next_cluster >= END_CLUSTER_12 && fat_type == 12)) {
+					if (FAT_cluster_end(next_cluster, fat_type) == TRUE) {
 						next_cluster = FAT_cluster_allocate();
-						if ((next_cluster == BAD_CLUSTER_32 && fat_type == 32) || (next_cluster == BAD_CLUSTER_16 && fat_type == 16) || (next_cluster == BAD_CLUSTER_12 && fat_type == 12)) {
+						if (FAT_cluster_bad(next_cluster, fat_type) == TRUE) {
 							printf("Function FAT_directory_add: allocation of new cluster failed. Aborting...\n");
 							free(cluster_data);
 							return -1;
@@ -616,7 +615,7 @@
 
 					return -1;
 				}
-
+				
 				file_to_add->low_bits 	= GET_ENTRY_LOW_BITS(new_cluster);
 				file_to_add->high_bits 	= GET_ENTRY_HIGH_BITS(new_cluster);
 
@@ -647,8 +646,8 @@
 //
 // This function edit names of directory entries in cluster
 
-	int FAT_directory_edit(const unsigned int cluster, const char* fileName, const char* newFileName) {
-		if (FAT_name_check(fileName) != 0) {
+	int FAT_directory_edit(const unsigned int cluster, directory_entry_t* oldMeta, directory_entry_t* newMeta) {
+		if (FAT_name_check(oldMeta->file_name) != 0) {
 			printf("Function FAT_directory_edit: Invalid file name!");
 			return -1;
 		}
@@ -662,8 +661,26 @@
 		directory_entry_t* file_metadata = (directory_entry_t*)cluster_data;
 		unsigned int meta_pointer_iterator_count = 0;
 		while (1) {
-			if (strstr(file_metadata->file_name, fileName) == 0) {
-				strncpy(file_metadata->file_name, newFileName, 11);
+			if (strstr(file_metadata->file_name, oldMeta->file_name) == 0) {
+
+				// Correct new_meta data
+				newMeta->last_accessed 		 	= FAT_current_date();
+				newMeta->last_modification_date = FAT_current_time();
+				newMeta->last_modification_time = FAT_current_time_temths();
+
+				newMeta->creation_date 		  = oldMeta->creation_date;
+				newMeta->creation_time 		  = oldMeta->creation_time;
+				newMeta->creation_time_tenths = oldMeta->creation_time_tenths;
+
+				newMeta->high_bits = oldMeta->high_bits;
+				newMeta->low_bits  = oldMeta->low_bits;
+
+				if (newMeta->file_size == 1)
+					newMeta->file_size  = oldMeta->file_size;
+
+				newMeta->attributes = oldMeta->attributes;
+
+				memcpy(file_metadata, newMeta, sizeof(directory_entry_t));
 				if (FAT_cluster_write(cluster_data, cluster) != 0) {
 					printf("Function FAT_directory_edit: Writing updated directory entry failed. Aborting...\n");
 					free(cluster_data);
@@ -687,7 +704,7 @@
 				}
 
 				free(cluster_data);
-				return FAT_directory_edit(next_cluster, fileName, newFileName);
+				return FAT_directory_edit(next_cluster, oldMeta, newMeta);
 			}
 		}
 
@@ -976,6 +993,7 @@
 			
 			unsigned int cluster 			= GET_CLUSTER_FROM_ENTRY(content_meta);
 			unsigned int dataLeftToWrite 	= strlen(newData);
+			unsigned int allData			= dataLeftToWrite;
 
 			while (cluster <= END_CLUSTER_32) {
 				unsigned int dataWrite = 0;
@@ -1049,82 +1067,112 @@
 				}
 
 				dataLeftToWrite -= dataWrite;
-				if (dataLeftToWrite == 0) FAT_set_cluster_end(cluster, fat_type);
+				if (dataLeftToWrite == 0) {
+					FAT_set_cluster_end(cluster, fat_type);
+
+				}
+				
 				if (dataLeftToWrite < 0) {
 					printf("Function FAT_directory_edit_content: An undefined value has been detected. Aborting...\n");
 					return -1;
 				}
-
-				cluster = FAT_read(cluster);
 			}
 
+			directory_entry_t* new_content = malloc(sizeof(directory_entry_t));
+			memcpy(new_content, &content_meta, sizeof(directory_entry_t));
+
+			new_content->last_accessed 		 	= FAT_current_date();
+			new_content->last_modification_date = FAT_current_time();
+			new_content->last_modification_time = FAT_current_time_temths();
+			new_content->file_size = allData;
+
+			FAT_change_meta(filePath, new_content);
+
+			free(new_content);
 			return 0;
 		
 		// EDIT DATA
 		//////////////////////
 
-		// Free allocated memory
-		FAT_unload_content_system(fatContent);
-
-		return 0; // directory or file successfully deleted
+		return 0;
 	}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // This function finds content in FAT table and change their name
-int FAT_change_content_name(const char* filePath, char* oldName, char* newName) {
-	///////////////////////
-	// FIND CONTENT
+int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 
-		struct FATContent* fatContent = FAT_get_content(filePath);
-		if (fatContent == NULL) {
-			printf("Function FAT_change_content_name: FAT_get_content encountered an error. Aborting...\n");
-			FAT_unload_content_system(fatContent);
-			return -1;
-		}
-		
-		char old[13] = { '\0' };
-		strcpy(old, oldName);
-
-		char new[13] = { '\0' };
-		strcpy(new, newName);
-
-		if (FAT_name_check(old) != 0) 
-			FAT_name2fatname(old);
-
-		if (FAT_name_check(new) != 0) 
-			FAT_name2fatname(new);
-
-	// FIND CONTENT
-	///////////////////////
+	char fileNamePart[256];
+	unsigned short start = 0;
+	unsigned int active_cluster;
+	unsigned int prev_active_cluster;
 
 	//////////////////////
-	// CONTENT META SAVING
+	//	FAT ACTIVE CLUSTER CHOOSING
 
-		directory_entry_t content_meta;
-		if (fatContent->directory != NULL)
-			content_meta = fatContent->directory->directory_meta;
-		else if (fatContent->file != NULL)
-			content_meta = fatContent->file->file_meta;
+		if (fat_type == 32) active_cluster = ext_root_cluster;
+		else {
+			printf("Function FAT_change_meta: FAT16 and FAT12 are not supported!\n");
+			return -1;
+		}
 
-	// CONTENT META SAVING
+	//	FAT ACTIVE CLUSTER CHOOSING
+	//////////////////////
+
+	//////////////////////
+	//	FINDING DIR BY PATH
+
+		directory_entry_t file_info; //holds found directory info
+		if (strlen(filePath) == 0) { // Create main dir if it not created (root dir)
+			if (fat_type == 32) {
+				active_cluster 			= ext_root_cluster;
+				file_info.attributes 	= FILE_DIRECTORY | FILE_VOLUME_ID;
+				file_info.file_size 	= 0;
+				file_info.high_bits 	= GET_ENTRY_HIGH_BITS(active_cluster);
+				file_info.low_bits 		= GET_ENTRY_LOW_BITS(active_cluster);
+			}
+			else {
+				printf("Function FAT_change_meta: FAT16 and FAT12 are not supported!\n");
+				return -1;
+			}
+		}
+		else {
+			for (unsigned int iterator = 0; iterator <= strlen(filePath); iterator++) 
+				if (filePath[iterator] == '\\' || filePath[iterator] == '\0') {
+					prev_active_cluster = active_cluster;
+
+					memset(fileNamePart, '\0', 256);
+					memcpy(fileNamePart, filePath + start, iterator - start);
+
+					int retVal = FAT_directory_search(fileNamePart, active_cluster, &file_info, NULL);
+					switch (retVal) {
+						case -2:
+							printf("Function FAT_change_meta: No matching directory found. Aborting...\n");
+						return -2;
+
+						case -1:
+							printf("Function FAT_change_meta: An error occurred in FAT_directory_search. Aborting...\n");
+						return retVal;
+					}
+
+					start = iterator + 1;
+					active_cluster = GET_CLUSTER_FROM_ENTRY(file_info); //prep for next search
+				}
+		}
+
+	//	FINDING DIR\FILE BY PATH
 	//////////////////////
 
 	//////////////////////
 	// EDIT DATA
 
-		unsigned int cluster = GET_CLUSTER_FROM_ENTRY(content_meta);
-		if (FAT_directory_edit(cluster, old, new) != 0) {
-			printf("Function FAT_change_content_name: FAT_directory_edit encountered an error. Aborting...\n");
-			FAT_unload_content_system(fatContent);
+		if (FAT_directory_edit(prev_active_cluster, &file_info, newMeta) != 0) {
+			printf("Function FAT_change_meta: FAT_directory_edit encountered an error. Aborting...\n");
 			return -1;
 		}
 	
 	// EDIT DATA
 	//////////////////////
-
-	// Free allocated memory
-	FAT_unload_content_system(fatContent);
 
 	return 0; // directory or file successfully deleted
 }
@@ -1191,7 +1239,7 @@ int FAT_change_content_name(const char* filePath, char* oldName, char* newName) 
 		//	FINDING DIR BY PATH
 
 			directory_entry_t file_info; //holds found directory info
-			if (strlen(filePath) == 0) {
+			if (strlen(filePath) == 0) { // Create main dir if it not created (root dir)
 				if (fat_type == 32) {
 					active_cluster 			= ext_root_cluster;
 					file_info.attributes 	= FILE_DIRECTORY | FILE_VOLUME_ID;
@@ -1261,7 +1309,7 @@ int FAT_change_content_name(const char* filePath, char* oldName, char* newName) 
 			// A.i.: now filling file_info with the information of the file directory entry
 
 				char output[13];
-				FAT_fatname2name((char *)content_meta.file_name, output);
+				FAT_fatname2name((char*)content_meta.file_name, output);
 				int retVal = FAT_directory_search(output, active_cluster, &file_info, NULL);
 				if (retVal == -2) {
 					printf("Function FAT_put_content: FAT_directory_add did not properly write the new file's entry to disk. Aborting...\n");
@@ -1276,37 +1324,38 @@ int FAT_change_content_name(const char* filePath, char* oldName, char* newName) 
 			//////////////////////
 
 			active_cluster = GET_CLUSTER_FROM_ENTRY(file_info);
-			unsigned int dataLeftToWrite = content_meta.file_size;
-			while (dataLeftToWrite > 0) {
-				unsigned int dataWrite = 0;
-				if (dataLeftToWrite >= bytes_per_sector * sectors_per_cluster) dataWrite = bytes_per_sector * sectors_per_cluster + 1;
-				else dataWrite = dataLeftToWrite;
+			if ((file_info.attributes & FILE_DIRECTORY) != FILE_DIRECTORY) {
+				unsigned int dataLeftToWrite = content_meta.file_size;
+				while (dataLeftToWrite > 0) {
+					unsigned int dataWrite = 0;
+					if (dataLeftToWrite >= bytes_per_sector * sectors_per_cluster) dataWrite = bytes_per_sector * sectors_per_cluster + 1;
+					else dataWrite = dataLeftToWrite;
 
-				if (FAT_cluster_write(content->file->data, active_cluster) != 0) {
-					printf("Function FAT_put_content: FAT_cluster_write encountered an error. Aborting...\n");
-					return -1;
+					if (FAT_cluster_write(content->file->data, active_cluster) != 0) {
+						printf("Function FAT_put_content: FAT_cluster_write encountered an error. Aborting...\n");
+						return -1;
+					}
+
+					dataLeftToWrite -= dataWrite;
+					if (dataLeftToWrite == 0) break;
+					else if (dataLeftToWrite < 0) {
+						printf("Function FAT_put_content: An undefined value has been detected. Aborting...\n");
+						return -1;
+					}
+
+					unsigned int new_cluster = FAT_cluster_allocate();
+					if (FAT_cluster_bad(new_cluster, fat_type) == TRUE) {
+						printf("Function FAT_put_content: FAT_cluster_allocate encountered an error. Aborting...\n");
+						return -1;
+					}
+
+					if (FAT_write(active_cluster, new_cluster) != 0) {
+						printf("Function FAT_put_content: FAT_write encountered an error. Aborting...\n");
+						return -1;
+					}
+
+					active_cluster = new_cluster;
 				}
-
-				dataLeftToWrite -= dataWrite;
-				if (dataLeftToWrite == 0) break;
-				else if (dataLeftToWrite < 0) {
-					printf("Function FAT_put_content: An undefined value has been detected. Aborting...\n");
-					return -1;
-				}
-
-				//there's more data to write, so allocate new cluster, change fat of current cluster to point to new cluster, and change active cluster to new cluster
-
-				unsigned int new_cluster = FAT_cluster_allocate();
-				if ((new_cluster == BAD_CLUSTER_32 && fat_type == 32) || (new_cluster == BAD_CLUSTER_16 && fat_type == 16) || (new_cluster == BAD_CLUSTER_12 && fat_type == 12)) {
-					printf("Function FAT_put_content: FAT_cluster_allocate encountered an error. Aborting...\n");
-					return -1;
-				}
-				if (FAT_write(active_cluster, new_cluster) != 0) {
-					printf("Function FAT_put_content: FAT_write encountered an error. Aborting...\n");
-					return -1;
-				}
-
-				active_cluster = new_cluster;
 			}
 
 			return 0; //file successfully written
@@ -1587,7 +1636,7 @@ int FAT_change_content_name(const char* filePath, char* oldName, char* newName) 
 		and populates the entry with the info in a correct format for
 		insertion into a disk.
 	*/
-	struct directory_entry* FAT_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize) {
+	struct directory_entry* FAT_create_entry(const char* filename, const char* ext, BOOL isDir, uint32_t firstCluster, uint32_t filesize) {
 		struct directory_entry* data = malloc(sizeof(struct directory_entry));
 
 		data->reserved0 				= 0; 
@@ -1613,6 +1662,10 @@ int FAT_change_content_name(const char* filePath, char* oldName, char* newName) 
 			data->file_size 	= filesize;
 			data->attributes 	= FILE_ARCHIVE;
 		}
+
+		data->creation_date 		 = FAT_current_date();
+		data->creation_time 		 = FAT_current_time();
+		data->creation_time_tenths 	 = FAT_current_time_temths();
 
 		if (FAT_name_check(file_name) != 0)
 			FAT_name2fatname(file_name);
@@ -1656,17 +1709,17 @@ int FAT_change_content_name(const char* filePath, char* oldName, char* newName) 
 			return NULL;
 		}
 		
-		struct directory_entry* content_meta = FAT_create_entry(name, extension, directory, NULL, NULL);
 		if (directory == TRUE) {
 			content->directory = malloc(sizeof(struct FATDirectory));
 			strncpy(content->directory->name, name, 11);
-			content->directory->directory_meta = *content_meta;
+			content->directory->directory_meta = *FAT_create_entry(name, NULL, TRUE, NULL, NULL);
 		}
 
 		else {
 			content->file = malloc(sizeof(struct FATFile));
 			strncpy(content->file->name, name, 11);
-			content->file->file_meta = *content_meta;
+			strncpy(content->file->extension, extension, 4);
+			content->file->file_meta = *FAT_create_entry(name, extension, FALSE, NULL, 1);
 		}
 
 		return content;

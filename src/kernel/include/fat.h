@@ -6,6 +6,8 @@
 #include "memory.h"
 #include "date_time.h"
 
+#define SECTOR_OFFSET		23000
+
 #define END_CLUSTER_32      0x0FFFFFF8
 #define BAD_CLUSTER_32      0x0FFFFFF7
 #define FREE_CLUSTER_32     0x00000000
@@ -46,8 +48,8 @@
 #define GET_CLUSTER_FROM_ENTRY(x)       (x.low_bits | (x.high_bits << (fat_type / 2)))
 #define GET_CLUSTER_FROM_PENTRY(x)      (x->low_bits | (x->high_bits << (fat_type / 2)))
 
-#define GET_ENTRY_LOW_BITS(x)           (x & ((fat_type /2) -1))
-#define GET_ENTRY_HIGH_BITS(x)          (x >> (fat_type / 2))
+#define GET_ENTRY_LOW_BITS(x)           ((x) & ((1 << (fat_type / 2)) - 1))
+#define GET_ENTRY_HIGH_BITS(x)          ((x) >> (fat_type / 2))
 #define CONCAT_ENTRY_HL_BITS(high, low) ((high << (fat_type / 2)) | low)
 
 #ifndef NULL
@@ -136,10 +138,10 @@ typedef struct directory_entry {
 	unsigned short creation_time;
 	unsigned short creation_date;
 	unsigned short last_accessed;
-	unsigned short high_bits;
+	unsigned short high_bits; // EA-Index (used by OS/2 and NT) in FAT12 and FAT16, High 2 bytes of first cluster number in FAT32
 	unsigned short last_modification_time;
 	unsigned short last_modification_date;
-	unsigned short low_bits;
+	unsigned short low_bits; // First cluster in FAT12 and FAT16. Low 2 bytes of first cluster in FAT32. Entries with the Volume Label flag, subdirectory ".." pointing to root, and empty files with size 0 should have first cluster 0.
 	unsigned int file_size;
 } __attribute__((packed)) directory_entry_t;
 
@@ -227,7 +229,7 @@ struct FATDirectory* FAT_directory_list(const unsigned int cluster, unsigned cha
 int FAT_directory_search(const char* filepart, const unsigned int cluster, directory_entry_t* file, unsigned int* entryOffset);
 int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add);
 int FAT_directory_remove(const unsigned int cluster, const char* fileName);
-int FAT_directory_edit(const unsigned int cluster, const char* fileName, const char* newFileName);
+int FAT_directory_edit(const unsigned int cluster, directory_entry_t* oldMeta, directory_entry_t* newMeta);
 
 int FAT_content_exists(const char* filePath);
 struct FATContent* FAT_get_content(const char* filePath);
@@ -235,9 +237,9 @@ int FAT_put_content(const char* filePath, struct FATContent* content);
 int FAT_delete_content(const char* filePath, const char* name);
 struct FATContent* FAT_create_content(char* name, BOOL directory, char* extension);
 void FAT_edit_content(const char* filePath, char* newData);
-int FAT_change_content_name(const char* filePath, char* oldName, char* newName);
+int FAT_change_meta(const char* filePath, directory_entry_t* newMeta);
 
-struct directory_entry* FAT_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+struct directory_entry* FAT_create_entry(const char* filename, const char* ext, BOOL isDir, uint32_t firstCluster, uint32_t filesize);
 
 unsigned short FAT_current_time();
 unsigned char FAT_current_time_temths();

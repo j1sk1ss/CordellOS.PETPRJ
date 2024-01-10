@@ -19,8 +19,11 @@ void shell() {
     //
 
         if (FAT_content_exists("boot\\shell.txt") == 0) {
-            FAT_put_content("boot", FAT_create_content("shell", FALSE, "txt"));
+            struct FATContent* content = FAT_create_content("shell", FALSE, "txt");
+            FAT_put_content("boot", content);
             FAT_edit_content("boot\\shell.txt", "12345");
+
+            FAT_unload_content_system(content);
         }
 
     //
@@ -360,7 +363,9 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {
-                text_editor_init(command_line[1], FOREGROUND_WHITE + BACKGROUND_BLACK);
+                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
+                text_editor_init(FAT_get_current_path(), BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {

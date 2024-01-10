@@ -2,7 +2,9 @@
 #include <include/hal.h>
 
 #include "../user_land/include/user_land.h"
+
 #include "include/fat.h"
+#include "include/elf.h"
 #include "include/keyboard.h"
 
 extern void _init();
@@ -51,6 +53,7 @@ void kernel_main(void) {
     // - FS Clusters 
 
         FAT_initialize();
+        //ELF_read("boot\\kernel\\kernel.elf");
 
     //////////////////////
 
