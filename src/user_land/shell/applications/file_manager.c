@@ -6,6 +6,22 @@
 int row_position = 1;
 struct FATContent* current_directory;
 
+char* convert_date(int day, int month, int year) {
+    char* date = (char*)malloc(9);
+
+    date[0] = '0' + (day / 10);
+    date[1] = '0' + (day % 10);
+    date[2] = '.';
+    date[3] = '0' + (month / 10);
+    date[4] = '0' + (month % 10);
+    date[5] = '.';
+    date[6] = '0' + ((year % 100) / 10);
+    date[7] = '0' + ((year % 100) % 10);
+    date[8] = '\0';
+
+    return date;
+}
+
 void open_file_manager(struct User* user) {
     current_directory = FAT_get_content(FAT_get_current_path());
 
@@ -158,11 +174,12 @@ void execute_item(struct User* user, char action_type) {
 
                         if (action_type == F4_BUTTON) { 
                             while(1) {
-                                set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                                set_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
                             
                                 printf("\n%s", LINE);
-                                const char* lines[3] = {
+                                const char* lines[4] = {
                                     EDIT_LINE,
+                                    VIEW_LINE,
                                     RENAME_LINE,
                                     DELETE_LINE
                                 };
@@ -185,16 +202,28 @@ void execute_item(struct User* user, char action_type) {
                                     switch (row_position) {
                                         case EDIT_POS:
                                             FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
-                                            text_editor_init(FAT_get_current_path(), BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                                            text_editor_init(FAT_get_current_path(), BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
                                             FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
 
                                         break;
 
+                                        case VIEW_POS:
+                                            VGA_clrscr();
+
+                                            FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
+                                            printf("%sFile: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, FAT_get_content(FAT_get_current_path())->file->data, LINE);
+                                            FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+
+                                            set_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+
+                                            keyboard_wait(F3_BUTTON);
+                                        break;
+
                                         case RENAME_POS:
-                                            cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nNew file name: ");
+                                            cprintf(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE, "\nNew file name: ");
                                             char* new_file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 
-                                            cprintf(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE, "\nNew file ext: ");
+                                            cprintf(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE, "\nNew file ext: ");
                                             char* new_file_ext = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
 
                                             directory_entry_t* new_meta = FAT_create_entry(new_file_name, new_file_ext, FALSE, NULL, NULL);
@@ -255,7 +284,7 @@ void execute_item(struct User* user, char action_type) {
                                 printf("%sFile: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, FAT_get_content(FAT_get_current_path())->file->data, LINE);
                                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
 
-                                set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                                set_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
 
                                 keyboard_wait(F3_BUTTON);
 
@@ -268,7 +297,7 @@ void execute_item(struct User* user, char action_type) {
                                 asm_execute(FAT_get_content(FAT_get_current_path())->file->data);
                                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
 
-                                set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                                set_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
 
                                 printf("\n\nPress [F3] to exit");
                                 keyboard_wait(F3_BUTTON);
@@ -278,7 +307,7 @@ void execute_item(struct User* user, char action_type) {
 
                             else if (strstr(currentFile->extension, "SHL") == 0) {
                                 VGA_clrscr();
-                                set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                                set_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
                                 
                                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
                                 char* sector_data = FAT_get_content(FAT_get_current_path())->file->data;
@@ -347,7 +376,7 @@ void execute_item(struct User* user, char action_type) {
 }
 
 void print_directory_data() {
-    set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+    set_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
     printf("Directory: [%s]\n%s%s%s", FAT_get_current_path(), LINE, HEADER, LINE);
 
     int rows = 0;
@@ -356,71 +385,56 @@ void print_directory_data() {
 
     struct FATDirectory* currentDir = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(current_directory->directory->directory_meta), NULL, FALSE)->subDirectory;
     while (currentDir != NULL) {
-        char name[COLUMN_WIDTH + 1];
-        memset(name, ' ', COLUMN_WIDTH);
-        name[COLUMN_WIDTH] = '\0';
+        char name[11];
+        name[11] = '\0';
 
-        int name_length = strlen(currentDir->name);
-        if (name_length <= COLUMN_WIDTH) strncpy(name, currentDir->name, name_length);
-        else strncpy(name, currentDir->name, COLUMN_WIDTH - 3);
+        strncpy(name, currentDir->name, 11);
+        for (size_t i = strlen(name); i < 11; i++) name[i] = ' ';
 
-        if (rows++ == row_position) cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, "| %s | Dir               | N/A       | N/A       | N/A           |\n", name);
-        else printf("| %s | Dir               | N/A       | N/A       | N/A           |\n", name);
+        if (rows++ == row_position) cprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, "| %s | DIR    | N/A      | N/A      | N/A       | N/A  | N/A         |\n", name);
+        else printf("| %s | DIR    | N/A      | N/A      | N/A       | N/A  | N/A         |\n", name);
 
         currentDir = currentDir->next;
     }
 
+
+// name 11
+// cr 8
+// modif 8
+// access 8
+// ext 4
+// size 11
+
     struct FATFile* currentFile = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(current_directory->directory->directory_meta), NULL, FALSE)->files;
     while (currentFile != NULL) {
         ////////////////
-        //  FILE NAME PREPARATIONS
+        //  FILE INFO PREPARATIONS
         //
 
-            char file_name[COLUMN_WIDTH + 1];
-            memset(file_name, ' ', COLUMN_WIDTH);
-            file_name[COLUMN_WIDTH] = '\0';
+            char file_name[12];
+            char file_extension[5];
+            char file_size[12];
 
-            int file_name_length = strlen(currentFile->name);
-            if (file_name_length <= COLUMN_WIDTH) strncpy(file_name, currentFile->name, file_name_length);
-            else strncpy(file_name, currentFile->name, COLUMN_WIDTH - 3);
-        
-        //
-        //  FILE NAME PREPARATIONS
-        ////////////////
+            file_name[11]        = '\0';
+            file_extension[4]    = '\0';
+            file_size[11]        = '\0';
 
-        ////////////////
-        //  FILE EXTENSION PREPARATIONS
-        //
+            strncpy(file_name, currentFile->name, 11);
+            strncpy(file_extension, currentFile->extension, 4);
+            
+            char* file_size_str = itoa(currentFile->file_meta.file_size);
+            strncpy(file_size, file_size_str, 10);
+            strcat(file_size, "B");
 
-            char file_extension[COLUMN_WIDTH  - 5];
-            memset(file_extension, ' ', COLUMN_WIDTH - 6);
-            file_extension[COLUMN_WIDTH - 6] = '\0';
+            struct FATDate* creation_date = FAT_get_date(currentFile->file_meta.creation_date, 1);
+            struct FATDate* modification_date = FAT_get_date(currentFile->file_meta.last_modification_date, 1);
+            struct FATDate* access_date = FAT_get_date(currentFile->file_meta.last_accessed, 1);
 
-            int file_extension_length = strlen(currentFile->extension);
-            if (file_extension_length <= COLUMN_WIDTH - 6) strncpy(file_extension, currentFile->extension, file_extension_length);
-            else strncpy(file_extension, currentFile->extension, COLUMN_WIDTH - 9);
-        
-        //
-        //  FILE EXTENSION PREPARATIONS
-        ////////////////
+            for (size_t i = strlen(file_name); i < 11; i++) file_name[i] = ' ';
+            for (size_t i = strlen(file_extension); i < 4; i++) file_extension[i] = ' ';
+            for (size_t i = strlen(file_size); i < 11; i++) file_size[i] = ' ';
 
-        ////////////////
-        //  FILE SIZE PREPARATIONS
-        //
-
-            char file_size[COLUMN_WIDTH - 1];
-            memset(file_size, ' ', COLUMN_WIDTH - 2);
-            file_size[COLUMN_WIDTH - 2] = '\0';
-
-            char* file_size_str = itoa(currentFile->file_meta.file_size); // Mem leak?
-            strcat(file_size_str, "B");
-
-            int file_size_length = strlen(file_size_str);
-            if (file_size_length <= COLUMN_WIDTH - 2) strncpy(file_size, file_size_str, file_size_length);
-            else strncpy(file_size, file_size_str, (COLUMN_WIDTH - 2) - 3);
-
-        //
-        //  FILE SIZE PREPARATIONS
+        //  FILE INFO PREPARATIONS
         ////////////////
 
         uint8_t foreground_color = FOREGROUND_BRIGHT_WHITE;
@@ -433,13 +447,25 @@ void print_directory_data() {
         else if (strstr(file_extension, "OBJ") == 0)
             foreground_color = FOREGROUND_BLACK;
 
-        if (rows++ == row_position) cprintf(BACKGROUND_RED + foreground_color, "| %s | File              | %d %d %d     | %s | %s |\n",
-                file_name, currentFile->read_level, currentFile->write_level, currentFile->edit_level, file_extension, file_size);
-        else cprintf(BACKGROUND_BLUE + foreground_color, "| %s | File              | %d %d %d     | %s | %s |\n",
-                file_name, currentFile->read_level, currentFile->write_level, currentFile->edit_level, file_extension, file_size);
+        char* cdate = convert_date(creation_date->day, creation_date->mounth, creation_date->year);
+        char* mdate = convert_date(modification_date->day, modification_date->mounth, modification_date->year);
+        char* adate = convert_date(access_date->day, access_date->mounth, access_date->year);
+
+        if (rows++ == row_position) cprintf(BACKGROUND_RED + foreground_color, "| %s | FILE   | %s | %s | %s  | %s | %s |\n",
+                file_name, cdate, mdate, adate, file_extension, file_size);
+        else cprintf(BACKGROUND_BLACK + foreground_color, "| %s | FILE   | %s | %s | %s  | %s | %s |\n",
+                file_name, cdate, mdate, adate, file_extension, file_size);
 
         currentFile = currentFile->next;
-        free(file_size_str);  // Mem leak?
+
+        free(creation_date);
+        free(modification_date);
+        free(access_date);
+        free(file_size_str);
+
+        free(cdate);
+        free(mdate);
+        free(adate);
     }
 
     if (row_position > rows) row_position = rows - 1;

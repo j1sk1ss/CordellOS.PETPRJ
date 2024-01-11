@@ -53,7 +53,6 @@ void kernel_main(void) {
     // - FS Clusters 
 
         FAT_initialize();
-        //ELF_read("boot\\kernel\\kernel.elf");
 
     //////////////////////
 

@@ -1082,8 +1082,8 @@
 			memcpy(new_content, &content_meta, sizeof(directory_entry_t));
 
 			new_content->last_accessed 		 	= FAT_current_date();
-			new_content->last_modification_date = FAT_current_time();
-			new_content->last_modification_time = FAT_current_time_temths();
+			new_content->last_modification_date = new_content->last_accessed;
+			new_content->last_modification_time = FAT_current_time();
 			new_content->file_size = allData;
 
 			FAT_change_meta(filePath, new_content);
@@ -1451,19 +1451,51 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 	// clock hasn't been implemented yet
 	unsigned short FAT_current_time() {
 		datetime_read_rtc();
-		return datetime_hour;
+		return (datetime_hour << 11) | (datetime_minute << 5) | (datetime_second / 2);
 	}
 
 	//clock nor date has been implemented yet
 	unsigned short FAT_current_date() {
 		datetime_read_rtc();
-		return datetime_day;
+
+		uint16_t reversed_data = 0;
+
+		reversed_data |= datetime_day & 0x1F;
+		reversed_data |= (datetime_month & 0xF) << 5;
+		reversed_data |= ((datetime_year - 1980) & 0x7F) << 9;
+
+		return reversed_data;
 	}
 
 	//clock hasn't been implemented yet
 	unsigned char FAT_current_time_temths() {
 		datetime_read_rtc();
-		return datetime_hour;
+		return (datetime_hour << 11) | (datetime_minute << 5) | (datetime_second / 2);
+	}
+
+	// date - 1 | time - 2
+	struct FATDate* FAT_get_date(short data, int type) {
+		struct FATDate* date = malloc(sizeof(struct FATDate));
+		switch (type) {
+			case 1: // date
+				date->year   = ((data >> 9) & 0x7F) + 1980;
+				date->mounth = (data >> 5) & 0xF;
+				date->day    = data & 0x1F;
+				return date;
+
+			break;
+
+			case 2: // time
+				date->hour   = (data >> 11) & 0x1F;
+				date->minute = (data >> 5) & 0x3F;
+				date->second = (data & 0x1F) * 2;
+				return date;
+
+			break;
+		}
+
+		free(date);
+		return NULL;
 	}
 
 	/*-----------------------------------------------------------------------------

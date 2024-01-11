@@ -9,18 +9,20 @@
 
 #define COLUMN_WIDTH 15
 
-#define LINE        "+-----------------+-------------------+-----------+-----------+---------------+\n"
-#define HEADER      "| Name            | Type              | Access    | Extension | Size          |\n"
-#define UPPED_DIR   "|       ...       | None              | N/A       | N/A       | N/A           |\n"
-#define EMPTY       "|                 |                   |           |           |               |\n"
+#define LINE        "+-------------+--------+----------+----------+-----------+------+-------------+\n"
+#define HEADER      "| NAME        | TYPE   | CREATED  | MODIF    | ACCESS    | EXT  | SIZE        |\n"
+#define UPPED_DIR   "|     ...     | NONE   | N/A      | N/A      | N/A       | N/A  | N/A         |\n"
+#define EMPTY       "|             |        |          |          |           |      |             |\n"
 
 #define EDIT_LINE   "| EDIT                                                                        |\n"
+#define VIEW_LINE   "| VIEW                                                                        |\n"
 #define RENAME_LINE "| RENAME                                                                      |\n"
 #define DELETE_LINE "| DELETE                                                                      |\n"
 
 #define EDIT_POS        0
-#define RENAME_POS      1
-#define DELETE_POS      2
+#define VIEW_POS        1
+#define RENAME_POS      2
+#define DELETE_POS      3
 
 
 void open_file_manager(struct User* user);

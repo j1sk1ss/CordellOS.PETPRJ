@@ -163,7 +163,7 @@ void text_editor_init(char* path, int color) {
     edit_file = path;
     char* file_text = FAT_get_content(path)->file->data;
     printf("%sFile: [%s]   [F1 - SAVE]   [F3 - EXIT]\n%s", LINE, path, LINE);
-    set_color(BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+    set_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
     FAT_edit_content(path, keyboard_edit(file_text, color));
     
     free(file_text);

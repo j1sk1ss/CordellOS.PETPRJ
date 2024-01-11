@@ -187,10 +187,20 @@ struct FATDirectory {
 
 	char name[11];
 
-    struct File* files;
+    struct FATFile* files;
 
     struct FATDirectory* next;
     struct FATDirectory* subDirectory;
+};
+
+struct FATDate {
+	uint16_t hour;
+	uint16_t minute;
+	uint16_t second;
+
+	uint16_t year;
+	uint16_t mounth;
+	uint16_t day;
 };
 
 struct FATContent {
@@ -249,6 +259,7 @@ unsigned char FAT_check_sum(unsigned char *pFcbName);
 BOOL FAT_name_check(char * input);
 char* FAT_name2fatname(char* input);
 void FAT_fatname2name(char* input, char* output);
+struct FATDate* FAT_get_date(short data, int type);
 
 void FAT_unload_directories_system(struct FATDirectory* directory);
 void FAT_unload_files_system(struct FATFile* file);
