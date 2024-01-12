@@ -7,7 +7,8 @@
 #include "text_editor.h"
 
 
-#define COLUMN_WIDTH 15
+#define ROWS            14
+#define LINE_OFFSEET    4
 
 #define LINE        "+-------------+--------+----------+----------+-----------+------+-------------+\n"
 #define HEADER      "| NAME        | TYPE   | CREATED  | MODIF    | ACCESS    | EXT  | SIZE        |\n"

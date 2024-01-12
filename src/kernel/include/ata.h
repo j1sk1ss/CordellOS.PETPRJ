@@ -30,8 +30,8 @@
 bool ATA_is_sector_empty(const uint8_t* sector_data);
 bool ATA_is_current_sector_empty(uint32_t LBA);
 
-char* ATA_read_sector(uint32_t lba);
-char* ATA_read_sectors(uint32_t lba, uint32_t sector_count);
+uint8_t* ATA_read_sector(uint32_t lba);
+uint8_t* ATA_read_sectors(uint32_t lba, uint32_t sector_count);
 
 int ATA_write_sector(uint32_t lba, const uint8_t* buffer);
 char* ATA_write_sectors(uint32_t lba, const uint8_t* buffer, uint32_t sector_count);

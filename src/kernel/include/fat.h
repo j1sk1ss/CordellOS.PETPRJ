@@ -175,7 +175,8 @@ struct FATFile {
     int write_level;
     int edit_level;
     
-	char* data;
+	int data_size;
+	uint32_t* data;
 	char extension[4];
 	char name[11];
 
@@ -231,7 +232,7 @@ int FAT_write(unsigned int clusterNum, unsigned int clusterVal);
 unsigned int FAT_cluster_allocate();
 int FAT_cluster_deallocate(const unsigned int cluster);
 
-char* FAT_cluster_read(unsigned int clusterNum);
+uint8_t* FAT_cluster_read(unsigned int clusterNum);
 int FAT_cluster_write(void* contentsToWrite, unsigned int clusterNum);
 int FAT_cluster_clear(unsigned int clusterNum);
 
@@ -243,6 +244,7 @@ int FAT_directory_edit(const unsigned int cluster, directory_entry_t* oldMeta, d
 
 int FAT_content_exists(const char* filePath);
 struct FATContent* FAT_get_content(const char* filePath);
+char* FAT_read_content(struct FATContent* data);
 int FAT_put_content(const char* filePath, struct FATContent* content);
 int FAT_delete_content(const char* filePath, const char* name);
 struct FATContent* FAT_create_content(char* name, BOOL directory, char* extension);

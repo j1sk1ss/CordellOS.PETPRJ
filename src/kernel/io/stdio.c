@@ -240,6 +240,7 @@ void fprint_buffer(fileDescriptorId file, const char* msg, const void* buffer, u
     for (uint16_t i = 0; i < count; i++) {
         fputc(_HexChars[u8Buffer[i] >> 4], file, 0);
         fputc(_HexChars[u8Buffer[i] & 0xF], file, 0);
+        fputc(" ", file, 0);
     }
 
     fputs("\n", file, 0);

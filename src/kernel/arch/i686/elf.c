@@ -1,14 +1,26 @@
 #include "../../include/elf.h"
 
+
+void printHexTable(const char* data, size_t length) {
+    for (size_t i = 0; i < length; ++i) {
+        printf("%c%c ", '0' + ((unsigned char)data[i] >> 4), '0' + ((unsigned char)data[i] & 0x0F));
+
+        if ((i + 1) % 16 == 0 || i == length - 1) {
+            printf("\n");
+        }
+    }
+}
+
 void** ELF_read(const char* path) {
     uint8_t* headerBuffer;
     uint32_t filePos = 0;
 
     struct FATContent* content = FAT_get_content(path);
-    uint8_t* file_content = content->file->data;
+    char* file_content = FAT_read_content(content);
 
     // Read header
     headerBuffer = (uint8_t*)malloc(sizeof(ELFHeader));
+    memset(headerBuffer, 0, sizeof(ELFHeader));
     memcpy(headerBuffer, file_content, sizeof(ELFHeader));
 
     filePos += sizeof(ELFHeader);
@@ -25,12 +37,6 @@ void** ELF_read(const char* path) {
     ok = ok && (header->ELFVersion == 1);
     ok = ok && (header->Type == ELF_TYPE_EXECUTABLE);
     ok = ok && (header->InstructionSet == ELF_INSTRUCTION_SET_X86);
-
-    printf("IS ELF (0): [%i]\tENDIANESS (1): [%u]\t ELF HEADER VER (1): [%u]\n", memcmp(header->Magic, ELF_MAGIC, 4), header->Endianness, header->ELFHeaderVersion);
-    printf("TYPE (2): [%u]\tINSTRUCTIONS (3): [%u]\t ELF VERSION (1): [%u]\n", header->Type, header->InstructionSet, header->ELFVersion);
-    printf("HEADER OFFSET: [%u]\tHEADER SIZE: [%u]\t ENTRY SIZE : [%u]\n", header->ProgramHeaderTablePosition, header->ProgramHeaderTableEntrySize, header->ProgramHeaderTableEntrySize);
-    printf("TABLE COUNT: [%u]\tBITNESS: [%u]\n", header->ProgramHeaderTableEntryCount, header->Bitness);
-    return NULL;
 
     void** entryPoint = (void*)header->ProgramEntryPosition;
 

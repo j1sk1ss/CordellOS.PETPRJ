@@ -36,7 +36,7 @@ void init_users() {
 //   \____|_| \_\\___/ \___/|_|  
 
     struct Group* login_group(char* user_name) {
-        char* groups = FAT_get_content("boot\\security\\groups.txt")->file->data;
+        char* groups = FAT_read_content(FAT_get_content("boot\\security\\groups.txt"));
 
         int num_lines = 0;
         char* newline_pos = groups;
@@ -114,7 +114,7 @@ void init_users() {
 //   \___/|____/|_____|_| \_\
 
     struct User* login(char* user_name, char* pass, int all) {
-        char* data = FAT_get_content("boot\\security\\users.txt")->file->data;
+        char* data = FAT_read_content(FAT_get_content("boot\\security\\users.txt"));
 
         // Determine the number of lines (count the newline characters)
         int num_lines = 0;

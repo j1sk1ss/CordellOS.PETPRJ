@@ -113,7 +113,7 @@ void shell_start_screen() {
                 char* password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
                 int tries = 0;
 
-                char* pass = FAT_get_content("boot\\shell.txt")->file->data;
+                char* pass = FAT_read_content(FAT_get_content("boot\\shell.txt"));
                 while (strcmp(password, pass) != 0) {
                     cprintf(FOREGROUND_RED, "\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
                     free(password);
@@ -307,7 +307,7 @@ void shell_start_screen() {
                     }
 
                     if (current_file != NULL) {
-                        printf("\r\n\t%s", current_file->name);
+                        printf("\r\n\t%s.%s", current_file->name, current_file->extension);
                 
                         while (current_file->next != NULL) {
                             current_file = current_file->next;
@@ -326,13 +326,11 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_FILE_VIEW) == 0) {
                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
                 struct FATContent* content = FAT_get_content(FAT_get_current_path());
-                struct FATFile* file = content->file;
-                if (file == NULL) {
-                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                    return;
-                }
                 
-                printf("\r\n%s", file->data);
+                char* data = FAT_read_content(content);
+                printf("\r\n%s", data);
+                free(data);
+
                 FAT_unload_content_system(content);
                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
             }
@@ -400,7 +398,7 @@ void shell_start_screen() {
                 if (content->file == NULL)
                     return;
 
-                char* sector_data = content->file->data;
+                char* sector_data = FAT_read_content(content);
                 asm_execute(sector_data, user);
 
                 free(sector_data);

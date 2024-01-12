@@ -131,7 +131,11 @@ void asm_executor(int *memory_array, int memory_index, int start, int end, struc
 			case RFILE_INSTRUCTION:
 				if (FAT_content_exists(intermediate_table[i]->string_params[0]) == 1) {
 					struct FATContent* content = FAT_get_content(intermediate_table[i]->string_params[0]);
-					int data = atoi(content->file->data);
+
+					char* fat_data = FAT_read_content(content);
+					int data = atoi(fat_data);
+					free(fat_data);
+
 					memory_array[intermediate_table[i]->parameters[0]] = data; 
 
 					FAT_unload_content_system(content);

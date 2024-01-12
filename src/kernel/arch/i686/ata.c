@@ -5,9 +5,9 @@
 //  READ SECTOR FROM DISK BY LBA ADRESS
 //
 
-    char* ATA_read_sector(uint32_t lba) {
+    uint8_t* ATA_read_sector(uint32_t lba) {
         ATA_ata_wait();
-        char* buffer = (char*)malloc(SECTOR_SIZE);
+        uint8_t* buffer = (uint8_t*)malloc(SECTOR_SIZE);
         if (buffer == NULL) 
             return NULL;
 
@@ -37,14 +37,15 @@
     }
 
     // Function to read a sectors from the disk.
-    char* ATA_read_sectors(uint32_t lba, uint32_t sector_count) {
+    uint8_t* ATA_read_sectors(uint32_t lba, uint32_t sector_count) {
         ATA_ata_wait();
-        char* buffer = (char*)malloc(SECTOR_SIZE * sector_count);
+        uint8_t* buffer = (uint8_t*)malloc(SECTOR_SIZE * sector_count);
         if (buffer == NULL) 
             return NULL;
 
+        memset(buffer, 0, SECTOR_SIZE * sector_count);
         for (uint32_t i = 0; i < sector_count; i++) {
-            char* sector_data = ATA_read_sector(lba + i);
+            uint8_t* sector_data = ATA_read_sector(lba + i);
             if (sector_data == NULL) {
                 free(buffer);
                 return NULL;
@@ -139,7 +140,7 @@
 
     // Function to check if a sector (by LBA) is empty (all bytes are zero)
     bool ATA_is_current_sector_empty(uint32_t lba) {
-        char* sector_data = ATA_read_sector(lba);
+        uint8_t* sector_data = ATA_read_sector(lba);
         if (ATA_is_sector_empty(sector_data)) {
             free(sector_data);
             return true;

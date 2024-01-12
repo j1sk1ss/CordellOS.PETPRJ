@@ -12,15 +12,18 @@
 #define ELF_MAGIC ("\x7F" "ELF")
 
 
+/* https://en.wikipedia.org/wiki/Executable_and_Linkable_Format */
+
 typedef struct  {
     uint8_t Magic[4];
-    uint8_t Bitness;            // 1 = 32 bit, 2 = 64 bit
-    uint8_t Endianness;         // 1 = little endian, 2 = big endian
+    uint8_t Bitness;            
+    uint8_t Endianness;         
     uint8_t ELFHeaderVersion;
     uint8_t ABI;
-    uint8_t _Padding[8];
 
-    uint16_t Type;              // 1 = relocatable, 2 = executable, 3 = shared, 4 = core
+    uint8_t Padding[8];
+
+    uint16_t Type;              
     uint16_t InstructionSet;
 
     uint32_t ELFVersion;

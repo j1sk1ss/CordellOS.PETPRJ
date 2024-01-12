@@ -9,7 +9,6 @@
 
 extern void _init();
 
-
 void kernel_main(void) {
 
     ///////////////////////
