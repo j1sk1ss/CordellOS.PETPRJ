@@ -2,13 +2,13 @@
 #include "../include/vga_text.h"
 
 
-int VFS_Write(fileDescriptorId file, uint8_t* data, size_t size) {
+int VFS_write(fileDescriptorId file, uint8_t* data, size_t size) {
     switch (file) {
-        case VFS_FD_STDIN:
+        case 0:
             return 0;
 
-        case VFS_FD_STDOUT:
-        case VFS_FD_STDERR:
+        case 1:
+        case 2:
             for (size_t i = 0; i < size; i++)
                 VGA_putc(data[i]);
 

@@ -53,7 +53,7 @@ typedef int fileDescriptorId;   // Indetifine file
     //  COLORS
     /////////////////
 
-int VHS_write(fileDescriptorId file, uint8_t* data, size_t size);
+int VFS_write(fileDescriptorId file, uint8_t* data, size_t size);
 int VFS_color_write(uint8_t color, uint8_t* data, size_t size);
 
 void VFS_set_screen_color(uint8_t color);

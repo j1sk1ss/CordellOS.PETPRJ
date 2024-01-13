@@ -1,16 +1,6 @@
 #include "../../include/elf.h"
 
 
-void printHexTable(const char* data, size_t length) {
-    for (size_t i = 0; i < length; ++i) {
-        printf("%c%c ", '0' + ((unsigned char)data[i] >> 4), '0' + ((unsigned char)data[i] & 0x0F));
-
-        if ((i + 1) % 16 == 0 || i == length - 1) {
-            printf("\n");
-        }
-    }
-}
-
 void** ELF_read(const char* path) {
     uint8_t* headerBuffer;
     uint32_t filePos = 0;

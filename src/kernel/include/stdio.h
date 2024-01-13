@@ -34,3 +34,4 @@ void debugf(const char* fmt, ...);
 void debug_buffer(const char* msg, const void* buffer, uint32_t count);
 
 void set_color(int color);
+void print_hex_table(const char* data, size_t length);

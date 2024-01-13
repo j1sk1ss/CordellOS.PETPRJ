@@ -9,7 +9,7 @@
 
 void fputc(char c, fileDescriptorId file, int color) {
     if (color == 1) cputc(c, file);
-    else VFS_Write(file, &c, sizeof(c));
+    else VFS_write(file, &c, sizeof(c));
 }
 
 void cputc(char c, uint8_t color) {
@@ -68,8 +68,8 @@ void fprintf_signed(fileDescriptorId file, long long number, int radix, int colo
 }
 
 int vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
-    int state   = PRINTF_STATE_NORMAL;
-    int length  = PRINTF_LENGTH_DEFAULT;
+    int state   = 0;
+    int length  = 0;
     int radix   = 10;
 
     bool sign   = false;
@@ -77,10 +77,10 @@ int vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
 
     while (*fmt) {
         switch (state) {
-            case PRINTF_STATE_NORMAL:
+            case 0:
                 switch (*fmt) {
                     case '%':   
-                        state = PRINTF_STATE_LENGTH;
+                        state = 1;
                     break;
 
                     default:    
@@ -90,16 +90,16 @@ int vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
 
                 break;
 
-            case PRINTF_STATE_LENGTH:
+            case 1:
                 switch (*fmt) {
                     case 'h':   
-                        length  = PRINTF_LENGTH_SHORT;  
-                        state   = PRINTF_STATE_LENGTH_SHORT;
+                        length  = 2;  
+                        state   = 2;
                     break;
 
                     case 'l':   
-                        length  = PRINTF_LENGTH_LONG;
-                        state   = PRINTF_STATE_LENGTH_LONG;
+                        length  = 3;
+                        state   = 3;
                     break;
 
                     default:    
@@ -108,27 +108,27 @@ int vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
 
                 break;
 
-            case PRINTF_STATE_LENGTH_SHORT:
+            case 2:
                 if (*fmt == 'h') {
-                    length  = PRINTF_LENGTH_SHORT_SHORT;
-                    state   = PRINTF_STATE_SPEC;
+                    length  = 1;
+                    state   = 4;
                 }
                 else 
                     goto PRINTF_STATE_SPEC_;
 
                 break;
 
-            case PRINTF_STATE_LENGTH_LONG:
+            case 3:
                 if (*fmt == 'l') {
-                    length  = PRINTF_LENGTH_LONG_LONG;
-                    state   = PRINTF_STATE_SPEC;
+                    length  = 4;
+                    state   = 4;
                 }
                 else 
                     goto PRINTF_STATE_SPEC_;
 
                 break;
 
-            case PRINTF_STATE_SPEC:
+            case 4:
             PRINTF_STATE_SPEC_:
                 switch (*fmt) {
                     case 'c':   
@@ -178,34 +178,34 @@ int vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
                 if (number) {
                     if (sign) {
                         switch (length) {
-                            case PRINTF_LENGTH_SHORT_SHORT:
-                            case PRINTF_LENGTH_SHORT:
-                            case PRINTF_LENGTH_DEFAULT:     
+                            case 1:
+                            case 2:
+                            case 0:     
                                 fprintf_signed(file, va_arg(args, int), radix, color);
                             break;
 
-                            case PRINTF_LENGTH_LONG:        
+                            case 3:        
                                 fprintf_signed(file, va_arg(args, long), radix, color);
                             break;
 
-                            case PRINTF_LENGTH_LONG_LONG:   
+                            case 4:   
                                 fprintf_signed(file, va_arg(args, long long), radix, color);
                             break;
                         }
                     }
                     else {
                         switch (length) {
-                            case PRINTF_LENGTH_SHORT_SHORT:
-                            case PRINTF_LENGTH_SHORT:
-                            case PRINTF_LENGTH_DEFAULT:     
+                            case 1:
+                            case 2:
+                            case 0:     
                                 fprintf_unsigned(file, va_arg(args, unsigned int), radix, color);
                             break;
                                                             
-                            case PRINTF_LENGTH_LONG:        
+                            case 3:        
                                 fprintf_unsigned(file, va_arg(args, unsigned  long), radix, color);
                             break;
 
-                            case PRINTF_LENGTH_LONG_LONG:   
+                            case 4:   
                                 fprintf_unsigned(file, va_arg(args, unsigned  long long), radix, color);
                             break;
                         }
@@ -213,8 +213,8 @@ int vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
                 }
 
                 // reset state
-                state   = PRINTF_STATE_NORMAL;
-                length  = PRINTF_LENGTH_DEFAULT;
+                state   = 0;
+                length  = 0;
                 radix   = 10;
                 sign    = false;
                 number  = false;
@@ -257,12 +257,10 @@ void puts(const char* str) {
 }
 
 int printf(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(VFS_FD_STDOUT, fmt, args, 0);
-    va_end(args);
+    char c = fmt[0];
+    VFS_write(2, &c, sizeof(c));
 
-    return 11;
+    return 0;
 }
 
 void cprintf(uint8_t color, const char* fmt, ...) {

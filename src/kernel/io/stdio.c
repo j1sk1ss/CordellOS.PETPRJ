@@ -272,6 +272,16 @@ void print_buffer(const char* msg, const void* buffer, uint32_t count) {
     fprint_buffer(VFS_FD_STDOUT, msg, buffer, count);
 }
 
+void print_hex_table(const char* data, size_t length) {
+    for (size_t i = 0; i < length; ++i) {
+        printf("%c%c ", '0' + ((unsigned char)data[i] >> 4), '0' + ((unsigned char)data[i] & 0x0F));
+
+        if ((i + 1) % 16 == 0 || i == length - 1) {
+            printf("\n");
+        }
+    }
+}
+
 void debugc(char c) {
     fputc(c, VFS_FD_DEBUG, 0);
 }

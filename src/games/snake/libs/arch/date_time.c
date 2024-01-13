@@ -1,5 +1,5 @@
 #include "../include/date_time.h"
-#include "../../../../libs/include/x86.h"
+#include "../include/io.h"
 
 // Change this each year as needed.
 // This is only used if the century register doesn't exist.
@@ -21,13 +21,13 @@ enum {
 };
  
 int get_update_in_progress_flag() {
-    x86_outb(cmos_address, 0x0A);
-    return (x86_inb(cmos_data) & 0x80);
+    i686_outb(cmos_address, 0x0A);
+    return (i686_inb(cmos_data) & 0x80);
 }
  
 unsigned char get_RTC_register(int reg) {
-      x86_outb(cmos_address, reg);
-      return x86_inb(cmos_data);
+      i686_outb(cmos_address, reg);
+      return i686_inb(cmos_data);
 }
  
 void datetime_read_rtc() {

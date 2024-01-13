@@ -1,8 +1,10 @@
 #pragma once
 
-extern uint8_t* _screenBuffer; 
+#include <stdint.h>
 
 // Important functions
+void init_vars();
+
 void VGA_clrscr();
 void VGA_set_color(uint8_t color);
 void VGA_putc(char c);

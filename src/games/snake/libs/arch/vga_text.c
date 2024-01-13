@@ -6,15 +6,22 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-const unsigned int SCREEN_WIDTH  = 80;      //  Default widgth of screens
-const unsigned int SCREEN_HEIGHT = 25;      //  Default height of screens
-const uint8_t DEFAULT_COLOR      = 0x7;     //  Default color
+unsigned int SCREEN_WIDTH  = 80;      //  Default widgth of screens
+unsigned int SCREEN_HEIGHT = 25;      //  Default height of screens
+uint8_t DEFAULT_COLOR      = 0x7;     //  Default color
 
 uint8_t* _screenBuffer = (uint8_t*)0xB8000; // Position of screen buffer in memory
 
 int _screenX = 0;                           //  Cursor position
 int _screenY = 0;                           //
 
+void init_vars() {
+    SCREEN_WIDTH  = 80;
+    SCREEN_HEIGHT = 25;
+    DEFAULT_COLOR = 0x7;
+
+    _screenBuffer = (uint8_t*)0xB8000;
+}
 
 int VGA_cursor_get_x() {
     return _screenX;
