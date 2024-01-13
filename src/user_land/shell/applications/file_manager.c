@@ -338,6 +338,19 @@ void execute_item(struct User* user, char action_type) {
                                 break;
                             }
 
+                            if (strstr(currentFile->extension, "ELF") == 0) {
+                                VGA_clrscr();
+                                
+                                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
+                                printf("EXIT CODE: [%i]", FAT_ELF_execute_content(FAT_get_current_path()));
+                                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+
+                                printf("\n\nPress [F3] to exit");
+                                keyboard_wait(F3_BUTTON);
+
+                                break;
+                            }
+
                             else if (strstr(currentFile->extension, "ASM") == 0) {
                                 VGA_clrscr();
                                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
@@ -500,9 +513,9 @@ void print_directory_data() {
         free(cdate);
         free(mdate);
         free(adate);
-
-        down_border = rows;
     }
+
+    down_border = rows;
 
     for (int i = 0; i < 15 - (down_border - upper_border); i++) printf(EMPTY);
     printf("%s[F1 - MKDIR] [F2 - MKFILE] [F3 - EXIT] [F4 - EDIT] [ENTER - EXEC] [BSPACE - RM]\n", LINE);

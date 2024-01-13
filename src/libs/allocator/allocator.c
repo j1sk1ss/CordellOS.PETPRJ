@@ -3,7 +3,7 @@
 
 #include "../include/allocator.h"
 
-#define MAX_PAGE_ALIGNED_ALLOCS 32
+#define MAX_PAGE_ALIGNED_ALLOCS 64
 
 typedef struct {
 	uint8_t status;
@@ -76,7 +76,7 @@ uint32_t get_memory() {
 			if (a->status) {
 				mem += a->size;
 				mem += sizeof(alloc_t);
-				mem += 4; // Why? 
+				mem += 4;
 
 				continue;
 			}

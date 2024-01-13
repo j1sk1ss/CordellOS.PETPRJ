@@ -5,6 +5,7 @@
 #include "ata.h"
 #include "memory.h"
 #include "date_time.h"
+#include "elf.h"
 
 #define SECTOR_OFFSET		23000
 
@@ -39,11 +40,11 @@
 #define ENTRY_JAPAN             0x05
 #define LAST_LONG_ENTRY         0x40
 
-#define LOWERCASE_ISSUE	        0x01 //E.g.: "test    txt"
-#define BAD_CHARACTER	        0x02 //E.g.: "tes&t   txt"
-#define BAD_TERMINATION         0x04 //missing null character at the end
-#define NOT_CONVERTED_YET       0x08 //still contains a dot: E.g."test.txt"
-#define TOO_MANY_DOTS           0x10 //E.g.: "test..txt"; may or may not have already been converted
+#define LOWERCASE_ISSUE	        0x01
+#define BAD_CHARACTER	        0x02
+#define BAD_TERMINATION         0x04
+#define NOT_CONVERTED_YET       0x08
+#define TOO_MANY_DOTS           0x10
 
 #define GET_CLUSTER_FROM_ENTRY(x)       (x.low_bits | (x.high_bits << (fat_type / 2)))
 #define GET_CLUSTER_FROM_PENTRY(x)      (x->low_bits | (x->high_bits << (fat_type / 2)))
@@ -68,18 +69,11 @@
 #define FALSE 0
 #endif
 
-#ifndef DISK_READ_LOCATION
-#define DISK_READ_LOCATION 0x40000
-#endif
-#ifndef DISK_WRITE_LOCATION
-#define DISK_WRITE_LOCATION 0x40000
-#endif
 
 /* Bpb taken from http://wiki.osdev.org/FAT */
 
 //FAT directory and bootsector structures
 typedef struct fat_extBS_32 {
-	//extended fat32 stuff
 	unsigned int		table_size_32;
 	unsigned short		extended_flags;
 	unsigned short		fat_version;
@@ -97,7 +91,6 @@ typedef struct fat_extBS_32 {
 } __attribute__((packed)) fat_extBS_32_t;
 
 typedef struct fat_extBS_16 {
-	//extended fat12 and fat16 stuff
 	unsigned char		bios_drive_num;
 	unsigned char		reserved1;
 	unsigned char		boot_signature;
@@ -123,7 +116,6 @@ typedef struct fat_BS {
 	unsigned int 		hidden_sector_count;
 	unsigned int 		total_sectors_32;
 
-	//this will be cast to it's specific type once the driver actually knows what type of FAT this is.
 	unsigned char		extended_section[54];
 
 } __attribute__((packed)) fat_BS_t;
@@ -171,12 +163,9 @@ typedef struct long_entry {
 struct FATFile {
 	directory_entry_t file_meta;
 
-    int read_level;
-    int write_level;
-    int edit_level;
-    
 	int data_size;
 	uint32_t* data;
+
 	char extension[4];
 	char name[11];
 
@@ -188,9 +177,9 @@ struct FATDirectory {
 
 	char name[11];
 
-    struct FATFile* files;
+	struct FATDirectory* next;
 
-    struct FATDirectory* next;
+    struct FATFile* files;
     struct FATDirectory* subDirectory;
 };
 
@@ -224,51 +213,94 @@ extern unsigned int sectors_per_cluster;
 
 extern unsigned int ext_root_cluster;
 
-//FAT functions (see the .c file for function descriptions)
-int FAT_initialize(); 
-int FAT_read(unsigned int clusterNum);
-int FAT_write(unsigned int clusterNum, unsigned int clusterVal);
+/////////////////////////////////////
+//   _____  _    ____  _     _____ 
+//  |_   _|/ \  | __ )| |   | ____|
+//    | | / _ \ |  _ \| |   |  _|  
+//    | |/ ___ \| |_) | |___| |___ 
+//    |_/_/   \_\____/|_____|_____|
+//
+	int FAT_initialize(); 
+	int FAT_read(unsigned int clusterNum);
+	int FAT_write(unsigned int clusterNum, unsigned int clusterVal);
+//	
+/////////////////////////////////////
 
-unsigned int FAT_cluster_allocate();
-int FAT_cluster_deallocate(const unsigned int cluster);
+/////////////////////////////////////
+//    ____ _    _   _ ____ _____ _____ ____  
+//   / ___| |  | | | / ___|_   _| ____|  _ \ 
+//  | |   | |  | | | \___ \ | | |  _| | |_) |
+//  | |___| |__| |_| |___) || | | |___|  _ < 
+//   \____|_____\___/|____/ |_| |_____|_| \_\
+//
+	unsigned int FAT_cluster_allocate();
+	int FAT_cluster_deallocate(const unsigned int cluster);
 
-uint8_t* FAT_cluster_read(unsigned int clusterNum);
-int FAT_cluster_write(void* contentsToWrite, unsigned int clusterNum);
-int FAT_cluster_clear(unsigned int clusterNum);
+	uint8_t* FAT_cluster_read(unsigned int clusterNum);
+	int FAT_cluster_write(void* contentsToWrite, unsigned int clusterNum);
+	int FAT_cluster_clear(unsigned int clusterNum);
+//
+/////////////////////////////////////
 
-struct FATDirectory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, short exclusive);
-int FAT_directory_search(const char* filepart, const unsigned int cluster, directory_entry_t* file, unsigned int* entryOffset);
-int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add);
-int FAT_directory_remove(const unsigned int cluster, const char* fileName);
-int FAT_directory_edit(const unsigned int cluster, directory_entry_t* oldMeta, directory_entry_t* newMeta);
+/////////////////////////////////////
+//   _____ _   _ _____ ______   __
+//  | ____| \ | |_   _|  _ \ \ / /
+//  |  _| |  \| | | | | |_) \ V / 
+//  | |___| |\  | | | |  _ < | |  
+//  |_____|_| \_| |_| |_| \_\|_| 
+//
+	struct FATDirectory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, short exclusive);
+	int FAT_directory_search(const char* filepart, const unsigned int cluster, directory_entry_t* file, unsigned int* entryOffset);
+	int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add);
+	int FAT_directory_remove(const unsigned int cluster, const char* fileName);
+	int FAT_directory_edit(const unsigned int cluster, directory_entry_t* oldMeta, directory_entry_t* newMeta);
+	struct directory_entry* FAT_create_entry(const char* filename, const char* ext, BOOL isDir, uint32_t firstCluster, uint32_t filesize);
+//
+/////////////////////////////////////
 
-int FAT_content_exists(const char* filePath);
-struct FATContent* FAT_get_content(const char* filePath);
-char* FAT_read_content(struct FATContent* data);
-int FAT_put_content(const char* filePath, struct FATContent* content);
-int FAT_delete_content(const char* filePath, const char* name);
-struct FATContent* FAT_create_content(char* name, BOOL directory, char* extension);
-void FAT_edit_content(const char* filePath, char* newData);
-int FAT_change_meta(const char* filePath, directory_entry_t* newMeta);
+/////////////////////////////////////
+//    ____ ___  _   _ _____ _____ _   _ _____ 
+//   / ___/ _ \| \ | |_   _| ____| \ | |_   _|
+//  | |  | | | |  \| | | | |  _| |  \| | | |  
+//  | |__| |_| | |\  | | | | |___| |\  | | |  
+//   \____\___/|_| \_| |_| |_____|_| \_| |_|  
+//
+	int FAT_content_exists(const char* filePath);
+	struct FATContent* FAT_get_content(const char* filePath);
+	char* FAT_read_content(struct FATContent* data);
+	int FAT_put_content(const char* filePath, struct FATContent* content);
+	int FAT_delete_content(const char* filePath, const char* name);
+	struct FATContent* FAT_create_content(char* name, BOOL directory, char* extension);
+	void FAT_edit_content(const char* filePath, char* newData);
+	int FAT_ELF_execute_content(char* path);
+	int FAT_change_meta(const char* filePath, directory_entry_t* newMeta);
+//
+/////////////////////////////////////
 
-struct directory_entry* FAT_create_entry(const char* filename, const char* ext, BOOL isDir, uint32_t firstCluster, uint32_t filesize);
+/////////////////////////////////////
+//    ___ _____ _   _ _____ ____  
+//   / _ \_   _| | | | ____|  _ \ 
+//  | | | || | | |_| |  _| | |_) |
+//  | |_| || | |  _  | |___|  _ < 
+//   \___/ |_| |_| |_|_____|_| \_\
+//
+	unsigned short FAT_current_time();
+	unsigned char FAT_current_time_temths();
+	unsigned short FAT_current_date();
+	unsigned char FAT_check_sum(unsigned char *pFcbName);
 
-unsigned short FAT_current_time();
-unsigned char FAT_current_time_temths();
-unsigned short FAT_current_date();
-unsigned char FAT_check_sum(unsigned char *pFcbName);
+	BOOL FAT_name_check(char * input);
+	char* FAT_name2fatname(char* input);
+	void FAT_fatname2name(char* input, char* output);
+	struct FATDate* FAT_get_date(short data, int type);
 
-BOOL FAT_name_check(char * input);
-char* FAT_name2fatname(char* input);
-void FAT_fatname2name(char* input, char* output);
-struct FATDate* FAT_get_date(short data, int type);
+	void FAT_unload_directories_system(struct FATDirectory* directory);
+	void FAT_unload_files_system(struct FATFile* file);
+	void FAT_unload_content_system(struct FATContent* content);
 
-void FAT_unload_directories_system(struct FATDirectory* directory);
-void FAT_unload_files_system(struct FATFile* file);
-void FAT_unload_content_system(struct FATContent* content);
-
-char* FAT_change_path(const char* currentPath, const char* newDir);
-char* FAT_get_current_path();
-void FAT_set_current_path(char* path);
-
+	char* FAT_change_path(const char* currentPath, const char* newDir);
+	char* FAT_get_current_path();
+	void FAT_set_current_path(char* path);
+//
+/////////////////////////////////////
 #endif
