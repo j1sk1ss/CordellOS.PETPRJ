@@ -10,6 +10,7 @@
 
 extern void _init();
 
+
 void kernel_main(void) {
 
     ///////////////////////
@@ -61,20 +62,7 @@ void kernel_main(void) {
     // - Shell
     // - File system (current version)
 
-        //user_land_entry();
-        GFX_init();
-        printf("RESOLUTION: [%i]\t[%i]\n", gfx_mode->x_resolution, gfx_mode->y_resolution);
-        // Point p0, p1, p2;
-        // Point vertex_array[6];
-
-        // // Draw pixel test
-        // for (uint8_t i = 0; i < 100; i ++) {
-        //     for (uint8_t j = 0; j < 100; j++) {
-        //         p0.X = 200 + j;
-        //         p0.Y = 200 + i;
-        //         GFX_draw_pixel(p0.X, p0.Y, GFX_convert_color(RED));
-        //     }
-        // } 
+        user_land_entry();
 
     //////////////////////////////////
     

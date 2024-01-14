@@ -2,6 +2,7 @@
 #include "../../include/idt.h"
 #include "../../include/gdt.h"
 #include "../../include/io.h"
+#include "../../include/stdio.h"
 
 #include<stddef.h>
 #include <include/stdio.h>
@@ -45,28 +46,43 @@ static const char* const _exceptions[] = {
 
 void i686_ISR_InitializeGates();
 
+void syscall(Registers* regs) {
+    switch (regs->eax) {
+        case SYS_PRINT:
+            const char* data = (const char*)regs->ecx;
+            printf(data);
+            break;
+
+        case SYS_READ_FILE:
+            break;
+
+        case SYS_WRITE_FILE:
+            break;
+    }
+}
+
 void i686_isr_initialize() {
     i686_ISR_InitializeGates();
     for (int i = 0; i < 256; i++)
         i686_idt_enableGate(i);
+
+    i686_idt_enableGate(0x80);
+    i686_isr_registerHandler(0x80, syscall);
 }
 
 void __attribute__((cdelc)) i686_isr_handler(Registers* regs) {
     if (_isrHandlers[regs->interrupt] != NULL)
         _isrHandlers[regs->interrupt](regs);
+
     else if (regs->interrupt >= 32)
         printf("Unhandled interrupt! Interrupt: %d\n", regs->interrupt);
-    else  {
+    else {
         printf("Unhandled exception %d %s\n", regs->interrupt, _exceptions[regs->interrupt]);
-        
         printf("  eax=%x  ebx=%x  ecx=%x  edx=%x  esi=%x  edi=%x\n",
                regs->eax, regs->ebx, regs->ecx, regs->edx, regs->esi, regs->edi);
-
         printf("  esp=%x  ebp=%x  eip=%x  eflags=%x  cs=%x  ds=%x  ss=%x\n",
                regs->esp, regs->ebp, regs->eip, regs->eflag, regs->cs, regs->ds, regs->ss);
-
         printf("  interrupt=%x  errorcode=%x\n", regs->interrupt, regs->error);
-
         printf("KERNEL PANIC!\n");
         i686_panic();
     }

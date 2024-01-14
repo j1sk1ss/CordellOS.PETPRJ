@@ -2,6 +2,7 @@
 
 extern i686_isr_handler
 
+
 %macro ISR_NOERRORCODE 1
 
 global i686_ISR%1:
@@ -49,4 +50,3 @@ isr_common:
     popa
     add esp, 8               ; remove error code & interrupt number
     iret                     ; will pop : cs, eip, eflags, ss, esp
-

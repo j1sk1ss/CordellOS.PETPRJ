@@ -1,14 +1,17 @@
 int* main(void) {
-	char str1[50] = "HELLO FROM \n ELF!";
-	test(str1);
+    // const char *message = "SYSCALL";
+    // __asm__ volatile (
+    //     "movl $0, %%eax\n"          // syscall number for write
+    //     "movl $1, %%ebx\n"          // file descriptor (stdout)
+    //     "movl %0, %%ecx\n"          // pointer to the message
+    //     "movl %1, %%edx\n"          // length of the message
+    //     "int $0x80\n"               // interrupt to invoke syscall
+    //     :
+    //     : "r"(message), "r"(10)
+    //     : "eax", "ebx", "ecx", "edx"
+    // );
 
-	return -11;
-}
+    // for (;;);
 
-void test(char* data) {
-	volatile char *video = (volatile char*)0xB8000;
-    while( *data != 0 ) {
-        *video++ = *data++;
-        *video++ = 0x07;
-    }
+	return -1;
 }
