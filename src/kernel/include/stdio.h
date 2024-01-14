@@ -2,8 +2,10 @@
 
 #include <stdint.h>
 #include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
 
-#include "vfs.h"
+#include "vga_text.h"
 #include "string.h"
 
 void clrscr();
@@ -13,14 +15,14 @@ void printf(const char* fmt, ...);
 void cprintf(uint8_t color, const char* fmt, ...);
 void print_buffer(const char* msg, const void* buffer, uint32_t count);
 
-void fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radix, int color);
+void fprintf_unsigned(uint8_t file, unsigned long long number, int radix, int color);
 
-void fputc(char c, fileDescriptorId file, int color);
+void fputc(char c, uint8_t file, int color);
 void cputc(char c, uint8_t color);
-void fputs(const char* str, fileDescriptorId file, int color);
-void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color);
-void fprintf(fileDescriptorId file, const char* fmt, ...);
-void fprint_buffer(fileDescriptorId file, const char* msg, const void* buffer, uint32_t count);
+void fputs(const char* str, uint8_t file, int color);
+void vfprintf(uint8_t file, const char* fmt, va_list args, int color);
+void fprintf(uint8_t file, const char* fmt, ...);
+void fprint_buffer(uint8_t file, const char* msg, const void* buffer, uint32_t count);
 
 void putc(char c);
 void puts(const char* str);

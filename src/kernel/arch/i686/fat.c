@@ -947,7 +947,7 @@
 	}
 
 	int FAT_ELF_execute_content(char* path) {
-		int* (*programEntry)(void) = (int* (*)(void))(*ELF_read(path));
+		int* (*programEntry)(void) = (int* (*)(void))(ELF_read(path));
 		return programEntry();
 	}
 

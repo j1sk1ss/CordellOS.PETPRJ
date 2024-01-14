@@ -1,22 +1,16 @@
 #include "../include/stdio.h"
-#include <include/io.h>
 
-#include <stdarg.h>
-#include <stdbool.h>
-
-#include <include/vfs.h>
-
-
-void fputc(char c, fileDescriptorId file, int color) {
+void fputc(char c, uint8_t file, int color) {
     if (color == 1) cputc(c, file);
-    else VFS_Write(file, &c, sizeof(c));
+    else VGA_putc(c);
 }
 
 void cputc(char c, uint8_t color) {
-    VFS_color_write(color, &c, sizeof(c));
+    VGA_putc(c);
+    VGA_putcolor(VGA_cursor_get_x() - 1, VGA_cursor_get_y(), color);
 }
 
-void fputs(const char* str, fileDescriptorId file, int color) {
+void fputs(const char* str, uint8_t file, int color) {
     while(*str) {
         fputc(*str, file, color);
         str++;
@@ -24,7 +18,7 @@ void fputs(const char* str, fileDescriptorId file, int color) {
 }
 
 void set_color(int color) {
-    VFS_set_screen_color(color);
+    VGA_set_color(color);
 }
 
 #define PRINTF_STATE_NORMAL         0
@@ -41,7 +35,7 @@ void set_color(int color) {
 
 const char _HexChars[] = "0123456789abcdef";
 
-void fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radix, int color) {
+void fprintf_unsigned(uint8_t file, unsigned long long number, int radix, int color) {
     char buffer[32];
     int pos = 0;
 
@@ -58,7 +52,7 @@ void fprintf_unsigned(fileDescriptorId file, unsigned long long number, int radi
             fputc(buffer[pos], file, color);
 }
 
-void fprintf_signed(fileDescriptorId file, long long number, int radix, int color) {
+void fprintf_signed(uint8_t file, long long number, int radix, int color) {
     if (number < 0) {
         fputc('-', file, color);
         fprintf_unsigned(file, -number, radix, color);
@@ -67,7 +61,7 @@ void fprintf_signed(fileDescriptorId file, long long number, int radix, int colo
         fprintf_unsigned(file, number, radix, color);
 }
 
-void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
+void vfprintf(uint8_t file, const char* fmt, va_list args, int color) {
     int state   = PRINTF_STATE_NORMAL;
     int length  = PRINTF_LENGTH_DEFAULT;
     int radix   = 10;
@@ -226,14 +220,14 @@ void vfprintf(fileDescriptorId file, const char* fmt, va_list args, int color) {
     }
 }
 
-void fprintf(fileDescriptorId file, const char* fmt, ...) {
+void fprintf(uint8_t file, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vfprintf(file, fmt, args, 0);
     va_end(args);
 }
 
-void fprint_buffer(fileDescriptorId file, const char* msg, const void* buffer, uint32_t count) {
+void fprint_buffer(uint8_t file, const char* msg, const void* buffer, uint32_t count) {
     const uint8_t* u8Buffer = (const uint8_t*)buffer;
     
     fputs(msg, file, 0);
@@ -247,17 +241,17 @@ void fprint_buffer(fileDescriptorId file, const char* msg, const void* buffer, u
 }
 
 void putc(char c) {
-    fputc(c, VFS_FD_STDOUT, 0);
+    fputc(c, NULL, 0);
 }
 
 void puts(const char* str) {
-    fputs(str, VFS_FD_STDOUT, 0);
+    fputs(str, NULL, 0);
 }
 
 void printf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    vfprintf(VFS_FD_STDOUT, fmt, args, 0);
+    vfprintf(NULL, fmt, args, 0);
     va_end(args);
 }
 
@@ -269,7 +263,7 @@ void cprintf(uint8_t color, const char* fmt, ...) {
 }
 
 void print_buffer(const char* msg, const void* buffer, uint32_t count) {
-    fprint_buffer(VFS_FD_STDOUT, msg, buffer, count);
+    fprint_buffer(NULL, msg, buffer, count);
 }
 
 void print_hex_table(const char* data, size_t length) {
@@ -283,20 +277,20 @@ void print_hex_table(const char* data, size_t length) {
 }
 
 void debugc(char c) {
-    fputc(c, VFS_FD_DEBUG, 0);
+    fputc(c, NULL, 0);
 }
 
 void debugs(const char* str) {
-    fputs(str, VFS_FD_DEBUG, 0);
+    fputs(str, NULL, 0);
 }
 
 void debugf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    vfprintf(VFS_FD_DEBUG, fmt, args, 0);
+    vfprintf(NULL, fmt, args, 0);
     va_end(args);
 }
 
 void debug_buffer(const char* msg, const void* buffer, uint32_t count) {
-    fprint_buffer(VFS_FD_DEBUG, msg, buffer, count);
+    fprint_buffer(NULL, msg, buffer, count);
 }
