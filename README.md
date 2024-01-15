@@ -54,8 +54,8 @@ The motherboard was originally planned as a board based on an 8086 processor, in
 
 **TODO:**
 
-- Syscalls
-- ELF executing
+- Syscalls (Completed)
+- ELF executing (Completed)
 - С or CPP in-build compiler
 - Prepare for non-emulator device
 - Print case
