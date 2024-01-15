@@ -148,7 +148,8 @@ variantDir = 'build/CordellOS/boot'
 
 SConscript('src/libs/SConscript', variant_dir=variantDir + '/libs', duplicate=0)
 SConscript('src/user_land/SConscript', variant_dir=variantDir + '/user_land', duplicate=0)
-SConscript('src/games/snake/SConscript', variant_dir=variantDir + '/games/snake', duplicate=0)
+SConscript('src/apps/games/snake/SConscript', variant_dir=variantDir + '/apps/games/snake', duplicate=0)
+SConscript('src/apps/std/calc/SConscript', variant_dir=variantDir + '/apps/std/calc', duplicate=0)
 SConscript('src/kernel/SConscript', variant_dir=variantDir + '/kernel', duplicate=0)
 
 Import('kernel')

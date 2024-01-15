@@ -1,8 +1,8 @@
 #pragma once
 
 #include "stdio.h"
+#include "allocator.h"
 
-#include "../../libs/include/allocator.h"
 #include "../../libs/include/math.h"
 
 #include <stdint.h>

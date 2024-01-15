@@ -98,8 +98,8 @@ char get_character(char character) {
                             }
 
                             if (mode == VISIBLE_KEYBOARD)
-                                if (color != -1) cprintf(color, "%c", currentCharacter);
-                                else printf("%c", currentCharacter);
+                                if (color != -1) kcprintf(color, "%c", currentCharacter);
+                                else kprintf("%c", currentCharacter);
 
                             add_char_to_string(&input, ++input_size, currentCharacter);
                         }
@@ -125,8 +125,12 @@ char get_character(char character) {
 
         char keyboard_navigation() {
             while (1) 
-                if (i686_inb(0x64) & 0x1) 
-                    return alphabet[i686_inb(0x60)];
+                if (i686_inb(0x64) & 0x1) {
+                    char character = i686_inb(0x60);
+                    if (!(character & 0x80)) {
+                        return alphabet[character];
+                    }
+                }
         }
 
         void keyboard_wait(char symbol) {

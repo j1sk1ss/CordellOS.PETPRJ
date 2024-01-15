@@ -3,8 +3,8 @@
 char* edit_file;
 void update_screen(char* data, int x_position, int y_position) {
     VGA_text_clrscr();
-    printf("%sFile: [%s]   [F1 - SAVE]   [F3 - EXIT]\n%s", LINE, edit_file, LINE);
-    printf("%s", data);
+    kprintf("%sFile: [%s]   [F1 - SAVE]   [F3 - EXIT]\n%s", LINE, edit_file, LINE);
+    kprintf("%s", data);
 
     VGA_setcursor(x_position, y_position);
 }
@@ -56,7 +56,7 @@ char* keyboard_edit(char* previous_data, int color) {
     y_cursor, x_cursor = 0;
     get_start_positions(input, &x_cursor, &y_cursor);
 
-    cprintf(color, "%s", input);
+    kcprintf(color, "%s", input);
     size_t input_size = strlen(input);
 
     while (1) {
@@ -132,7 +132,7 @@ char* keyboard_edit(char* previous_data, int color) {
                     }
 
                     else if (currentCharacter == ENTER_BUTTON) {
-                        cprintf(color, "\n");                        
+                        kcprintf(color, "\n");                        
                         add_char_to_string(&input, ++input_size, '\n');
 
                         x_cursor = 0;
@@ -140,7 +140,7 @@ char* keyboard_edit(char* previous_data, int color) {
                     }
 
                     else {
-                        cprintf(color, "%c", currentCharacter);
+                        kcprintf(color, "%c", currentCharacter);
                         add_char_to_string(&input, ++input_size, currentCharacter);
 
                         if (++x_cursor >= 80) {
@@ -162,8 +162,8 @@ void text_editor_init(char* path, int color) {
 
     edit_file = path;
     char* file_text = FAT_read_content(FAT_get_content(path));
-    printf("%sFile: [%s]   [F1 - SAVE]   [F3 - EXIT]\n%s", LINE, path, LINE);
-    set_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+    kprintf("%sFile: [%s]   [F1 - SAVE]   [F3 - EXIT]\n%s", LINE, path, LINE);
+    kset_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
     FAT_edit_content(path, keyboard_edit(file_text, color));
     
     free(file_text);

@@ -4,8 +4,10 @@ vbe_mode_info_t* gfx_mode;
 user_gfx_info_t* user_gfx_info;
 
 void GFX_init() {
-    gfx_mode = (vbe_mode_info_t*)0xC000;
-    user_gfx_info = (user_gfx_info_t*)0xC200;
+}
+
+void get_vesa_info(vbe_controller_info_t *controller_info, vbe_mode_info_t *mode_info) {
+
 }
 
 void GFX_draw_pixel(uint16_t X, uint16_t Y, uint32_t color) {

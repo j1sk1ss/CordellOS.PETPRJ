@@ -131,7 +131,7 @@
 
         // Write the buffer to the specified sector
         if (ATA_write_sector(lba, buffer) == -1) {
-            printf("\n\rPulizia del settore non completata!");
+            kprintf("\n\rPulizia del settore non completata!");
             return -1;
         }
 

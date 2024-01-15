@@ -1,5 +1,5 @@
-#include "../../include/date_time.h"
-#include "../../../libs/include/x86.h"
+#include "../include/date_time.h"
+#include "../include/x86.h"
 
 // Change this each year as needed.
 // This is only used if the century register doesn't exist.

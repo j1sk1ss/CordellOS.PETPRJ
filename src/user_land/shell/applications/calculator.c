@@ -74,7 +74,7 @@ char* calculator(char **args, int n_args) {
                 a = stack_pop(&c_stack);
 
                 if (b == 0) {
-                    printf("Division by zero!");
+                    kprintf("Division by zero!");
                     return "null";
                 }
 

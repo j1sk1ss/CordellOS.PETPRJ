@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../include/allocator.h"
+#include "../../include/allocator.h"
 
 #define MAX_PAGE_ALIGNED_ALLOCS 64
 
@@ -103,7 +103,7 @@ uint32_t get_memory() {
 
 		nalloc:;
 		if (last_alloc + size + sizeof(alloc_t) >= heap_end) 
-			printf("Cannot allocate %d bytes! Out of memory.\n", size);
+			kprintf("Cannot allocate %d bytes! Out of memory.\n", size);
 
 		alloc_t* alloc  = (alloc_t*)last_alloc;
 		alloc->status   = 1;

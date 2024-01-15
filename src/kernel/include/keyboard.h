@@ -1,8 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../../libs/include/allocator.h"
-
+#include "allocator.h"
 #include "stdio.h"
 #include "string.h"
 #include "memory.h"

@@ -9,8 +9,7 @@
 
 #include "../../libs/include/math.h"
 
-#define ELF_MAGIC ("\x7F" "ELF")
-
+extern void* exe_buffer;
 
 typedef uint16_t Elf32_Half;
 typedef uint32_t Elf32_Word;

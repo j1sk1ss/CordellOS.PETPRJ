@@ -1,4 +1,4 @@
-#include "../../include/rand.h"
+#include "../include/rand.h"
 
 
 int rand_r(int seed) {

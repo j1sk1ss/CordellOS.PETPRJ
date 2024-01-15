@@ -4,13 +4,13 @@
 #include <stdbool.h>
 
 typedef struct {
-   char     VbeSignature[4];         // == "VESA"
-   uint16_t VbeVersion;              // == 0x0300 for VBE 3.0
-   uint16_t OemStringPtr[2];         // isa vbeFarPtr
-   uint8_t  Capabilities[4];
-   uint32_t VideoModePtr;            // isa vbeFarPtr
-   uint16_t TotalMemory;             // as # of 64KB blocks
-   uint8_t  Reserved[492];
+    char VbeSignature[4];             // == "VESA"
+    uint16_t VbeVersion;                 // == 0x0300 for VBE 3.0
+    uint16_t OemStringPtr[2];            // isa vbeFarPtr
+    uint8_t Capabilities[4];
+    uint32_t VideoModePtr;         // isa vbeFarPtr
+    uint16_t TotalMemory;             // as # of 64KB blocks
+    uint8_t _Reserved[236+256];
 } __attribute__((packed)) VbeInfoBlock;
 
 typedef struct {
@@ -49,9 +49,12 @@ typedef struct {
 	uint32_t off_screen_mem_off;
 	uint16_t off_screen_mem_size;	// size of memory in the framebuffer but not being displayed on the screen
 	uint8_t reserved1[206];
-} __attribute__ ((packed)) VBEModeInfoStructure;
+} __attribute__ ((packed)) VbeModeInfo;
 
-bool vbe_getControllerInfo(VbeInfoBlock* info);
+bool VBE_GetControllerInfo(VbeInfoBlock* info);
+bool VBE_GetModeInfo(uint16_t mode, VbeModeInfo* info);
+bool VBE_SetMode(uint16_t mode);
 
-bool vbe_getModeInfo(uint16_t mode, VBEModeInfoStructure* info);
-bool vbe_setMode(uint16_t mode);
+int __attribute__((cdecl)) x86_Video_GetVbeInfo(void* infoOut);
+int __attribute__((cdecl)) x86_Video_GetModeInfo(uint16_t mode, void* infoOut);
+int __attribute__((cdecl)) x86_Video_SetMode(uint16_t mode);

@@ -37,10 +37,10 @@ void shell() {
 
         int attempts = 0;
         while (user == NULL) {
-            cprintf(FOREGROUND_LIGHT_RED, "\r\n[LOGIN]: ");
+            kcprintf(FOREGROUND_LIGHT_RED, "\r\n[LOGIN]: ");
             char* user_login = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
 
-            cprintf(FOREGROUND_LIGHT_RED, "\r\n[PAROLA D'ORDINE]: ");
+            kcprintf(FOREGROUND_LIGHT_RED, "\r\n[PAROLA D'ORDINE]: ");
             char* user_pass = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
 
             user = login(user_login, user_pass, 0);
@@ -50,7 +50,7 @@ void shell() {
 
             if (user == NULL)
                 if (++attempts > MAX_ATTEMPT_COUNT) {
-                    cprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalita` ospite.\n\r");
+                    kcprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalita` ospite.\n\r");
                     user = (struct User*)malloc(sizeof(struct User*));
                     
                     user->read_access   = 6;
@@ -59,10 +59,10 @@ void shell() {
 
                     break;
                 }
-            else cprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalita` ospite.\n\r");
+            else kcprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalita` ospite.\n\r");
         }
 
-        printf("\n");
+        kprintf("\n");
 
     //
     //  USER LOGIN
@@ -70,8 +70,8 @@ void shell() {
     ////////////////////////////////////////////////////
 
     while (1) {
-        cprintf(FOREGROUND_GREEN, "\r\n[%s: CORDELL OS]", user->name);
-        printf(" $%s> ", FAT_get_current_path());
+        kcprintf(FOREGROUND_GREEN, "\r\n[%s: CORDELL OS]", user->name);
+        kprintf(" $%s> ", FAT_get_current_path());
 
         char* command = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
         if (strstr(command, "cordell") == 0)
@@ -84,15 +84,15 @@ void shell() {
 }
 
 void shell_start_screen() {
-    printf("\n\n");
+    kprintf("\n\n");
 
-    cprintf(FOREGROUND_LIGHT_GREEN, "     .aMMMb  .aMMMb  dMMMMb  dMMMMb  dMMMMMP dMP     dMP        .aMMMb  .dMMMb \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, "    dMP'VMP dMP'dMP dMP.dMP dMP VMP dMP     dMP     dMP        dMP'dMP dMP' VP \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, "   dMP     dMP dMP dMMMMK' dMP dMP dMMMP   dMP     dMP        dMP dMP  VMMMb   \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, "  dMP.aMP dMP.aMP dMP'AMF dMP.aMP dMP     dMP     dMP        dMP.aMP dP .dMP   \r\n");
-    cprintf(FOREGROUND_LIGHT_GREEN, "  VMMMP'  VMMMP' dMP dMP dMMMMP' dMMMMMP dMMMMMP dMMMMMP     VMMMP'  VMMMP'    \r\n");
+    kcprintf(FOREGROUND_LIGHT_GREEN, "     .aMMMb  .aMMMb  dMMMMb  dMMMMb  dMMMMMP dMP     dMP        .aMMMb  .dMMMb \r\n");
+    kcprintf(FOREGROUND_LIGHT_GREEN, "    dMP'VMP dMP'dMP dMP.dMP dMP VMP dMP     dMP     dMP        dMP'dMP dMP' VP \r\n");
+    kcprintf(FOREGROUND_LIGHT_GREEN, "   dMP     dMP dMP dMMMMK' dMP dMP dMMMP   dMP     dMP        dMP dMP  VMMMb   \r\n");
+    kcprintf(FOREGROUND_LIGHT_GREEN, "  dMP.aMP dMP.aMP dMP'AMF dMP.aMP dMP     dMP     dMP        dMP.aMP dP .dMP   \r\n");
+    kcprintf(FOREGROUND_LIGHT_GREEN, "  VMMMP'  VMMMP' dMP dMP dMMMMP' dMMMMMP dMMMMMP dMMMMMP     VMMMP'  VMMMP'    \r\n");
 
-    cprintf(FOREGROUND_LIGHT_AQUA, "\r\n\t Questo sistema operativo 'e in costruzione. [ver. 1.0.0b | 13.01.2024] \r\n");
+    kcprintf(FOREGROUND_LIGHT_AQUA, "\r\n\t Questo sistema operativo 'e in costruzione. [ver. 1.0.1a | 15.01.2024] \r\n");
 }
 
 ///////////////////////////////////////
@@ -109,13 +109,13 @@ void shell_start_screen() {
         //
 
             if (cordell_derictive == CORDELL_DERICTIVE) {
-                cprintf(FOREGROUND_GREEN, "\r\n[PAROLA D'ORDINE]: ");
+                kcprintf(FOREGROUND_GREEN, "\r\n[PAROLA D'ORDINE]: ");
                 char* password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
                 int tries = 0;
 
                 char* pass = FAT_read_content(FAT_get_content("boot\\shell.txt"));
                 while (strcmp(password, pass) != 0) {
-                    cprintf(FOREGROUND_RED, "\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
+                    kcprintf(FOREGROUND_RED, "\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
                     free(password);
 
                     password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
@@ -160,55 +160,55 @@ void shell_start_screen() {
         //
 
             if (strstr(command_line[0], COMMAND_HELP) == 0) {
-                printf("\r\n> Usa [%s] per ottenere aiuto",                                     COMMAND_HELP);
-                printf("\r\n> Utilizzare [%s] per la pulizia dello schermo",                    COMMAND_CLEAR);
-                printf("\r\n> Usa [%s] per l'eco",                                              COMMAND_ECHO);
-                printf("\r\n> Utilizza la [%s] per i calcoli (+, -, * e /)",                    COMMAND_CALCULATOR);
-                printf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
+                kprintf("\r\n> Usa [%s] per ottenere aiuto",                                     COMMAND_HELP);
+                kprintf("\r\n> Utilizzare [%s] per la pulizia dello schermo",                    COMMAND_CLEAR);
+                kprintf("\r\n> Usa [%s] per l'eco",                                              COMMAND_ECHO);
+                kprintf("\r\n> Utilizza la [%s] per i calcoli (+, -, * e /)",                    COMMAND_CALCULATOR);
+                kprintf("\r\n> Utilizzare cordell per utilizzare i comandi cordell");
 
 
-                printf("\r\n> Utilizza la [%s] per vista versione",                             COMMAND_VERSION);
-                printf("\r\n> Utilizza la [%s] per vista disk-data informazione",               COMMAND_DISK_DATA);
+                kprintf("\r\n> Utilizza la [%s] per vista versione",                             COMMAND_VERSION);
+                kprintf("\r\n> Utilizza la [%s] per vista disk-data informazione",               COMMAND_DISK_DATA);
 
 
-                printf("\r\n> Usa [%s] <nome> per cretore dir",                                 COMMAND_CREATE_DIR);
-                printf("\r\n> Usa [%s] <nome> <path> per elimita dir",                          COMMAND_DELETE_DIR);
+                kprintf("\r\n> Usa [%s] <nome> per cretore dir",                                 COMMAND_CREATE_DIR);
+                kprintf("\r\n> Usa [%s] <nome> <path> per elimita dir",                          COMMAND_DELETE_DIR);
 
-                printf("\r\n> Usa [%s] <accesso [x x x]> <nome> <extension> per cretore file",  COMMAND_CREATE_FILE);
-                printf("\r\n> Usa [%s] <nome> <path> per elimita file",                         COMMAND_DELETE_FILE);
+                kprintf("\r\n> Usa [%s] <accesso [x x x]> <nome> <extension> per cretore file",  COMMAND_CREATE_FILE);
+                kprintf("\r\n> Usa [%s] <nome> <path> per elimita file",                         COMMAND_DELETE_FILE);
 
-                printf("\r\n> Usa [%s] in dir per ottenere tutte le informazioni",              COMMAND_GO_TO_MANAGER);
-                printf("\r\n> Usa [%s] <nome> per entranto dir",                                COMMAND_IN_DIR);
-                printf("\r\n> Usa [%s] per uscire di dir",                                      COMMAND_OUT_DIR);
-                printf("\r\n> Usa [%s] per guardare tutto cosa in dir",                         COMMAND_LIST_DIR);
+                kprintf("\r\n> Usa [%s] in dir per ottenere tutte le informazioni",              COMMAND_GO_TO_MANAGER);
+                kprintf("\r\n> Usa [%s] <nome> per entranto dir",                                COMMAND_IN_DIR);
+                kprintf("\r\n> Usa [%s] per uscire di dir",                                      COMMAND_OUT_DIR);
+                kprintf("\r\n> Usa [%s] per guardare tutto cosa in dir",                         COMMAND_LIST_DIR);
 
 
-                printf("\r\n> Usa [%s] per guardare tutto data in file",                        COMMAND_FILE_VIEW);
-                printf("\r\n> Usa [%s] per modifica data in file",                              COMMAND_FILE_EDIT);
-                printf("\r\n> Usa [%s] per run file",                                           COMMAND_FILE_RUN);
+                kprintf("\r\n> Usa [%s] per guardare tutto data in file",                        COMMAND_FILE_VIEW);
+                kprintf("\r\n> Usa [%s] per modifica data in file",                              COMMAND_FILE_EDIT);
+                kprintf("\r\n> Usa [%s] per run file",                                           COMMAND_FILE_RUN);
             }
 
             else if (strstr(command_line[0], COMMAND_VERSION) == 0)
                 shell_start_screen();
 
             else if (strstr(command_line[0], COMMAND_DISK_DATA) == 0) {
-                printf("\r\nDisk-data utility ver 0.1\n");
-                printf("SECTORS ALL: [%i]\n", ATA_global_sector_count());
-                printf("FULLY-EMPTY SECTORS: [%i]\n", ATA_global_sector_empty());
+                kprintf("\r\nDisk-data utility ver 0.1\n");
+                kprintf("SECTORS ALL: [%i]\n", ATA_global_sector_count());
+                kprintf("FULLY-EMPTY SECTORS: [%i]\n", ATA_global_sector_empty());
 
-                // printf("FAT TYPE: [%i]\n", fat_type);
-                // printf("TOTAL CLUSTERS x32: [%i]\n", total_clusters);
+                // kprintf("FAT TYPE: [%i]\n", fat_type);
+                // kprintf("TOTAL CLUSTERS x32: [%i]\n", total_clusters);
             }
 
             else if (strstr(command_line[0], COMMAND_CLEAR) == 0) 
                 VGA_clrscr();
 
             else if (strstr(command_line[0], COMMAND_ECHO) == 0) 
-                printf("\r\n%s", command_line[1]);
+                kprintf("\r\n%s", command_line[1]);
 
             else if (strstr(command_line[0], COMMAND_TIME) == 0) {
                 datetime_read_rtc();
-                printf("\r\nGiorno: %i/%i/%i\tTempo: %i:%i:%i", datetime_day, datetime_month, datetime_year, 
+                kprintf("\r\nGiorno: %i/%i/%i\tTempo: %i:%i:%i", datetime_day, datetime_month, datetime_year, 
                                                                 datetime_hour, datetime_minute, datetime_second);
             }
 
@@ -236,12 +236,12 @@ void shell_start_screen() {
                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
                 if (FAT_content_exists(FAT_get_current_path()) == 0) {
                     FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                    printf("\nDirectory not exists.");
+                    kprintf("\nDirectory not exists.");
                 }
 
                 else if (FAT_get_content(FAT_get_current_path())->file != NULL) {
                     FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                    printf("\nThis is no a Directory.");
+                    kprintf("\nThis is no a Directory.");
                 }
             }
             
@@ -255,11 +255,11 @@ void shell_start_screen() {
                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
                 if (FAT_content_exists(FAT_get_current_path()) == 0) {
                     FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                    printf("Content not exists.\n");
+                    kprintf("Content not exists.\n");
                     return;
                 } else if (FAT_get_content(FAT_get_current_path())->directory == NULL) {
                     FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                    printf("Content is not a directory exists.\n");
+                    kprintf("Content is not a directory exists.\n");
                     return;
                 }
 
@@ -278,11 +278,11 @@ void shell_start_screen() {
                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
                 if (FAT_content_exists(FAT_get_current_path()) == 0) {
                     FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                    printf("Content not exists.\n");
+                    kprintf("Content not exists.\n");
                     return;
                 } else if (FAT_get_content(FAT_get_current_path())->file == NULL) {
                     FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                    printf("Content is not a directory exists.\n");
+                    kprintf("Content is not a directory exists.\n");
                     return;
                 }
 
@@ -298,20 +298,20 @@ void shell_start_screen() {
                     struct FATFile* current_file = directory->files;
 
                     if (current_dir != NULL) {
-                        printf("\r\n\t%s", current_dir->name);
+                        kprintf("\r\n\t%s", current_dir->name);
                 
                         while (current_dir->next != NULL) {
                             current_dir = current_dir->next;
-                            printf("\t%s", current_dir->name);
+                            kprintf("\t%s", current_dir->name);
                         }
                     }
 
                     if (current_file != NULL) {
-                        printf("\r\n\t%s.%s", current_file->name, current_file->extension);
+                        kprintf("\r\n\t%s.%s", current_file->name, current_file->extension);
                 
                         while (current_file->next != NULL) {
                             current_file = current_file->next;
-                            printf("\t%s.%s", current_file->name, current_file->extension);
+                            kprintf("\t%s.%s", current_file->name, current_file->extension);
                         }
                     }
 
@@ -328,7 +328,7 @@ void shell_start_screen() {
                 struct FATContent* content = FAT_get_content(FAT_get_current_path());
                 
                 char* data = FAT_read_content(content);
-                printf("\r\n%s", data);
+                kprintf("\r\n%s", data);
                 free(data);
 
                 FAT_unload_content_system(content);
@@ -357,7 +357,7 @@ void shell_start_screen() {
                     splitted = strtok(NULL, " ");
                 }
 
-                printf("\r\n> Risposta: %s", calculator(tokens, tokenCount));
+                kprintf("\r\n> Risposta: %s", calculator(tokens, tokenCount));
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {
@@ -412,13 +412,13 @@ void shell_start_screen() {
         ///////////////////////////////////////////////////////////////////////////////////////////
 
             else 
-                printf("\r\nComando sconosciuto. Forse hai dimenticato CORDELL?");
+                kprintf("\r\nComando sconosciuto. Forse hai dimenticato CORDELL?");
 
 
         free(command_line);
         free(command_for_split);
 
-        printf("\r\n");
+        kprintf("\r\n");
     }
 
 //

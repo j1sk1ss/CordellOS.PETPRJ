@@ -1,0 +1,52 @@
+import os
+
+from SCons.Environment import Environment
+from build_scripts.utility import glob_recursive, find_index, is_file_name
+
+
+Import('TARGET_ENVIRONMENT')
+TARGET_ENVIRONMENT: Environment
+
+env = TARGET_ENVIRONMENT.Clone()
+env.Append(
+    LINKFLAGS = [
+        '-Wl,-Map=' + env.File('calc.map').path
+    ],
+
+    CPPPATH = [ 
+        env.Dir('.').srcnode(),
+        env['PROJECTDIR'].Dir('src/libs')
+    ],
+
+    ASFLAGS = [ '-I', env.Dir('.').srcnode(), '-f', 'elf' ]
+)
+
+# Add boot.s to the sources
+sources = glob_recursive(env, '*.c') + \
+          glob_recursive(env, '*.cpp') + \
+          glob_recursive(env, '*.asm')
+
+headers = glob_recursive(env, '*.h') + \
+          glob_recursive(env, '*.hpp') + \
+          glob_recursive(env, '*.inc')
+
+objects = env.Object(sources)
+
+Import('libcore')
+
+static_libs = [
+    libcore
+]
+
+objects = [
+    *objects,
+    *static_libs,
+]
+
+calc = env.Program('calc.elf', objects)
+calc_stripped = env.Command('calc-stripped.elf', calc, '$STRIP -o $TARGET $SOURCE')
+
+env.Default(calc_stripped)
+
+Export('calc')
+Export('calc_stripped')

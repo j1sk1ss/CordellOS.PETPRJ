@@ -33,11 +33,11 @@ void i686_irq_initialize() {
     }
 
     if (_PICDriver == NULL) {
-        printf("Cordell: Warning: NO PIC!\n");
+        kprintf("Cordell: Warning: NO PIC!\n");
         return;
     }
 
-    printf("PIC %s finded!\n", _PICDriver->Name);
+    kprintf("PIC %s finded!\n", _PICDriver->Name);
     _PICDriver->Initialize(PIC_REMAP_OFFSET, PIC_REMAP_OFFSET + 8, false);
 
     // Reg ISR handlers

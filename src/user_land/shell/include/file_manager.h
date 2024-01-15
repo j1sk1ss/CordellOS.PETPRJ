@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../../kernel/include/fat.h"
+#include "../../../kernel/include/elf.h"
 #include "../../../kernel/include/keyboard.h"
 
 #include "user.h"

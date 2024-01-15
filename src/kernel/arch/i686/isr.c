@@ -3,6 +3,8 @@
 #include "../../include/gdt.h"
 #include "../../include/io.h"
 #include "../../include/stdio.h"
+#include "../../include/vga_text.h"
+#include "../../include/keyboard.h"
 
 #include<stddef.h>
 #include <include/stdio.h>
@@ -50,13 +52,50 @@ void syscall(Registers* regs) {
     switch (regs->eax) {
         case SYS_PRINT:
             const char* data = (const char*)regs->ecx;
-            printf(data);
+            kprintf(data);
+
+            break;
+
+        case SYS_PUTC:
+            char cdata = (char)regs->ecx;
+            kputc(cdata);
+
+            break;
+
+        case SYS_CLEAR:
+            VGA_clrscr();
+            break;
+
+        case SYS_SLEEP:
+            const int sleep = (const int)regs->edx;
+            for (int i = 0; i < sleep * 100000; i++);
+
+            break;
+
+        case SYS_READ_KEYBOARD:
+            char* wait_buffer = (char*)regs->ecx;
+            wait_buffer[0] = keyboard_navigation();
+
+            break;
+
+        case SYS_GET_KEY_KEYBOARD:
+            char* key_buffer = (char*)regs->ecx;
+            char key = '\0';
+            if (i686_inb(0x64) & 0x1) {
+                key = i686_inb(0x60);
+                key = get_character(key);
+            }
+
+            key_buffer[0] = key;
+
             break;
 
         case SYS_READ_FILE:
+            kprintf("READF SYSCALL\n");
             break;
 
         case SYS_WRITE_FILE:
+            kprintf("WRITEF SYSCALL\n");
             break;
     }
 }
@@ -75,15 +114,15 @@ void __attribute__((cdelc)) i686_isr_handler(Registers* regs) {
         _isrHandlers[regs->interrupt](regs);
 
     else if (regs->interrupt >= 32)
-        printf("Unhandled interrupt! Interrupt: %d\n", regs->interrupt);
+        kprintf("Unhandled interrupt! Interrupt: %d\n", regs->interrupt);
     else {
-        printf("Unhandled exception %d %s\n", regs->interrupt, _exceptions[regs->interrupt]);
-        printf("  eax=%x  ebx=%x  ecx=%x  edx=%x  esi=%x  edi=%x\n",
+        kprintf("Unhandled exception %d %s\n", regs->interrupt, _exceptions[regs->interrupt]);
+        kprintf("  eax=%x  ebx=%x  ecx=%x  edx=%x  esi=%x  edi=%x\n",
                regs->eax, regs->ebx, regs->ecx, regs->edx, regs->esi, regs->edi);
-        printf("  esp=%x  ebp=%x  eip=%x  eflags=%x  cs=%x  ds=%x  ss=%x\n",
+        kprintf("  esp=%x  ebp=%x  eip=%x  eflags=%x  cs=%x  ds=%x  ss=%x\n",
                regs->esp, regs->ebp, regs->eip, regs->eflag, regs->cs, regs->ds, regs->ss);
-        printf("  interrupt=%x  errorcode=%x\n", regs->interrupt, regs->error);
-        printf("KERNEL PANIC!\n");
+        kprintf("  interrupt=%x  errorcode=%x\n", regs->interrupt, regs->error);
+        kprintf("KERNEL PANIC!\n");
         i686_panic();
     }
 }

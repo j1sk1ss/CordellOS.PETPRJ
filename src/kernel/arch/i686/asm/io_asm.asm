@@ -53,19 +53,3 @@ global i686_disableInterrupts
 i686_disableInterrupts:
     cli
     ret
-
-
-; global x86_inputWait
-; x86_inputWait:
-;     push eax          ; Save EAX register value
-;     push ebx          ; Save EBX register value
-
-;     mov ah, 0         ; Set AH to 0 (AH will be used for the function result)
-;     int 16h           ; Call keyboard interrupt
-
-;     movzx eax, ah     ; Zero-extend the result to 32 bits in EAX (assuming AL contains the char)
-    
-;     pop ebx           ; Restore EBX register value
-;     pop eax           ; Restore EAX register value
-
-;     ret

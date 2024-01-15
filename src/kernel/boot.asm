@@ -43,9 +43,9 @@ _start:
 	; machine. Interrupts are disabled. Paging is disabled. The processor
 	; state is as defined in the multiboot standard. The kernel has full
 	; control of the CPU. The kernel can only make use of hardware features
-	; and any code it provides as part of itself. There's no printf
+	; and any code it provides as part of itself. There's no kprintf
 	; function, unless the kernel provides its own <stdio.h> header and a
-	; printf implementation. There are no security restrictions, no
+	; kprintf implementation. There are no security restrictions, no
 	; safeguards, no debugging mechanisms, only what the kernel provides
 	; itself. It has absolute and complete power over the
 	; machine.
