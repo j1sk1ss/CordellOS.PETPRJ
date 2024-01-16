@@ -55,8 +55,16 @@ The motherboard was originally planned as a board based on an 8086 processor, in
 **TODO:**
 
 - Syscalls (Completed)
+    1) write syscall
+    2) read syscall
+    3) time syscall
+    4) fs syscalls
+
 - ELF executing (Completed)
+    1) Port DOOM Classic
+
 - С or CPP in-build compiler
+
 - Prepare for non-emulator device
 - Print case
 - Assemble
