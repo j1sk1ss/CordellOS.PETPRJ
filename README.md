@@ -55,10 +55,10 @@ The motherboard was originally planned as a board based on an 8086 processor, in
 **TODO:**
 
 - Syscalls (Completed)
-    1) write syscall
-    2) read syscall
-    3) time syscall
-    4) fs syscalls
+    1) write syscall (Completed)
+    2) read syscall (Completed)
+    3) time syscall (Completed)
+    4) fs syscalls (Part-Completed)
 
 - ELF executing (Completed)
     1) Port DOOM Classic
