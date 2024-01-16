@@ -1,5 +1,9 @@
 #include "../../../libs/include/syscall.h"
 #include "../../../libs/include/rand.h"
+#include "../../../libs/include/stdio.h"
+#include "../../../libs/include/fatlib.h"
+
+#define VERSION	1
 
 #define F4_BUTTON               '\254'
 #define F3_BUTTON               '\255'
@@ -22,9 +26,9 @@
 #define H 75
 #define N 100
 
-int main(void) {
-    const char data[50] = "SNAKE GAME ver 0.1\nPress ENTER to start game\n\0";
-    SYS_print(data);
+int main(int args, char** argv) {
+    const char data[50] = "SNAKE GAME ver %i\nPress ENTER to start game\n\0";
+    printf(data, VERSION);
     
     while (1) {
         char key = SYS_keyboard_wait_key();
@@ -38,7 +42,7 @@ int main(void) {
 		}
     }
 
-	return -1;
+	return args;
 }
 
 typedef struct {
@@ -60,9 +64,9 @@ int snake_start() {
     snake snk[N];
     fruit frt;
 
-    begin(map, snk, &frt, snake_size);
+    begin(map, &snk, &frt, snake_size);
 	show(map, snake_size);
-	loop(map, dead, snake_size, snk, &frt);
+	loop(map, dead, snake_size, &snk, &frt);
 
 	return snake_size - 4;
 }
@@ -73,8 +77,8 @@ void begin(char map[V][H], snake* snk, fruit* frt, int size) {
 	snk[0].x = 32;
 	snk[0].y = 10;
 
-	frt->x = srand_r() % (H - 4) + 1;
-	frt->y = srand_r() % (V - 4) + 1;
+	frt->x = srand_r(size) % (H - 4) + 1;
+	frt->y = srand_r(size + 1) % (V - 4) + 1;
 
 	for (i = 0; i < size; i++) {
 		snk[i].movX = 1;
@@ -82,7 +86,7 @@ void begin(char map[V][H], snake* snk, fruit* frt, int size) {
 	}
 
 	intro(map);
-	intro_data(map, snk, size, &frt);
+	intro_data(map, snk, size, *frt);
 }
 
 void show(char map[V][H], int size) {
@@ -90,15 +94,13 @@ void show(char map[V][H], int size) {
 
 	for (i = 0; i < V; i++) {
 		for (j = 0; j < H; j++) 
-			SYS_putc(map[i][j]);
+			putc(map[i][j]);
 		
-		SYS_putc('\n');
+		putc('\n');
 	}
 
-	char message[25] = "Score: ";
-	char score = (size - 4) + '0';
-	SYS_print(message);
-	SYS_putc(score);
+	char message[25] = "Score: [%i]";
+	printf(message, size - 4);
 }
 
 void intro(char map[V][H]) {
@@ -111,35 +113,35 @@ void intro(char map[V][H]) {
 			else map[i][j] = ' ';
 }
 
-void intro_data(char map[V][H], snake* snk, int size, fruit* frt) {
-	int i;
-	for (i = 1; i < size; i++) {
+void intro_data(char map[V][H], snake* snk, int size, fruit frt) {
+	for (int i = 1; i < N; i++) {
 		snk[i].x = snk[i - 1].x - 1;
 		snk[i].y = snk[i - 1].y;
 
-		snk[i].imagen = 'X'; // body
+		if (i <= size) snk[i].imagen = 'X'; // body
+		else snk[i].imagen = ' ';
 	}
 
 	snk[0].imagen = 'O'; // head
-	for (i = 0; i < size; i++)
+	for (int i = 0; i < size; i++)
 		map[snk[i].y][snk[i].x] = snk[i].imagen;
 	
-	map[frt->y][frt->x] = 'M'; // fruit
+	map[frt.y][frt.x] = 'M'; // fruit
 }
 
 int loop(char map[V][H], int dead, int size, snake* snk, fruit* frt) {
 	do {
-		SYS_clrs();
+		clrscr();
 
 		show(map, size);
-		if (input(map, dead, snk, size, &frt) == -1) return -1;
-		update(map, snk, size, &frt);
+		if (input(map, dead, snk, size, frt, (*frt).x, (*frt).y) == -1) return -1;
+		update(map, snk, size, *frt);
 
         SYS_sleep(100);
 	} while (dead == 0);
 }
 
-int input(char map[V][H], int dead, snake* snk, int size, fruit* frt) {
+int input(char map[V][H], int dead, snake* snk, int size, fruit* frt, int fx, int fy) {
 	int i;
 	char key;
 
@@ -154,13 +156,13 @@ int input(char map[V][H], int dead, snake* snk, int size, fruit* frt) {
 			return -1;
 		}
 
-	if (snk[0].x == frt->x && snk[0].y == frt->y) {
+	if (snk[0].x == fx && snk[0].y == fy) {
 		size++;
 
 		snk[size - 1].imagen = 'X';
 
-		frt->x = srand_r() % (H - 2) + 1;
-		frt->y = srand_r() % (V - 2) + 1;
+		frt->x = srand_r(size) % (H - 2) + 1;
+		frt->y = srand_r(size + 1) % (V - 2) + 1;
 	}
 
 	if (dead == 0) {
@@ -192,12 +194,12 @@ int input(char map[V][H], int dead, snake* snk, int size, fruit* frt) {
 	}
 }
 
-void update(char map[V][H], snake* snk, int size, fruit* frt) {
+void update(char map[V][H], snake* snk, int size, fruit frt) {
 	intro(map);
-	intro_data2(map, snk, size, &frt);
+	intro_data2(map, snk, size, frt);
 }
 
-void intro_data2(char map[V][H], snake* snk, int size, fruit* frt) {
+void intro_data2(char map[V][H], snake* snk, int size, fruit frt) {
 	int i;
 
 	for (i = size - 1; i > 0; i--) { // 0 is the head. so we going decresing until extremities
@@ -213,5 +215,5 @@ void intro_data2(char map[V][H], snake* snk, int size, fruit* frt) {
 	for (i = 0; i < size; i++) 
 		map[snk[i].y][snk[i].x] = snk[i].imagen;
 	
-	map[frt->y][frt->x] = 'M';
+	map[frt.y][frt.x] = 'M';
 }

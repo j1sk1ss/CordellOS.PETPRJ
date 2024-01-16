@@ -944,9 +944,9 @@
 		return result;
 	}
 
-	int FAT_ELF_execute_content(char* path) {
-		int (*programEntry)(void) = (int (*)(void))(ELF_read(path));
-		return programEntry();
+	int FAT_ELF_execute_content(char* path, int args, char** argv) {
+		int (*programEntry)(int, char**) = (int (*)(int, char**))(ELF_read(path));
+		return programEntry(args, argv);
 	}
 
 //////////////////////////////////////////////////////////////////////////////////////////

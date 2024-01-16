@@ -1,4 +1,4 @@
-#include "../include/x86.h"
+#include "../../include/x86.h"
 
 uint16_t x86_inw(uint16_t port) {
     uint16_t r;

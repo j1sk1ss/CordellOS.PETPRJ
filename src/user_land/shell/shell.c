@@ -1,5 +1,5 @@
 #include "include/shell.h"
-// TODO: fat.c
+
 //   ____  _   _ _____ _     _     
 //  / ___|| | | | ____| |   | |    
 //  \___ \| |_| |  _| | |   | |    
@@ -92,7 +92,7 @@ void shell_start_screen() {
     kcprintf(FOREGROUND_LIGHT_GREEN, "  dMP.aMP dMP.aMP dMP'AMF dMP.aMP dMP     dMP     dMP        dMP.aMP dP .dMP   \r\n");
     kcprintf(FOREGROUND_LIGHT_GREEN, "  VMMMP'  VMMMP' dMP dMP dMMMMP' dMMMMMP dMMMMMP dMMMMMP     VMMMP'  VMMMP'    \r\n");
 
-    kcprintf(FOREGROUND_LIGHT_AQUA, "\r\n\t Questo sistema operativo 'e in costruzione. [ver. 1.0.1a | 15.01.2024] \r\n");
+    kcprintf(FOREGROUND_LIGHT_AQUA, "\r\n\t Questo sistema operativo 'e in costruzione. [ver. 1.0.1b | 16.01.2024] \r\n");
 }
 
 ///////////////////////////////////////
@@ -193,9 +193,6 @@ void shell_start_screen() {
 
             else if (strstr(command_line[0], COMMAND_DISK_DATA) == 0) {
                 kprintf("\r\nDisk-data utility ver 0.1\n");
-                kprintf("SECTORS ALL: [%i]\n", ATA_global_sector_count());
-                kprintf("FULLY-EMPTY SECTORS: [%i]\n", ATA_global_sector_empty());
-
                 // kprintf("FAT TYPE: [%i]\n", fat_type);
                 // kprintf("TOTAL CLUSTERS x32: [%i]\n", total_clusters);
             }

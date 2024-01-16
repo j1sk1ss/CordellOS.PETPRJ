@@ -1,6 +1,8 @@
 #ifndef __DATETIME_H__
 #define __DATETIME_H__
 
+#include "x86.h"
+
 extern unsigned char datetime_second;
 extern unsigned char datetime_minute;
 extern unsigned char datetime_hour;

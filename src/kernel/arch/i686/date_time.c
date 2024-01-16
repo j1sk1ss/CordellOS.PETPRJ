@@ -1,9 +1,9 @@
-#include "../include/date_time.h"
-#include "../include/x86.h"
+#include "../../include/date_time.h"
 
 // Change this each year as needed.
 // This is only used if the century register doesn't exist.
-#define CURRENT_YEAR 2024
+#define CURRENT_YEAR    2024
+#define CURRENT_CENTURY 21
  
 unsigned char datetime_second;
 unsigned char datetime_minute;
@@ -77,8 +77,6 @@ void datetime_read_rtc() {
 
     registerB = get_RTC_register(0x0B);
 
-    // Convert BCD to binary values if necessary
-
     if (!(registerB & 0x04)) {
         datetime_second = (datetime_second & 0x0F) + ((datetime_second / 16) * 10);
         datetime_minute = (datetime_minute & 0x0F) + ((datetime_minute / 16) * 10);
@@ -87,21 +85,15 @@ void datetime_read_rtc() {
         datetime_month  = (datetime_month & 0x0F) + ((datetime_month / 16) * 10);
         datetime_year   = (datetime_year & 0x0F) + ((datetime_year / 16) * 10);
 
-        if (century_register != 0) 
-            century = (century & 0x0F) + ((century / 16) * 10);
+        if (century_register != 0) century = (century & 0x0F) + ((century / 16) * 10);
     }
 
-    // Convert 12 hour clock to 24 hour clock if necessary
     if (!(registerB & 0x02) && (datetime_hour & 0x80)) 
         datetime_hour = ((datetime_hour & 0x7F) + 12) % 24;
 
-    // Calculate the full (4-digit) year
-    if (century_register != 0) 
-        datetime_year += century * 100;
+    if (century_register != 0) datetime_year += century * 100;
     else {
         datetime_year += (CURRENT_YEAR / 100) * 100;
-
-        if (datetime_year < CURRENT_YEAR) 
-            datetime_year += 100;
+        if (datetime_year < CURRENT_YEAR) datetime_year += 100;
     }
 }

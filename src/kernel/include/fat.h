@@ -5,8 +5,7 @@
 #include "ata.h"
 #include "memory.h"
 #include "elf.h"
-
-#include "../../libs/include/date_time.h"
+#include "date_time.h"
 
 #define SECTOR_OFFSET		23000
 
@@ -131,10 +130,10 @@ typedef struct directory_entry {
 	unsigned short creation_time;
 	unsigned short creation_date;
 	unsigned short last_accessed;
-	unsigned short high_bits; // EA-Index (used by OS/2 and NT) in FAT12 and FAT16, High 2 bytes of first cluster number in FAT32
+	unsigned short high_bits;
 	unsigned short last_modification_time;
 	unsigned short last_modification_date;
-	unsigned short low_bits; // First cluster in FAT12 and FAT16. Low 2 bytes of first cluster in FAT32. Entries with the Volume Label flag, subdirectory ".." pointing to root, and empty files with size 0 should have first cluster 0.
+	unsigned short low_bits;
 	unsigned int file_size;
 } __attribute__((packed)) directory_entry_t;
 
@@ -273,7 +272,7 @@ extern unsigned int ext_root_cluster;
 	int FAT_delete_content(const char* filePath, const char* name);
 	struct FATContent* FAT_create_content(char* name, BOOL directory, char* extension);
 	void FAT_edit_content(const char* filePath, char* newData);
-	int FAT_ELF_execute_content(char* path);
+	int FAT_ELF_execute_content(char* path, int args, char** argv);
 	int FAT_change_meta(const char* filePath, directory_entry_t* newMeta);
 //
 /////////////////////////////////////

@@ -178,7 +178,6 @@ void init_users() {
                 if (strlen(parsed_access) > 2)
                     users[position].edit_access = parsed_access[2] - '0';
 
-
                 /////////////////
                 //  GROUP
                 //
@@ -202,13 +201,14 @@ void init_users() {
             //
             /////////////////////
 
-            if (strstr(parsed_name, user_name) == 0 && strstr(parsed_password, pass) == 0 && all != 1) {
-                free(lines[position]);
-                free(lines);
-                free(data); 
+            if (strlen(user_name) > 0 && strlen(pass) > 0)
+                if (strstr(parsed_name, user_name) == 0 && strstr(parsed_password, pass) == 0 && all != 1) {
+                    free(lines[position]);
+                    free(lines);
+                    free(data); 
 
-                return &users[position];
-            }
+                    return &users[position];
+                }
 
             if (all != 1) {
                 free(users[position].name);

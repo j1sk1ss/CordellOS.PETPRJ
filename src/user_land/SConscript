@@ -23,8 +23,6 @@ sources = glob_recursive(env, '*.c') + \
           glob_recursive(env, '*.asm')
 
 objects = env.Object(sources)
-obj_crti = objects.pop(find_index(objects, lambda item: is_file_name(item, 'crti.o')))
-obj_crtn = objects.pop(find_index(objects, lambda item: is_file_name(item, 'crtn.o')))
 
 Import('libcore')
 
@@ -33,12 +31,8 @@ static_libs = [
 ]
 
 objects = [
-    obj_crti,
-    os.path.join(env["TOOLCHAIN_LIBGCC"], 'crtbegin.o'),
     *objects,
     *static_libs,
-    os.path.join(env["TOOLCHAIN_LIBGCC"], 'crtend.o'),
-    obj_crtn
 ]
 
 user_land = env.Library('user_land', objects)

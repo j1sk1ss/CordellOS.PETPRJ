@@ -1,18 +1,18 @@
 #include "../include/rand.h"
+#include "../include/syscall.h"
 
 
 int rand_r(int seed) {
 	seed = seed * 1103515245 + 12345;
-	return ((srand_r() * seed) & RAND_MAX);
+	return ((srand_r(123) * seed) & 2147483647);
 }
 
-int global_seed = 1;
+int srand_r(int fseed) {
+	short date_time[7];
+    SYS_get_datetime(&date_time);
 
-int srand_r() {
-    datetime_read_rtc();
-
-	int seed = datetime_second * datetime_hour * 11015245 + 12345;
-	return ((++global_seed * seed) & RAND_MAX);
+	int seed = date_time[0] * date_time[2] * 11015245 + 12345;
+	return ((fseed * seed) & 2147483647);
 }
 
 static int rand(unsigned long *ctx) {

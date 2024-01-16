@@ -1,11 +1,9 @@
-#include "../../../kernel/include/stdio.h"
-#include "../../../kernel/include/string.h"
+#include "../../../kernel/include/stdio.h" // complete
+#include "../../../kernel/include/string.h" // complete
 #include "../../../kernel/include/fat.h"
-#include "../../../kernel/include/ata.h"
 #include "../../../kernel/include/asm_compiler.h"
-#include "../../../kernel/include/keyboard.h"
-
-#include "../../../libs/include/date_time.h"
+#include "../../../kernel/include/keyboard.h" // complete
+#include "../../../kernel/include/date_time.h" // complete
 
 #include "user.h"
 #include "file_manager.h"

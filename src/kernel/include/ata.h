@@ -1,7 +1,6 @@
 #include <stdint.h>
 
-#include "../../libs/include/x86.h"
-
+#include "x86.h"
 #include "memory.h"
 #include "string.h"
 #include "stdio.h"

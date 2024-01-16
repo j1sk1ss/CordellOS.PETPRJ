@@ -77,8 +77,8 @@ void open_file_manager(struct User* user) {
         }
 
         else if (user_action == F1_BUTTON) {
-            kcprintf(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE, "\nDIR NAME: ");
-            char* dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+            kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nDIR NAME: ");
+            char* dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
             
             struct FATContent* content = FAT_create_content(dir_name, TRUE, NULL);
             FAT_put_content(FAT_get_current_path(), content);
@@ -94,11 +94,11 @@ void open_file_manager(struct User* user) {
         }
 
         else if (user_action == F2_BUTTON) {
-            kcprintf(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE, "\nFILE NAME: ");
-            char* file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+            kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nFILE NAME: ");
+            char* file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
             
-            kcprintf(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE, "\t\tFILE EXT: ");
-            char* file_extension = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+            kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\t\tFILE EXT: ");
+            char* file_extension = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
             struct FATContent* content = FAT_create_content(file_name, FALSE, file_extension); 
             FAT_put_content(FAT_get_current_path(), content);
@@ -153,7 +153,7 @@ void execute_item(struct User* user, char action_type) {
                     else if (action_type == BACKSPACE_BUTTON) {
                         kprintf("\nDELETE? (Y/N): ");
                         while (1) {
-                            char* answer = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+                            char* answer = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
                             if (strcmp(answer, "y") == 0) {
                                 FAT_delete_content(FAT_get_current_path(), currentDir->name);
                                 free(answer);
@@ -170,8 +170,8 @@ void execute_item(struct User* user, char action_type) {
                     }
 
                     else if (action_type == F4_BUTTON) { 
-                        kcprintf(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE, "\nNEW DIR NAME: ");
-                        char* new_dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+                        kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW DIR NAME: ");
+                        char* new_dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
                         directory_entry_t* new_meta = FAT_create_entry(new_dir_name, NULL, TRUE, NULL, NULL);
                         FAT_set_current_path(FAT_change_path(FAT_get_current_path(), currentDir->directory_meta.file_name));
@@ -218,7 +218,7 @@ void execute_item(struct User* user, char action_type) {
 
                         if (action_type == F4_BUTTON) { 
                             while(1) {
-                                kset_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+                                kset_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
                             
                                 kprintf("\n%s", LINE);
                                 const char* lines[4] = {
@@ -229,7 +229,7 @@ void execute_item(struct User* user, char action_type) {
                                 };
 
                                 for (int i = EDIT_POS; i <= DELETE_POS; i++) {
-                                    if (row_position == i) kcprintf(BACKGROUND_RED + FOREGROUND_BRIGHT_WHITE, lines[i]);
+                                    if (row_position == i) kcprintf(BACKGROUND_RED + FOREGROUND_WHITE, lines[i]);
                                     else kprintf(lines[i]);
 
                                     kprintf(LINE);
@@ -246,7 +246,7 @@ void execute_item(struct User* user, char action_type) {
                                     switch (row_position) {
                                         case EDIT_POS:
                                             FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
-                                            text_editor_init(FAT_get_current_path(), BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+                                            text_editor_init(FAT_get_current_path(), BACKGROUND_BLACK + FOREGROUND_WHITE);
                                             FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
 
                                         break;
@@ -259,17 +259,17 @@ void execute_item(struct User* user, char action_type) {
                                             kprintf("%sFILE: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, data, LINE);
                                             FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
 
-                                            kset_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+                                            kset_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
                                             free(data);
                                             keyboard_wait(F3_BUTTON);
                                         break;
 
                                         case RENAME_POS:
-                                            kcprintf(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE, "\nNEW FILE NAME: ");
-                                            char* new_file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+                                            kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW FILE NAME: ");
+                                            char* new_file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
-                                            kcprintf(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE, "\nNEW FILE EXT: ");
-                                            char* new_file_ext = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+                                            kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW FILE EXT: ");
+                                            char* new_file_ext = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
                                             directory_entry_t* new_meta = FAT_create_entry(new_file_name, new_file_ext, FALSE, NULL, NULL);
 
@@ -289,7 +289,7 @@ void execute_item(struct User* user, char action_type) {
                                         case DELETE_POS:
                                             kprintf("\nDELETE? (Y/N): ");
                                             
-                                            char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+                                            char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
                                             if (strcmp(user_choose, "y") == 0) {
                                                 FAT_delete_content(FAT_get_current_path(), currentFile->name);
                                                 
@@ -331,7 +331,7 @@ void execute_item(struct User* user, char action_type) {
                                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
                                 free(data);
 
-                                kset_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+                                kset_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
 
                                 keyboard_wait(F3_BUTTON);
 
@@ -342,7 +342,7 @@ void execute_item(struct User* user, char action_type) {
                                 VGA_clrscr();
                                 
                                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
-                                kprintf("\nEXIT CODE: [%i]", FAT_ELF_execute_content(FAT_get_current_path()));
+                                kprintf("\nEXIT CODE: [%i]", FAT_ELF_execute_content(FAT_get_current_path(), NULL, NULL));
                                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
 
                                 free(exe_buffer);
@@ -360,7 +360,7 @@ void execute_item(struct User* user, char action_type) {
                                 asm_execute(data);
                                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
 
-                                kset_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+                                kset_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
 
                                 free(data);
                                 kprintf("\n\nPress [F3] to exit");
@@ -371,7 +371,7 @@ void execute_item(struct User* user, char action_type) {
 
                             else if (strstr(currentFile->extension, "SHL") == 0) {
                                 VGA_clrscr();
-                                kset_color(BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+                                kset_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
                                 
                                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
                                 char* sector_data = FAT_get_content(FAT_get_current_path())->file->data;
@@ -407,7 +407,7 @@ void execute_item(struct User* user, char action_type) {
                         else if (action_type == BACKSPACE_BUTTON) {
                             kprintf("\nDelete? (Y/N): ");
                                             
-                            char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_BRIGHT_WHITE);
+                            char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
                             if (strcmp(user_choose, "y") == 0) {
                                 FAT_delete_content(FAT_get_current_path(), name);
                                 
@@ -517,8 +517,6 @@ void print_directory_data() {
         free(adate);
     }
 
-    down_border = rows;
-
-    for (int i = 0; i < 15 - (down_border - upper_border); i++) kprintf(EMPTY);
+    for (int i = 0; i < 15 - (rows - upper_border); i++) kprintf(EMPTY);
     kprintf("%s[F1 - MKDIR] [F2 - MKFILE] [F3 - EXIT] [F4 - EDIT] [ENTER - EXEC] [BSPACE - RM]\n", LINE);
 }

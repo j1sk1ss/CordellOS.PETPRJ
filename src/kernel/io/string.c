@@ -104,7 +104,7 @@ int strcmp(const char* firstStr, const char* secondStr) {
         ++secondStr;
     }
 
-    return (*firstStr) - (*secondStr);
+    return (unsigned char)(*firstStr) - (unsigned char)(*secondStr);
 }
 
 int strncmp(const char* str1, const char* str2, size_t n) {

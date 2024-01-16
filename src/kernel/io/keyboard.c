@@ -79,7 +79,6 @@ char get_character(char character) {
             memset(input, 0, sizeof(input));
 
             size_t input_size = 0;
-
             while (1) {
                 if (i686_inb(0x64) & 0x1) {
                     char character = i686_inb(0x60);

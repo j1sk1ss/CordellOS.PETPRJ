@@ -3,10 +3,10 @@
 #define F3_BUTTON               '\255'
 #define ENTER_BUTTON            '\n'
 
-int main(void) {
+int main(int args, char** argv) {
     while (1) {
         char message[35] = "Enter expression (e.g., 5 + 3): ";
-        SYS_print(message);
+        SYS_puts(message);
 
         int operand1 = 0;
         while (1) {
@@ -47,27 +47,27 @@ int main(void) {
                 if (operand2 != 0) result = operand1 / operand2;
                 else {
                     char error[26] = "Error: Division by zero\n";
-                    SYS_print(error);
+                    SYS_puts(error);
                     continue;
                 }
             break;
 
             default:
                 char warn[26] = "Error: Invalid operator\n";
-                SYS_print(warn);
+                SYS_puts(warn);
             continue;
         }
 
         char eq[4] = " = ";
-        SYS_print(eq);
+        SYS_puts(eq);
         
         char result_buffer[20];
         int_to_string(result, result_buffer, sizeof(result_buffer));
-        SYS_print(result_buffer);
+        SYS_puts(result_buffer);
         SYS_putc('\n');
 
         char exit_message[40] = "Press F3 to exit or ENTER to continue\n";
-        SYS_print(exit_message);
+        SYS_puts(exit_message);
         while (1) {
             switch (SYS_keyboard_wait_key()) {
                 case F3_BUTTON:

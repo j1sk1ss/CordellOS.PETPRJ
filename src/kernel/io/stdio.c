@@ -47,9 +47,8 @@ void kfprintf_unsigned(uint8_t file, unsigned long long number, int radix, int c
     } while (number > 0);
 
     // print number in reverse order
-    if (file > 0)
-        while (--pos >= 0)
-            kfputc(buffer[pos], file, color);
+    while (--pos >= 0)
+        kfputc(buffer[pos], file, color);
 }
 
 void fprintf_signed(uint8_t file, long long number, int radix, int color) {

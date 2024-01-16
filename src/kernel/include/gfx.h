@@ -3,8 +3,7 @@
 #include <stdint.h>
 
 #include "stdio.h"
-
-#include "../../libs/include/x86.h"
+#include "x86.h"
 
 // 32 bit ARGB colors
 #define BLACK      0x00000000 
