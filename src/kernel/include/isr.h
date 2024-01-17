@@ -24,9 +24,8 @@
 #define SYS_EXECUTE_FILE     12 // Not implemented yet
 #define SYS_CEXISTS          15 // Not implemented yet
 #define SYS_FCREATE          16 // Not implemented yet
-#define SYS_FDELETE          17 // Not implemented yet
-#define SYS_DIRCREATE        18 // Not implemented yet
-#define SYS_DIREDELETE       19 // Not implemented yet
+#define SYS_DIRCREATE        17 // Not implemented yet
+#define SYS_CDELETE          18 // Not implemented yet
 
 
 typedef struct {

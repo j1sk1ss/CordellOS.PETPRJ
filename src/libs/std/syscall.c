@@ -372,8 +372,85 @@ void SYS_scrclr(uint8_t color) {
 //
 /////////////////////////////
 
-    // TODO:
-    // FAT_content_exists
-    // FAT_put_content (mkfile / mkdir)
-    // FAT_delete_content (rmfile / rmdir)
-    // ELF executing
+int SYS_cexists(const char* path) {
+    int result = 0;
+    uint32_t path_ptr = (uint32_t)path;
+
+    __asm__ volatile(
+        "movl $15, %%eax\n"
+        "movl %1, %%ebx\n"
+        "int %2\n"
+        "movl %%eax, %0\n"
+        : "=r"(result)
+        : "r"(path_ptr), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx"
+    );
+
+    return result;
+}
+
+void SYS_mkfile(const char* path, const char* name, const char* extension) {
+    uint32_t file_path_ptr = (uint32_t)path;
+    uint32_t file_name_ptr = (uint32_t)name;
+    uint32_t file_extension_ptr = (uint32_t)extension;
+
+    __asm__ volatile(
+        "movl $16, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "movl %2, %%edx\n"
+        "int %3\n"
+        :
+        : "r"(file_path_ptr), "r"(file_name_ptr), "r"(file_extension_ptr), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
+}
+
+void SYS_mkdir(const char* path, const char* name) {
+    uint32_t dir_path_ptr = (uint32_t)path;
+    uint32_t dir_name_ptr = (uint32_t)name;
+
+    __asm__ volatile(
+        "movl $17, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "int %2\n"
+        :
+        : "r"(dir_path_ptr), "r"(dir_name_ptr), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
+}
+
+void SYS_rmcontent(const char* path, const char* name) {
+    uint32_t dir_path_ptr = (uint32_t)path;
+    uint32_t content_name_ptr = (uint32_t)name;
+
+    __asm__ volatile(
+        "movl $18, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "int %2\n"
+        :
+        : "r"(dir_path_ptr), "r"(content_name_ptr), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
+}
+
+int SYS_fexec(char* path, int args, char** argv) {
+    int result = 0;
+    uint32_t file_path_ptr = (uint32_t)path;
+
+    __asm__ volatile(
+        "movl $12, %%eax\n"
+        "movl %1, %%ebx\n"
+        "movl %2, %%ecx\n"
+        "movl %3, %%edx\n"
+        "int %4\n"
+        "movl %%eax, %0\n"
+        : "=r"(result)
+        : "r"(file_path_ptr), "r"(args), "r"(argv), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
+
+    return result;
+}

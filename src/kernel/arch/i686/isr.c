@@ -116,7 +116,7 @@ void syscall(Registers* regs) {
         break;
 
         case SYS_OPENDIR:
-            char *path = (char *)regs->ebx;
+            char* path = (char*)regs->ebx;
             struct FATDirectory* user_dir = (struct FATDirectory*)regs->ecx;
             struct FATDirectory* kdir = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(FAT_get_content(path)->directory->directory_meta), NULL, FALSE);
             memcpy(user_dir, kdir, sizeof(struct FATDirectory));
@@ -124,21 +124,43 @@ void syscall(Registers* regs) {
         break;
 
         case SYS_EXECUTE_FILE:
+            char* exec_path = (char*)regs->ebx;
+            char** argv = (char**)regs->edx;
+            int args = (int)regs->ecx;
+            int result = (int)regs->eax;
+
+            result = FAT_ELF_execute_content(exec_path, args, argv);
         break;
 
         case SYS_CEXISTS:
+            int result = (int)regs->eax;
+            char* epath = (char *)regs->ebx;
+            result = FAT_content_exists(epath);
         break;
 
         case SYS_FCREATE:
-        break;
+            char* mkfile_path = (char*)regs->ebx;
+            char* mkfile_name = (char*)regs->ecx;
+            char* mkfile_exten = (char*)regs->edx;
 
-        case SYS_FDELETE:
+            struct FATContent* mkfile_content = FAT_create_content(mkfile_name, FALSE, mkfile_exten);
+            FAT_put_content(mkfile_path, mkfile_content);
+            FAT_unload_files_system(mkfile_content);
         break;
 
         case SYS_DIRCREATE:
+            char* mkdir_path = (char*)regs->ebx;
+            char* mkdir_name = (char*)regs->ecx;
+
+            struct FATContent* mkdir_content = FAT_create_content(mkdir_name, TRUE, NULL);
+            FAT_put_content(mkdir_path, mkdir_content);
+            FAT_unload_files_system(mkdir_content);
         break;
 
-        case SYS_DIREDELETE:
+        case SYS_CDELETE:
+            char* delete_path = (char*)regs->ebx;
+            char* delete_name = (char*)regs->ecx;
+            FAT_delete_content(delete_path, delete_name);
         break;
     }
 }
@@ -148,14 +170,11 @@ void i686_isr_initialize() {
     for (int i = 0; i < 256; i++)
         i686_idt_enableGate(i);
 
-    i686_idt_enableGate(0x80);
     i686_isr_registerHandler(0x80, syscall);
 }
 
 void __attribute__((cdelc)) i686_isr_handler(Registers* regs) {
-    if (_isrHandlers[regs->interrupt] != NULL)
-        _isrHandlers[regs->interrupt](regs);
-
+    if (_isrHandlers[regs->interrupt] != NULL) _isrHandlers[regs->interrupt](regs);
     else if (regs->interrupt >= 32) kprintf("Unhandled interrupt! Interrupt: %d\n", regs->interrupt);
     else {
         kprintf("Unhandled exception %d %s\n", regs->interrupt, _exceptions[regs->interrupt]);
