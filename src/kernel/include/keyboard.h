@@ -5,7 +5,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "memory.h"
-#include "io.h"
+#include "x86.h"
 #include "vga_text.h"
 
 #define HIDDEN_KEYBOARD         0

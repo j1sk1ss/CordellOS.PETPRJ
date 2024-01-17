@@ -1,7 +1,7 @@
 import os
 
 from SCons.Environment import Environment
-from build_scripts.utility import glob_recursive, find_index, is_file_name
+from build_scripts.utility import glob_recursive
 
 
 Import('TARGET_ENVIRONMENT')
@@ -9,6 +9,10 @@ TARGET_ENVIRONMENT: Environment
 
 env = TARGET_ENVIRONMENT.Clone()
 env.Append(
+    LINKFLAGS = [
+        '-Wl,-Map=' + env.File('userl.map').path
+    ],
+
     CPPPATH = [ 
         env.Dir('.').srcnode(),
         env['PROJECTDIR'].Dir('src/libs')
@@ -21,6 +25,10 @@ env.Append(
 sources = glob_recursive(env, '*.c') + \
           glob_recursive(env, '*.cpp') + \
           glob_recursive(env, '*.asm')
+
+headers = glob_recursive(env, '*.h') + \
+          glob_recursive(env, '*.hpp') + \
+          glob_recursive(env, '*.inc')
 
 objects = env.Object(sources)
 
@@ -35,6 +43,10 @@ objects = [
     *static_libs,
 ]
 
-user_land = env.Library('user_land', objects)
+userl = env.Program('userl.elf', objects)
+userl_stripped = env.Command('userl-stripped.elf', userl, '$STRIP -o $TARGET $SOURCE')
 
-Export('user_land')
+env.Default(userl_stripped)
+
+Export('userl')
+Export('userl_stripped')

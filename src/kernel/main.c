@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <include/hal.h>
 
-#include "../user_land/include/user_land.h"
 #include "../libs/include/syscall.h"
 
 #include "include/fat.h"
@@ -9,10 +8,18 @@
 #include "include/gfx.h"
 #include "include/elf.h"
 #include "include/keyboard.h"
+#include "include/kshell.h"
+#include "include/speaker.h"
 
 
 extern void _init();
 
+// TODO List:
+// 1) Paging
+// 2) Multitasking
+// 3) VBE / VESA
+// 4) Fix memory in ELF
+// 5) DOOM
 
 void kernel_main(void) {
 
@@ -61,11 +68,18 @@ void kernel_main(void) {
     //////////////////////
 
     //////////////////////////////////
+    // Kernel shell part
+
+        kshell();
+
+    //////////////////////////////////
+
+    //////////////////////////////////
     // User land part
     // - Shell
     // - File system (current version)
 
-        user_land_entry();
+        FAT_ELF_execute_content("boot\\userl\\userl.elf", NULL, NULL);
 
     //////////////////////////////////
     

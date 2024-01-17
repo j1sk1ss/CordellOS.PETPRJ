@@ -1,8 +1,6 @@
-#include "include/user_land.h"
-
 #include "shell/include/shell.h"
 
-void user_land_entry(void) {
+int main(int args, char* argv[]) {
     shell();
     return -1;
 }

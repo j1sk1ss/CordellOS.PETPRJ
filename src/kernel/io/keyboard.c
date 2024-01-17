@@ -56,7 +56,7 @@ unsigned char alphabet[128] = {
 };
 
 int key_press() {
-    if (i686_inb(0x64) & 0x1)
+    if (x86_inb(0x64) & 0x1)
         return 1;
 
     return 0;
@@ -80,8 +80,8 @@ char get_character(char character) {
 
             size_t input_size = 0;
             while (1) {
-                if (i686_inb(0x64) & 0x1) {
-                    char character = i686_inb(0x60);
+                if (x86_inb(0x64) & 0x1) {
+                    char character = x86_inb(0x60);
 
                     if (!(character & 0x80)) {
                         char currentCharacter = alphabet[character];
@@ -124,8 +124,8 @@ char get_character(char character) {
 
         char keyboard_navigation() {
             while (1) 
-                if (i686_inb(0x64) & 0x1) {
-                    char character = i686_inb(0x60);
+                if (x86_inb(0x64) & 0x1) {
+                    char character = x86_inb(0x60);
                     if (!(character & 0x80)) {
                         return alphabet[character];
                     }

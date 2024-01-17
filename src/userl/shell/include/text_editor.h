@@ -1,5 +1,6 @@
-#include "../../../kernel/include/keyboard.h"
-#include "../../../kernel/include/fat.h"
+#include "../../../libs/include/fatlib.h"
+#include "../../../libs/include/memory.h"
+#include "../../../libs/include/stdio.h"
 
 #define LINE "+-----------------+-------------------+-----------+---------------------------+\n"
 

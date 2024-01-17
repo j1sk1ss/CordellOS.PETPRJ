@@ -1,7 +1,8 @@
 #pragma once
 
 #include "../../../libs/include/math.h"
-#include "../../../kernel/include/fat.h"
+#include "../../../libs/include/syscall.h"
+#include "../../../libs/include/fatlib.h"
 
 #define GUEST_ACCESS    9
 

@@ -1,12 +1,9 @@
 #define _CRT_SECURE_NO_WARNINGS
 
-#include "stdio.h"
-#include "string.h"
-#include "fat.h"
-#include "ata.h"
-
-#include "keyboard.h"
-#include "../../user_land/shell/include/user.h"
+#include "stdio.h" // complete
+#include "string.h" // complete
+#include "fat.h" // complete
+#include "keyboard.h" // complete
 
 #define STACK_SIZE              100
 #define MEMORY_SIZE             100

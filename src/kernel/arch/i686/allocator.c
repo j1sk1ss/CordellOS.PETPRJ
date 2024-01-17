@@ -28,7 +28,7 @@ uint32_t get_memory() {
 //
 
 	void mm_init(uint32_t kernel_end) {
-		last_alloc  = kernel_end + 0x1000;
+		last_alloc  = 0x00300000 + 0x1000;
 		heap_begin  = last_alloc;
 		pheap_end   = 0x400000;
 		pheap_begin = pheap_end - (MAX_PAGE_ALIGNED_ALLOCS * 4096);

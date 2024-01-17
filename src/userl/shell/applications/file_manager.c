@@ -80,7 +80,7 @@ void open_file_manager(struct User* user) {
             kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nDIR NAME: ");
             char* dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
             
-            struct FATContent* content = FAT_create_content(dir_name, TRUE, NULL);
+            struct FATContent* content = FAT_create_content(dir_name, 1, NULL);
             FAT_put_content(FAT_get_current_path(), content);
             
             free(dir_name); 
@@ -100,7 +100,7 @@ void open_file_manager(struct User* user) {
             kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\t\tFILE EXT: ");
             char* file_extension = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
-            struct FATContent* content = FAT_create_content(file_name, FALSE, file_extension); 
+            struct FATContent* content = FAT_create_content(file_name, 0, file_extension); 
             FAT_put_content(FAT_get_current_path(), content);
 
             free(file_name);
@@ -141,7 +141,7 @@ void execute_item(struct User* user, char action_type) {
         int rows = 1;
         struct FATContent* content = FAT_get_content(FAT_get_current_path());
         if (content->directory != NULL) {
-            struct FATDirectory* currentDir = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(content->directory->directory_meta), NULL, FALSE)->subDirectory;
+            struct UFATDirectory* currentDir = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(content->directory->directory_meta), NULL, 0)->subDirectory;
             while (currentDir != NULL) {
                 if (rows++ == row_position) {
                     if (action_type == ENTER_BUTTON) {
@@ -173,7 +173,7 @@ void execute_item(struct User* user, char action_type) {
                         kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW DIR NAME: ");
                         char* new_dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
-                        directory_entry_t* new_meta = FAT_create_entry(new_dir_name, NULL, TRUE, NULL, NULL);
+                        udirectory_entry_t* new_meta = FAT_create_entry(new_dir_name, NULL, 1, NULL, NULL);
                         FAT_set_current_path(FAT_change_path(FAT_get_current_path(), currentDir->directory_meta.file_name));
                         FAT_change_meta(FAT_get_current_path(), new_meta);
                         FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
@@ -203,7 +203,7 @@ void execute_item(struct User* user, char action_type) {
     //
 
         if (content->directory != NULL) {
-            struct FATFile* currentFile = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(content->directory->directory_meta), NULL, FALSE)->files;
+            struct FATFile* currentFile = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(content->directory->directory_meta), NULL, 0)->files;
             while (currentFile != NULL) {
 
                 char name[25]; 
@@ -271,7 +271,7 @@ void execute_item(struct User* user, char action_type) {
                                             kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW FILE EXT: ");
                                             char* new_file_ext = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
-                                            directory_entry_t* new_meta = FAT_create_entry(new_file_name, new_file_ext, FALSE, NULL, NULL);
+                                            udirectory_entry_t* new_meta = FAT_create_entry(new_file_name, new_file_ext, 0, NULL, NULL);
 
                                             FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
                                             FAT_change_meta(FAT_get_current_path(), new_file_name);
@@ -344,8 +344,6 @@ void execute_item(struct User* user, char action_type) {
                                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
                                 kprintf("\nEXIT CODE: [%i]", FAT_ELF_execute_content(FAT_get_current_path(), NULL, NULL));
                                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-
-                                free(exe_buffer);
 
                                 kprintf("\n\nPress [F3] to exit");
                                 keyboard_wait(F3_BUTTON);
@@ -449,7 +447,7 @@ void print_directory_data() {
         rows++;
     }
 
-    struct FATDirectory* currentDir = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(current_directory->directory->directory_meta), NULL, FALSE)->subDirectory;
+    struct UFATDirectory* currentDir = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(current_directory->directory->directory_meta), NULL, 0)->subDirectory;
     while (currentDir != NULL) {
         char name[12];
         name[11] = '\0';
@@ -465,7 +463,7 @@ void print_directory_data() {
         currentDir = currentDir->next;
     }
 
-    struct FATFile* currentFile = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(current_directory->directory->directory_meta), NULL, FALSE)->files;
+    struct FATFile* currentFile = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(current_directory->directory->directory_meta), NULL, 0)->files;
     while (currentFile != NULL) {
         //////////////////////////
         //  FILE INFO PREPARATIONS

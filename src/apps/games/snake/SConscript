@@ -44,7 +44,7 @@ objects = [
 ]
 
 snake = env.Program('snake.elf', objects)
-snake_stripped = env.Command('snake-stripped.elf', snake, '$STRIP -o $TARGET $SOURCE')
+snake_stripped = env.Command('snake-s.elf', snake, '$STRIP -o $TARGET $SOURCE')
 
 env.Default(snake_stripped)
 

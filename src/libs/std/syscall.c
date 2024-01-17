@@ -202,6 +202,36 @@ void SYS_scrclr(uint8_t color) {
 /////////////////////////////
 
 /////////////////////////////
+//   _  _________   ______   ___    _    ____  ____    ____  _____    _    ____  
+//  | |/ / ____\ \ / / __ ) / _ \  / \  |  _ \|  _ \  |  _ \| ____|  / \  |  _ \ 
+//  | ' /|  _|  \ V /|  _ \| | | |/ _ \ | |_) | | | | | |_) |  _|   / _ \ | | | |
+//  | . \| |___  | | | |_) | |_| / ___ \|  _ <| |_| | |  _ <| |___ / ___ \| |_| |
+//  |_|\_\_____| |_| |____/ \___/_/   \_\_| \_\____/  |_| \_\_____/_/   \_\____/ 
+//
+//  This function reads keyboard input from user until he press ENTER that returns string of input
+//  EAX - interrupt / buffer
+//  EDX - color
+//  EBX - mode
+//
+    char* SYS_keyboard_read(int mode, uint8_t color) {
+        char* buffer;
+        __asm__ volatile(
+            "movl $19, %%eax\n"
+            "movl %2, %%ebx\n"
+            "movl %1, %%edx\n"
+            "int %3\n"
+            "movl %%eax, %0\n"
+            : "=r"(buffer)
+            : "r"((int)color), "r"(mode), "i"(SYSCALL_INTERRUPT)
+            : "eax", "ebx", "ecx", "edx"
+        );
+
+        return buffer;
+    }
+//
+/////////////////////////////
+
+/////////////////////////////
 //   ____    _  _____ _____ _____ ___ __  __ _____ 
 //  |  _ \  / \|_   _| ____|_   _|_ _|  \/  | ____|
 //  | | | |/ _ \ | | |  _|   | |  | || |\/| |  _|  
@@ -337,7 +367,7 @@ void SYS_scrclr(uint8_t color) {
             "int %2\n"
             :
             : "r"(file_path_ptr), "r"(data_ptr), "i"(SYSCALL_INTERRUPT)
-            : "eax", "ebx", "ecx", "edx"
+            : "eax", "ebx", "ecx"
         );
     }
 //
@@ -364,7 +394,7 @@ void SYS_scrclr(uint8_t color) {
             "int %2\n"
             :
             : "r"(path_ptr), "r"(directory), "i"(SYSCALL_INTERRUPT)
-            : "eax", "ebx", "ecx", "edx"
+            : "eax", "ebx", "ecx"
         );
 
         return directory;
@@ -372,85 +402,262 @@ void SYS_scrclr(uint8_t color) {
 //
 /////////////////////////////
 
-int SYS_cexists(const char* path) {
-    int result = 0;
-    uint32_t path_ptr = (uint32_t)path;
+/////////////////////////////
+//    ____ ___  _   _ _____ _____ _   _ _____   _______  _____ ____ _____ ____  
+//   / ___/ _ \| \ | |_   _| ____| \ | |_   _| | ____\ \/ /_ _/ ___|_   _/ ___| 
+//  | |  | | | |  \| | | | |  _| |  \| | | |   |  _|  \  / | |\___ \ | | \___ \ 
+//  | |__| |_| | |\  | | | | |___| |\  | | |   | |___ /  \ | | ___) || |  ___) |
+//   \____\___/|_| \_| |_| |_____|_| \_| |_|   |_____/_/\_\___|____/ |_| |____/ 
+//
+//  Function for checking if content exist by this path
+//  EBX - path
+//  ECX - result (0 - nexists)
+//
+    int SYS_cexists(const char* path) {
+        int result;
+        uint32_t path_ptr = (uint32_t)path;
 
-    __asm__ volatile(
-        "movl $15, %%eax\n"
-        "movl %1, %%ebx\n"
-        "int %2\n"
-        "movl %%eax, %0\n"
-        : "=r"(result)
-        : "r"(path_ptr), "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx"
-    );
+        __asm__ volatile(
+            "movl $15, %%eax\n"
+            "movl %0, %%ebx\n"
+            "movl %1, %%ecx\n"
+            "int %2\n"
+            : 
+            : "r"(path_ptr), "r"(&result), "i"(SYSCALL_INTERRUPT)
+            : "eax", "ebx"
+        );
 
-    return result;
-}
+        return result;
+    }
+//
+/////////////////////////////
 
-void SYS_mkfile(const char* path, const char* name, const char* extension) {
-    uint32_t file_path_ptr = (uint32_t)path;
-    uint32_t file_name_ptr = (uint32_t)name;
-    uint32_t file_extension_ptr = (uint32_t)extension;
+/////////////////////////////
+//   __  __ _  _______ ___ _     _____ 
+//  |  \/  | |/ /  ___|_ _| |   | ____|
+//  | |\/| | ' /| |_   | || |   |  _|  
+//  | |  | | . \|  _|  | || |___| |___ 
+//  |_|  |_|_|\_\_|   |___|_____|_____|
+//
+//  This function creates file
+//  EBX - path
+//  RCX - name (with extention)
+//
+    void SYS_mkfile(const char* path, const char* name) {
+        uint32_t file_path_ptr = (uint32_t)path;
+        uint32_t file_name_ptr = (uint32_t)name;
 
-    __asm__ volatile(
-        "movl $16, %%eax\n"
-        "movl %0, %%ebx\n"
-        "movl %1, %%ecx\n"
-        "movl %2, %%edx\n"
-        "int %3\n"
-        :
-        : "r"(file_path_ptr), "r"(file_name_ptr), "r"(file_extension_ptr), "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
-    );
-}
+        __asm__ volatile(
+            "movl $16, %%eax\n"
+            "movl %0, %%ebx\n"
+            "movl %1, %%ecx\n"
+            "int %2\n"
+            :
+            : "r"(file_path_ptr), "r"(file_name_ptr), "i"(SYSCALL_INTERRUPT)
+            : "eax", "ebx", "ecx"
+        );
+    }
+//
+/////////////////////////////
 
-void SYS_mkdir(const char* path, const char* name) {
-    uint32_t dir_path_ptr = (uint32_t)path;
-    uint32_t dir_name_ptr = (uint32_t)name;
+/////////////////////////////
+//   __  __ _  ______ ___ ____  
+//  |  \/  | |/ /  _ \_ _|  _ \ 
+//  | |\/| | ' /| | | | || |_) |
+//  | |  | | . \| |_| | ||  _ < 
+//  |_|  |_|_|\_\____/___|_| \_\
+//
+//  This function creates directory
+//  EBX - path
+//  ECX - name
+//
+    void SYS_mkdir(const char* path, const char* name) {
+        uint32_t dir_path_ptr = (uint32_t)path;
+        uint32_t dir_name_ptr = (uint32_t)name;
 
-    __asm__ volatile(
-        "movl $17, %%eax\n"
-        "movl %0, %%ebx\n"
-        "movl %1, %%ecx\n"
-        "int %2\n"
-        :
-        : "r"(dir_path_ptr), "r"(dir_name_ptr), "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
-    );
-}
+        __asm__ volatile(
+            "movl $17, %%eax\n"
+            "movl %0, %%ebx\n"
+            "movl %1, %%ecx\n"
+            "int %2\n"
+            :
+            : "r"(dir_path_ptr), "r"(dir_name_ptr), "i"(SYSCALL_INTERRUPT)
+            : "eax", "ebx", "ecx"
+        );
+    }
+//
+/////////////////////////////
 
-void SYS_rmcontent(const char* path, const char* name) {
-    uint32_t dir_path_ptr = (uint32_t)path;
-    uint32_t content_name_ptr = (uint32_t)name;
+/////////////////////////////
+//   ____  _____ __  __  _____     _______    ____ ___  _   _ _____ _____ _   _ _____ 
+//  |  _ \| ____|  \/  |/ _ \ \   / / ____|  / ___/ _ \| \ | |_   _| ____| \ | |_   _|
+//  | |_) |  _| | |\/| | | | \ \ / /|  _|   | |  | | | |  \| | | | |  _| |  \| | | |  
+//  |  _ <| |___| |  | | |_| |\ V / | |___  | |__| |_| | |\  | | | | |___| |\  | | |  
+//  |_| \_\_____|_|  |_|\___/  \_/  |_____|  \____\___/|_| \_| |_| |_____|_| \_| |_| 
+//
+//  This function remove content
+//  EBX - path
+//  ECX - name (if file - with extention)
+//
+    void SYS_rmcontent(const char* path, const char* name) {
+        uint32_t dir_path_ptr = (uint32_t)path;
+        uint32_t content_name_ptr = (uint32_t)name;
 
-    __asm__ volatile(
-        "movl $18, %%eax\n"
-        "movl %0, %%ebx\n"
-        "movl %1, %%ecx\n"
-        "int %2\n"
-        :
-        : "r"(dir_path_ptr), "r"(content_name_ptr), "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
-    );
-}
+        __asm__ volatile(
+            "movl $18, %%eax\n"
+            "movl %0, %%ebx\n"
+            "movl %1, %%ecx\n"
+            "int %2\n"
+            :
+            : "r"(dir_path_ptr), "r"(content_name_ptr), "i"(SYSCALL_INTERRUPT)
+            : "eax", "ebx", "ecx"
+        );
+    }
+//
+/////////////////////////////
 
-int SYS_fexec(char* path, int args, char** argv) {
-    int result = 0;
-    uint32_t file_path_ptr = (uint32_t)path;
+/////////////////////////////
+//   _______  _______ ____   _____ ___ _     _____ 
+//  | ____\ \/ / ____/ ___| |  ___|_ _| |   | ____|
+//  |  _|  \  /|  _|| |     | |_   | || |   |  _|  
+//  | |___ /  \| |__| |___  |  _|  | || |___| |___ 
+//  |_____/_/\_\_____\____| |_|   |___|_____|_____|
+//
+//  Function that executes ELF file
+//  EAX - result CODE
+//  EBX - path
+//  ECX - args (count)
+//  EDX - argv (array of args)
+//
+    int SYS_fexec(char* path, int args, char** argv) {
+        int result = 0;
+        uint32_t file_path_ptr = (uint32_t)path;
 
-    __asm__ volatile(
-        "movl $12, %%eax\n"
-        "movl %1, %%ebx\n"
-        "movl %2, %%ecx\n"
-        "movl %3, %%edx\n"
-        "int %4\n"
-        "movl %%eax, %0\n"
-        : "=r"(result)
-        : "r"(file_path_ptr), "r"(args), "r"(argv), "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
-    );
+        __asm__ volatile(
+            "movl $12, %%eax\n"
+            "movl %1, %%ebx\n"
+            "movl %2, %%ecx\n"
+            "movl %3, %%edx\n"
+            "int %4\n"
+            "movl %%eax, %0\n"
+            : "=r"(result)
+            : "m"(file_path_ptr), "r"(args), "m"(argv), "i"(SYSCALL_INTERRUPT)
+            : "eax", "ebx", "ecx", "edx"
+        );
 
-    return result;
-}
+        return result;
+    }
+//
+/////////////////////////////
+
+/////////////////////////////
+//   ____   ____ ____  _____ _____ _   _    ____ _   _    _    ____  
+//  / ___| / ___|  _ \| ____| ____| \ | |  / ___| | | |  / \  |  _ \ 
+//  \___ \| |   | |_) |  _| |  _| |  \| | | |   | |_| | / _ \ | |_) |
+//   ___) | |___|  _ <| |___| |___| |\  | | |___|  _  |/ ___ \|  _ < 
+//  |____/ \____|_| \_\_____|_____|_| \_|  \____|_| |_/_/   \_\_| \_\
+//
+//  Get char from screen by coordinates
+//  AL - character
+//  EBX - x
+//  ECX - y
+//
+    char SYS_scrchar(int x, int y) {
+        char result;
+        __asm__ volatile(
+            "movl $22, %%eax\n"
+            "movl %1, %%ebx\n"
+            "movl %2, %%ecx\n"
+            "int %3\n"
+            "movb %%al, %0\n"
+            : "=r"(result)
+            : "r"(x), "r"(y), "i"(SYSCALL_INTERRUPT)
+            : "eax", "ebx", "ecx"
+        );
+
+        return result;
+    }
+//
+/////////////////////////////
+
+/////////////////////////////
+//    ____ _____ _____    ____ _   _ ____  ____   ___  ____  
+//   / ___| ____|_   _|  / ___| | | |  _ \/ ___| / _ \|  _ \ 
+//  | |  _|  _|   | |   | |   | | | | |_) \___ \| | | | |_) |
+//  | |_| | |___  | |   | |___| |_| |  _ < ___) | |_| |  _ < 
+//   \____|_____| |_|    \____|\___/|_| \_\____/ \___/|_| \_\
+//
+//  Function that gets cursor coordinates
+//  ECX - array of coordinates
+//  
+//  data[0] - x
+//  data[1] - y
+//
+    int* SYS_get_cursor() {
+        int result[2];
+        __asm__ volatile(
+            "movl $21, %%eax\n"
+            "movl $1, %%ebx\n"
+            "movl %0, %%ecx\n"
+            "int %1\n"
+            :
+            : "r"(&result), "i"(SYSCALL_INTERRUPT)
+            : "eax", "ebx", "ecx", "edx"
+        );
+
+        return result;
+    }
+//
+/////////////////////////////
+
+/////////////////////////////
+//   ____  _____ _____    ____ _   _ ____  ____   ___  ____  
+//  / ___|| ____|_   _|  / ___| | | |  _ \/ ___| / _ \|  _ \ 
+//  \___ \|  _|   | |   | |   | | | | |_) \___ \| | | | |_) |
+//   ___) | |___  | |   | |___| |_| |  _ < ___) | |_| |  _ < 
+//  |____/|_____| |_|    \____|\___/|_| \_\____/ \___/|_| \_\
+//
+//  Function set cursor by coordinates
+//  EBX - x
+//  ECX - y
+//
+    void SYS_set_cursor(int x, int y) {
+        __asm__ volatile(
+            "movl $20, %%eax\n"
+            "movl %0, %%ebx\n"
+            "movl %1, %%ecx\n"
+            "int %2\n"
+            :
+            : "r"(x), "r"(y), "i"(SYSCALL_INTERRUPT)
+            : "eax", "ebx", "ecx"
+        );
+    }
+//
+/////////////////////////////
+
+/////////////////////////////
+//   ____  _____ _____   ____   ____ ____  _____ _____ _   _    ____ _   _    _    ____  
+//  / ___|| ____|_   _| / ___| / ___|  _ \| ____| ____| \ | |  / ___| | | |  / \  |  _ \ 
+//  \___ \|  _|   | |   \___ \| |   | |_) |  _| |  _| |  \| | | |   | |_| | / _ \ | |_) |
+//   ___) | |___  | |    ___) | |___|  _ <| |___| |___| |\  | | |___|  _  |/ ___ \|  _ < 
+//  |____/|_____| |_|   |____/ \____|_| \_\_____|_____|_| \_|  \____|_| |_/_/   \_\_| \_\
+//
+//  Function set char in screen by path
+//  EBX - x
+//  ECX - y
+//  EDX - character
+//
+    void SYS_set_scrchar(int x, int y, char character) {
+        __asm__ volatile(
+            "movl $23, %%eax\n"
+            "movl %0, %%ebx\n"
+            "movl %1, %%ecx\n"
+            "movl %2, %%edx\n"
+            "int %3\n"
+            :
+            : "r"(x), "r"(y), "r"((int)character), "i"(SYSCALL_INTERRUPT)
+            : "eax", "ebx", "ecx"
+        );
+    }
+//
+/////////////////////////////

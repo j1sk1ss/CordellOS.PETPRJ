@@ -1,13 +1,12 @@
-#include "../../../kernel/include/stdio.h" // complete
-#include "../../../kernel/include/string.h" // complete
-#include "../../../kernel/include/fat.h"
-#include "../../../kernel/include/asm_compiler.h"
-#include "../../../kernel/include/keyboard.h" // complete
-#include "../../../kernel/include/date_time.h" // complete
+#include "../../../libs/include/stdio.h"
+#include "../../../libs/include/string.h"
+#include "../../../libs/include/fatlib.h"
 
 #include "user.h"
 #include "file_manager.h"
 #include "text_editor.h"
+#include "asm_compiler.h"
+#include "calculator.h"
 
 
 #define SUPER_DERICTIVE        0

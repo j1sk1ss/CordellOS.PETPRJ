@@ -272,7 +272,7 @@ extern unsigned int ext_root_cluster;
 	int FAT_delete_content(const char* filePath, const char* name);
 	struct FATContent* FAT_create_content(char* name, BOOL directory, char* extension);
 	void FAT_edit_content(const char* filePath, char* newData);
-	int FAT_ELF_execute_content(char* path, int args, char** argv);
+	int FAT_ELF_execute_content(char* path, int args, char* argv[]);
 	int FAT_change_meta(const char* filePath, directory_entry_t* newMeta);
 //
 /////////////////////////////////////

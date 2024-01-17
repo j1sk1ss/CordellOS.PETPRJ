@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../../kernel/include/fat.h"
-#include "../../../kernel/include/elf.h"
-#include "../../../kernel/include/keyboard.h"
+#include "../../../libs/include/fatlib.h"
+#include "../../../libs/include/syscall.h"
+#include "../../../libs/include/stdio.h"
 
 #include "user.h"
 #include "text_editor.h"

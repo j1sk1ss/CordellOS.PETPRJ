@@ -36,7 +36,6 @@ void set_color(int color) {
 #define PRINTF_LENGTH_LONG          3
 #define PRINTF_LENGTH_LONG_LONG     4
 
-const char _HexChars[] = "0123456789abcdef";
 
 void fprintf_unsigned(uint8_t file, unsigned long long number, int radix, int color) {
     char hexChars[17] = "0123456789abcdef";
@@ -231,7 +230,7 @@ void print_buffer(const char* msg, const void* buffer, uint32_t count) {
     fprint_buffer(NULL, msg, buffer, count);
 }
 
-void kprint_hex_table(const char* data, size_t length) {
+void print_hex_table(const char* data, size_t length) {
     for (size_t i = 0; i < length; ++i) {
         printf("%c%c ", '0' + ((unsigned char)data[i] >> 4), '0' + ((unsigned char)data[i] & 0x0F));
         if ((i + 1) % 16 == 0 || i == length - 1) printf("\n");

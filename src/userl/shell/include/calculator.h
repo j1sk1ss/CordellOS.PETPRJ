@@ -1,4 +1,4 @@
-#include "../../../kernel/include/memory.h"
+#include "../../../libs/include/memory.h"
 
 #define MAX_CALCULATOR_STACK_SIZE 64
 

@@ -26,7 +26,8 @@
 #define H 75
 #define N 100
 
-int main(int args, char** argv) {
+
+int main(int args, char* argv[]) {
     const char data[50] = "SNAKE GAME ver %i\nPress ENTER to start game\n\0";
     printf(data, VERSION);
     
@@ -137,7 +138,7 @@ int loop(char map[V][H], int dead, int size, snake* snk, fruit* frt) {
 		if (input(map, dead, snk, size, frt, (*frt).x, (*frt).y) == -1) return -1;
 		update(map, snk, size, *frt);
 
-        SYS_sleep(100);
+        SYS_sleep(10000);
 	} while (dead == 0);
 }
 

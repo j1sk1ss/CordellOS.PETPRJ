@@ -5,7 +5,6 @@ from build_scripts.utility import glob_recursive, find_index, is_file_name
 
 
 Import('TARGET_ENVIRONMENT')
-Import('user_land')
 TARGET_ENVIRONMENT: Environment
 
 env = TARGET_ENVIRONMENT.Clone()
@@ -45,7 +44,6 @@ objects = [
     *static_libs,
     os.path.join(env["TOOLCHAIN_LIBGCC"], 'crtend.o'),
     obj_crtn,
-    user_land,
 ]
 
 kernel = env.Program('kernel.elf', objects)

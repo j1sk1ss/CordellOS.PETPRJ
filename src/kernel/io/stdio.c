@@ -51,7 +51,7 @@ void kfprintf_unsigned(uint8_t file, unsigned long long number, int radix, int c
         kfputc(buffer[pos], file, color);
 }
 
-void fprintf_signed(uint8_t file, long long number, int radix, int color) {
+void kfprintf_signed(uint8_t file, long long number, int radix, int color) {
     if (number < 0) {
         kfputc('-', file, color);
         kfprintf_unsigned(file, -number, radix, color);
@@ -174,15 +174,15 @@ void kvfprintf(uint8_t file, const char* fmt, va_list args, int color) {
                             case PRINTF_LENGTH_SHORT_SHORT:
                             case PRINTF_LENGTH_SHORT:
                             case PRINTF_LENGTH_DEFAULT:     
-                                fprintf_signed(file, va_arg(args, int), radix, color);
+                                kfprintf_signed(file, va_arg(args, int), radix, color);
                             break;
 
                             case PRINTF_LENGTH_LONG:        
-                                fprintf_signed(file, va_arg(args, long), radix, color);
+                                kfprintf_signed(file, va_arg(args, long), radix, color);
                             break;
 
                             case PRINTF_LENGTH_LONG_LONG:   
-                                fprintf_signed(file, va_arg(args, long long), radix, color);
+                                kfprintf_signed(file, va_arg(args, long long), radix, color);
                             break;
                         }
                     }

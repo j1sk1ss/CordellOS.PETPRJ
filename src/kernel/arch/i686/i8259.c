@@ -1,5 +1,5 @@
 #include "../../include/i8259.h"
-#include "../../include/io.h"
+#include "../../include/x86.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -59,14 +59,14 @@ static bool _autoEoi    = false;
 void i8259_setMask(uint16_t newMask) {
     picMask = newMask;
 
-    i686_outb(PIC1_DATA_PORT, picMask & 0xFF);                              // Lower 8 bits to PIC1                                       
+    x86_outb(PIC1_DATA_PORT, picMask & 0xFF);                              // Lower 8 bits to PIC1                                       
     i686_io_wait();
-    i686_outb(PIC2_DATA_PORT, picMask >> 8);                                // Upper 8 bits to PIC2
+    x86_outb(PIC2_DATA_PORT, picMask >> 8);                                // Upper 8 bits to PIC2
     i686_io_wait();
 }
 
 uint16_t i8259_getMask() {
-    return i686_inb(PIC1_DATA_PORT) | (i686_inb(PIC2_DATA_PORT) << 8);
+    return x86_inb(PIC1_DATA_PORT) | (x86_inb(PIC2_DATA_PORT) << 8);
 }
 
 void i8259_configure(uint8_t offsetPic1, uint8_t offsetPic2, bool autoEoi) {
@@ -74,21 +74,21 @@ void i8259_configure(uint8_t offsetPic1, uint8_t offsetPic2, bool autoEoi) {
     i8259_setMask(0xFFFF);
 
     // initialization control word 1
-    i686_outb(PIC1_COMMAND_PORT, PIC_ICW1_ICW4 | PIC_ICW1_INITIALIZE);  // Send to PIC1 port init command
+    x86_outb(PIC1_COMMAND_PORT, PIC_ICW1_ICW4 | PIC_ICW1_INITIALIZE);  // Send to PIC1 port init command
     i686_io_wait();                                                     // Wait for PC respond
-    i686_outb(PIC2_COMMAND_PORT, PIC_ICW1_ICW4 | PIC_ICW1_INITIALIZE);  // Send to PIC2 port init command
+    x86_outb(PIC2_COMMAND_PORT, PIC_ICW1_ICW4 | PIC_ICW1_INITIALIZE);  // Send to PIC2 port init command
     i686_io_wait();                                                     // Wait for PC respond
 
     // initialization control word 2 - the offsets
-    i686_outb(PIC1_DATA_PORT, offsetPic1);
+    x86_outb(PIC1_DATA_PORT, offsetPic1);
     i686_io_wait();
-    i686_outb(PIC2_DATA_PORT, offsetPic2);
+    x86_outb(PIC2_DATA_PORT, offsetPic2);
     i686_io_wait();
 
     // initialization control word 3
-    i686_outb(PIC1_DATA_PORT, 0x4);             // tell PIC1 that it has a slave at IRQ2 (0000 0100)
+    x86_outb(PIC1_DATA_PORT, 0x4);             // tell PIC1 that it has a slave at IRQ2 (0000 0100)
     i686_io_wait();
-    i686_outb(PIC2_DATA_PORT, 0x2);             // tell PIC2 its cascade identity (0000 0010)
+    x86_outb(PIC2_DATA_PORT, 0x2);             // tell PIC2 its cascade identity (0000 0010)
     i686_io_wait();
 
     // initialization control word 4
@@ -97,9 +97,9 @@ void i8259_configure(uint8_t offsetPic1, uint8_t offsetPic2, bool autoEoi) {
         icw4 |= PIC_ICW4_AUTO_EOI;
     }
 
-    i686_outb(PIC1_DATA_PORT, icw4);
+    x86_outb(PIC1_DATA_PORT, icw4);
     i686_io_wait();
-    i686_outb(PIC2_DATA_PORT, icw4);
+    x86_outb(PIC2_DATA_PORT, icw4);
     i686_io_wait();
 
     // clear data registers
@@ -108,9 +108,9 @@ void i8259_configure(uint8_t offsetPic1, uint8_t offsetPic2, bool autoEoi) {
 
 void i8259_sendEndOfInterrupt(int irq) {
      if (irq >= 8)
-        i686_outb(PIC2_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT);
+        x86_outb(PIC2_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT);
 
-    i686_outb(PIC1_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT);
+    x86_outb(PIC1_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT);
 }
 
 void i8259_disable() {
@@ -126,17 +126,17 @@ void i8259_unmask(int irq) {                                             // irq 
 }
 
 uint16_t i8259_readIRQRequestRegisters() {
-    i686_outb(PIC1_COMMAND_PORT, PIC_CMD_READ_IRR);
-    i686_outb(PIC2_COMMAND_PORT, PIC_CMD_READ_IRR);
+    x86_outb(PIC1_COMMAND_PORT, PIC_CMD_READ_IRR);
+    x86_outb(PIC2_COMMAND_PORT, PIC_CMD_READ_IRR);
 
-    return (i686_inb(PIC2_DATA_PORT) | (i686_inb(PIC2_DATA_PORT) << 8));
+    return (x86_inb(PIC2_DATA_PORT) | (x86_inb(PIC2_DATA_PORT) << 8));
 }
 
 uint16_t i8259_readIRQInServiceRegisters() {
-    i686_outb(PIC1_COMMAND_PORT, PIC_CMD_READ_ISR);
-    i686_outb(PIC2_COMMAND_PORT, PIC_CMD_READ_ISR);
+    x86_outb(PIC1_COMMAND_PORT, PIC_CMD_READ_ISR);
+    x86_outb(PIC2_COMMAND_PORT, PIC_CMD_READ_ISR);
 
-    return (i686_inb(PIC2_DATA_PORT) | (i686_inb(PIC2_DATA_PORT) << 8));
+    return (x86_inb(PIC2_DATA_PORT) | (x86_inb(PIC2_DATA_PORT) << 8));
 }
 
 bool i8259_probe() {

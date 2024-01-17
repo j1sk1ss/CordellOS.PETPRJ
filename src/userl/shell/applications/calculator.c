@@ -1,7 +1,7 @@
 #include "../include/calculator.h"
 
-#include "../../../kernel/include/string.h"
-#include "../../../kernel/include/stdio.h"
+#include "../../../libs/include/string.h"
+#include "../../../libs/include/stdio.h"
 
 typedef struct {
     double stack[MAX_CALCULATOR_STACK_SIZE];
@@ -74,7 +74,7 @@ char* calculator(char **args, int n_args) {
                 a = stack_pop(&c_stack);
 
                 if (b == 0) {
-                    kprintf("Division by zero!");
+                    printf("Division by zero!");
                     return "null";
                 }
 

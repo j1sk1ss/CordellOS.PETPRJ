@@ -3,7 +3,7 @@
 #define F3_BUTTON               '\255'
 #define ENTER_BUTTON            '\n'
 
-int main(int args, char** argv) {
+int main(int args, char* argv[]) {
     while (1) {
         char message[35] = "Enter expression (e.g., 5 + 3): ";
         SYS_puts(message);
