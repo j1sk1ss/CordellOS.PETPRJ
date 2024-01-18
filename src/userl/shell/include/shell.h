@@ -1,6 +1,7 @@
 #include "../../../libs/include/stdio.h"
 #include "../../../libs/include/string.h"
 #include "../../../libs/include/fatlib.h"
+#include "../../../libs/include/syscall.h"
 
 #include "user.h"
 #include "file_manager.h"
@@ -60,4 +61,4 @@
 
 
 void shell();
-void execute_command(char* command, int access_level);
+void execute_command(char* command, int cordell_derictive, char* path);

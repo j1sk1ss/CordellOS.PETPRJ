@@ -6,7 +6,7 @@ void clrscr() {
 
 void fputc(char c, uint8_t file, int color) {
     if (color == 0) SYS_putc(c);
-    else cputc(c, color);
+    else cputc(c, file);
 }
 
 void cputc(char c, uint8_t color) {
@@ -21,7 +21,7 @@ void fputs(const char* str, uint8_t file, int color) {
 }
 
 void set_color(int color) {
-    //VGA_set_color(color);
+    SYS_scrclr(color);
 }
 
 #define PRINTF_STATE_NORMAL         0

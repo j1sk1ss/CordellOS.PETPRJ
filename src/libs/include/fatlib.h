@@ -3,6 +3,25 @@
 #include "../include/syscall.h"
 #include "../include/stdio.h"
 
+#define FILE_READ_ONLY      0x01
+#define FILE_HIDDEN         0x02
+#define FILE_SYSTEM         0x04
+#define FILE_VOLUME_ID      0x08
+#define FILE_DIRECTORY      0x10
+#define FILE_ARCHIVE        0x20
+
+#define FILE_LAST_LONG_ENTRY    0x40
+#define ENTRY_FREE              0xE5
+#define ENTRY_END               0x00
+#define ENTRY_JAPAN             0x05
+#define LAST_LONG_ENTRY         0x40
+
+#define LOWERCASE_ISSUE	        0x01
+#define BAD_CHARACTER	        0x02
+#define BAD_TERMINATION         0x04
+#define NOT_CONVERTED_YET       0x08
+#define TOO_MANY_DOTS           0x10
+
 typedef struct udirectory_entry {
 	unsigned char file_name[11];
 	unsigned char attributes;
@@ -51,7 +70,17 @@ struct UFATDate {
 	uint16_t day;
 };
 
+char* FATLIB_get_current_path();
+void FATLIB_set_current_path(char* path);
+
 void FATLIB_unload_directories_system(struct UFATDirectory* directory);
 void FATLIB_unload_files_system(struct UFATFile* file);
 
 char* FATLIB_change_path(const char* currentPath, const char* content);
+
+struct UFATDate* FATLIB_get_date(short data, int type);
+
+void FATLIB_fatname2name(char* input, char* output);
+char* FATLIB_name2fatname(char* input);
+
+struct udirectory_entry* FATLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);

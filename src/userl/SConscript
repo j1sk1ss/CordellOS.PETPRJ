@@ -9,6 +9,10 @@ TARGET_ENVIRONMENT: Environment
 
 env = TARGET_ENVIRONMENT.Clone()
 env.Append(
+    CCFLAGS=[
+        '-c', '-fpic'
+    ],
+
     LINKFLAGS = [
         '-Wl,-Map=' + env.File('userl.map').path
     ],

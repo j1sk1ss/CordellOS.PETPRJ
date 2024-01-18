@@ -315,9 +315,8 @@ size_t strspn(const char* s, const char* accept) {
   return count;
 }
 
-static char *olds;
-
-char *strtok (char *s, const char *delim){
+static char* olds;
+char* strtok(char* s, const char* delim){
     char *token;
 
     if (s == NULL)

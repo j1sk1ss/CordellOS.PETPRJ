@@ -262,24 +262,16 @@ void* __rawmemchr (const void* s, int c_in) {
         if ((((longword + magic_bits) ^ ~longword) & ~magic_bits) != 0) {
                 const unsigned char *cp = (const unsigned char *) (longword_ptr - 1);
 
-                if (cp[0] == c)
-                    return (void*) cp;
-                if (cp[1] == c)
-                    return (void*) &cp[1];
-                if (cp[2] == c)
-                    return (void*) &cp[2];
-                if (cp[3] == c)
-                    return (void*) &cp[3];
+                if (cp[0] == c) return (void*)cp;
+                if (cp[1] == c) return (void*)&cp[1];
+                if (cp[2] == c) return (void*)&cp[2];
+                if (cp[3] == c) return (void*)&cp[3];
 
                 #if LONG_MAX > 2147483647
-                    if (cp[4] == c)
-                        return (void*) &cp[4];
-                    if (cp[5] == c)
-                        return (void*) &cp[5];
-                    if (cp[6] == c)
-                        return (void*) &cp[6];
-                    if (cp[7] == c)
-                        return (void*) &cp[7];
+                    if (cp[4] == c) return (void*) &cp[4];
+                    if (cp[5] == c) return (void*) &cp[5];
+                    if (cp[6] == c) return (void*) &cp[6];
+                    if (cp[7] == c) return (void*) &cp[7];
                 #endif
             }
     }
@@ -391,7 +383,7 @@ cont:
 }
 
 void backspace_string(char** str, size_t size) {
-    char* buffer = (char*)malloc(size);
+    char* buffer = (char*)SYS_malloc(size);
     memset(buffer, 0, sizeof(buffer));
 
     if (buffer == NULL) {
@@ -440,7 +432,7 @@ char place_char_in_text(char* text, char character, int x_position, int y_positi
 }
 
 void add_char_to_string(char** str, size_t size, char character) {
-    char* buffer = (char*)malloc(size + 1);
+    char* buffer = (char*)SYS_malloc(size + 1);
     if (buffer == NULL) 
         return;
 
@@ -459,7 +451,7 @@ void add_string_to_string(char** str, char* string) {
 
     size_t new_size = strlen(*str) + strlen(string) + 1;
 
-    char* buffer = (char*)malloc(new_size);
+    char* buffer = (char*)SYS_malloc(new_size);
     if (buffer == NULL) 
         return;
 
@@ -534,7 +526,7 @@ int	atoi(char *str) {
 }
 
 char* itoa(int n) {
-    char* str = (char*)malloc(10);
+    char* str = (char*)SYS_malloc(10);
     int i, sign;
 
     if ((sign = n) < 0)        /* record sign */
@@ -581,7 +573,7 @@ char* strdup(const char *src) {
 	while (src[size])
 		size++;
 
-	if (!(new = malloc(sizeof(char) * (size + 1))))
+	if (!(new = SYS_malloc(sizeof(char) * (size + 1))))
 		return (NULL);
 
 	i = 0;

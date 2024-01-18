@@ -1,8 +1,6 @@
 #include <stdint.h>
 #include <include/hal.h>
 
-#include "../libs/include/syscall.h"
-
 #include "include/fat.h"
 #include "include/vbe.h"
 #include "include/gfx.h"
@@ -10,15 +8,16 @@
 #include "include/keyboard.h"
 #include "include/kshell.h"
 #include "include/speaker.h"
+#include "include/paging.h"
+#include "include/allocator.h"
 
 
 extern void _init();
 
 // TODO List:
-// 1) Paging
+// 1) Paging / New allocators 
 // 2) Multitasking
 // 3) VBE / VESA
-// 4) Fix memory in ELF
 // 5) DOOM
 
 void kernel_main(void) {
@@ -30,14 +29,23 @@ void kernel_main(void) {
 
     ///////////////////////
 
-    ////////////////////////////////////
+    ///////////////////////
     // Heap allocator initialization
     // - Initializing first memory block
 
-        mm_init(0x00300000);
+        mm_init(0x00900000);
 
-    ////////////////////////////////////
+    ///////////////////////
     
+    ///////////////////////
+    //  Paging initialization
+    //  - Inits first page
+
+        // Page exception
+        // paging_init(0x00900000);
+
+    ///////////////////////
+
     ///////////////////////
     // HAL initialization
     // - IRQ initialization
@@ -49,15 +57,15 @@ void kernel_main(void) {
 
     ///////////////////////
 
-    //////////////////////////
+    ///////////////////////
     // Keyboard initialization
     // - Keyboard activation
 
         x86_init_keyboard();
 
-    //////////////////////////
+    ///////////////////////
 
-    /////////////////////
+    ///////////////////////
     // FAT and FS initialization
     // - Boot sector 
     // - Cluster data
@@ -65,23 +73,25 @@ void kernel_main(void) {
 
         FAT_initialize();
 
-    //////////////////////
+    ///////////////////////
 
-    //////////////////////////////////
+    ///////////////////////
     // Kernel shell part
 
         kshell();
 
-    //////////////////////////////////
+    ///////////////////////
 
-    //////////////////////////////////
+    ///////////////////////
     // User land part
     // - Shell
     // - File system (current version)
 
+        mm_reset(); // Without some issues happen. TODO: fix free and allocation
         FAT_ELF_execute_content("boot\\userl\\userl.elf", NULL, NULL);
+        free(ELF_exe_buffer);
 
-    //////////////////////////////////
+    ///////////////////////
     
 end:
     for (;;);

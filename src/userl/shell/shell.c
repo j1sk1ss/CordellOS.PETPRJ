@@ -5,12 +5,13 @@
 //  \___ \| |_| |  _| | |   | |    
 //   ___) |  _  | |___| |___| |___ 
 //  |____/|_| |_|_____|_____|_____|
-                                
-
+                               
 struct User* user = NULL;
 
 void shell() {
-
+    char* curpath = (char*)SYS_malloc(4);
+    strcpy(curpath, "BOOT");
+    
     shell_start_screen();
     init_users();
     
@@ -46,6 +47,8 @@ void shell() {
                 if (++attempts > MAX_ATTEMPT_COUNT) {
                     cprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalita` ospite.\n\r");
                     user = (struct User*)SYS_malloc(sizeof(struct User*));
+                    user->name = SYS_malloc(6);
+                    strcpy(user->name, "guest");
                     
                     user->read_access   = 6;
                     user->write_access  = 6;
@@ -64,11 +67,11 @@ void shell() {
 
     while (1) {
         cprintf(FOREGROUND_GREEN, "\r\n[%s: CORDELL OS]", user->name);
-        printf(" $%s> ", FAT_get_current_path()); // TODO
+        printf(" $%s> ", curpath);
 
         char* command = SYS_keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
-        if (strstr(command, "cordell") == 0) execute_command(command + strlen("cordell") + 1, CORDELL_DERICTIVE);
-        else execute_command(command, DEFAULT_DERICTIVE);
+        if (strstr(command, "cordell") == 0) execute_command(command + strlen("cordell") + 1, CORDELL_DERICTIVE, curpath);
+        else execute_command(command, DEFAULT_DERICTIVE, curpath);
 
         SYS_free(command);
     }
@@ -90,7 +93,7 @@ void shell_start_screen() {
 //
 //  SHELL COMMANDS
 //
-    void execute_command(char* command, int cordell_derictive) {
+    void execute_command(char* command, int cordell_derictive, char* path) {
 
         ////////////////////////////////
         //
@@ -135,6 +138,7 @@ void shell_start_screen() {
                 command_line[tokenCount++]  = splitted;
                 splitted                    = strtok(NULL, " ");
             }
+
         //
         //  SPLIT COMMAND LINE TO ARGS
         //
@@ -171,20 +175,9 @@ void shell_start_screen() {
                 printf("\r\n> Usa [%s] per run file",                                           COMMAND_FILE_RUN);
             }
 
-            else if (strstr(command_line[0], COMMAND_VERSION) == 0)
-                shell_start_screen();
-
-            else if (strstr(command_line[0], COMMAND_DISK_DATA) == 0) {
-                printf("\r\nDisk-data utility ver 0.1\n");
-                // printf("FAT TYPE: [%i]\n", fat_type);
-                // printf("TOTAL CLUSTERS x32: [%i]\n", total_clusters);
-            }
-
-            else if (strstr(command_line[0], COMMAND_CLEAR) == 0) 
-                SYS_clrs();
-
-            else if (strstr(command_line[0], COMMAND_ECHO) == 0) 
-                printf("\r\n%s", command_line[1]);
+            else if (strstr(command_line[0], COMMAND_VERSION) == 0) shell_start_screen();
+            else if (strstr(command_line[0], COMMAND_CLEAR) == 0) SYS_clrs();
+            else if (strstr(command_line[0], COMMAND_ECHO) == 0) printf("\r\n%s", command_line[1]);
 
             else if (strstr(command_line[0], COMMAND_TIME) == 0) {
                 short data[7];
@@ -199,70 +192,57 @@ void shell_start_screen() {
         //
         //  FILE SYSTEM COMMANDS
         //
-            else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0) {
-                SYS_mkdir(NULL, command_line[1]); // TODO
-            }
-
-            else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0)                      
-                open_file_manager(user);                                             
+            else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0) SYS_mkdir(path, command_line[1]);
+            else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0) open_file_manager(user);                                             
 
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0) {
-                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
-                if (SYS_cexists(FAT_get_current_path()) == 0) { // TODO
-                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                char* dname = SYS_malloc(strlen(command_line[1]));
+                strcpy(dname, command_line[1]);
+                str_uppercase(dname);
+
+                path = (FATLIB_change_path(path, dname));
+                if (SYS_cexists(path) == 0) {
+                    path = (FATLIB_change_path(path, NULL));
                     printf("\nDirectory not exists.");
                 }
 
-                else if (FAT_get_content(FAT_get_current_path())->file != NULL) {
-                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                    printf("\nThis is no a Directory.");
-                }
+                SYS_free(dname);
             }
             
-            else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0) { // TODO
-                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                if (strlen(FAT_get_current_path()) <= 1)
-                    FAT_set_current_path("BOOT");
+            else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0) {
+                path = (FATLIB_change_path(path, NULL));
+                if (strlen(path) <= 1)
+                    path = "BOOT";
             }
             
             else if (strstr(command_line[0], COMMAND_DELETE_DIR) == 0) {
-                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
-                if (SYS_cexists(FAT_get_current_path()) == 0) {
-                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                    printf("Content not exists.\n");
-                    return;
-                } else if (FAT_get_content(FAT_get_current_path())->directory == NULL) {
-                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                path = (FATLIB_change_path(path, command_line[1]));
+                if (SYS_cexists(path) == 0) {
+                    path = (FATLIB_change_path(path, NULL));
                     printf("Content is not a directory exists.\n");
                     return;
                 }
 
-                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                SYS_rmcontent(FAT_get_current_path(), command_line[1]); // TODO
+                path = (FATLIB_change_path(path, NULL));
+                SYS_rmcontent(path, command_line[1]);
             }
             
-            else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0) {
-                SYS_mkfile(NULL, command_line[1]); // TODO
-            }
+            else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0) SYS_mkfile(path, command_line[1]);
 
             else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {    
-                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
-                if (SYS_cexists(FAT_get_current_path()) == 0) {
-                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                    printf("Content not exists.\n");
-                    return;
-                } else if (FAT_get_content(FAT_get_current_path())->file == NULL) {
-                    FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                path = (FATLIB_change_path(path, command_line[1]));
+                if (SYS_cexists(path) == 0) {
+                    path = (FATLIB_change_path(path, NULL));
                     printf("Content is not a directory exists.\n");
                     return;
                 }
 
-                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                SYS_rmcontent(FAT_get_current_path(), command_line[1]); // TODO
+                path = (FATLIB_change_path(path, NULL));
+                SYS_rmcontent(path, command_line[1]);
             }
 
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {
-                struct UFATDirectory* directory = SYS_opendir(NULL); // TODO
+                struct UFATDirectory* directory = SYS_opendir(path);
                 struct UFATDirectory* current_dir = directory->subDirectory;
                 struct UFATFile* current_file = directory->files;
 
@@ -290,7 +270,10 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_VIEW) == 0) {
-                char* data = SYS_fread(NULL);
+                path = (FATLIB_change_path(path, command_line[1]));
+                char* data = SYS_fread(path);
+                path = (FATLIB_change_path(path, NULL));
+
                 printf("\r\n%s", data);
                 SYS_free(data);
             }
@@ -301,29 +284,14 @@ void shell_start_screen() {
         //
         //  APPLICATIONS
         //
-            else if (strstr(command_line[0], COMMAND_CALCULATOR) == 0) {
-                char* tokens[100];
-
-                int tokenCount      = 0;
-                char* expression    = command + strlen(command_line[0]) + 1;  
-                char* splitted      = strtok(expression, " ");
-
-                while(splitted) {
-                    tokens[tokenCount++] = splitted;
-                    splitted = strtok(NULL, " ");
-                }
-
-                printf("\r\n> Risposta: %s", calculator(tokens, tokenCount));
-            }
-
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {
-                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1])); // TODO
-                text_editor_init(FAT_get_current_path(), BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                path = FATLIB_change_path(path, command_line[1]); 
+                text_editor_init(path, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
+                path = FATLIB_change_path(path, NULL);
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {
-                char* sector_data = SYS_fread(NULL); // TODO
+                char* sector_data = SYS_fread(path);
                 char* command_for_split = (char*)SYS_malloc(strlen(sector_data));
                 strcpy(command_for_split, sector_data);
 
@@ -337,17 +305,10 @@ void shell_start_screen() {
                 }
 
                 for (int i = 0; i < tokenCount; i++)
-                    if (cordell_derictive == CORDELL_DERICTIVE) execute_command(lines[i], SUPER_DERICTIVE);
-                    else execute_command(lines[i], DEFAULT_DERICTIVE);
+                    if (cordell_derictive == CORDELL_DERICTIVE) execute_command(lines[i], SUPER_DERICTIVE, path);
+                    else execute_command(lines[i], DEFAULT_DERICTIVE, path);
 
                 SYS_free(command_for_split);
-                SYS_free(sector_data);
-            }
-
-            else if (strstr(command_line[0], COMMAND_FILE_ASM_RUN) == 0) {
-                char* sector_data = SYS_fread(NULL); // TODO
-                asm_execute(sector_data, user);
-
                 SYS_free(sector_data);
             }
         //

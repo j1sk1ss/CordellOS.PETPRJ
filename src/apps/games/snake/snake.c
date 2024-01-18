@@ -28,8 +28,7 @@
 
 
 int main(int args, char* argv[]) {
-    const char data[50] = "SNAKE GAME ver %i\nPress ENTER to start game\n\0";
-    printf(data, VERSION);
+	printf("SNAKE GAME v. 1.0\n");
     
     while (1) {
         char key = SYS_keyboard_wait_key();
@@ -100,8 +99,7 @@ void show(char map[V][H], int size) {
 		putc('\n');
 	}
 
-	char message[25] = "Score: [%i]";
-	printf(message, size - 4);
+	printf("Score: [%i]", size - 4);
 }
 
 void intro(char map[V][H]) {
@@ -210,8 +208,6 @@ void intro_data2(char map[V][H], snake* snk, int size, fruit frt) {
 
 	snk[0].x += snk[0].movX; // plus movemenrts
 	snk[0].y += snk[0].movY;
-
-	// now introduce the values in the camp
 
 	for (i = 0; i < size; i++) 
 		map[snk[i].y][snk[i].x] = snk[i].imagen;

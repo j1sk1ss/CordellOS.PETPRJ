@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 #include "fatlib.h"
@@ -13,6 +15,7 @@ char SYS_scrchar(int x, int y);
 int* SYS_get_cursor();
 void SYS_set_cursor(int x, int y);
 void SYS_set_scrchar(int x, int y, char character);
+void SYS_set_scrcolor(int x, int y, uint8_t color);
 
 void SYS_sleep(int milliseconds);
 char SYS_keyboard_wait_key();
@@ -25,6 +28,7 @@ void SYS_free(void* ptr);
 
 int SYS_cexists(const char* path);
 void SYS_rmcontent(const char* path, const char* name);
+void SYS_chgcontent(const char* path, struct udirectory_entry* meta);
 
 char* SYS_fread(const char* path);
 void SYS_fwrite(const char* path, const char* data);

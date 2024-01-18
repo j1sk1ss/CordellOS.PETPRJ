@@ -56,14 +56,14 @@
 //   \____|_|    \___/  |_| \____|
 //
 //  Puts a char in screen with color (used kernel printf commands)
-//  EBX - color
-//  ECX - character
+//  ECX - color
+//  EBX - character
 //
     void SYS_cputc(uint8_t color, char character) {
         __asm__ volatile(
             "movl $13, %%eax\n"
-            "movl %0, %%ebx\n"
-            "movl %1, %%ecx\n"
+            "movl %1, %%ebx\n"
+            "movl %0, %%ecx\n"
             "int %2\n"
             :
             : "r"((int)color), "r"((int)character), "i"(SYSCALL_INTERRUPT)
@@ -516,6 +516,21 @@ void SYS_scrclr(uint8_t color) {
 //
 /////////////////////////////
 
+void SYS_chgcontent(const char* path, struct udirectory_entry* meta) {
+    uint32_t dir_path_ptr = (uint32_t)path;
+    uint32_t content_name_ptr = (uint32_t)meta;
+
+    __asm__ volatile(
+        "movl $25, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "int %2\n"
+        :
+        : "r"(dir_path_ptr), "r"(content_name_ptr), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx"
+    );
+}
+
 /////////////////////////////
 //   _______  _______ ____   _____ ___ _     _____ 
 //  | ____\ \/ / ____/ ___| |  ___|_ _| |   | ____|
@@ -661,3 +676,16 @@ void SYS_scrclr(uint8_t color) {
     }
 //
 /////////////////////////////
+
+void SYS_set_scrcolor(int x, int y, uint8_t color) {
+    __asm__ volatile(
+        "movl $24, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "movl %2, %%edx\n"
+        "int %3\n"
+        :
+        : "r"(x), "r"(y), "r"((int)color), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx"
+    );
+}

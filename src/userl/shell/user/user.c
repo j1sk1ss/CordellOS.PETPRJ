@@ -2,19 +2,14 @@
 
 void init_users() {
     if (SYS_cexists("boot\\security") == 0) SYS_mkdir("boot", "security");
+    if (SYS_cexists("boot\\security\\users.txt") == 0) {
+        SYS_mkfile("boot\\security", "users.txt");
+        SYS_fwrite("boot\\security\\users.txt", "admin[000[0\nguest[666[123\n");
+    }
 
-    while (1) {
-        if (SYS_cexists("boot\\security\\users.txt") == 0) {
-            SYS_mkfile("boot\\security", "users.txt");
-            SYS_fwrite("boot\\security\\users.txt", "admin[000[0\nguest[666[123\n");
-        }
-
-        if (SYS_cexists("boot\\security\\groups.txt") == 0) {
-            SYS_mkfile("boot\\security", "groups.txt");
-            SYS_fwrite("boot\\security\\groups.txt", "default[000[admin[guest\n");
-        }
-
-        return;
+    if (SYS_cexists("boot\\security\\groups.txt") == 0) {
+        SYS_mkfile("boot\\security", "groups.txt");
+        SYS_fwrite("boot\\security\\groups.txt", "default[000[admin[guest\n");
     }
 }
 

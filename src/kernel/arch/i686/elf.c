@@ -12,7 +12,13 @@ void* ELF_read(const char* path) {
     char* file_content = FAT_read_content(content);
     char* header_content = file_content;
 
-    Elf32_Ehdr *ehdr = (Elf32_Ehdr *)header_content;
+    Elf32_Ehdr *ehdr = (Elf32_Ehdr*)header_content;
+    if (ehdr->e_ident[0] != '\x7f' || ehdr->e_ident[1] != 'E') {
+        kprintf("\r\nError: Not ELF.\r\n");
+        free(file_content);
+        return NULL;
+    }
+
     if (ehdr->e_type != ET_EXEC && ehdr->e_type != ET_DYN) {
         kprintf("\r\nError: Program is not an executable or dynamic executable.\r\n");
         free(file_content);
@@ -22,7 +28,7 @@ void* ELF_read(const char* path) {
     Elf32_Phdr* phdr = (Elf32_Phdr*)(header_content + ehdr->e_phoff);
 
     uint32_t mem_min   = 0xFFFFFFFF, mem_max = 0;
-    uint32_t alignment = 4096;
+    uint32_t alignment = PAGE_SIZE;
     uint32_t align     = alignment;
 
     for (uint32_t i = 0; i < ehdr->e_phnum; i++) {
@@ -40,14 +46,14 @@ void* ELF_read(const char* path) {
     }
 
     uint32_t buffer_size = mem_max - mem_min;
-    ELF_exe_buffer = malloc(buffer_size);
+    uint32_t buffer_alignment = align - 1;
+    ELF_exe_buffer = calloc(1, buffer_size);
     if (ELF_exe_buffer == NULL) {
         kprintf("\r\nError: Could not malloc() enough memory for program\r\n");
         free(file_content);
         return NULL;
     }
 
-    memset(ELF_exe_buffer, 0, buffer_size);
     for (uint32_t i = 0; i < ehdr->e_phnum; i++) {
         if (phdr[i].p_type != PT_LOAD) continue;
 

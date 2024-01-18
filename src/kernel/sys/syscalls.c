@@ -13,8 +13,8 @@ void syscall(Registers* regs) {
         break;
 
         case SYS_COLOR_PUTC:
-            char ccdata = (char)regs->ecx;
-            uint8_t color = (uint8_t)regs->ebx;
+            char ccdata = (char)regs->ebx;
+            uint8_t color = (uint8_t)regs->ecx;
             kcputc(ccdata, color);
         break;
 
@@ -118,9 +118,11 @@ void syscall(Registers* regs) {
         case SYS_FCREATE:
             char* mkfile_path = (char*)regs->ebx;
             char* mkfile_name = (char*)regs->ecx;
-            char* mkfile_exten = (char*)regs->edx;
 
-            struct FATContent* mkfile_content = FAT_create_content(mkfile_name, FALSE, mkfile_exten);
+            char* fname = strtok(mkfile_name, ".");
+            char* fexec = strtok(NULL, "."); 
+
+            struct FATContent* mkfile_content = FAT_create_content(fname, FALSE, fexec);
             FAT_put_content(mkfile_path, mkfile_content);
             FAT_unload_files_system(mkfile_content);
         break;
@@ -168,6 +170,21 @@ void syscall(Registers* regs) {
             char new_char = (char)regs->edx;
 
             VGA_putchr(pos_x, pos_y, new_char);
+        break;
+
+        case SYS_SET_SCRCOLOR:
+            int cpos_x = (int)regs->ebx;
+            int cpos_y = (int)regs->ecx;
+            uint8_t new_color = (uint8_t)regs->edx;
+
+            VGA_putcolor(pos_x, pos_y, new_char);
+        break;
+
+        case SYS_CHANGE_META:
+            char* meta_path = (char*)regs->ebx;
+            directory_entry_t* meta = (char*)regs->ecx;
+
+            FAT_change_meta(meta_path, meta);
         break;
     }
 }

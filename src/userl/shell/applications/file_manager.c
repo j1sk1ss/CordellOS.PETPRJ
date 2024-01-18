@@ -2,15 +2,24 @@
 
 #include "../include/file_manager.h"
 
+// FAT_change_meta
 
 int row_position = 1;
-struct FATContent* current_directory;
+struct UFATDirectory* current_directory;
 
 int upper_border = 0;
 int down_border = 14;
 
+void keyboard_wait(char symbol) {
+    while (1) {
+        char user_action = SYS_keyboard_wait_key();
+        if (user_action == symbol)
+            break;
+    }
+}
+
 char* convert_date(int day, int month, int year) {
-    char* date = (char*)malloc(9);
+    char* date = (char*)SYS_malloc(9);
 
     date[0] = '0' + (day / 10);
     date[1] = '0' + (day % 10);
@@ -27,23 +36,23 @@ char* convert_date(int day, int month, int year) {
 
 int set_line_color(int line, uint8_t color) {
     for (int i = 0; i < 80; i++)
-        VGA_putcolor(i, (line + LINE_OFFSEET) - upper_border, color);
+        SYS_set_scrcolor(i, (line + LINE_OFFSEET) - upper_border, color);
 }
 
 void open_file_manager(struct User* user) {
-    current_directory = FAT_get_content(FAT_get_current_path());
+    current_directory = SYS_opendir(FATLIB_get_current_path());
 
-    VGA_clrscr();
+    SYS_clrs();
     print_directory_data();
 
     while(1) {
-        char user_action = keyboard_navigation();
+        char user_action = SYS_keyboard_wait_key();
         if (user_action == UP_ARROW_BUTTON && row_position > 0) {
             if (abs(row_position - upper_border) <= 1 && upper_border >= 1) {
                 upper_border--;
                 down_border--;
 
-                VGA_clrscr();
+                SYS_clrs();
                 print_directory_data();
             }
 
@@ -56,7 +65,7 @@ void open_file_manager(struct User* user) {
                 upper_border++;
                 down_border++;
 
-                VGA_clrscr();
+                SYS_clrs();
                 print_directory_data();
             }
 
@@ -66,57 +75,45 @@ void open_file_manager(struct User* user) {
 
         else if (user_action == ENTER_BUTTON || user_action == BACKSPACE_BUTTON) {
             execute_item(user, user_action);
-            VGA_clrscr();
+            SYS_clrs();
             print_directory_data();
         }
 
         else if (user_action == F3_BUTTON) {
             row_position = 1;
-            VGA_clrscr();
+            SYS_clrs();
             break;
         }
 
         else if (user_action == F1_BUTTON) {
-            kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nDIR NAME: ");
-            char* dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
-            
-            struct FATContent* content = FAT_create_content(dir_name, 1, NULL);
-            FAT_put_content(FAT_get_current_path(), content);
-            
-            free(dir_name); 
-            FAT_unload_content_system(content);
+            cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nDIR NAME: ");
+            char* dir_name = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+            SYS_mkdir(FATLIB_get_current_path(), dir_name);
+            SYS_free(dir_name); 
 
-            FAT_unload_content_system(current_directory);
-            current_directory = FAT_get_content(FAT_get_current_path());
+            FATLIB_unload_directories_system(current_directory);
+            current_directory = SYS_opendir(FATLIB_get_current_path());
 
-            VGA_clrscr();
+            SYS_clrs();
             print_directory_data();
         }
 
         else if (user_action == F2_BUTTON) {
-            kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nFILE NAME: ");
-            char* file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
-            
-            kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\t\tFILE EXT: ");
-            char* file_extension = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+            cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nFILE NAME: ");
+            char* file_name = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+            SYS_mkfile(FATLIB_get_current_path(), file_name);
+            SYS_free(file_name);
 
-            struct FATContent* content = FAT_create_content(file_name, 0, file_extension); 
-            FAT_put_content(FAT_get_current_path(), content);
+            FATLIB_unload_directories_system(current_directory);
+            current_directory = SYS_opendir(FATLIB_get_current_path());
 
-            free(file_name);
-            free(file_extension);
-            FAT_unload_content_system(content);
-
-            FAT_unload_content_system(current_directory);
-            current_directory = FAT_get_content(FAT_get_current_path());
-
-            VGA_clrscr();
+            SYS_clrs();
             print_directory_data();
         }
 
         else if (user_action == F4_BUTTON) {
             execute_item(user, user_action);
-            VGA_clrscr();
+            SYS_clrs();
             print_directory_data();
         }
     }
@@ -124,12 +121,12 @@ void open_file_manager(struct User* user) {
 
 void execute_item(struct User* user, char action_type) {
     if (row_position == 0 && action_type != BACKSPACE_BUTTON) {
-        FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-        if (strlen(FAT_get_current_path()) <= 1) 
-            FAT_set_current_path("BOOT");
+        FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), NULL));
+        if (strlen(FATLIB_get_current_path()) <= 1) 
+            FATLIB_set_current_path("BOOT");
 
-        FAT_unload_content_system(current_directory);
-        current_directory = FAT_get_content(FAT_get_current_path());
+        FATLIB_unload_directories_system(current_directory);
+        current_directory = SYS_opendir(FATLIB_get_current_path());
 
         return;
     }
@@ -137,63 +134,58 @@ void execute_item(struct User* user, char action_type) {
     ///////////////////////////////////
     //  SELECTED DIRECTORY
     //
-
         int rows = 1;
-        struct FATContent* content = FAT_get_content(FAT_get_current_path());
-        if (content->directory != NULL) {
-            struct UFATDirectory* currentDir = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(content->directory->directory_meta), NULL, 0)->subDirectory;
-            while (currentDir != NULL) {
-                if (rows++ == row_position) {
-                    if (action_type == ENTER_BUTTON) {
-                        FAT_set_current_path(FAT_change_path(FAT_get_current_path(), currentDir->name));
-                        FAT_unload_content_system(current_directory);
-                        current_directory = FAT_get_content(FAT_get_current_path());
-                    }
-
-                    else if (action_type == BACKSPACE_BUTTON) {
-                        kprintf("\nDELETE? (Y/N): ");
-                        while (1) {
-                            char* answer = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
-                            if (strcmp(answer, "y") == 0) {
-                                FAT_delete_content(FAT_get_current_path(), currentDir->name);
-                                free(answer);
-
-                                FAT_unload_content_system(current_directory);
-                                current_directory = FAT_get_content(FAT_get_current_path());
-
-                                break;
-                            }
-                            
-                            free(answer);
-                            break;
-                        }
-                    }
-
-                    else if (action_type == F4_BUTTON) { 
-                        kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW DIR NAME: ");
-                        char* new_dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
-
-                        udirectory_entry_t* new_meta = FAT_create_entry(new_dir_name, NULL, 1, NULL, NULL);
-                        FAT_set_current_path(FAT_change_path(FAT_get_current_path(), currentDir->directory_meta.file_name));
-                        FAT_change_meta(FAT_get_current_path(), new_meta);
-                        FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-
-                        free(new_dir_name);
-                        free(new_meta);
-
-                        FAT_unload_content_system(current_directory);
-                        current_directory = FAT_get_content(FAT_get_current_path());
-                    }
-
-                    break;
+        struct UFATDirectory* currentDir = SYS_opendir(FATLIB_get_current_path());
+        while (currentDir != NULL) {
+            if (rows++ == row_position) {
+                if (action_type == ENTER_BUTTON) {
+                    FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), currentDir->name));
+                    FATLIB_unload_directories_system(current_directory);
+                    current_directory = SYS_opendir(FATLIB_get_current_path());
                 }
 
-                currentDir = currentDir->next;
+                else if (action_type == BACKSPACE_BUTTON) {
+                    printf("\nDELETE? (Y/N): ");
+                    while (1) {
+                        char* answer = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                        if (strcmp(answer, "y") == 0) {
+                            SYS_rmcontent(FATLIB_get_current_path(), currentDir->name);
+                            SYS_free(answer);
+
+                            FATLIB_unload_directories_system(current_directory);
+                            current_directory = SYS_opendir(FATLIB_get_current_path());
+
+                            break;
+                        }
+                        
+                        SYS_free(answer);
+                        break;
+                    }
+                }
+
+                else if (action_type == F4_BUTTON) { 
+                    cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW DIR NAME: ");
+                    char* new_dir_name = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+
+                    udirectory_entry_t* new_meta = FATLIB_create_entry(new_dir_name, NULL, 1, NULL, NULL);
+                    FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), currentDir->directory_meta.file_name));
+                    SYS_chgcontent(FATLIB_get_current_path(), new_meta);
+                    FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), NULL));
+
+                    SYS_free(new_dir_name);
+                    SYS_free(new_meta);
+
+                    FATLIB_unload_directories_system(current_directory);
+                    current_directory = SYS_opendir(FATLIB_get_current_path());
+                }
+
+                break;
             }
 
-            FAT_unload_directories_system(currentDir);
+            currentDir = currentDir->next;
         }
 
+        FATLIB_unload_directories_system(currentDir);
     //
     //  SELECTED DIRECTORY
     ///////////////////////////////////
@@ -201,236 +193,222 @@ void execute_item(struct User* user, char action_type) {
     ///////////////////////////////////
     //  SELECTED FILE
     //
+        struct UFATFile* currentFile = SYS_opendir(FATLIB_get_current_path())->files;
+        while (currentFile != NULL) {
 
-        if (content->directory != NULL) {
-            struct FATFile* currentFile = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(content->directory->directory_meta), NULL, 0)->files;
-            while (currentFile != NULL) {
+            char name[25]; 
+            FATLIB_fatname2name(currentFile->file_meta.file_name, name);
 
-                char name[25]; 
-                FAT_fatname2name(currentFile->file_meta.file_name, name);
+            if (rows++ == row_position) {
+                row_position = 1;
 
-                if (rows++ == row_position) {
-                    row_position = 1;
+                /////////////////
+                //  EDIT
+                //
+                    if (action_type == F4_BUTTON) { 
+                        while(1) {
+                            SYS_scrclr(BACKGROUND_BLACK + FOREGROUND_WHITE);
+                        
+                            printf("\n%s", LINE);
+                            const char* lines[4] = {
+                                EDIT_LINE,
+                                VIEW_LINE,
+                                RENAME_LINE,
+                                DELETE_LINE
+                            };
 
-                    /////////////////
-                    //  EDIT
-                    //
+                            for (int i = EDIT_POS; i <= DELETE_POS; i++) {
+                                if (row_position == i) cprintf(BACKGROUND_RED + FOREGROUND_WHITE, lines[i]);
+                                else printf(lines[i]);
 
-                        if (action_type == F4_BUTTON) { 
-                            while(1) {
-                                kset_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
-                            
-                                kprintf("\n%s", LINE);
-                                const char* lines[4] = {
-                                    EDIT_LINE,
-                                    VIEW_LINE,
-                                    RENAME_LINE,
-                                    DELETE_LINE
-                                };
+                                printf(LINE);
+                            }
 
-                                for (int i = EDIT_POS; i <= DELETE_POS; i++) {
-                                    if (row_position == i) kcprintf(BACKGROUND_RED + FOREGROUND_WHITE, lines[i]);
-                                    else kprintf(lines[i]);
+                            char user_action = SYS_keyboard_wait_key();
+                            if (user_action == UP_ARROW_BUTTON && row_position > 0) row_position--;
+                            else if (user_action == DOWN_ARROW_BUTTON && row_position < 4) row_position++;
+                            else if (user_action == ENTER_BUTTON) {
+                                switch (row_position) {
+                                    case EDIT_POS:
+                                        FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), name));
+                                        text_editor_init(FATLIB_get_current_path(), BACKGROUND_BLACK + FOREGROUND_WHITE);
+                                        FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), NULL));
 
-                                    kprintf(LINE);
-                                }
+                                    break;
 
-                                char user_action = keyboard_navigation();
-                                if (user_action == UP_ARROW_BUTTON && row_position > 0) 
-                                    row_position--;
+                                    case VIEW_POS:
+                                        SYS_clrs();
 
-                                else if (user_action == DOWN_ARROW_BUTTON && row_position < 4)
-                                    row_position++;
+                                        FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), name));
+                                        char* data = SYS_fread(FATLIB_get_current_path());
+                                        printf("%sFILE: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, data, LINE);
+                                        FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), NULL));
 
-                                else if (user_action == ENTER_BUTTON) {
-                                    switch (row_position) {
-                                        case EDIT_POS:
-                                            FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
-                                            text_editor_init(FAT_get_current_path(), BACKGROUND_BLACK + FOREGROUND_WHITE);
-                                            FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                                        SYS_scrclr(BACKGROUND_BLACK + FOREGROUND_WHITE);
+                                        SYS_free(data);
+                                        keyboard_wait(F3_BUTTON);
+                                    break;
 
-                                        break;
+                                    case RENAME_POS:
+                                        cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW FILE NAME: ");
+                                        char* new_file_name = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
-                                        case VIEW_POS:
-                                            VGA_clrscr();
+                                        cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW FILE EXT: ");
+                                        char* new_file_ext = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
-                                            FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
-                                            char* data = FAT_read_content(FAT_get_content(FAT_get_current_path()));
-                                            kprintf("%sFILE: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, data, LINE);
-                                            FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                                        udirectory_entry_t* new_meta = FATLIB_create_entry(new_file_name, new_file_ext, 0, NULL, NULL);
 
-                                            kset_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
-                                            free(data);
-                                            keyboard_wait(F3_BUTTON);
-                                        break;
+                                        FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), name));
+                                        SYS_chgcontent(FATLIB_get_current_path(), new_meta);
+                                        FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), NULL));
+                                        
+                                        SYS_free(new_file_name);
+                                        SYS_free(new_file_ext);
+                                        SYS_free(new_meta);
 
-                                        case RENAME_POS:
-                                            kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW FILE NAME: ");
-                                            char* new_file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                                        FATLIB_unload_directories_system(current_directory);
+                                        current_directory = SYS_opendir(FATLIB_get_current_path());
 
-                                            kcprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW FILE EXT: ");
-                                            char* new_file_ext = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                                    break;
 
-                                            udirectory_entry_t* new_meta = FAT_create_entry(new_file_name, new_file_ext, 0, NULL, NULL);
-
-                                            FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
-                                            FAT_change_meta(FAT_get_current_path(), new_file_name);
-                                            FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
+                                    case DELETE_POS:
+                                        printf("\nDELETE? (Y/N): ");
+                                        
+                                        char* user_choose = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                                        if (strcmp(user_choose, "y") == 0) {
+                                            SYS_rmcontent(FATLIB_get_current_path(), currentFile->name);
                                             
-                                            free(new_file_name);
-                                            free(new_file_ext);
-                                            free(new_meta);
+                                            FATLIB_unload_directories_system(current_directory);
+                                            current_directory = SYS_opendir(FATLIB_get_current_path());
+                                        }
 
-                                            FAT_unload_content_system(current_directory);
-                                            current_directory = FAT_get_content(FAT_get_current_path());
+                                        SYS_clrs();
+                                        SYS_free(user_choose);
 
-                                        break;
-
-                                        case DELETE_POS:
-                                            kprintf("\nDELETE? (Y/N): ");
-                                            
-                                            char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
-                                            if (strcmp(user_choose, "y") == 0) {
-                                                FAT_delete_content(FAT_get_current_path(), currentFile->name);
-                                                
-                                                FAT_unload_content_system(current_directory);
-                                                current_directory = FAT_get_content(FAT_get_current_path());
-                                            }
-
-                                            VGA_clrscr();
-
-                                            free(user_choose);
-
-                                        break;
-                                    }
-
-                                    return;
-                                }
-                                
-                                else if (user_action == F3_BUTTON) {
-                                    VGA_clrscr();
                                     break;
                                 }
 
-                                VGA_clrscr();
+                                return;
                             }
+                            
+                            else if (user_action == F3_BUTTON) {
+                                SYS_clrs();
+                                break;
+                            }
+
+                            SYS_clrs();
+                        }
+                    }
+                //
+                //  EDIT
+                /////////////////
+                //  EXECUTE
+                //
+                    else if (action_type == ENTER_BUTTON) {
+                        if (strstr(currentFile->extension, "TXT") == 0) {
+                            SYS_clrs();
+
+                            FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), name));
+                            char* data = SYS_fread(FATLIB_get_current_path());
+                            printf("%sFile: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, data, LINE);
+                            FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), NULL));
+                            SYS_free(data);
+
+                            SYS_scrclr(BACKGROUND_BLACK + FOREGROUND_WHITE);
+
+                            keyboard_wait(F3_BUTTON);
+
+                            break;
                         }
 
-                    //
-                    //  EDIT
-                    /////////////////
-                    //  EXECUTE
-                    //
-                        else if (action_type == ENTER_BUTTON) {
-                            if (strstr(currentFile->extension, "TXT") == 0) {
-                                VGA_clrscr();
+                        if (strstr(currentFile->extension, "ELF") == 0) {
+                            SYS_clrs();
+                            
+                            FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), name));
+                            printf("\nEXIT CODE: [%i]", SYS_fexec(FATLIB_get_current_path(), NULL, NULL));
+                            FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), NULL));
 
-                                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
-                                char* data = FAT_read_content(FAT_get_content(FAT_get_current_path()));
-                                kprintf("%sFile: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, data, LINE);
-                                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                                free(data);
+                            printf("\n\nPress [F3] to exit");
+                            keyboard_wait(F3_BUTTON);
 
-                                kset_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
-
-                                keyboard_wait(F3_BUTTON);
-
-                                break;
-                            }
-
-                            if (strstr(currentFile->extension, "ELF") == 0) {
-                                VGA_clrscr();
-                                
-                                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
-                                kprintf("\nEXIT CODE: [%i]", FAT_ELF_execute_content(FAT_get_current_path(), NULL, NULL));
-                                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-
-                                kprintf("\n\nPress [F3] to exit");
-                                keyboard_wait(F3_BUTTON);
-
-                                break;
-                            }
-
-                            else if (strstr(currentFile->extension, "ASM") == 0) {
-                                VGA_clrscr();
-                                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
-                                char* data = FAT_read_content(FAT_get_content(FAT_get_current_path()));
-                                asm_execute(data);
-                                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-
-                                kset_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
-
-                                free(data);
-                                kprintf("\n\nPress [F3] to exit");
-                                keyboard_wait(F3_BUTTON);
-
-                                break;
-                            }
-
-                            else if (strstr(currentFile->extension, "SHL") == 0) {
-                                VGA_clrscr();
-                                kset_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
-                                
-                                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), name));
-                                char* sector_data = FAT_get_content(FAT_get_current_path())->file->data;
-                                FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-
-                                char* command_for_split = (char*)malloc(strlen(sector_data));
-                                strcpy(command_for_split, sector_data);
-
-                                char* lines[100];
-                                int tokenCount = 0;
-
-                                char* splitted = strtok(command_for_split, "\n");
-                                while(splitted) {
-                                    lines[tokenCount++] = splitted;
-                                    splitted = strtok(NULL, "\n");
-                                }
-
-                                for (int i = 0; i < tokenCount; i++) {
-                                    execute_command(lines[i], 2);
-                                    free(lines[i]);
-                                }
-
-                                free(command_for_split);
-                                free(sector_data);
-                                
-                                kprintf("\n\nPress [F3] to exit");
-                                keyboard_wait(F3_BUTTON);
-                                
-                                break;
-                            }
+                            break;
                         }
 
-                        else if (action_type == BACKSPACE_BUTTON) {
-                            kprintf("\nDelete? (Y/N): ");
-                                            
-                            char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
-                            if (strcmp(user_choose, "y") == 0) {
-                                FAT_delete_content(FAT_get_current_path(), name);
-                                
-                                FAT_unload_content_system(current_directory);
-                                current_directory = FAT_get_content(FAT_get_current_path());
-                            }
+                        else if (strstr(currentFile->extension, "ASM") == 0) {
+                            SYS_clrs();
+                            FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), name));
+                            char* data = SYS_fread(FATLIB_get_current_path());
+                            asm_execute(data);
+                            FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), NULL));
 
-                            free(user_choose);
+                            SYS_scrclr(BACKGROUND_BLACK + FOREGROUND_WHITE);
+
+                            SYS_free(data);
+                            printf("\n\nPress [F3] to exit");
+                            keyboard_wait(F3_BUTTON);
+
+                            break;
                         }
 
-                    //
-                    //  EXECUTE
-                    /////////////////
+                        else if (strstr(currentFile->extension, "SHL") == 0) {
+                            SYS_clrs();
+                            SYS_scrclr(BACKGROUND_BLACK + FOREGROUND_WHITE);
+                            
+                            FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), name));
+                            char* sector_data = SYS_fread(FATLIB_get_current_path());
+                            FATLIB_set_current_path(FATLIB_change_path(FATLIB_get_current_path(), NULL));
 
-                    break;
-                }
+                            char* command_for_split = (char*)SYS_malloc(strlen(sector_data));
+                            strcpy(command_for_split, sector_data);
 
-                currentFile = currentFile->next;
+                            char* lines[100];
+                            int tokenCount = 0;
+
+                            char* splitted = strtok(command_for_split, "\n");
+                            while(splitted) {
+                                lines[tokenCount++] = splitted;
+                                splitted = strtok(NULL, "\n");
+                            }
+
+                            for (int i = 0; i < tokenCount; i++) {
+                                execute_command(lines[i], 2);
+                                SYS_free(lines[i]);
+                            }
+
+                            SYS_free(command_for_split);
+                            SYS_free(sector_data);
+                            
+                            printf("\n\nPress [F3] to exit");
+                            keyboard_wait(F3_BUTTON);
+                            
+                            break;
+                        }
+                    }
+
+                    else if (action_type == BACKSPACE_BUTTON) {
+                        printf("\nDelete? (Y/N): ");
+                                        
+                        char* user_choose = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                        if (strcmp(user_choose, "y") == 0) {
+                            SYS_rmcontent(FATLIB_get_current_path(), name);
+                            
+                            FATLIB_unload_directories_system(current_directory);
+                            current_directory = SYS_opendir(FATLIB_get_current_path());
+                        }
+
+                        SYS_free(user_choose);
+                    }
+                //
+                //  EXECUTE
+                /////////////////
+
+                break;
             }
 
-            FAT_unload_files_system(currentFile);
+            currentFile = currentFile->next;
         }
 
-        FAT_unload_content_system(content);
-
+        FATLIB_unload_files_system(currentFile);
     //
     //  SELECTED DIRECTORY
     ///////////////////////////////////
@@ -438,16 +416,16 @@ void execute_item(struct User* user, char action_type) {
 }
 
 void print_directory_data() {
-    kprintf("Directory: [%s]\n%s%s%s", FAT_get_current_path(), LINE, HEADER, LINE);
+    printf("Directory: [%s]\n%s%s%s", FATLIB_get_current_path(), LINE, HEADER, LINE);
 
     int rows = upper_border;
     int all_rows = 0;
     if (all_rows++ == rows) {
-        kprintf(UPPED_DIR);
+        printf(UPPED_DIR);
         rows++;
     }
 
-    struct UFATDirectory* currentDir = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(current_directory->directory->directory_meta), NULL, 0)->subDirectory;
+    struct UFATDirectory* currentDir = current_directory->subDirectory;
     while (currentDir != NULL) {
         char name[12];
         name[11] = '\0';
@@ -456,18 +434,18 @@ void print_directory_data() {
         for (size_t i = strlen(name); i < 11; i++) name[i] = ' ';
 
         if (all_rows++ == rows) {
-            kprintf("| %s | DIR    | N/A      | N/A      | N/A       | N/A  | N/A         |\n", name);
+            printf("| %s | DIR    | N/A      | N/A      | N/A       | N/A  | N/A         |\n", name);
             rows++;
         }
 
         currentDir = currentDir->next;
     }
 
-    struct FATFile* currentFile = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(current_directory->directory->directory_meta), NULL, 0)->files;
+    struct UFATFile* currentFile = current_directory->files;
     while (currentFile != NULL) {
         //////////////////////////
         //  FILE INFO PREPARATIONS
-
+        //
             char file_name[12];
             char file_extension[5];
             char file_size[12];
@@ -483,14 +461,14 @@ void print_directory_data() {
             strncpy(file_size, file_size_str, 10);
             strcat(file_size, "B");
 
-            struct FATDate* creation_date = FAT_get_date(currentFile->file_meta.creation_date, 1);
-            struct FATDate* modification_date = FAT_get_date(currentFile->file_meta.last_modification_date, 1);
-            struct FATDate* access_date = FAT_get_date(currentFile->file_meta.last_accessed, 1);
+            struct UFATDate* creation_date = FATLIB_get_date(currentFile->file_meta.creation_date, 1);
+            struct UFATDate* modification_date = FATLIB_get_date(currentFile->file_meta.last_modification_date, 1);
+            struct UFATDate* access_date = FATLIB_get_date(currentFile->file_meta.last_accessed, 1);
 
             for (size_t i = strlen(file_name); i < 11; i++) file_name[i] = ' ';
             for (size_t i = strlen(file_extension); i < 4; i++) file_extension[i] = ' ';
             for (size_t i = strlen(file_size); i < 11; i++) file_size[i] = ' ';
-
+        //
         //  FILE INFO PREPARATIONS
         //////////////////////////
 
@@ -499,22 +477,22 @@ void print_directory_data() {
         char* adate = convert_date(access_date->day, access_date->mounth, access_date->year);
 
         if (all_rows++ == rows) {
-            kprintf("| %s | FILE   | %s | %s | %s  | %s | %s |\n", file_name, cdate, mdate, adate, file_extension, file_size);
+            printf("| %s | FILE   | %s | %s | %s  | %s | %s |\n", file_name, cdate, mdate, adate, file_extension, file_size);
             rows++;
         }
 
         currentFile = currentFile->next;
 
-        free(creation_date);
-        free(modification_date);
-        free(access_date);
-        free(file_size_str);
+        SYS_free(creation_date);
+        SYS_free(modification_date);
+        SYS_free(access_date);
+        SYS_free(file_size_str);
 
-        free(cdate);
-        free(mdate);
-        free(adate);
+        SYS_free(cdate);
+        SYS_free(mdate);
+        SYS_free(adate);
     }
 
-    for (int i = 0; i < 15 - (rows - upper_border); i++) kprintf(EMPTY);
-    kprintf("%s[F1 - MKDIR] [F2 - MKFILE] [F3 - EXIT] [F4 - EDIT] [ENTER - EXEC] [BSPACE - RM]\n", LINE);
+    for (int i = 0; i < 15 - (rows - upper_border); i++) printf(EMPTY);
+    printf("%s[F1 - MKDIR] [F2 - MKFILE] [F3 - EXIT] [F4 - EDIT] [ENTER - EXEC] [BSPACE - RM]\n", LINE);
 }

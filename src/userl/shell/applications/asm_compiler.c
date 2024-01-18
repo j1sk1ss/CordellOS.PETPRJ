@@ -1,4 +1,4 @@
-#include "../../include/asm_compiler.h"
+#include "../include/asm_compiler.h"
 
 
 int intermediate_index = 0;
@@ -247,7 +247,7 @@ void print_func(char *param, int instruction_number) {
 }
 
 void prints_func(char *param, int instruction_number){
-	intermediate_table[intermediate_index]->string = (char*)malloc(strlen(param));
+	intermediate_table[intermediate_index]->string = (char*)SYS_malloc(strlen(param));
 	strcpy(intermediate_table[intermediate_index]->string, param);
 
 	intermediate_table[intermediate_index]->opcode = PRINTS_INSTRUCTION;
@@ -256,7 +256,7 @@ void prints_func(char *param, int instruction_number){
 }
 
 void printl_func(char *param, int instruction_number){
-	intermediate_table[intermediate_index]->string = (char*)malloc(strlen(param));
+	intermediate_table[intermediate_index]->string = (char*)SYS_malloc(strlen(param));
 	strcpy(intermediate_table[intermediate_index]->string, param);
 
 	intermediate_table[intermediate_index]->opcode = PRINTL_INSTRUCTION;
@@ -271,7 +271,7 @@ void clear_func(int instruction_number){
 }
 
 void mkfile_func(char* param, int instruction_number) {
-	intermediate_table[intermediate_index]->string_params[0] = (char*)malloc(strlen(param));
+	intermediate_table[intermediate_index]->string_params[0] = (char*)SYS_malloc(strlen(param));
 	strcpy(intermediate_table[intermediate_index]->string_params[0], param);
 
 	intermediate_table[intermediate_index]->opcode 					= MKFILE_INSTRUCTION;
@@ -280,7 +280,7 @@ void mkfile_func(char* param, int instruction_number) {
 }
 
 void rmfile_func(char* param, int instruction_number){
-	intermediate_table[intermediate_index]->string = (char*)malloc(strlen(param));
+	intermediate_table[intermediate_index]->string = (char*)SYS_malloc(strlen(param));
 	strcpy(intermediate_table[intermediate_index]->string, param);
 
 	intermediate_table[intermediate_index]->opcode 					= RMFILE_INSTRUCTION;
@@ -292,11 +292,11 @@ void rmfile_func(char* param, int instruction_number){
 
 void wfile_func(char* param, int instruction_number) {
 	char* first = strtok(param, " ");
-	intermediate_table[intermediate_index]->string_params[0] = (char*)malloc(strlen(first));
+	intermediate_table[intermediate_index]->string_params[0] = (char*)SYS_malloc(strlen(first));
 	strcpy(intermediate_table[intermediate_index]->string_params[0], first);
 
 	first = strtok(NULL, " ");
-	intermediate_table[intermediate_index]->string_params[1] = (char*)malloc(strlen(first));
+	intermediate_table[intermediate_index]->string_params[1] = (char*)SYS_malloc(strlen(first));
 	strcpy(intermediate_table[intermediate_index]->string_params[1], first);
 
 	intermediate_table[intermediate_index]->opcode 					= WFILE_INSTRUCTION;
@@ -311,7 +311,7 @@ void rfile_func(char *param, int instruction_number) {
 	intermediate_table[intermediate_index]->parameters[0] = get_address(first);
 
 	first = strtok(NULL, " ");
-	intermediate_table[intermediate_index]->string = (char*)malloc(strlen(first));
+	intermediate_table[intermediate_index]->string = (char*)SYS_malloc(strlen(first));
 	strcpy(intermediate_table[intermediate_index]->string, first);
 
 	intermediate_table[intermediate_index]->opcode 					= RFILE_INSTRUCTION;
@@ -479,17 +479,17 @@ int asm_execute(char* file_data, struct User* user) {
 	int memory_array[MEMORY_SIZE];
 	int memory_index = VARIABLE_MEMORY_START - 1 ;  // 0 to 7 are already reserved
 
-	symbol_tab = (struct symbol_table**)malloc(sizeof(struct symbol_table*) * 25);
+	symbol_tab = (struct symbol_table**)SYS_malloc(sizeof(struct symbol_table*) * 25);
 	for (int i = 0; i < 25; i++)
-		symbol_tab[i] = (struct symbol_table*)malloc(sizeof(struct symbol_table));
+		symbol_tab[i] = (struct symbol_table*)SYS_malloc(sizeof(struct symbol_table));
 
-	intermediate_table = (struct intermediate_lang**)malloc(sizeof(struct intermediate_lang*)*50);
+	intermediate_table = (struct intermediate_lang**)SYS_malloc(sizeof(struct intermediate_lang*)*50);
 	for (int i = 0; i < 50; i++)
-		intermediate_table[i] = (struct intermediate_lang*)malloc(sizeof(struct intermediate_lang));
+		intermediate_table[i] = (struct intermediate_lang*)SYS_malloc(sizeof(struct intermediate_lang));
 
-	block_tab = (struct blocks_table**)malloc(sizeof(struct blocks_table*) * 50);
+	block_tab = (struct blocks_table**)SYS_malloc(sizeof(struct blocks_table*) * 50);
 	for (int i = 0; i < 50; i++)
-		block_tab[i] = (struct blocks_table*)malloc(sizeof(struct blocks_table));
+		block_tab[i] = (struct blocks_table*)SYS_malloc(sizeof(struct blocks_table));
 
     // Determine the number of lines (count the newline characters)
     int num_lines = 0;
@@ -502,12 +502,12 @@ int asm_execute(char* file_data, struct User* user) {
     }
 
     // Allocate an array of char* to store the lines
-    char** lines 	= (char**)malloc(num_lines * sizeof(char*));
+    char** lines 	= (char**)SYS_malloc(num_lines * sizeof(char*));
     char* raw_line 	= strtok(file_data, "\n");
     int line_index 	= 0;
 
     while (raw_line != NULL) {
-        lines[line_index] = (char*)malloc(strlen(raw_line) + 2);
+        lines[line_index] = (char*)SYS_malloc(strlen(raw_line) + 2);
 
         strcat(lines[line_index], raw_line);
 		strcat(lines[line_index], "\n");
@@ -518,7 +518,7 @@ int asm_execute(char* file_data, struct User* user) {
     }
 
 	char tokens[10][10];
-	char *buffer = (char*)malloc(10 * sizeof(char));
+	char *buffer = (char*)SYS_malloc(10 * sizeof(char));
 
 	int index = 0;
 
@@ -536,9 +536,9 @@ int asm_execute(char* file_data, struct User* user) {
 				buffer_index = 0;
 
 				strcpy(tokens[row++], buffer);
-				free(buffer);
+				SYS_free(buffer);
                 
-				buffer = (char*)malloc(10 * sizeof(char));
+				buffer = (char*)SYS_malloc(10 * sizeof(char));
 			}
 			else buffer[buffer_index++] = lines[index][i];
 		}
@@ -679,14 +679,14 @@ ending:
 	asm_executor(memory_array, memory_index, 0, intermediate_index, user);
 	// executing the program //
 
-	for (int i = 0; i < 25; i++) free(symbol_tab[i]);
-	free(symbol_tab);
+	for (int i = 0; i < 25; i++) SYS_free(symbol_tab[i]);
+	SYS_free(symbol_tab);
 
-	for (int i = 0; i < 50; i++) free(intermediate_table[i]);
-	free(intermediate_table);
+	for (int i = 0; i < 50; i++) SYS_free(intermediate_table[i]);
+	SYS_free(intermediate_table);
 
-	for (int i = 0; i < 50; i++) free(block_tab[i]);
-	free(block_tab);
+	for (int i = 0; i < 50; i++) SYS_free(block_tab[i]);
+	SYS_free(block_tab);
 
 	return 0;
 }

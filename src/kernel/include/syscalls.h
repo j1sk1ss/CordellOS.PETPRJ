@@ -15,7 +15,8 @@
 #define SYS_SET_CURSOR       20
 #define SYS_GET_CURSOR       21
 #define SYS_GET_SCRCHAR      22
-#define SYS_SET_SCRCHAR      23 // Not implemented yet
+#define SYS_SET_SCRCHAR      23
+#define SYS_SET_SCRCOLOR     24
 
 // System managment (memory, tasks)
 #define SYS_SLEEP            3 
@@ -35,6 +36,7 @@
 #define SYS_FCREATE          16
 #define SYS_DIRCREATE        17
 #define SYS_CDELETE          18
+#define SYS_CHANGE_META      25 // Not implemented yet
 
 
 void syscall(Registers* regs);

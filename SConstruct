@@ -147,7 +147,7 @@ Export('TARGET_ENVIRONMENT')
 variantDir = 'build/CordellOS/boot'
 
 SConscript('src/libs/SConscript', variant_dir=variantDir + '/libs', duplicate=0)
-# SConscript('src/userl/SConscript', variant_dir=variantDir + '/userl', duplicate=0)
+SConscript('src/userl/SConscript', variant_dir=variantDir + '/userl', duplicate=0)
 SConscript('src/apps/games/snake/SConscript', variant_dir=variantDir + '/apps/games/snake', duplicate=0)
 SConscript('src/apps/std/calc/SConscript', variant_dir=variantDir + '/apps/std/calc', duplicate=0)
 SConscript('src/kernel/SConscript', variant_dir=variantDir + '/kernel', duplicate=0)

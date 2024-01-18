@@ -1,4 +1,4 @@
-#include "../../include/asm_compiler.h"
+#include "../include/asm_compiler.h"
 
 
 extern int symbol_index;
@@ -9,31 +9,31 @@ extern struct symbol_table **symbol_tab;
 extern struct blocks_table **block_tab;
 
 void display_symbol_table() {
-	kprintf("\n---------------Symbol Table is ----------\n");
+	printf("\n---------------Symbol Table is ----------\n");
 	for (int i = 0; i < symbol_index; i++)
-		kprintf("\nvariable name is %s,address is %d, size is %d", symbol_tab[i]->variable_name, symbol_tab[i]->address, symbol_tab[i]->size);
+		printf("\nvariable name is %s,address is %d, size is %d", symbol_tab[i]->variable_name, symbol_tab[i]->address, symbol_tab[i]->size);
 
 	return;
 }
 
 void display_intermediate_table() {
-	kprintf("\n---------------Instruction Table is ----------\n");
+	printf("\n---------------Instruction Table is ----------\n");
 	for (int i = 0; i < intermediate_index; i++){
-		kprintf("\n%d : %d : ", intermediate_table[i]->instruction_position, intermediate_table[i]->opcode);
+		printf("\n%d : %d : ", intermediate_table[i]->instruction_position, intermediate_table[i]->opcode);
 		for (int j = 0; intermediate_table[i]->parameters[j] != -1; j++)
-			kprintf(" %d", intermediate_table[i]->parameters[j]);
+			printf(" %d", intermediate_table[i]->parameters[j]);
 	}
 
-	kprintf("\n");
+	printf("\n");
 	return;
 }
 
 void display_block_table() {
-	kprintf("\n---------------Block Table is ----------\n");
+	printf("\n---------------Block Table is ----------\n");
 	for (int i = 0; i < blocks_index; i++)
-		kprintf("\n Label is : %s and address is : %d ", block_tab[i]->name, block_tab[i]->instr_no);
+		printf("\n Label is : %s and address is : %d ", block_tab[i]->name, block_tab[i]->instr_no);
 
-	kprintf("\n");
+	printf("\n");
 	return;
 }
 
@@ -77,8 +77,8 @@ void asm_executor(int *memory_array, int memory_index, int start, int end, struc
 	for (int i = start; i < end;) {  // iterating on the intermediate language table
 		switch (intermediate_table[i]->opcode) {
 			case READ_INSTRUCTION:  
-				kprintf("\n\r");
-                memory_array[intermediate_table[i]->parameters[0]] = atoi(keyboard_read(VISIBLE_KEYBOARD, -1));
+				printf("\n\r");
+                memory_array[intermediate_table[i]->parameters[0]] = atoi(SYS_keyboard_read(VISIBLE_KEYBOARD, -1));
 			break; // READ Instruction //
 
 			case MOV_INSTRUCTION: 
@@ -101,44 +101,38 @@ void asm_executor(int *memory_array, int memory_index, int start, int end, struc
 		    break; // MUL Instruction //
 
 			case PRINT_INSTRUCTION: 
-                kprintf("\n%d\n", memory_array[intermediate_table[i]->parameters[0]]);
+                printf("\n%d\n", memory_array[intermediate_table[i]->parameters[0]]);
 	    	break;  // PRINT Instruction //
 
 			case PRINTS_INSTRUCTION: 
-                kprintf("%s", intermediate_table[i]->string);
+                printf("%s", intermediate_table[i]->string);
 	    	break;  // PRINTS Instruction //
 
 			case PRINTL_INSTRUCTION:
-                kprintf("\n%s", intermediate_table[i]->string);
+                printf("\n%s", intermediate_table[i]->string);
 	    	break;  // PRINTL Instruction //
 
 			case MKFILE_INSTRUCTION:
-				struct FATContent* content = FAT_create_content(intermediate_table[i]->string_params[0], FALSE, "txt");
-				FAT_put_content(intermediate_table[i]->string_params[1], content);
-				FAT_unload_content_system(content);
+				SYS_mkfile(intermediate_table[i]->string_params[1], intermediate_table[i]->string_params[0]);
 			break;
 
 			case RMFILE_INSTRUCTION:
-				if (FAT_content_exists(intermediate_table[i]->string) == 1)
-					FAT_delete_content(intermediate_table[i]->string_params[1], intermediate_table[i]->string_params[0]);
+				if (SYS_cexists(intermediate_table[i]->string) == 1)
+					SYS_rmcontent(intermediate_table[i]->string_params[1], intermediate_table[i]->string_params[0]);
 			break;
 
 			case WFILE_INSTRUCTION:
-				if (FAT_content_exists(intermediate_table[i]->string_params[0]) == 1)
-						FAT_edit_content(intermediate_table[i]->string_params[0], intermediate_table[i]->string_params[1]);
+				if (SYS_cexists(intermediate_table[i]->string_params[0]) == 1)
+						SYS_fwrite(intermediate_table[i]->string_params[0], intermediate_table[i]->string_params[1]);
 			break;
 
 			case RFILE_INSTRUCTION:
-				if (FAT_content_exists(intermediate_table[i]->string_params[0]) == 1) {
-					struct FATContent* content = FAT_get_content(intermediate_table[i]->string_params[0]);
-
-					char* fat_data = FAT_read_content(content);
+				if (SYS_cexists(intermediate_table[i]->string_params[0]) == 1) {
+					char* fat_data = SYS_fread(intermediate_table[i]->string_params[0]);
 					int data = atoi(fat_data);
-					free(fat_data);
+					SYS_free(fat_data);
 
-					memory_array[intermediate_table[i]->parameters[0]] = data; 
-
-					FAT_unload_content_system(content);
+					memory_array[intermediate_table[i]->parameters[0]] = data;
 				}
 			break;
 
@@ -166,7 +160,7 @@ void asm_executor(int *memory_array, int memory_index, int start, int end, struc
 			break;
 
 			case CLEAR_INSTRUCTION:
-				VGA_text_clrscr();
+				SYS_clrs();
 			break;
 
 			case JMP_INSTRUCTION:  
