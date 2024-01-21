@@ -1,4 +1,6 @@
-#include "isr.h"
+#ifndef SYSCALLS_H
+#define SYSCALLS_H
+
 #include "stdio.h"
 #include "vga_text.h"
 #include "keyboard.h"
@@ -39,4 +41,14 @@
 #define SYS_CHANGE_META      25 // Not implemented yet
 
 
-void syscall(Registers* regs);
+typedef struct {
+    uint32_t ds;                                            // data segment pushed by us
+    uint32_t edi, esi, ebp, kern_esp, ebx, edx, ecx, eax;   // pusha
+    uint32_t interrupt, error;                              // we push interrupt and error code
+    uint32_t eip, cs, eflag, esp, ss;                       // ushed auto by cpu
+} __attribute__((packed)) SYSCall;
+
+
+void syscall(SYSCall* regs);
+
+#endif

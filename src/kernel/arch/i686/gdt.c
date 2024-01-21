@@ -68,7 +68,7 @@ GDTEntry _gtd[] = {
     // Empty discriptor
     GDT_ENTRY(0, 0, 0, 0),
 
-    // Kernel 32-bit ode segment
+    // Kernel 32-bit code segment
     GDT_ENTRY(0,
                 0xFFFFF,
                 GDT_ACCESS_SEGMENT_PRESENT | GDT_ACCESS_RING0 | GDT_ACCESS_CODE_SEGMENT | GDT_ACCESS_CODE_READABLE,

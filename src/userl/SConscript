@@ -48,7 +48,7 @@ objects = [
 ]
 
 userl = env.Program('userl.elf', objects)
-userl_stripped = env.Command('userl-stripped.elf', userl, '$STRIP -o $TARGET $SOURCE')
+userl_stripped = env.Command('userl-s.elf', userl, '$STRIP -o $TARGET $SOURCE')
 
 env.Default(userl_stripped)
 

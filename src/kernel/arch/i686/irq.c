@@ -27,13 +27,11 @@ void i686_irq_initialize() {
         i8259_getDriver(),
     };
 
-    for (int i = 0; i < SIZE(drivers); i++) {
-        if (drivers[i]->Probe())
-            _PICDriver = drivers[i];
-    }
+    for (int i = 0; i < SIZE(drivers); i++) 
+        if (drivers[i]->Probe()) _PICDriver = drivers[i];
 
     if (_PICDriver == NULL) {
-        kprintf("Cordell: Warning: NO PIC!\n");
+        kprintf("Cordell Warning: NO PIC!\n");
         return;
     }
 

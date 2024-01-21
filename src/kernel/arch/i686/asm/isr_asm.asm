@@ -49,4 +49,5 @@ isr_common:
 
     popa
     add esp, 8               ; remove error code & interrupt number
+
     iret                     ; will pop : cs, eip, eflags, ss, esp

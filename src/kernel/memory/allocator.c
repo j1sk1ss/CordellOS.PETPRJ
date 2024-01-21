@@ -1,9 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../../include/allocator.h"
+#include "../include/allocator.h"
 
-#define MAX_PAGE_ALIGNED_ALLOCS 64
+#define MAX_PAGE_ALIGNED_ALLOCS 32
 
 typedef struct {
 	uint8_t status;
@@ -11,7 +11,6 @@ typedef struct {
 } alloc_t;
 
 uint32_t alloc_start 	= 0;
-
 uint32_t last_alloc     = 0;
 uint32_t heap_end       = 0;
 uint32_t heap_begin     = 0;
@@ -21,12 +20,6 @@ uint8_t *pheap_desc     = 0;
 uint32_t memory_used    = 0;
 
 uint32_t get_memory() {
-	kprintf("Memory used: %d bytes\n", memory_used);
-	kprintf("Memory free: %d bytes\n", heap_end - heap_begin - memory_used);
-	kprintf("Heap size: %d bytes\n", heap_end - heap_begin);
-	kprintf("Heap start: 0x%x\n", heap_begin);
-	kprintf("Heap end: 0x%x\n", heap_end);
-	kprintf("PHeap start: 0x%x\nPHeap end: 0x%x\n", pheap_begin, pheap_end);
 	return last_alloc;
 }
 
@@ -37,9 +30,9 @@ uint32_t get_memory() {
 	void mm_init(uint32_t kernel_end) {
 		alloc_start = kernel_end;
 
-		last_alloc  = kernel_end;
+		last_alloc  = kernel_end + 0x1000;
 		heap_begin  = last_alloc;
-		pheap_end   = 0x1000000;
+		pheap_end   = 0x400000;
 		pheap_begin = pheap_end - (MAX_PAGE_ALIGNED_ALLOCS * 4096);
 		heap_end    = pheap_begin;
 
@@ -50,7 +43,7 @@ uint32_t get_memory() {
 	void mm_reset() {
 		last_alloc  = alloc_start;
 		heap_begin  = last_alloc;
-		pheap_end   = 0x1000000;
+		pheap_end   = 0x400000;
 		pheap_begin = pheap_end - (MAX_PAGE_ALIGNED_ALLOCS * 4096);
 		heap_end    = pheap_begin;
 
@@ -144,7 +137,8 @@ uint32_t get_memory() {
 
 	void* pmalloc() {
 		for(int i = 0; i < MAX_PAGE_ALIGNED_ALLOCS; i++) {
-			if(pheap_desc[i]) continue;
+			if (pheap_desc[i]) continue;
+
 			pheap_desc[i] = 1;
 			return (char*)(pheap_begin + i * 4096);
 		}

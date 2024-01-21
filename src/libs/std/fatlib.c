@@ -270,7 +270,6 @@ int FATLIB_name_check(char * input) {
     return retVal;
 }
 
-// TODO: fix
 struct udirectory_entry* FATLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize) {
     struct udirectory_entry* data = SYS_malloc(sizeof(struct udirectory_entry));
 

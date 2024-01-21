@@ -193,7 +193,7 @@ void shell_start_screen() {
         //  FILE SYSTEM COMMANDS
         //
             else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0) SYS_mkdir(path, command_line[1]);
-            else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0) open_file_manager(user);                                             
+            else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0) open_file_manager(user, path);                                             
 
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0) {
                 char* dname = SYS_malloc(strlen(command_line[1]));

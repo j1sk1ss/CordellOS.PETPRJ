@@ -1,6 +1,6 @@
 #include "../include/syscalls.h"
 
-void syscall(Registers* regs) {
+void syscall(SYSCall* regs) {
     switch (regs->eax) {
         case SYS_PRINT:
             const char* data = (const char*)regs->ecx;

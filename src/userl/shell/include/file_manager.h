@@ -27,4 +27,4 @@
 #define DELETE_POS      3
 
 
-void open_file_manager(struct User* user);
+void open_file_manager(struct User* user, char* path);
