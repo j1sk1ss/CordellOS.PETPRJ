@@ -14,19 +14,20 @@ void kshell() {
 }
 
 void shell_start_screen() {
-    kprintf("\nCordell Kernel [ver. 0.1a | 17.01.2024] \r\n");
+    kprintf("Cordell Kernel [ver. 0.2c | 24.01.2024] \n\r");
+    kprintf("You are entering to light kernel shell. Use [aiuto] for getting help. \n\n\r");
 }
 
-///////////////////////////////////////
-//
+//====================
 //  KSHELL COMMANDS
-//
+//====================
+
     void execute_command(char* command) {
 
-        ////////////////////////////////
-        //
+        //====================
         //  SPLIT COMMAND LINE TO ARGS
-        //
+        //====================
+
             char* command_line[100];
             int tokenCount = 0;
 
@@ -38,28 +39,25 @@ void shell_start_screen() {
                 command_line[tokenCount++]  = splitted;
                 splitted                    = strtok(NULL, " ");
             }
-        //
+
+        //====================
         //  SPLIT COMMAND LINE TO ARGS
-        //
-        ////////////////////////////////
-        //
+        //====================
         //  DEFAULT SHELL COMMANDS CLEAR, ECHO AND HELP
-        //
+        //====================
+
             if (strstr(command_line[0], COMMAND_HELP) == 0) {
                 kprintf("\r\n> Usa [%s] per ottenere aiuto",                                     COMMAND_HELP);
                 kprintf("\r\n> Utilizzare [%s] per la pulizia dello schermo",                    COMMAND_CLEAR);
                 kprintf("\r\n> Usa [%s] per l'eco",                                              COMMAND_ECHO);
                 kprintf("\r\n> Usa [%s] per vista questo giorno",                                COMMAND_TIME);
 
-
                 kprintf("\r\n> Utilizza la [%s] per vista versione",                             COMMAND_VERSION);
                 kprintf("\r\n> Utilizza la [%s] per vista disk-data informazione",               COMMAND_DISK_DATA);
-
 
                 kprintf("\r\n> Usa [%s] <nome> per entranto dir",                                COMMAND_IN_DIR);
                 kprintf("\r\n> Usa [%s] per uscire di dir",                                      COMMAND_OUT_DIR);
                 kprintf("\r\n> Usa [%s] per guardare tutto cosa in dir",                         COMMAND_LIST_DIR);
-
 
                 kprintf("\r\n> Usa [%s] per guardare tutto data in file",                        COMMAND_FILE_VIEW);
                 kprintf("\r\n> Usa [%s] per run file",                                           COMMAND_FILE_RUN);
@@ -72,14 +70,14 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_VERSION) == 0) shell_start_screen();
 
             else if (strstr(command_line[0], COMMAND_DISK_DATA) == 0) {
-                kprintf("\r\nDisk-data kernel utility ver 0.2a\n");
+                kprintf("\r\nDisk-data kernel utility ver 0.2b\n");
                 
-                kprintf("FAT TYPE: [%i]\n", fat_type);
-                kprintf("TOTAL CLUSTERS x32: [%i]\n", total_clusters);
-                kprintf("TOTAL SECTORS x32: [%i]\n", total_sectors);
+                kprintf("FAT TYPE:             [%i]\n", fat_type);
+                kprintf("TOTAL CLUSTERS x32:   [%i]\n", total_clusters);
+                kprintf("TOTAL SECTORS x32:    [%i]\n", total_sectors);
                 kprintf("BYTES PER SECTOR x32: [%i]\n", bytes_per_sector);
-                kprintf("SECTORS PER CLUSTER: [%i]\n", sectors_per_cluster);
-                kprintf("FAT TABLE SIZE: [%i]\n", fat_size);
+                kprintf("SECTORS PER CLUSTER:  [%i]\n", sectors_per_cluster);
+                kprintf("FAT TABLE SIZE:       [%i]\n", fat_size);
                 kprintf("\n");
             }
 
@@ -91,13 +89,13 @@ void shell_start_screen() {
                 kprintf("\r\nGiorno: %i/%i/%i\tTempo: %i:%i:%i", datetime_day, datetime_month, datetime_year, 
                                                                 datetime_hour, datetime_minute, datetime_second);
             }
-        //
+
+        //====================
         //  DEFAULT SHELL COMMANDS CLEAR, ECHO AND HELP
-        //
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        //
+        //====================
         //  FILE SYSTEM COMMANDS
-        //                                      
+        //====================
+
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0) {
                 str_uppercase(command_line[1]);
                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), command_line[1]));
@@ -114,8 +112,7 @@ void shell_start_screen() {
             
             else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0) {
                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
-                if (strlen(FAT_get_current_path()) <= 1)
-                    FAT_set_current_path("BOOT");
+                if (strlen(FAT_get_current_path()) <= 1) FAT_set_current_path("BOOT");
             }
 
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {
@@ -168,21 +165,19 @@ void shell_start_screen() {
                 kprintf("CODE: [%i]\n", FAT_ELF_execute_content(FAT_get_current_path(), command_line[2], command_line[3]));
                 FAT_set_current_path(FAT_change_path(FAT_get_current_path(), NULL));
             }
-        //
+
+        //====================
         //  FILE SYSTEM COMMANDS
-        //
-        ///////////////////////////////////////////////////////////////////////////////////////////
+        //====================
 
             else 
                 kprintf("\r\nComando sconosciuto.");
 
-
-        free(command_line);
         free(command_for_split);
 
         kprintf("\r\n");
     }
-//
+
+//====================
 //  KSHELL COMMANDS
-//
-////////////////////////////////////////////
+//====================

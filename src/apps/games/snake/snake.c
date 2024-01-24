@@ -1,4 +1,4 @@
-#include "../../../libs/include/syscall.h"
+#include "../../../libs/include/stdlib.h"
 #include "../../../libs/include/rand.h"
 #include "../../../libs/include/stdio.h"
 #include "../../../libs/include/fatlib.h"
@@ -31,7 +31,7 @@ int main(int args, char* argv[]) {
 	printf("SNAKE GAME v. 1.0\n");
     
     while (1) {
-        char key = SYS_keyboard_wait_key();
+        char key = wait_char();
 		switch (key) {
 			case ENTER_BUTTON:
 				snake_start();
@@ -136,7 +136,7 @@ int loop(char map[V][H], int dead, int size, snake* snk, fruit* frt) {
 		if (input(map, dead, snk, size, frt, (*frt).x, (*frt).y) == -1) return -1;
 		update(map, snk, size, *frt);
 
-        SYS_sleep(10000);
+        sleep(10000);
 	} while (dead == 0);
 }
 
@@ -165,7 +165,7 @@ int input(char map[V][H], int dead, snake* snk, int size, fruit* frt, int fx, in
 	}
 
 	if (dead == 0) {
-        key = SYS_keyboard_get_key();
+        key = get_char();
 		if (key == 's' && snk[0].movY != -1) {
 			snk[0].movX = 0;
 			snk[0].movY = 1;

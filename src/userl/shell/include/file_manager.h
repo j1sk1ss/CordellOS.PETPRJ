@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../../libs/include/fatlib.h"
-#include "../../../libs/include/syscall.h"
+#include "../../../libs/include/stdlib.h"
 #include "../../../libs/include/stdio.h"
 
 #include "user.h"

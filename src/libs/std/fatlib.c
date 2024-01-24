@@ -1,22 +1,11 @@
 #include "../include/fatlib.h"
 
-char* current_path;
-
-char* FATLIB_get_current_path() {
-    return current_path;
-}
-
-void FATLIB_set_current_path(char* path) {
-    current_path = path;
-}
-
-
 void FATLIB_unload_directories_system(struct UFATDirectory* directory) {
     struct UFATFile* current_file = directory->files;
     struct UFATFile* next_file    = NULL;
     while (current_file != NULL) {
         next_file = current_file->next;
-        SYS_free(current_file);
+        free(current_file);
         current_file = next_file;
     }
 
@@ -26,7 +15,7 @@ void FATLIB_unload_directories_system(struct UFATDirectory* directory) {
     if (directory->next != NULL) 
         FATLIB_unload_directories_system(directory->next);
 
-    SYS_free(directory);
+    free(directory);
 }
 
 void FATLIB_unload_files_system(struct UFATFile* file) {
@@ -34,13 +23,13 @@ void FATLIB_unload_files_system(struct UFATFile* file) {
     struct UFATFile* next_file    = NULL;
     while (current_file != NULL) {
         next_file = current_file->next;
-        SYS_free(current_file);
+        free(current_file);
         current_file = next_file;
     }
 }
 
 struct UFATDate* FATLIB_get_date(short data, int type) {
-    struct UFATDate* date = SYS_malloc(sizeof(struct UFATDate));
+    struct UFATDate* date = malloc(sizeof(struct UFATDate));
     switch (type) {
         case 1: // date
             date->year   = ((data >> 9) & 0x7F) + 1980;
@@ -59,7 +48,7 @@ struct UFATDate* FATLIB_get_date(short data, int type) {
         break;
     }
 
-    SYS_free(date);
+    free(date);
     return NULL;
 }
 
@@ -69,7 +58,7 @@ char* FATLIB_change_path(const char* currentPath, const char* content) {
         if (lastSeparator == NULL) currentPath = "";
         else {
             size_t parentPathLen = lastSeparator - currentPath;
-            char* parentPath = (char*)SYS_malloc(parentPathLen + 1);
+            char* parentPath = (char*)malloc(parentPathLen + 1);
             if (parentPath == NULL) {
                 printf("Memory allocation failed\n");
                 return NULL;
@@ -78,12 +67,12 @@ char* FATLIB_change_path(const char* currentPath, const char* content) {
             strncpy(parentPath, currentPath, parentPathLen);
             parentPath[parentPathLen] = '\0';
 
-            SYS_free((void*)currentPath);
+            free((void*)currentPath);
             currentPath = parentPath;
         }
     } else {
         size_t newPathLen = strlen(currentPath) + strlen(content) + 2;
-        char* newPath = (char*)SYS_malloc(newPathLen);
+        char* newPath = (char*)malloc(newPathLen);
         if (newPath == NULL) {
             printf("Memory allocation failed\n");
             return NULL;
@@ -95,7 +84,7 @@ char* FATLIB_change_path(const char* currentPath, const char* content) {
         
         strcat(newPath, content);
 
-        SYS_free((void*)currentPath);
+        free((void*)currentPath);
         currentPath = newPath;
     }
 
@@ -197,14 +186,14 @@ char* FATLIB_name2fatname(char* input) {
 
 unsigned short FATLIB_current_time() {
     short data[7];
-    SYS_get_datetime(&data);
+    get_datetime(&data);
     return (data[2] << 11) | (data[1] << 5) | (data[0] / 2);
 }
 
 	//clock nor date has been implemented yet
 unsigned short FATLIB_current_date() {
     short data[7];
-    SYS_get_datetime(&data);
+    get_datetime(&data);
 
     uint16_t reversed_data = 0;
 
@@ -218,7 +207,7 @@ unsigned short FATLIB_current_date() {
 //clock hasn't been implemented yet
 unsigned char FATLIB_current_time_temths() {
     short data[7];
-    SYS_get_datetime(&data);
+    get_datetime(&data);
     return (data[2] << 11) | (data[1] << 5) | (data[0] / 2);
 }
 
@@ -271,7 +260,7 @@ int FATLIB_name_check(char * input) {
 }
 
 struct udirectory_entry* FATLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize) {
-    struct udirectory_entry* data = SYS_malloc(sizeof(struct udirectory_entry));
+    struct udirectory_entry* data = malloc(sizeof(struct udirectory_entry));
 
     data->reserved0 				= 0; 
     data->creation_time_tenths 		= 0;
@@ -279,7 +268,7 @@ struct udirectory_entry* FATLIB_create_entry(const char* filename, const char* e
     data->creation_date 			= 0;
     data->last_modification_date 	= 0;
 
-    char* file_name = (char*)SYS_malloc(25);
+    char* file_name = (char*)malloc(25);
     strcpy(file_name, filename);
     if (ext) {
         strcat(file_name, ".");

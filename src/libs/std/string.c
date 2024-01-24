@@ -390,11 +390,11 @@ cont:
 }
 
 void backspace_string(char** str, size_t size) {
-    char* buffer = (char*)SYS_malloc(size);
+    char* buffer = (char*)malloc(size);
     memset(buffer, 0, sizeof(buffer));
 
     if (buffer == NULL) {
-        SYS_free(buffer);
+        free(buffer);
         return;
     }
 
@@ -402,7 +402,7 @@ void backspace_string(char** str, size_t size) {
 
     buffer[size] = '\0';
 
-    SYS_free(*str);
+    free(*str);
     *str = buffer;   
 }
 
@@ -439,7 +439,7 @@ char place_char_in_text(char* text, char character, int x_position, int y_positi
 }
 
 void add_char_to_string(char** str, size_t size, char character) {
-    char* buffer = (char*)SYS_malloc(size + 1);
+    char* buffer = (char*)malloc(size + 1);
     if (buffer == NULL) 
         return;
 
@@ -448,7 +448,7 @@ void add_char_to_string(char** str, size_t size, char character) {
     buffer[size - 1] = character;
     buffer[size]     = '\0';
 
-    SYS_free(*str);
+    free(*str);
     *str = buffer;
 }
 
@@ -458,15 +458,15 @@ void add_string_to_string(char** str, char* string) {
 
     size_t new_size = strlen(*str) + strlen(string) + 1;
 
-    char* buffer = (char*)SYS_malloc(new_size);
+    char* buffer = (char*)malloc(new_size);
     if (buffer == NULL) 
         return;
 
     strcpy(buffer, *str);
     strcat(buffer, string);
 
-    SYS_free(*str);
-    SYS_free(string);
+    free(*str);
+    free(string);
 
     *str = buffer;
 }
@@ -533,7 +533,7 @@ int	atoi(char *str) {
 }
 
 char* itoa(int n) {
-    char* str = (char*)SYS_malloc(10);
+    char* str = (char*)malloc(10);
     int i, sign;
 
     if ((sign = n) < 0)        /* record sign */
@@ -580,7 +580,7 @@ char* strdup(const char *src) {
 	while (src[size])
 		size++;
 
-	if (!(new = SYS_malloc(sizeof(char) * (size + 1))))
+	if (!(new = malloc(sizeof(char) * (size + 1))))
 		return (NULL);
 
 	i = 0;

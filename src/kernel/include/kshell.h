@@ -7,6 +7,7 @@
 #include "string.h"
 #include "keyboard.h"
 #include "date_time.h"
+#include "tasking.h"
 
 //   ____  _   _ _____ _     _     
 //  / ___|| | | | ____| |   | |    

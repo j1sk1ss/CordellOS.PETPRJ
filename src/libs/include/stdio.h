@@ -6,74 +6,101 @@
 #include <stddef.h>
 
 #include "string.h"
-#include "syscall.h"
 
-    /////////////////
-    //  COLORS
 
-        // General Formatting
-        #define GEN_FORMAT_RESET        0x00
-        #define GEN_FORMAT_BRIGHT       0x01
-        #define GEN_FORMAT_DIM          0x02
-        #define GEN_FORMAT_UNDERSCORE   0x03
-        #define GEN_FORMAT_BLINK        0x04
-        #define GEN_FORMAT_REVERSE      0x05
-        #define GEN_FORMAT_HIDDEN       0x06
+#define SYSCALL_INTERRUPT 0x80
 
-        // Foreground Colors
-        #define FOREGROUND_BLACK        0x00
-        #define FOREGROUND_BLUE         0x01
-        #define FOREGROUND_GREEN        0x02
-        #define FOREGROUND_AQUA         0x03
-        #define FOREGROUND_RED          0x04
-        #define FOREGROUND_PURPLE       0x05
-        #define FOREGROUND_YELLOW       0x06
-        #define FOREGROUND_WHITE        0x07
-        #define FOREGROUND_GREY         0x08
-        #define FOREGROUND_LIGHT_BLUE   0x09
-        #define FOREGROUND_LIGHT_GREEN  0x0A
-        #define FOREGROUND_LIGHT_AQUA   0x0B
-        #define FOREGROUND_LIGHT_RED    0x0C
-        #define FOREGROUND_LIGHT_PURPLE 0x0D
-        #define FOREGROUND_LIGHT_YELLOW 0x0E
-        #define FOREGROUND_BRIGHT_WHITE 0x0F
 
-        // Background Colors
-        #define BACKGROUND_BLACK        0x00
-        #define BACKGROUND_BLUE         0x10
-        #define BACKGROUND_GREEN        0x20
-        #define BACKGROUND_AQUA         0x30
-        #define BACKGROUND_RED          0x40
-        #define BACKGROUND_PURPLE       0x50
-        #define BACKGROUND_YELLOW       0x60
-        #define BACKGROUND_WHITE        0x70
+//=======================================
+//  COLORS
 
-    //  COLORS
-    /////////////////
-    //  KEYS
+    // General Formatting
+    #define GEN_FORMAT_RESET        0x00
+    #define GEN_FORMAT_BRIGHT       0x01
+    #define GEN_FORMAT_DIM          0x02
+    #define GEN_FORMAT_UNDERSCORE   0x03
+    #define GEN_FORMAT_BLINK        0x04
+    #define GEN_FORMAT_REVERSE      0x05
+    #define GEN_FORMAT_HIDDEN       0x06
 
-        #define F4_BUTTON               '\254'
-        #define F3_BUTTON               '\255'
-        #define F2_BUTTON               '\7'
-        #define F1_BUTTON               '\6'
+    // Foreground Colors
+    #define FOREGROUND_BLACK        0x00
+    #define FOREGROUND_BLUE         0x01
+    #define FOREGROUND_GREEN        0x02
+    #define FOREGROUND_AQUA         0x03
+    #define FOREGROUND_RED          0x04
+    #define FOREGROUND_PURPLE       0x05
+    #define FOREGROUND_YELLOW       0x06
+    #define FOREGROUND_WHITE        0x07
+    #define FOREGROUND_GREY         0x08
+    #define FOREGROUND_LIGHT_BLUE   0x09
+    #define FOREGROUND_LIGHT_GREEN  0x0A
+    #define FOREGROUND_LIGHT_AQUA   0x0B
+    #define FOREGROUND_LIGHT_RED    0x0C
+    #define FOREGROUND_LIGHT_PURPLE 0x0D
+    #define FOREGROUND_LIGHT_YELLOW 0x0E
+    #define FOREGROUND_BRIGHT_WHITE 0x0F
 
-        #define UP_ARROW_BUTTON         '\4'
-        #define DOWN_ARROW_BUTTON       '\3'
-        #define LEFT_ARROW_BUTTON       '\1'
-        #define RIGHT_ARROW_BUTTON      '\2'
+    // Background Colors
+    #define BACKGROUND_BLACK        0x00
+    #define BACKGROUND_BLUE         0x10
+    #define BACKGROUND_GREEN        0x20
+    #define BACKGROUND_AQUA         0x30
+    #define BACKGROUND_RED          0x40
+    #define BACKGROUND_PURPLE       0x50
+    #define BACKGROUND_YELLOW       0x60
+    #define BACKGROUND_WHITE        0x70
 
-        #define ENTER_BUTTON            '\n'
-        #define BACKSPACE_BUTTON        '\b'
+//  COLORS
+//=======================================
+//  KEYS
 
-    //  KEYS
-    /////////////////
-    //  MODS
+    #define F4_BUTTON               '\254'
+    #define F3_BUTTON               '\255'
+    #define F2_BUTTON               '\7'
+    #define F1_BUTTON               '\6'
 
-        #define HIDDEN_KEYBOARD         0
-        #define VISIBLE_KEYBOARD        1
+    #define UP_ARROW_BUTTON         '\4'
+    #define DOWN_ARROW_BUTTON       '\3'
+    #define LEFT_ARROW_BUTTON       '\1'
+    #define RIGHT_ARROW_BUTTON      '\2'
 
-    //  MODS
-    /////////////////
+    #define ENTER_BUTTON            '\n'
+    #define BACKSPACE_BUTTON        '\b'
+
+//  KEYS
+//=======================================
+//  MODS
+
+    #define HIDDEN_KEYBOARD         0
+    #define VISIBLE_KEYBOARD        1
+
+//  MODS
+//=======================================
+
+
+#define PRINTF_STATE_NORMAL         0
+#define PRINTF_STATE_LENGTH         1
+#define PRINTF_STATE_LENGTH_SHORT   2
+#define PRINTF_STATE_LENGTH_LONG    3
+#define PRINTF_STATE_SPEC           4
+
+#define PRINTF_LENGTH_DEFAULT       0
+#define PRINTF_LENGTH_SHORT_SHORT   1
+#define PRINTF_LENGTH_SHORT         2
+#define PRINTF_LENGTH_LONG          3
+#define PRINTF_LENGTH_LONG_LONG     4
+
+
+char get_char();
+char wait_char();
+char* keyboard_read(int mode, uint8_t color);
+
+void directly_putclr(int x, int y, uint8_t color);
+void directly_putc(int x, int y, char character);
+char directly_getchar(int x, int y);
+void cursor_set(int x, int y);
+void cursor_get(int* result);
 
 void clrscr();
 void putc(char c);

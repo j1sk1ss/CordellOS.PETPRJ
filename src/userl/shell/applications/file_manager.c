@@ -10,14 +10,14 @@ static int down_border  = 14;
 
 void keyboard_wait(char symbol) {
     while (1) {
-        char user_action = SYS_keyboard_wait_key();
+        char user_action = wait_char();
         if (user_action == symbol)
             break;
     }
 }
 
 char* convert_date(int day, int month, int year) {
-    char* date = (char*)SYS_malloc(9);
+    char* date = (char*)malloc(9);
 
     date[0] = '0' + (day / 10);
     date[1] = '0' + (day % 10);
@@ -34,23 +34,23 @@ char* convert_date(int day, int month, int year) {
 
 int set_line_color(int line, uint8_t color) {
     for (int i = 0; i < 80; i++)
-        SYS_set_scrcolor(i, (line + LINE_OFFSEET) - upper_border, color);
+        directly_putclr(i, (line + LINE_OFFSEET) - upper_border, color);
 }
 
 void open_file_manager(struct User* user, char* path) {
-    struct UFATDirectory* current_directory = SYS_opendir(path);
+    struct UFATDirectory* current_directory = opendir(path);
 
-    SYS_clrs();
+    clrscr();
     print_directory_data(path);
 
     while(1) {
-        char user_action = SYS_keyboard_wait_key();
+        char user_action = wait_char();
         if (user_action == UP_ARROW_BUTTON && row_position > 0) {
             if (abs(row_position - upper_border) <= 1 && upper_border >= 1) {
                 upper_border--;
                 down_border--;
 
-                SYS_clrs();
+                clrscr();
                 print_directory_data(path);
             }
 
@@ -63,7 +63,7 @@ void open_file_manager(struct User* user, char* path) {
                 upper_border++;
                 down_border++;
 
-                SYS_clrs();
+                clrscr();
                 print_directory_data(path);
             }
 
@@ -73,39 +73,39 @@ void open_file_manager(struct User* user, char* path) {
 
         else if (user_action == ENTER_BUTTON || user_action == BACKSPACE_BUTTON) {
             execute_item(user, user_action, path);
-            SYS_clrs();
+            clrscr();
             print_directory_data(path);
         }
 
         else if (user_action == F3_BUTTON) {
             row_position = 1;
-            SYS_clrs();
+            clrscr();
             break;
         }
 
         else if (user_action == F1_BUTTON) {
             cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nDIR NAME: ");
-            char* dir_name = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
-            SYS_mkdir(path, dir_name);
-            SYS_free(dir_name); 
+            char* dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+            mkdir(path, dir_name);
+            free(dir_name); 
 
-            SYS_clrs();
+            clrscr();
             print_directory_data(path);
         }
 
         else if (user_action == F2_BUTTON) {
             cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nFILE NAME: ");
-            char* file_name = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
-            SYS_mkfile(path, file_name);
-            SYS_free(file_name);
+            char* file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+            mkfile(path, file_name);
+            free(file_name);
 
-            SYS_clrs();
+            clrscr();
             print_directory_data(path);
         }
 
         else if (user_action == F4_BUTTON) {
             execute_item(user, user_action, path);
-            SYS_clrs();
+            clrscr();
             print_directory_data(path);
         }
     }
@@ -126,7 +126,7 @@ void execute_item(struct User* user, char action_type, char* path) {
     //  SELECTED DIRECTORY
     //
         int rows = 1;
-        struct UFATDirectory* currentDir = SYS_opendir(path);
+        struct UFATDirectory* currentDir = opendir(path);
         while (currentDir != NULL) {
             if (rows++ == row_position) {
                 if (action_type == ENTER_BUTTON) {
@@ -136,29 +136,29 @@ void execute_item(struct User* user, char action_type, char* path) {
                 else if (action_type == BACKSPACE_BUTTON) {
                     printf("\nDELETE? (Y/N): ");
                     while (1) {
-                        char* answer = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                        char* answer = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
                         if (strcmp(answer, "y") == 0) {
-                            SYS_rmcontent(path, currentDir->name);
-                            SYS_free(answer);
+                            rmcontent(path, currentDir->name);
+                            free(answer);
                             break;
                         }
                         
-                        SYS_free(answer);
+                        free(answer);
                         break;
                     }
                 }
 
                 else if (action_type == F4_BUTTON) { 
                     cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW DIR NAME: ");
-                    char* new_dir_name = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                    char* new_dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
                     udirectory_entry_t* new_meta = FATLIB_create_entry(new_dir_name, NULL, 1, NULL, NULL);
                     path = (FATLIB_change_path(path, currentDir->directory_meta.file_name));
-                    SYS_chgcontent(path, new_meta);
+                    chgcontent(path, new_meta);
                     path = (FATLIB_change_path(path, NULL));
 
-                    SYS_free(new_dir_name);
-                    SYS_free(new_meta);
+                    free(new_dir_name);
+                    free(new_meta);
                 }
 
                 break;
@@ -175,7 +175,7 @@ void execute_item(struct User* user, char action_type, char* path) {
     ///////////////////////////////////
     //  SELECTED FILE
     //
-        struct UFATFile* currentFile = SYS_opendir(path)->files;
+        struct UFATFile* currentFile = opendir(path)->files;
         while (currentFile != NULL) {
 
             char name[25]; 
@@ -189,7 +189,7 @@ void execute_item(struct User* user, char action_type, char* path) {
                 //
                     if (action_type == F4_BUTTON) { 
                         while(1) {
-                            SYS_scrclr(BACKGROUND_BLACK + FOREGROUND_WHITE);
+                            set_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
                         
                             printf("\n%s", LINE);
                             const char* lines[4] = {
@@ -206,7 +206,7 @@ void execute_item(struct User* user, char action_type, char* path) {
                                 printf(LINE);
                             }
 
-                            char user_action = SYS_keyboard_wait_key();
+                            char user_action = wait_char();
                             if (user_action == UP_ARROW_BUTTON && row_position > 0) row_position--;
                             else if (user_action == DOWN_ARROW_BUTTON && row_position < 4) row_position++;
                             else if (user_action == ENTER_BUTTON) {
@@ -219,47 +219,47 @@ void execute_item(struct User* user, char action_type, char* path) {
                                     break;
 
                                     case VIEW_POS:
-                                        SYS_clrs();
+                                        clrscr();
 
                                         path = (FATLIB_change_path(path, name));
-                                        char* data = SYS_fread(path);
+                                        char* data = fread(path);
                                         printf("%sFILE: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, data, LINE);
                                         path = (FATLIB_change_path(path, NULL));
 
-                                        SYS_scrclr(BACKGROUND_BLACK + FOREGROUND_WHITE);
-                                        SYS_free(data);
+                                        set_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
+                                        free(data);
                                         keyboard_wait(F3_BUTTON);
                                     break;
 
                                     case RENAME_POS:
                                         cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW FILE NAME: ");
-                                        char* new_file_name = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                                        char* new_file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
                                         cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW FILE EXT: ");
-                                        char* new_file_ext = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                                        char* new_file_ext = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
                                         udirectory_entry_t* new_meta = FATLIB_create_entry(new_file_name, new_file_ext, 0, NULL, NULL);
 
                                         path = (FATLIB_change_path(path, name));
-                                        SYS_chgcontent(path, new_meta);
+                                        chgcontent(path, new_meta);
                                         path = (FATLIB_change_path(path, NULL));
                                         
-                                        SYS_free(new_file_name);
-                                        SYS_free(new_file_ext);
-                                        SYS_free(new_meta);
+                                        free(new_file_name);
+                                        free(new_file_ext);
+                                        free(new_meta);
 
                                     break;
 
                                     case DELETE_POS:
                                         printf("\nDELETE? (Y/N): ");
                                         
-                                        char* user_choose = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                                        char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
                                         if (strcmp(user_choose, "y") == 0) {
-                                            SYS_rmcontent(path, currentFile->name);
+                                            rmcontent(path, currentFile->name);
                                         }
 
-                                        SYS_clrs();
-                                        SYS_free(user_choose);
+                                        clrscr();
+                                        free(user_choose);
 
                                     break;
                                 }
@@ -268,11 +268,11 @@ void execute_item(struct User* user, char action_type, char* path) {
                             }
                             
                             else if (user_action == F3_BUTTON) {
-                                SYS_clrs();
+                                clrscr();
                                 break;
                             }
 
-                            SYS_clrs();
+                            clrscr();
                         }
                     }
                 //
@@ -282,15 +282,15 @@ void execute_item(struct User* user, char action_type, char* path) {
                 //
                     else if (action_type == ENTER_BUTTON) {
                         if (strstr(currentFile->extension, "TXT") == 0) {
-                            SYS_clrs();
+                            clrscr();
 
                             path = (FATLIB_change_path(path, name));
-                            char* data = SYS_fread(path);
+                            char* data = fread(path);
                             printf("%sFile: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, data, LINE);
                             path = (FATLIB_change_path(path, NULL));
-                            SYS_free(data);
+                            free(data);
 
-                            SYS_scrclr(BACKGROUND_BLACK + FOREGROUND_WHITE);
+                            set_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
 
                             keyboard_wait(F3_BUTTON);
 
@@ -298,10 +298,10 @@ void execute_item(struct User* user, char action_type, char* path) {
                         }
 
                         if (strstr(currentFile->extension, "ELF") == 0) {
-                            SYS_clrs();
+                            clrscr();
                             
                             path = (FATLIB_change_path(path, name));
-                            printf("\nEXIT CODE: [%i]", SYS_fexec(path, NULL, NULL));
+                            printf("\nEXIT CODE: [%i]", fexec(path, NULL, NULL));
                             path = (FATLIB_change_path(path, NULL));
 
                             printf("\n\nPress [F3] to exit");
@@ -311,15 +311,15 @@ void execute_item(struct User* user, char action_type, char* path) {
                         }
 
                         else if (strstr(currentFile->extension, "ASM") == 0) {
-                            SYS_clrs();
+                            clrscr();
                             path = (FATLIB_change_path(path, name));
-                            char* data = SYS_fread(path);
+                            char* data = fread(path);
                             asm_execute(data);
                             path = (FATLIB_change_path(path, NULL));
 
-                            SYS_scrclr(BACKGROUND_BLACK + FOREGROUND_WHITE);
+                            set_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
 
-                            SYS_free(data);
+                            free(data);
                             printf("\n\nPress [F3] to exit");
                             keyboard_wait(F3_BUTTON);
 
@@ -327,14 +327,14 @@ void execute_item(struct User* user, char action_type, char* path) {
                         }
 
                         else if (strstr(currentFile->extension, "SHL") == 0) {
-                            SYS_clrs();
-                            SYS_scrclr(BACKGROUND_BLACK + FOREGROUND_WHITE);
+                            clrscr();
+                            set_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
                             
                             path = (FATLIB_change_path(path, name));
-                            char* sector_data = SYS_fread(path);
+                            char* sector_data = fread(path);
                             path = (FATLIB_change_path(path, NULL));
 
-                            char* command_for_split = (char*)SYS_malloc(strlen(sector_data));
+                            char* command_for_split = (char*)malloc(strlen(sector_data));
                             strcpy(command_for_split, sector_data);
 
                             char* lines[100];
@@ -348,11 +348,11 @@ void execute_item(struct User* user, char action_type, char* path) {
 
                             for (int i = 0; i < tokenCount; i++) {
                                 execute_command(lines[i], 2);
-                                SYS_free(lines[i]);
+                                free(lines[i]);
                             }
 
-                            SYS_free(command_for_split);
-                            SYS_free(sector_data);
+                            free(command_for_split);
+                            free(sector_data);
                             
                             printf("\n\nPress [F3] to exit");
                             keyboard_wait(F3_BUTTON);
@@ -364,12 +364,12 @@ void execute_item(struct User* user, char action_type, char* path) {
                     else if (action_type == BACKSPACE_BUTTON) {
                         printf("\nDelete? (Y/N): ");
                                         
-                        char* user_choose = SYS_keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                        char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
                         if (strcmp(user_choose, "y") == 0) {
-                            SYS_rmcontent(path, name);
+                            rmcontent(path, name);
                         }
 
-                        SYS_free(user_choose);
+                        free(user_choose);
                     }
                 //
                 //  EXECUTE
@@ -398,7 +398,7 @@ void print_directory_data(char* path) {
         rows++;
     }
 
-    struct UFATDirectory* currentDir = SYS_opendir(path)->subDirectory;
+    struct UFATDirectory* currentDir = opendir(path)->subDirectory;
     while (currentDir != NULL) {
         char name[12];
         name[11] = '\0';
@@ -456,14 +456,14 @@ void print_directory_data(char* path) {
 
         currentFile = currentFile->next;
 
-        SYS_free(creation_date);
-        SYS_free(modification_date);
-        SYS_free(access_date);
-        SYS_free(file_size_str);
+        free(creation_date);
+        free(modification_date);
+        free(access_date);
+        free(file_size_str);
 
-        SYS_free(cdate);
-        SYS_free(mdate);
-        SYS_free(adate);
+        free(cdate);
+        free(mdate);
+        free(adate);
     }
 
     FATLIB_unload_directories_system(currentDir);

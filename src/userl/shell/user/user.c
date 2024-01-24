@@ -1,15 +1,15 @@
 #include "../include/user.h"
 
 void init_users() {
-    if (SYS_cexists("boot\\security") == 0) SYS_mkdir("boot", "security");
-    if (SYS_cexists("boot\\security\\users.txt") == 0) {
-        SYS_mkfile("boot\\security", "users.txt");
-        SYS_fwrite("boot\\security\\users.txt", "admin[000[0\nguest[666[123\n");
+    if (cexists("boot\\security") == 0) mkdir("boot", "security");
+    if (cexists("boot\\security\\users.txt") == 0) {
+        mkfile("boot\\security", "users.txt");
+        fwrite("boot\\security\\users.txt", "admin[000[0\nguest[666[123\n");
     }
 
-    if (SYS_cexists("boot\\security\\groups.txt") == 0) {
-        SYS_mkfile("boot\\security", "groups.txt");
-        SYS_fwrite("boot\\security\\groups.txt", "default[000[admin[guest\n");
+    if (cexists("boot\\security\\groups.txt") == 0) {
+        mkfile("boot\\security", "groups.txt");
+        fwrite("boot\\security\\groups.txt", "default[000[admin[guest\n");
     }
 }
 
@@ -21,7 +21,7 @@ void init_users() {
 //   \____|_| \_\\___/ \___/|_|  
 
     struct Group* login_group(char* user_name) {
-        char* groups = SYS_fread("boot\\security\\groups.txt");
+        char* groups = fread("boot\\security\\groups.txt");
 
         int num_lines = 0;
         char* newline_pos = groups;
@@ -32,12 +32,12 @@ void init_users() {
             newline_pos++;
         }
 
-        char** lines    = (char**)SYS_malloc(num_lines * sizeof(char*));
+        char** lines    = (char**)malloc(num_lines * sizeof(char*));
         char* raw_line  = strtok(groups, "\n");
         int line_index  = 0;
 
         while (raw_line != NULL) {
-            lines[line_index] = (char*)SYS_malloc(strlen(raw_line) + 2);
+            lines[line_index] = (char*)malloc(strlen(raw_line) + 2);
 
             strcat(lines[line_index], raw_line);
             strcat(lines[line_index++], "\n\0");
@@ -46,12 +46,12 @@ void init_users() {
 
         int position = 0; //default[000[admin[guest\n
         while (position < num_lines) {
-            struct Group* group = SYS_malloc(sizeof(struct Group));
+            struct Group* group = malloc(sizeof(struct Group));
 
             char* token = strtok(lines[position], "[");
             char* parsed_name = token;
 
-            group->name = (char*)SYS_malloc(strlen(parsed_name));
+            group->name = (char*)malloc(strlen(parsed_name));
             strcpy(group->name, parsed_name);
 
             token = strtok(NULL, "[");
@@ -77,14 +77,14 @@ void init_users() {
                 if (strstr(parsed_user, user_name) == 0) return group;
             }
 
-            SYS_free(group->name);
-            SYS_free(group);
+            free(group->name);
+            free(group);
 
-            SYS_free(lines[position++]);
+            free(lines[position++]);
         }
 
-        SYS_free(lines);
-        SYS_free(groups);
+        free(lines);
+        free(groups);
 
         return NULL;
     }
@@ -99,7 +99,7 @@ void init_users() {
 //   \___/|____/|_____|_| \_\
 
     struct User* login(char* user_name, char* pass, int all) {
-        char* data = SYS_fread("boot\\security\\users.txt");
+        char* data = fread("boot\\security\\users.txt");
 
         // Determine the number of lines (count the newline characters)
         int num_lines = 0;
@@ -112,15 +112,15 @@ void init_users() {
         }
 
         // Allocate an array of char* to store the lines
-        char** lines = (char**)SYS_malloc(num_lines * sizeof(char*));
-        struct User* users = SYS_malloc(num_lines * sizeof(struct User));
+        char** lines = (char**)malloc(num_lines * sizeof(char*));
+        struct User* users = malloc(num_lines * sizeof(struct User));
 
         // Split the data into lines and store them in the lines array
         char* raw_line = strtok(data, "\n");
         int line_index = 0;
 
         while (raw_line != NULL) {
-            lines[line_index] = (char*)SYS_malloc(strlen(raw_line) + 2);
+            lines[line_index] = (char*)malloc(strlen(raw_line) + 2);
 
             strcat(lines[line_index], raw_line);
             strcat(lines[line_index++], "\n\0");
@@ -141,7 +141,7 @@ void init_users() {
             //////
             //  NAME
             //
-                users[position].name = (char*)SYS_malloc(strlen(parsed_name));
+                users[position].name = (char*)malloc(strlen(parsed_name));
                 strcpy(users[position].name, parsed_name);
             //
             //  NAME
@@ -173,7 +173,7 @@ void init_users() {
                         users[position].write_access    = min(group->write_access, users[position].write_access);
                         users[position].edit_access     = min(group->edit_access, users[position].edit_access);
 
-                        users[position].group = (char*)SYS_malloc(strlen(group->name));
+                        users[position].group = (char*)malloc(strlen(group->name));
                         strcpy(users[position].group, group->name);
                     }
 
@@ -188,29 +188,29 @@ void init_users() {
 
             if (strlen(user_name) > 0 && strlen(pass) > 0)
                 if (strstr(parsed_name, user_name) == 0 && strstr(parsed_password, pass) == 0 && all != 1) {
-                    SYS_free(lines[position]);
-                    SYS_free(lines);
-                    SYS_free(data); 
+                    free(lines[position]);
+                    free(lines);
+                    free(data); 
 
                     return &users[position];
                 }
 
             if (all != 1) {
-                SYS_free(users[position].name);
-                SYS_free(group->name);
-                SYS_free(group);
+                free(users[position].name);
+                free(group->name);
+                free(group);
             }
 
-            SYS_free(lines[position++]);
+            free(lines[position++]);
         }
 
-        SYS_free(lines);
-        SYS_free(data);
+        free(lines);
+        free(data);
 
         if (all == 1)
             return users;
 
-        SYS_free(users);
+        free(users);
         return NULL;
     }
 

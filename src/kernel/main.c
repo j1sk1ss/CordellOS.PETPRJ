@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include <include/hal.h>
 
+#include "include/hal.h"
 #include "include/fat.h"
 #include "include/elf.h"
 #include "include/kshell.h"
@@ -8,45 +8,67 @@
 #include "include/tasking.h"
 #include "include/x86.h"
 #include "include/pit.h"
+#include "include/phys_manager.h"
+#include "include/virt_manager.h"
+
+#include "multiboot.h"
+
+
+#define KERNEL_POS 0x00100000
 
 
 extern void _init();
 extern uint32_t kernel_base;
 extern uint32_t kernel_end;
 
+//===================================================================
 // TODO List:
-// Phys and Virt manages. Paging  https://github.com/stevej/osdev/blob/master/kernel/mem/mem.c#L238 (Look memory.c)
-// ELF check v_addr
-// 1) Paging (create error with current malloc) / New allocators 
-// 2) Multitasking 
-// 3) VBE / VESA
-// Keyboard to int
-// Reboot outportb(0x64, 0xFE);
-// 5) DOOM
-
-int gla = 0;
-
-void a() {
-    while(1) {
-        kprintf("hello\n");
-    }
-}
-
-void b() {
-    while(1) {
-        VGA_putchr(20, 20, 'b');
-    }
-}
+//===================================================================
+//      1) Multiboot struct                                       [V]
+//      2) Phys and Virt manages                                  [ ]
+//      3) ELF check v_addr                                       [ ]
+//      4) Paging (create error with current malloc) / allocators [ ]
+//          4.1) Tasking with paging                              [ ]
+//          4.2) ELF exec with tasking and paging                 [ ]
+//      5) VBE / VESA                                             [ ]
+//      6) Keyboard to int                                        [ ]
+//      7) Reboot outportb(0x64, 0xFE);                           [ ]
+//      8.-1) Syscalls to std libs                                [V]
+//      8) DOOM?                                                  [ ]
+//===================================================================
 
 void kernel_main(void) {
 
+    struct multiboot_header* mb_header = (struct multiboot_header*)GRUB_HEADER_POS;
+    struct multiboot_memory_map_entry* memory_map = (struct multiboot_memory_map_entry*)mb_header->flags;
+
+    if (mb_header->magic != GRUB_MAGIC) {
+        kprintf("[kernel.c 46] Multiboot error (Magic is wrong).\n");
+        goto end;
+    }
+
+    //===================
+    // Phys & Virt memory manager initialization
+    // - Phys blocks
+    // - Virt pages
+    //===================
+
+        uint32_t total_memory = memory_map->base_addr + memory_map->length - 1;
+        initialize_memory_manager(&kernel_end, total_memory);
+        initialize_virtual_memory_manager(KERNEL_POS);
+
+    //===================
+
+
     //===================
     // GLOBAL CONSTRUCTORS
+    // CPP now avaliable
     //===================
 
         _init();
 
     //===================
+
 
     //===================
     // Heap allocator initialization
@@ -56,16 +78,7 @@ void kernel_main(void) {
         mm_init(&kernel_end);
 
     //===================
-    
-    //===================
-    //  Paging initialization
-    //  - Inits first page
-    //===================
 
-        // Page exception
-        // paging_init();
-
-    //===================
 
     //===================
     // HAL initialization
@@ -81,7 +94,9 @@ void kernel_main(void) {
         
     //===================
 
+
     kprintf("Kernel base: %u\nKernel end: %u\n\n", &kernel_base, &kernel_end);
+
 
     //===================
     // Keyboard initialization
@@ -92,7 +107,9 @@ void kernel_main(void) {
 
     //===================
 
+
     kprintf("Keyboard initialized\n\n");
+
 
     //===================
     // FAT and FS initialization
@@ -105,32 +122,27 @@ void kernel_main(void) {
 
     //===================
 
+
     kprintf("FAT driver initialized\nTC:[%u]\tSPC:[%u]\tBPS:[%u]\n\n", total_clusters, sectors_per_cluster, bytes_per_sector);
-
-    // Multitasking
-
-    TASK_add_task(TASK_create_task((uint32_t)b));
-    TASK_add_task(TASK_create_task((uint32_t)a));
-    TASK_start_tasking();
-
-    // Multitasking
 
 
     //===================
     // Kernel shell part
     //===================
 
-        //kshell();
+        kshell();
 
     //===================
+
 
     //===================
     // User land part
     // - Shell
-    // - File system (current version)
+    // - Idle task
     //===================
 
-        //FAT_ELF_execute_content("boot\\userl\\userl-s.elf", NULL, NULL);
+        START_PROCESS("idle", FAT_ELF_execute_content("boot\\userl\\userl-s.elf", NULL, NULL));
+        TASK_start_tasking();
 
     //===================
     

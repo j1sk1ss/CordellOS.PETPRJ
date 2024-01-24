@@ -1,7 +1,7 @@
 #pragma once
 
 #include "stdio.h"
-#include "syscall.h"
+#include "stdlib.h"
 #include "math.h"
 
 #include <stdint.h>

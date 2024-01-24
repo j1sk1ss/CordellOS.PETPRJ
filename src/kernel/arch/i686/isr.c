@@ -90,8 +90,7 @@ void __attribute__((cdecl)) i686_isr_handler(Registers* regs) {
         kprintf("  esp=%x  ebp=%x  eip=%x  eflags=%x  cs=%x  ds=%x  ss=%x\n",
                regs->esp, regs->ebp, regs->eip, regs->eflag, regs->cs, regs->ds, regs->ss);
         kprintf("  interrupt=%x  errorcode=%x\n", regs->interrupt, regs->error);
-        kprintf("KERNEL PANIC!\n");
-        i686_panic();
+        kernel_panic("\nKERNEL PANIC\n");
     }
 }
 

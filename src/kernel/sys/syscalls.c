@@ -83,12 +83,14 @@ void syscall(SYSCall* regs) {
             char* rfile_path = (char*)regs->ebx;
             struct FATContent* content = FAT_get_content(rfile_path);
             regs->eax = (uint32_t)FAT_read_content(content);
+            
             FAT_unload_content_system(content);
         break;
 
         case SYS_WRITE_FILE:
             char* wfile_path = (char*)regs->ebx;
             char* fdata = (char*)regs->ecx;
+
             FAT_edit_content(wfile_path, fdata);
         break;
 
@@ -96,6 +98,7 @@ void syscall(SYSCall* regs) {
             char* path = (char*)regs->ebx;
             struct FATDirectory* user_dir = (struct FATDirectory*)regs->ecx;
             struct FATDirectory* kdir = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(FAT_get_content(path)->directory->directory_meta), NULL, FALSE);
+
             memcpy(user_dir, kdir, sizeof(struct FATDirectory));
             FAT_unload_directories_system(kdir);
         break;
@@ -185,6 +188,17 @@ void syscall(SYSCall* regs) {
             directory_entry_t* meta = (char*)regs->ecx;
 
             FAT_change_meta(meta_path, meta);
+        break;
+
+        case SYS_START_PROCESS:
+            char* process_name = (char*)regs->ebx;
+            uint32_t address = (uint32_t)regs->ecx;
+
+            START_PROCESS(process_name, address);
+        break;
+
+        case SYS_KILL_PROCESS:
+            __kill();
         break;
     }
 }

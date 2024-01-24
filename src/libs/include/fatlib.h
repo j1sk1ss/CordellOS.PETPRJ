@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../include/syscall.h"
+#include "../include/stdlib.h"
 #include "../include/stdio.h"
 
 #define FILE_READ_ONLY      0x01
@@ -27,6 +27,7 @@ typedef struct udirectory_entry {
 	unsigned char attributes;
 	unsigned char reserved0;
 	unsigned char creation_time_tenths;
+
 	unsigned short creation_time;
 	unsigned short creation_date;
 	unsigned short last_accessed;
@@ -34,6 +35,7 @@ typedef struct udirectory_entry {
 	unsigned short last_modification_time;
 	unsigned short last_modification_date;
 	unsigned short low_bits;
+	
 	unsigned int file_size;
 } __attribute__((packed)) udirectory_entry_t;
 
@@ -69,9 +71,6 @@ struct UFATDate {
 	uint16_t mounth;
 	uint16_t day;
 };
-
-char* FATLIB_get_current_path();
-void FATLIB_set_current_path(char* path);
 
 void FATLIB_unload_directories_system(struct UFATDirectory* directory);
 void FATLIB_unload_files_system(struct UFATFile* file);

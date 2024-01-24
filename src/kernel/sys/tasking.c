@@ -1,7 +1,6 @@
 #include "../include/tasking.h"
 
-// TODO: create main idle process (kernel shell for example)
-//		 make process that clean another processes
+// TODO: make process that clean another processes
 
 TaskManager* taskManager;
 
@@ -40,28 +39,31 @@ void TASK_start_tasking() {
 	asm ("iret");
 }
 
-Task* TASK_create_task(uint32_t address) {
+void TASK_stop_tasking() {
+	taskManager->currentTask = -1;
+}
+
+Task* TASK_create_task(char* pname, uint32_t address) {
 
 	//=============================
 	// Allocate memory for new task
 
-		Task* task          = (Task*)calloc(1, sizeof(Task));
-		task->cpuState      = (CPUState*)calloc(1, sizeof(CPUState));
+		Task* task          = (Task*)malloc(sizeof(Task));
+		task->cpuState      = (CPUState*)malloc(sizeof(CPUState));
 
-		task->cpuState->esp = (uint32_t)calloc(1, PAGE_SIZE);
+		task->cpuState->esp = (uint32_t)malloc(PAGE_SIZE);
 		uint32_t* stack_pointer = (uint32_t*)(task->cpuState->esp + PAGE_SIZE);
 
 		task->state = PROCESS_STATE_ALIVE;
 		task->pid   = -1;
+		task->name  = pname;
 
 		for (int pid = 0; pid < TASKS_MAX; pid++) {
-			for (int id = 0; id < TASKS_MAX; id++) {
-				if (taskManager->tasks[pid]->pid == id) continue;
-				else {
+			for (int id = 0; id < TASKS_MAX; id++) 
+				if (taskManager->tasks[pid]->pid != id) {
 					task->pid = id;
 					break;
 				}
-			}
 
 			if (task->pid != -1) break;
 		}
@@ -131,29 +133,36 @@ Task* get_task(int pid) {
 
 void __kill() {
 	int current = taskManager->currentTask;
-	_kill(current);
+	taskManager->currentTask = -1;
+	_kill(taskManager->tasks[current]->pid);
+
+	taskManager->currentTask = current;
 }
 
 void _kill(int pid) {
-    if (pid >= 0 && pid < TASKS_MAX) {
-        Task* taskToKill = get_task(pid);
-        if (taskToKill->state) {
-            // Perform any cleanup or specific termination actions here
-			// TODO: deleting 
-
-            // Mark the task as inactive
-            taskToKill->state = PROCESS_STATE_DEAD;
-            if (taskManager->currentTask == pid) 
-                taskManager->currentTask = -1;
-        }
-    }
+    if (pid >= 0 && pid < TASKS_MAX) 
+        for (int task = 0; task < TASKS_MAX; task++) 
+			if (taskManager->tasks[task]->pid == pid) {
+				taskManager->tasks[task]->state = PROCESS_STATE_DEAD;
+				break;
+			}
 }
 
-int TASK_add_task(Task* task) {
+int _TASK_add_task(Task* task) {
     if (taskManager->tasksCount >= 256) return -1;
 
     taskManager->tasks[taskManager->tasksCount++] = task;
-    return 1;
+    return task->pid;
+}
+
+int TASK_add_task(Task* task) {
+	int current = taskManager->currentTask;
+	taskManager->currentTask = -1;
+
+	_TASK_add_task(task);
+
+	taskManager->currentTask = current;
+	return task->pid;
 }
 
 // TODO: don`t return dead processes 
@@ -163,9 +172,17 @@ CPUState* TASK_task_switch(CPUState* state) {
 	taskManager->tasks[taskManager->currentTask]->cpuState = state;
 
 	// Change task
-    if (++taskManager->currentTask >= taskManager->tasksCount)
-        taskManager->currentTask = 0;
+	if (++taskManager->currentTask >= taskManager->tasksCount)
+			taskManager->currentTask = 0;
+
+	Task* new_task = taskManager->tasks[taskManager->currentTask];
+	while (new_task->state != PROCESS_STATE_ALIVE) {
+		if (++taskManager->currentTask >= taskManager->tasksCount)
+			taskManager->currentTask = 0;
+
+		new_task = taskManager->tasks[taskManager->currentTask];
+	}
 
 	i686_enableInterrupts();
-	return taskManager->tasks[taskManager->currentTask]->cpuState;
+	return new_task->cpuState;
 }

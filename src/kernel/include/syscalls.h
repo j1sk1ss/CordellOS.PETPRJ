@@ -7,6 +7,7 @@
 #include "date_time.h"
 #include "fat.h"
 #include "time.h"
+#include "tasking.h"
 
 // Screen managment through kprint 
 #define SYS_PRINT            0
@@ -38,7 +39,11 @@
 #define SYS_FCREATE          16
 #define SYS_DIRCREATE        17
 #define SYS_CDELETE          18
-#define SYS_CHANGE_META      25 // Not implemented yet
+#define SYS_CHANGE_META      25
+
+// Multitasking 
+#define SYS_START_PROCESS    26
+#define SYS_KILL_PROCESS     27 //
 
 
 typedef struct {

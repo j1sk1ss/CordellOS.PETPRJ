@@ -78,7 +78,7 @@ void asm_executor(int *memory_array, int memory_index, int start, int end, struc
 		switch (intermediate_table[i]->opcode) {
 			case READ_INSTRUCTION:  
 				printf("\n\r");
-                memory_array[intermediate_table[i]->parameters[0]] = atoi(SYS_keyboard_read(VISIBLE_KEYBOARD, -1));
+                memory_array[intermediate_table[i]->parameters[0]] = atoi(keyboard_read(VISIBLE_KEYBOARD, -1));
 			break; // READ Instruction //
 
 			case MOV_INSTRUCTION: 
@@ -113,24 +113,24 @@ void asm_executor(int *memory_array, int memory_index, int start, int end, struc
 	    	break;  // PRINTL Instruction //
 
 			case MKFILE_INSTRUCTION:
-				SYS_mkfile(intermediate_table[i]->string_params[1], intermediate_table[i]->string_params[0]);
+				mkfile(intermediate_table[i]->string_params[1], intermediate_table[i]->string_params[0]);
 			break;
 
 			case RMFILE_INSTRUCTION:
-				if (SYS_cexists(intermediate_table[i]->string) == 1)
-					SYS_rmcontent(intermediate_table[i]->string_params[1], intermediate_table[i]->string_params[0]);
+				if (cexists(intermediate_table[i]->string) == 1)
+					rmcontent(intermediate_table[i]->string_params[1], intermediate_table[i]->string_params[0]);
 			break;
 
 			case WFILE_INSTRUCTION:
-				if (SYS_cexists(intermediate_table[i]->string_params[0]) == 1)
-						SYS_fwrite(intermediate_table[i]->string_params[0], intermediate_table[i]->string_params[1]);
+				if (cexists(intermediate_table[i]->string_params[0]) == 1)
+						fwrite(intermediate_table[i]->string_params[0], intermediate_table[i]->string_params[1]);
 			break;
 
 			case RFILE_INSTRUCTION:
-				if (SYS_cexists(intermediate_table[i]->string_params[0]) == 1) {
-					char* fat_data = SYS_fread(intermediate_table[i]->string_params[0]);
+				if (cexists(intermediate_table[i]->string_params[0]) == 1) {
+					char* fat_data = fread(intermediate_table[i]->string_params[0]);
 					int data = atoi(fat_data);
-					SYS_free(fat_data);
+					free(fat_data);
 
 					memory_array[intermediate_table[i]->parameters[0]] = data;
 				}
@@ -160,7 +160,7 @@ void asm_executor(int *memory_array, int memory_index, int start, int end, struc
 			break;
 
 			case CLEAR_INSTRUCTION:
-				SYS_clrs();
+				clrscr();
 			break;
 
 			case JMP_INSTRUCTION:  

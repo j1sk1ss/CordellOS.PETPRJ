@@ -1,16 +1,207 @@
 #include "../include/stdio.h"
 
-void clrscr() {
-    SYS_clrs();
+//==================================
+//           FUNCTIONS
+//==================================
+
+//====================================================================
+// Function directly in screen put color by coordinates
+// EBX - x
+// ECX - y
+// EDX - color
+void directly_putclr(int x, int y, uint8_t color) {
+    __asm__ volatile(
+        "movl $24, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "movl %2, %%edx\n"
+        "int %3\n"
+        :
+        : "r"(x), "r"(y), "r"((int)color), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx"
+    );
 }
 
+//====================================================================
+// Function directly in screen put character by coordinates
+// EBX - x
+// ECX - y
+// EDX - character
+void directly_putc(int x, int y, char character) {
+    __asm__ volatile(
+        "movl $23, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "movl %2, %%edx\n"
+        "int %3\n"
+        :
+        : "r"(x), "r"(y), "r"((int)character), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx"
+    );
+}
+
+//====================================================================
+// Function get character from screen by coordinates
+// EBX - x
+// ECX - y
+// AL - result
+char directly_getchar(int x, int y) {
+    char result;
+    __asm__ volatile(
+        "movl $22, %%eax\n"
+        "movl %1, %%ebx\n"
+        "movl %2, %%ecx\n"
+        "int %3\n"
+        "movb %%al, %0\n"
+        : "=r"(result)
+        : "r"(x), "r"(y), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx"
+    );
+
+    return result;
+}
+
+//====================================================================
+// Function set cursor by coordinates
+// EBX - x
+// ECX - y
+void cursor_set(int x, int y) {
+    __asm__ volatile(
+        "movl $20, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "int %2\n"
+        :
+        : "r"(x), "r"(y), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx"
+    );
+}
+
+//====================================================================
+// Function get coordinates of cursor
+// ECX - pointer to result array
+// 
+// result[0] - x
+// result[1] - y
+void cursor_get(int* result) {
+    __asm__ volatile(
+        "movl $21, %%eax\n"
+        "movl $1, %%ebx\n"
+        "movl %0, %%ecx\n"
+        "int %1\n"
+        :
+        : "r"(&result), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
+}
+
+//====================================================================
+// Function take a value from keyboard
+// ECX - pointer to character
+char get_char() {
+    char key;
+    __asm__ volatile(
+        "movl $5, %%eax\n"
+        "movl $1, %%ebx\n"
+        "movl %0, %%ecx\n"
+        "movl $1, %%edx\n"
+        "int %1\n"
+        :
+        : "r"(&key), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
+
+    return key;
+}
+
+//====================================================================
+//  This function waits an any button pressing from user
+//  ECX - pointer to character
+char wait_char() {
+    char key;
+    __asm__ volatile(
+        "movl $4, %%eax\n"
+        "movl $1, %%ebx\n"
+        "movl %0, %%ecx\n"
+        "movl $0, %%edx\n"
+        "int %1\n"
+        :
+        : "r"(&key), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
+
+    return key;
+}
+
+//====================================================================
+//  This function reads keyboard input from user until he press ENTER -
+//  that returns string of input
+//  EAX - interrupt / buffer
+//  EDX - color
+//  EBX - mode
+char* keyboard_read(int mode, uint8_t color) {
+    char* buffer;
+    __asm__ volatile(
+        "movl $19, %%eax\n"
+        "movl %2, %%ebx\n"
+        "movl %1, %%edx\n"
+        "int %3\n"
+        "movl %%eax, %0\n"
+        : "=r"(buffer)
+        : "r"((int)color), "r"(mode), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
+
+    return buffer;
+}
+
+//====================================================================
+//  Clear entire screen (used kernel printf commands)
+void clrscr() {
+    __asm__ volatile (
+        "movl $2, %%eax\n"
+        "movl $1, %%ebx\n"
+        "movl $1, %%edx\n"
+        "int %0\n"
+        :
+        : "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
+}
+
+//====================================================================
+//  Puts a char in screen (used kernel printf commands)
+//  ECX - character
 void fputc(char c, uint8_t file, int color) {
-    if (color == 0) SYS_putc(c);
+    if (color == 0) {
+        __asm__ volatile(
+            "movl $1, %%eax\n"
+            "movl $1, %%ebx\n"
+            "movl %0, %%ecx\n"
+            "movl $1, %%edx\n"
+            "int %1\n"
+            :
+            : "r"((int)c), "i"(SYSCALL_INTERRUPT)
+            : "eax", "ebx", "ecx", "edx"
+        );
+    }
     else cputc(c, file);
 }
 
+//====================================================================
+//  Puts a char in screen with color (used kernel printf commands)
+//  ECX - color
+//  EBX - character
 void cputc(char c, uint8_t color) {
-    SYS_cputc(color, c);
+    __asm__ volatile(
+        "movl $13, %%eax\n"
+        "movl %1, %%ebx\n"
+        "movl %0, %%ecx\n"
+        "int %2\n"
+        :
+        : "r"((int)color), "r"((int)c), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
 }
 
 void fputs(const char* str, uint8_t file, int color) {
@@ -20,22 +211,21 @@ void fputs(const char* str, uint8_t file, int color) {
     }
 }
 
+//====================================================================
+//  Fill screen by selected color (Not VBE color)
+//  ECX - color
 void set_color(int color) {
-    SYS_scrclr(color);
+    __asm__ volatile(
+        "movl $14, %%eax\n"
+        "movl $1, %%ebx\n"
+        "movl %0, %%ecx\n"
+        "movl $1, %%edx\n"
+        "int %1\n"
+        :
+        : "r"((int)color), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
 }
-
-#define PRINTF_STATE_NORMAL         0
-#define PRINTF_STATE_LENGTH         1
-#define PRINTF_STATE_LENGTH_SHORT   2
-#define PRINTF_STATE_LENGTH_LONG    3
-#define PRINTF_STATE_SPEC           4
-
-#define PRINTF_LENGTH_DEFAULT       0
-#define PRINTF_LENGTH_SHORT_SHORT   1
-#define PRINTF_LENGTH_SHORT         2
-#define PRINTF_LENGTH_LONG          3
-#define PRINTF_LENGTH_LONG_LONG     4
-
 
 void fprintf_unsigned(uint8_t file, unsigned long long number, int radix, int color) {
     char hexChars[17] = "0123456789abcdef";
