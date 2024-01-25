@@ -166,7 +166,6 @@ int TASK_add_task(Task* task) {
 	return task->pid;
 }
 
-// TODO: don`t return dead processes 
 CPUState* TASK_task_switch(CPUState* state) {
 	i686_disableInterrupts();
 

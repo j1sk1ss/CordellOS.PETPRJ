@@ -69,14 +69,14 @@ void syscall(SYSCall* regs) {
 
         case SYS_MALLOC:
             uint32_t size = regs->ebx;
-            void* allocated_memory = malloc(size);
+            void* allocated_memory = kmalloc(size);
             regs->eax = (uint32_t)allocated_memory;
         break;
 
         case SYS_FREE:
             void* ptr_to_free = (void*)regs->ebx;
             if (ptr_to_free != NULL)
-                free(ptr_to_free);
+                kfree(ptr_to_free);
         break;
 
         case SYS_READ_FILE:
@@ -94,6 +94,7 @@ void syscall(SYSCall* regs) {
             FAT_edit_content(wfile_path, fdata);
         break;
 
+        // TODO: Don't copy. Just send pointer to allocated dir
         case SYS_OPENDIR:
             char* path = (char*)regs->ebx;
             struct FATDirectory* user_dir = (struct FATDirectory*)regs->ecx;

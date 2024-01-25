@@ -9,6 +9,8 @@
 #include "date_time.h"
 #include "tasking.h"
 
+#include "../../libs/include/fatlib.h"
+
 //   ____  _   _ _____ _     _     
 //  / ___|| | | | ____| |   | |    
 //  \___ \| |_| |  _| | |   | |    

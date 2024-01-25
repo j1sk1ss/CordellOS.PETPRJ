@@ -11,13 +11,13 @@ uint32_t get_memory();
 void mm_init(uint32_t kernel_end);
 void mm_reset();
 
-void* malloc(size_t size);
-void* pmalloc();
+void* kmalloc(size_t size);
+void* kpmalloc();
 
-void* realloc(void* ptr, size_t size);
-void* calloc(size_t nelem, size_t elsize);
+void* krealloc(void* ptr, size_t size);
+void* kcalloc(size_t nelem, size_t elsize);
 
-void free(void *mem);
-void pfree(void* mem);
+void kfree(void *mem);
+void kpfree(void* mem);
 
 void consolidate_free_blocks();

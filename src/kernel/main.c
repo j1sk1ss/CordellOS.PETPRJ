@@ -146,7 +146,7 @@ void kernel_main(void) {
     // - Idle task
     //===================
 
-        mm_reset();
+        mm_reset(); // TODO: This is odd. Not normal when we should reset manager
         START_PROCESS("idle", FAT_ELF_execute_content("boot\\userl\\userl-s.elf", NULL, NULL));
         TASK_start_tasking();
 

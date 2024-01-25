@@ -67,7 +67,7 @@ char* FATLIB_change_path(const char* currentPath, const char* content) {
             strncpy(parentPath, currentPath, parentPathLen);
             parentPath[parentPathLen] = '\0';
 
-            free((void*)currentPath);
+            free(currentPath);
             currentPath = parentPath;
         }
     } else {
@@ -84,7 +84,7 @@ char* FATLIB_change_path(const char* currentPath, const char* content) {
         
         strcat(newPath, content);
 
-        free((void*)currentPath);
+        free(currentPath);
         currentPath = newPath;
     }
 

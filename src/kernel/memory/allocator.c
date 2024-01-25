@@ -57,7 +57,7 @@ uint32_t get_memory() {
 //	ALLOCATORS
 //================================
 
-	void free(void* mem) {
+	void kfree(void* mem) {
 		alloc_t* alloc = (mem - sizeof(alloc_t));
         if (alloc->status == 0 || alloc->size <= 0) return;
 
@@ -67,7 +67,7 @@ uint32_t get_memory() {
         consolidate_free_blocks(); // Unite free blocks (if they placed in one location)
 	}
 
-	void pfree(void* mem) {
+	void kpfree(void* mem) {
 		if(mem < pheap_begin || mem > pheap_end) return;
 
 		/* Determine which page is it */
@@ -80,7 +80,7 @@ uint32_t get_memory() {
 		return;
 	}
 
-	void* malloc(size_t size) {
+	void* kmalloc(size_t size) {
 		if (!size) return 0;
 
 		// Loop through blocks and find a block sized the same or bigger
@@ -119,7 +119,8 @@ uint32_t get_memory() {
 			mem += sizeof(uint32_t);
 		}
 
-		nalloc:;
+	nalloc:;
+
 		if (last_alloc + size + sizeof(alloc_t) >= heap_end) {
 			kprintf("Cannot allocate %d bytes! Out of memory.\n", size);
 			return -1;
@@ -139,19 +140,19 @@ uint32_t get_memory() {
 		return (char*)((uint32_t)alloc + sizeof(alloc_t));
 	}
 
-	void* pmalloc() {
+	void* kpmalloc() {
 		for(int i = 0; i < MAX_PAGE_ALIGNED_ALLOCS; i++) {
 			if (pheap_desc[i]) continue;
 
 			pheap_desc[i] = 1;
-			return (char*)(pheap_begin + i * 4096);
+			return (char*)(pheap_begin + i * PAGE_SIZE);
 		}
 		
 		kprintf("pmalloc: FATAL: failure!\n");
 		return 0;
 	}
 
-	void* realloc(void* ptr, size_t size) {
+	void* krealloc(void* ptr, size_t size) {
 		void* new_data = NULL;
 		if (size) {
 			if(!ptr) return malloc(size);
@@ -166,7 +167,7 @@ uint32_t get_memory() {
 		return new_data;
 	}
 
-	void* calloc(size_t nelem, size_t elsize) {
+	void* kcalloc(size_t nelem, size_t elsize) {
 		void* tgt = malloc(nelem * elsize);
 		if (tgt != NULL) 
 			memset(tgt, 0, nelem * elsize);

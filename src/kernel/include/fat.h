@@ -1,13 +1,13 @@
 #ifndef FAT_H_
 #define FAT_H_
 
-#include "string.h"
-#include "ata.h"
-#include "memory.h"
-#include "elf.h"
-#include "date_time.h"
+#include "string.h"    // String lib
+#include "ata.h"       // Lib for reading and writing ATA PIO sectors
+#include "memory.h"    // Lib for working with memory
+#include "elf.h"       // Not important for base implementation. ELF executer
+#include "date_time.h" // Not important for base implementation. Date time getter from CMOS
 
-#include "../../libs/include/stdlib.h"
+#include "../../libs/include/stdlib.h"  // Allocators (basic malloc required)
 
 #define SECTOR_OFFSET		23000
 
@@ -129,6 +129,7 @@ typedef struct directory_entry {
 	unsigned char attributes;
 	unsigned char reserved0;
 	unsigned char creation_time_tenths;
+
 	unsigned short creation_time;
 	unsigned short creation_date;
 	unsigned short last_accessed;
@@ -136,28 +137,35 @@ typedef struct directory_entry {
 	unsigned short last_modification_time;
 	unsigned short last_modification_date;
 	unsigned short low_bits;
+
 	unsigned int file_size;
+
 } __attribute__((packed)) directory_entry_t;
 
 typedef struct fsInfo {
-	unsigned int lead_signature; //should contain 0x41615252
+	unsigned int  lead_signature;      //should contain 0x41615252
 	unsigned char reserved1[480];
-	unsigned int structure_signature; //should contain 0x61417272
-	unsigned int free_space; //contains last known free cluster count. 0xFFFFFFFF indicates count is unknown.
-	unsigned int last_written; //contains last-written cluster number to help FAT drivers find a free cluster. 0xFFFFFFFF indicates that cluster number is unknown.
+	
+	unsigned int  structure_signature; //should contain 0x61417272
+	unsigned int  free_space;          //contains last known free cluster count. 0xFFFFFFFF indicates count is unknown.
+	unsigned int  last_written;        //contains last-written cluster number to help FAT drivers find a free cluster. 0xFFFFFFFF indicates that cluster number is unknown.
+	
 	unsigned char reserved2[12];
-	unsigned int trail_signature; //should contain 0xAA550000
+	unsigned int  trail_signature;     //should contain 0xAA550000
+
 } __attribute__((packed)) FSInfo_t;
 
 typedef struct long_entry {
 	unsigned char order;
-	unsigned char first_five[10]; //first 5, 2-byte characters
-	unsigned char attributes; //MUST BE FILE_LONG_NAME
-	unsigned char type; //indicates a sub-component of a long name (leave as 0)
+	unsigned char first_five[10];      //first 5, 2-byte characters
+	unsigned char attributes;          //MUST BE FILE_LONG_NAME
+	unsigned char type;                //indicates a sub-component of a long name (leave as 0)
 	unsigned char checksum;
-	unsigned char next_six[12]; //next 6, 2-byte characters
-	unsigned short zero; //must be zero - otherwise meaningless
-	unsigned char last_two[4]; //last 2, 2-byte characters
+	unsigned char next_six[12];        //next 6, 2-byte characters
+
+	unsigned short zero;               //must be zero - otherwise meaningless
+	unsigned char last_two[4];         //last 2, 2-byte characters
+
 } __attribute__((packed)) long_entry_t;
 
 /* From file_system.h (CordellOS brunch FS_based_on_FAL) */
@@ -165,8 +173,8 @@ typedef struct long_entry {
 struct FATFile {
 	directory_entry_t file_meta;
 
-	int data_size;
-	uint32_t* data;
+	int data_size;  // Size of array 
+	uint32_t* data; // Array of clusters with file data
 
 	char extension[4];
 	char name[11];
@@ -215,58 +223,65 @@ extern unsigned int sectors_per_cluster;
 
 extern unsigned int ext_root_cluster;
 
-/////////////////////////////////////
+//===================================
 //   _____  _    ____  _     _____ 
 //  |_   _|/ \  | __ )| |   | ____|
 //    | | / _ \ |  _ \| |   |  _|  
 //    | |/ ___ \| |_) | |___| |___ 
 //    |_/_/   \_\____/|_____|_____|
-//
+//===================================
+
 	int FAT_initialize(); 
 	int FAT_read(unsigned int clusterNum);
 	int FAT_write(unsigned int clusterNum, unsigned int clusterVal);
-//	
-/////////////////////////////////////
 
-/////////////////////////////////////
+//===================================
+
+
+//===================================
 //    ____ _    _   _ ____ _____ _____ ____  
 //   / ___| |  | | | / ___|_   _| ____|  _ \ 
 //  | |   | |  | | | \___ \ | | |  _| | |_) |
 //  | |___| |__| |_| |___) || | | |___|  _ < 
 //   \____|_____\___/|____/ |_| |_____|_| \_\
-//
+//===================================
+
 	unsigned int FAT_cluster_allocate();
 	int FAT_cluster_deallocate(const unsigned int cluster);
 
 	uint8_t* FAT_cluster_read(unsigned int clusterNum);
 	int FAT_cluster_write(void* contentsToWrite, unsigned int clusterNum);
 	int FAT_cluster_clear(unsigned int clusterNum);
-//
-/////////////////////////////////////
 
-/////////////////////////////////////
+//===================================
+
+
+//===================================
 //   _____ _   _ _____ ______   __
 //  | ____| \ | |_   _|  _ \ \ / /
 //  |  _| |  \| | | | | |_) \ V / 
 //  | |___| |\  | | | |  _ < | |  
 //  |_____|_| \_| |_| |_| \_\|_| 
-//
+//===================================
+
 	struct FATDirectory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, short exclusive);
 	int FAT_directory_search(const char* filepart, const unsigned int cluster, directory_entry_t* file, unsigned int* entryOffset);
 	int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add);
 	int FAT_directory_remove(const unsigned int cluster, const char* fileName);
 	int FAT_directory_edit(const unsigned int cluster, directory_entry_t* oldMeta, directory_entry_t* newMeta);
 	struct directory_entry* FAT_create_entry(const char* filename, const char* ext, BOOL isDir, uint32_t firstCluster, uint32_t filesize);
-//
-/////////////////////////////////////
 
-/////////////////////////////////////
+//===================================
+
+
+//===================================
 //    ____ ___  _   _ _____ _____ _   _ _____ 
 //   / ___/ _ \| \ | |_   _| ____| \ | |_   _|
 //  | |  | | | |  \| | | | |  _| |  \| | | |  
 //  | |__| |_| | |\  | | | | |___| |\  | | |  
 //   \____\___/|_| \_| |_| |_____|_| \_| |_|  
-//
+//===================================
+
 	int FAT_content_exists(const char* filePath);
 	struct FATContent* FAT_get_content(const char* filePath);
 	char* FAT_read_content(struct FATContent* data);
@@ -276,16 +291,18 @@ extern unsigned int ext_root_cluster;
 	void FAT_edit_content(const char* filePath, char* newData);
 	int FAT_ELF_execute_content(char* path, int args, char* argv[]);
 	int FAT_change_meta(const char* filePath, directory_entry_t* newMeta);
-//
-/////////////////////////////////////
 
-/////////////////////////////////////
+//===================================
+
+
+//===================================
 //    ___ _____ _   _ _____ ____  
 //   / _ \_   _| | | | ____|  _ \ 
 //  | | | || | | |_| |  _| | |_) |
 //  | |_| || | |  _  | |___|  _ < 
 //   \___/ |_| |_| |_|_____|_| \_\
-//
+//=================================== 
+
 	unsigned short FAT_current_time();
 	unsigned char FAT_current_time_temths();
 	unsigned short FAT_current_date();
@@ -300,9 +317,6 @@ extern unsigned int ext_root_cluster;
 	void FAT_unload_files_system(struct FATFile* file);
 	void FAT_unload_content_system(struct FATContent* content);
 
-	char* FAT_change_path(const char* currentPath, const char* newDir);
-	char* FAT_get_current_path();
-	void FAT_set_current_path(char* path);
-//
-/////////////////////////////////////
+//===================================
+
 #endif
