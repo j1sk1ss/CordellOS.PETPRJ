@@ -3,23 +3,20 @@
 page_directory *current_page_directory = 0;
 
 // Get entry in page table for given address
-pt_entry *get_pt_entry(page_table *pt, virtual_address address)
-{
+pt_entry *get_pt_entry(page_table *pt, virtual_address address) {
     if (pt) return &pt->entries[PT_INDEX(address)];
     return 0;
 }
 
 // Get entry in page directory for given address
-pd_entry *get_pd_entry(page_table *pd, virtual_address address)
-{
+pd_entry *get_pd_entry(page_table *pd, virtual_address address) {
     if (pd) return &pd->entries[PT_INDEX(address)];
     return 0;
 }
 
 // Return a page for a given virtual address in the current
 //   page directory
-pt_entry *get_page(const virtual_address address)
-{
+pt_entry *get_page(const virtual_address address) {
     // Get page directory
     page_directory *pd = current_page_directory; 
 
@@ -35,8 +32,7 @@ pt_entry *get_page(const virtual_address address)
 }
 
 // Allocate a page of memory
-void *allocate_page(pt_entry *page) 
-{
+void *allocate_page(pt_entry *page) {
     void *block = allocate_blocks(1);
     if (block) {
         // Map page to block
@@ -48,8 +44,7 @@ void *allocate_page(pt_entry *page)
 }
 
 // Free a page of memory
-void free_page(pt_entry *page)
-{
+void free_page(pt_entry *page) {
     void *address = (void *)PAGE_PHYS_ADDRESS(page);
     if (address) free_blocks(address, 1);
 
@@ -57,22 +52,20 @@ void free_page(pt_entry *page)
 }
 
 // Set the current page directory
-bool set_page_directory(page_directory *pd)
-{
+bool set_page_directory(page_directory *pd) {
     if (!pd) return false;
 
     current_page_directory = pd;
 
     // CR3 (Control register 3) holds address of the current page directory
-    __asm__ __volatile__ ("movl %%EAX, %%CR3" : : "a"(current_page_directory) );
+    asm ("movl %%EAX, %%CR3" : : "a"(current_page_directory) );
 
     return true;
 }
 
 // Flush a single page from the TLB (translation lookaside buffer)
-void flush_tlb_entry(virtual_address address)
-{
-    __asm__ __volatile__ ("cli; invlpg (%0); sti" : : "r"(address) );
+void flush_tlb_entry(virtual_address address) {
+    asm ("cli; invlpg (%0); sti" : : "r"(address) );
 }
 
 // Map a page
@@ -116,8 +109,7 @@ bool map_page(void *phys_address, void *virt_address)
 }
 
 // Unmap a page
-void unmap_page(void *virt_address)
-{
+void unmap_page(void *virt_address) {
     pt_entry *page = get_page((uint32_t)virt_address);
 
     SET_FRAME(page, 0);     // Set physical address to 0 (effectively this is now a null pointer)
@@ -125,26 +117,22 @@ void unmap_page(void *virt_address)
 }
 
 // Initialize virtual memory manager
-bool initialize_virtual_memory_manager(uint32_t kernel_address)
-{
+bool initialize_virtual_memory_manager(uint32_t kernel_address) {
     // Create a default page directory
-    page_directory *dir = (page_directory *)allocate_blocks(3);
-
+    page_directory* dir = (page_directory*)allocate_blocks(3);
     if (!dir) return false; // Out of memory
-
+    
     // Clear page directory and set as current
     memset(dir, 0, sizeof(page_directory));
     for (uint32_t i = 0; i < 1024; i++)
         dir->entries[i] = 0x02; // Supervisor, read/write, not present
 
     // Allocate page table for 0-4MB
-    page_table *table = (page_table *)allocate_blocks(1);
-
+    page_table* table = (page_table*)allocate_blocks(1);
     if (!table) return false;   // Out of memory
 
     // Allocate a 3GB page table
-    page_table *table3G = (page_table *)allocate_blocks(1);
-
+    page_table* table3G = (page_table*)allocate_blocks(1);
     if (!table3G) return false;   // Out of memory
 
     // Clear page tables
@@ -186,10 +174,17 @@ bool initialize_virtual_memory_manager(uint32_t kernel_address)
     SET_FRAME(entry2, (physical_address)table3G); // Default dir entry points to 3GB page table
 
     // Switch to page directory
-    set_page_directory(dir);
-
+    if (set_page_directory(dir) == false) {
+        return false;
+    }
+    
     // Enable paging: Set PG (paging) bit 31 and PE (protection enable) bit 0 of CR0
-    __asm__ __volatile__ ("movl %CR0, %EAX; orl $0x80000001, %EAX; movl %EAX, %CR0");
+    asm (
+        "movl %%cr0, %%eax;"
+        "orl $0x80000001, %%eax;"
+        "movl %%eax, %%cr0"
+        : : : "eax"
+    );
 
     return true;
 }

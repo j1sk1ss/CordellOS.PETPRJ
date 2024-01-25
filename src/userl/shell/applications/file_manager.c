@@ -85,7 +85,7 @@ void open_file_manager(struct User* user, char* path) {
 
         else if (user_action == F1_BUTTON) {
             cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nDIR NAME: ");
-            char* dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+            char* dir_name = input_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
             mkdir(path, dir_name);
             free(dir_name); 
 
@@ -95,7 +95,7 @@ void open_file_manager(struct User* user, char* path) {
 
         else if (user_action == F2_BUTTON) {
             cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nFILE NAME: ");
-            char* file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+            char* file_name = input_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
             mkfile(path, file_name);
             free(file_name);
 
@@ -136,7 +136,7 @@ void execute_item(struct User* user, char action_type, char* path) {
                 else if (action_type == BACKSPACE_BUTTON) {
                     printf("\nDELETE? (Y/N): ");
                     while (1) {
-                        char* answer = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                        char* answer = input_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
                         if (strcmp(answer, "y") == 0) {
                             rmcontent(path, currentDir->name);
                             free(answer);
@@ -150,7 +150,7 @@ void execute_item(struct User* user, char action_type, char* path) {
 
                 else if (action_type == F4_BUTTON) { 
                     cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW DIR NAME: ");
-                    char* new_dir_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                    char* new_dir_name = input_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
                     udirectory_entry_t* new_meta = FATLIB_create_entry(new_dir_name, NULL, 1, NULL, NULL);
                     path = (FATLIB_change_path(path, currentDir->directory_meta.file_name));
@@ -233,10 +233,10 @@ void execute_item(struct User* user, char action_type, char* path) {
 
                                     case RENAME_POS:
                                         cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW FILE NAME: ");
-                                        char* new_file_name = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                                        char* new_file_name = input_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
                                         cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW FILE EXT: ");
-                                        char* new_file_ext = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                                        char* new_file_ext = input_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
                                         udirectory_entry_t* new_meta = FATLIB_create_entry(new_file_name, new_file_ext, 0, NULL, NULL);
 
@@ -253,7 +253,7 @@ void execute_item(struct User* user, char action_type, char* path) {
                                     case DELETE_POS:
                                         printf("\nDELETE? (Y/N): ");
                                         
-                                        char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                                        char* user_choose = input_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
                                         if (strcmp(user_choose, "y") == 0) {
                                             rmcontent(path, currentFile->name);
                                         }
@@ -364,7 +364,7 @@ void execute_item(struct User* user, char action_type, char* path) {
                     else if (action_type == BACKSPACE_BUTTON) {
                         printf("\nDelete? (Y/N): ");
                                         
-                        char* user_choose = keyboard_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                        char* user_choose = input_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
                         if (strcmp(user_choose, "y") == 0) {
                             rmcontent(path, name);
                         }

@@ -1,9 +1,7 @@
-#include <stddef.h>
-#include <stdint.h>
-
 #include "../include/allocator.h"
 
-#define MAX_PAGE_ALIGNED_ALLOCS 32
+#include <stddef.h>
+#include <stdint.h>
 
 typedef struct {
 	uint8_t status;
@@ -16,19 +14,21 @@ uint32_t heap_end       = 0;
 uint32_t heap_begin     = 0;
 uint32_t pheap_begin    = 0;
 uint32_t pheap_end      = 0;
-uint8_t *pheap_desc     = 0;
+
+uint8_t* pheap_desc     = 0;
+
 uint32_t memory_used    = 0;
 
 uint32_t get_memory() {
-	return last_alloc;
+	return memory_used;
 }
 
-///////////////////////////////////////
-//
+//================================
 //	ALLOCATORS INITIALIZATION
-//
+//================================
+
 	void mm_init(uint32_t kernel_end) {
-		alloc_start = kernel_end;
+		alloc_start = kernel_end + 0x1000;
 
 		last_alloc  = kernel_end + 0x1000;
 		heap_begin  = last_alloc;
@@ -48,19 +48,23 @@ uint32_t get_memory() {
 		heap_end    = pheap_begin;
 
 		memset((char*)heap_begin, 0, heap_end - heap_begin);
-		pheap_desc = (uint8_t *)malloc(MAX_PAGE_ALIGNED_ALLOCS);
+		pheap_desc = (uint8_t*)malloc(MAX_PAGE_ALIGNED_ALLOCS);
 	}
-//
+
+//================================
 //	ALLOCATORS INITIALIZATION
-//
-//////////////////////////////////////
-//
+//================================
 //	ALLOCATORS
-//
+//================================
+
 	void free(void* mem) {
 		alloc_t* alloc = (mem - sizeof(alloc_t));
+        if (alloc->status == 0 || alloc->size <= 0) return;
+
 		memory_used -= alloc->size + sizeof(alloc_t);
 		alloc->status = 0;
+
+        consolidate_free_blocks(); // Unite free blocks (if they placed in one location)
 	}
 
 	void pfree(void* mem) {
@@ -69,7 +73,7 @@ uint32_t get_memory() {
 		/* Determine which page is it */
 		uint32_t ad = (uint32_t)mem;
 		ad -= pheap_begin;
-		ad /= 4096;
+		ad /= PAGE_SIZE;
 
 		/* Now, ad has the id of the page */
 		pheap_desc[ad] = 0;
@@ -80,9 +84,9 @@ uint32_t get_memory() {
 		if (!size) return 0;
 
 		// Loop through blocks and find a block sized the same or bigger
-		uint8_t *mem = (uint8_t*)heap_begin;
+		uint8_t* mem = (uint8_t*)heap_begin;
 		while ((uint32_t)mem < last_alloc) {
-			alloc_t *a = (alloc_t*)mem;
+			alloc_t* a = (alloc_t*)mem;
 
 			// If the alloc has no size, we have reaced the end of allocation
 			if (!a->size) goto nalloc;
@@ -92,7 +96,7 @@ uint32_t get_memory() {
 			if (a->status == 1) {
 				mem += a->size;
 				mem += sizeof(alloc_t);
-				mem += 4;
+				mem += sizeof(uint32_t);
 
 				continue;
 			}
@@ -112,7 +116,7 @@ uint32_t get_memory() {
 			// continue;
 			mem += a->size;
 			mem += sizeof(alloc_t);
-			mem += 4;
+			mem += sizeof(uint32_t);
 		}
 
 		nalloc:;
@@ -127,9 +131,9 @@ uint32_t get_memory() {
 
 		last_alloc += size;
 		last_alloc += sizeof(alloc_t);
-		last_alloc += 4;
+		last_alloc += sizeof(uint32_t);
 
-		memory_used += size + 4 + sizeof(alloc_t);
+		memory_used += size + sizeof(uint32_t) + sizeof(alloc_t);
 
 		memset((char*)((uint32_t)alloc + sizeof(alloc_t)), 0, size);
 		return (char*)((uint32_t)alloc + sizeof(alloc_t));
@@ -169,7 +173,39 @@ uint32_t get_memory() {
 
 		return tgt;
 	}
-//
+
+//================================
 //	ALLOCATORS
-//
-//////////////////////////////////////
+//================================
+//  MEMORY MANAGMENT
+//================================
+
+    void consolidate_free_blocks() {
+        uint8_t* mem = (uint8_t*)heap_begin;
+        while ((uint32_t)mem < last_alloc) {
+            alloc_t* current_alloc = (alloc_t*)mem;
+
+            if (!current_alloc->size) break;
+            if (current_alloc->status == 0) {
+                // Current block is free, try to merge with the next block
+                uint8_t* next_mem = mem + current_alloc->size + sizeof(alloc_t) + sizeof(uint32_t);
+
+                if ((uint32_t)next_mem < last_alloc) {
+                    alloc_t* next_alloc = (alloc_t*)next_mem;
+
+                    if (next_alloc->status == 0) {
+                        // Merge the two free blocks
+                        current_alloc->size += sizeof(alloc_t) + sizeof(uint32_t) + next_alloc->size;
+                        continue;  // Continue to check the next block
+                    }
+                }
+            }
+
+            // Move to the next block
+            mem += current_alloc->size + sizeof(alloc_t) + sizeof(uint32_t);
+        }
+    }
+
+//================================
+//  MEMORY MANAGMENT
+//================================

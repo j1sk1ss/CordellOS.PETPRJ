@@ -8,6 +8,8 @@
 #include "memory.h"
 #include "allocator.h"
 
+#include "../../libs/include/stdlib.h"
+
 #define TASKS_MAX             256
 
 #define PROCESS_STATE_ALIVE   0 

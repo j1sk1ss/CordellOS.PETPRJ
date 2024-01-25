@@ -1,7 +1,8 @@
 #pragma once
 
-#include "../include/stdlib.h"
-#include "../include/stdio.h"
+#include "stdlib.h"
+#include "stdio.h"
+#include "stdlib.h"
 
 #define FILE_READ_ONLY      0x01
 #define FILE_HIDDEN         0x02

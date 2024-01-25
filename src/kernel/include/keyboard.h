@@ -1,12 +1,15 @@
+#pragma once
+
 #include <stddef.h>
 #include <stdint.h>
 
-#include "allocator.h"
 #include "stdio.h"
 #include "string.h"
 #include "memory.h"
 #include "x86.h"
 #include "vga_text.h"
+
+#include "../../libs/include/stdlib.h"
 
 #define HIDDEN_KEYBOARD         0
 #define VISIBLE_KEYBOARD        1

@@ -5,8 +5,7 @@ int exit = 0;
 void kshell() {
     shell_start_screen();
     while (exit == 0) {
-        kprintf(FOREGROUND_GREEN, "\r\n[CORDELL OS]");
-        kprintf(" $%s> ", FAT_get_current_path());
+        kprintf("\r\n[KERNEL] $%s> ", FAT_get_current_path());
         char* command = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
         execute_command(command);
         free(command);
@@ -14,7 +13,7 @@ void kshell() {
 }
 
 void shell_start_screen() {
-    kprintf("Cordell Kernel [ver. 0.2c | 24.01.2024] \n\r");
+    kprintf("Cordell Kernel [ver. 0.2d | 25.01.2024] \n\r");
     kprintf("You are entering to light kernel shell. Use [aiuto] for getting help. \n\n\r");
 }
 

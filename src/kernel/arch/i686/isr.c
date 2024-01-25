@@ -37,7 +37,8 @@ void __attribute__((cdecl)) i686_isr_handler(Registers* regs) {
             //=====================
             // Create current state
 
-                CPUState* current_state = (CPUState*)calloc(1, sizeof(CPUState));
+                CPUState* current_state = (CPUState*)malloc(sizeof(CPUState));
+                memset(current_state, 0, sizeof(CPUState));
 
                 current_state->eflag = regs->eflag;
                 current_state->cs    = regs->cs;

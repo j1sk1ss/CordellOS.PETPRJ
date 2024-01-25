@@ -384,8 +384,6 @@ cont:
 
 void backspace_string(char** str, size_t size) {
     char* buffer = (char*)malloc(size);
-    memset(buffer, 0, sizeof(buffer));
-
     if (buffer == NULL) {
         free(buffer);
         return;

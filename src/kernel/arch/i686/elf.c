@@ -47,7 +47,9 @@ void* ELF_read(const char* path) {
 
     uint32_t buffer_size = mem_max - mem_min;
     uint32_t buffer_alignment = align - 1;
-    ELF_exe_buffer = calloc(1, buffer_size);
+
+    ELF_exe_buffer = malloc(buffer_size);
+    memset(ELF_exe_buffer, 0, sizeof(ELF_exe_buffer));
     if (ELF_exe_buffer == NULL) {
         kprintf("\r\nError: Could not malloc() enough memory for program\r\n");
         free(file_content);

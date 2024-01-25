@@ -4,31 +4,33 @@
 
 // Sets a block/bit in the memory map (mark block as used)
 void set_block(const uint32_t bit) {
-    memory_map[bit / 32] |= (1 << (bit % 32));
+    memory_map[bit / 32] |= (1u << (bit % 32));
 }
 
 // Unsets a block/bit in the memory map (mark block as free)
 void unset_block(const uint32_t bit) {
-    memory_map[bit / 32] &= ~(1 << (bit % 32));
+    memory_map[bit / 32] &= ~(1u << (bit % 32));
 }
 
 // Find the first free blocks of memory for a given size
 int32_t find_first_free_blocks(const uint32_t num_blocks) {
     if (num_blocks == 0) return -1; // Can't return no memory, error
 
-    for (uint32_t i = 0; i < max_blocks / 32; i++) {
-        if (memory_map[i] != 0xFFFFFFFF) {
+    // Test 32 blocks at a time
+    for (uint32_t i = 0; i < max_blocks / 32;  i++) {
+        if (memory_map[i] != 0xFFFFFFFFu) {
             // At least 1 bit is not set within this 32bit chunk of memory,
             //   find that bit by testing each bit
             for (int32_t j = 0; j < 32; j++) {
-                int32_t bit = 1 << j;
+                int32_t bit = 1u << j;
 
                 // If bit is unset/0, found start of a free region of memory
                 if (!(memory_map[i] & bit)) {
                     for (uint32_t count = 0, free_blocks = 0; count < num_blocks; count++) {
-                        if ((j+count > 31) && (i+1 <= max_blocks / 32)) if (!(memory_map[i+1] & (1 << ((j+count)-32))))  free_blocks++;
-                        else {
-                            if (!(memory_map[i] & (1 << (j+count)))) free_blocks++;
+                        if ((j + count > 31) && (i + 1 <= max_blocks / 32)) {
+                            if (!(memory_map[i + 1] & (1u << ((j + count) - 32)))) free_blocks++;
+                        } else {
+                            if (!(memory_map[i] & (1u << (j+count)))) free_blocks++;
                         }
 
                         if (free_blocks == num_blocks) // Found enough free space
@@ -63,9 +65,8 @@ void initialize_memory_region(const uint32_t base_address, const uint32_t size) 
         used_blocks--;
     }
 
-    // Always going to set the 1st block, ensure we can't alloc 0, and can't overwrite
-    //   interrupt tables IDT/IVT, Bios data areas, etc.
-    set_block(0);
+    // Set 0 first block (bootloader, kernel data etc.)
+    // set_block(0);
 }
 
 // De-initialize region of memory (sets blocks as used/reserved)
@@ -80,12 +81,12 @@ void deinitialize_memory_region(const uint32_t base_address, const uint32_t size
 }
 
 // Allocate blocks of memory
-uint32_t *allocate_blocks(const uint32_t num_blocks) {
+uint32_t* allocate_blocks(const uint32_t num_blocks) {
     // If # of free blocks left is not enough, we can't allocate any more, return
     if ((max_blocks - used_blocks) <= num_blocks) return 0;   
 
     int32_t starting_block = find_first_free_blocks(num_blocks);
-    if (starting_block == -1) return 0;     // Couldn't find that many blocks in a row to allocate
+    if (starting_block == -1) return NULL;     // Couldn't find that many blocks in a row to allocate
 
     // Found free blocks, set them as used
     for (uint32_t i = 0; i < num_blocks; i++)
@@ -94,9 +95,8 @@ uint32_t *allocate_blocks(const uint32_t num_blocks) {
     used_blocks += num_blocks;  // Blocks are now used/reserved, increase count
 
     // Convert blocks to bytes to get start of actual RAM that is now allocated
-    uint32_t address = starting_block * BLOCK_SIZE; 
-
-    return (uint32_t *)address;  // Physical memory location of allocated blocks
+    uint32_t address = starting_block * BLOCK_SIZE + (uint32_t)memory_map;
+    return (uint32_t*)address;  // Physical memory location of allocated blocks
 }
 
 // Free blocks memory

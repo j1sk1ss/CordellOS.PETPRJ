@@ -27,7 +27,7 @@ extern uint32_t kernel_end;
 //      1) Multiboot struct                                       [V]
 //      2) Phys and Virt manages                                  [ ]
 //      3) ELF check v_addr                                       [ ]
-//      4) Paging (create error with current malloc) / allocators [ ]
+//      4) Paging (create error with current malloc) / allocators [V]
 //          4.1) Tasking with paging                              [ ]
 //          4.2) ELF exec with tasking and paging                 [ ]
 //      5) VBE / VESA                                             [ ]
@@ -52,10 +52,15 @@ void kernel_main(void) {
     // - Phys blocks
     // - Virt pages
     //===================
+    
+        // uint32_t total_memory = memory_map->base_addr + memory_map->length - 1;
+        // initialize_memory_manager(&kernel_end + MEM_OFFSET, total_memory - (kernel_end + MEM_OFFSET));
+        // initialize_memory_region(&kernel_end + MEM_OFFSET, total_memory - (kernel_end + MEM_OFFSET));
 
-        uint32_t total_memory = memory_map->base_addr + memory_map->length - 1;
-        initialize_memory_manager(&kernel_end, total_memory);
-        initialize_virtual_memory_manager(KERNEL_POS);
+        // if (initialize_virtual_memory_manager(&kernel_end + MEM_OFFSET) == false) {
+        //     kprintf("[kernel.c 64] Virtual memory can`t be init.\n");
+        //     goto end;
+        // }
 
     //===================
 
@@ -141,6 +146,7 @@ void kernel_main(void) {
     // - Idle task
     //===================
 
+        mm_reset();
         START_PROCESS("idle", FAT_ELF_execute_content("boot\\userl\\userl-s.elf", NULL, NULL));
         TASK_start_tasking();
 

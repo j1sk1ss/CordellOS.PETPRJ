@@ -188,7 +188,9 @@ void init_users() {
 
             if (strlen(user_name) > 0 && strlen(pass) > 0)
                 if (strstr(parsed_name, user_name) == 0 && strstr(parsed_password, pass) == 0 && all != 1) {
-                    free(lines[position]);
+                    while (line_index >= 0) 
+                        free(lines[line_index--]);
+                    
                     free(lines);
                     free(data); 
 

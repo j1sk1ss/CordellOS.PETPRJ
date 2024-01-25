@@ -5,7 +5,8 @@
 TaskManager* taskManager;
 
 void TASK_task_init() {
-	taskManager = (TaskManager*)calloc(1, sizeof(TaskManager));
+	taskManager = (TaskManager*)malloc(sizeof(TaskManager));
+	memset(taskManager, 0, sizeof(TaskManager));
 
     taskManager->tasksCount  = 0;
     taskManager->currentTask = -1;

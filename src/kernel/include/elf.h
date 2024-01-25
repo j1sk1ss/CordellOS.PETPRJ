@@ -6,8 +6,10 @@
 #include "fat.h"
 #include "memory.h"
 #include "stdio.h"
+#include "allocator.h"
 
 #include "../../libs/include/math.h"
+#include "../../libs/include/stdlib.h"
 
 extern void* ELF_exe_buffer;
 

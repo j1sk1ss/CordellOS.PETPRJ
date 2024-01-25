@@ -88,6 +88,29 @@ void* malloc(uint32_t size) {
     return allocated_memory;
 }
 
+void* realloc(void* ptr, size_t size) {
+    void* new_data = NULL;
+    if (size) {
+        if(!ptr) return malloc(size);
+
+        new_data = malloc(size);
+        if(new_data) {
+            memcpy(new_data, ptr, size);
+            free(ptr);
+        }
+    }
+
+    return new_data;
+}
+
+void* calloc(size_t nelem, size_t elsize) {
+    void* tgt = malloc(nelem * elsize);
+    if (tgt != NULL) 
+        memset(tgt, 0, nelem * elsize);
+
+    return tgt;
+}
+
 //====================================================================
 //  Free alocated memory
 //  EBX - pointer to allocated memory

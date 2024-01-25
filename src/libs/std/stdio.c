@@ -139,7 +139,7 @@ char wait_char() {
 //  EAX - interrupt / buffer
 //  EDX - color
 //  EBX - mode
-char* keyboard_read(int mode, uint8_t color) {
+char* input_read(int mode, uint8_t color) {
     char* buffer;
     __asm__ volatile(
         "movl $19, %%eax\n"

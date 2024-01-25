@@ -7,6 +7,8 @@
 #include "elf.h"
 #include "date_time.h"
 
+#include "../../libs/include/stdlib.h"
+
 #define SECTOR_OFFSET		23000
 
 #define END_CLUSTER_32      0x0FFFFFF8

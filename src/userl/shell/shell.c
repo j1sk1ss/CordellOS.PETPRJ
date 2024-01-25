@@ -6,8 +6,6 @@
 //   ___) |  _  | |___| |___| |___ 
 //  |____/|_| |_|_____|_____|_____|
                                
-struct User* user = NULL;
-
 void shell() {
     char* curpath = (char*)malloc(4);
     strcpy(curpath, "BOOT");
@@ -31,12 +29,13 @@ void shell() {
     //  USER LOGIN
     //
         int attempts = 0;
+        struct User* user = NULL;
         while (user == NULL) {
             cprintf(FOREGROUND_LIGHT_RED, "\r\n[LOGIN]: ");
-            char* user_login = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
+            char* user_login = input_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
 
             cprintf(FOREGROUND_LIGHT_RED, "\r\n[PAROLA D'ORDINE]: ");
-            char* user_pass = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
+            char* user_pass = input_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
 
             user = login(user_login, user_pass, 0);
 
@@ -69,9 +68,9 @@ void shell() {
         cprintf(FOREGROUND_GREEN, "\r\n[%s: CORDELL OS]", user->name);
         printf(" $%s> ", curpath);
 
-        char* command = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
-        if (strstr(command, "cordell") == 0) execute_command(command + strlen("cordell") + 1, CORDELL_DERICTIVE, curpath);
-        else execute_command(command, DEFAULT_DERICTIVE, curpath);
+        char* command = input_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
+        if (strstr(command, "cordell") == 0) execute_command(command + strlen("cordell") + 1, CORDELL_DERICTIVE, curpath, user);
+        else execute_command(command, DEFAULT_DERICTIVE, curpath, user);
 
         free(command);
     }
@@ -86,14 +85,14 @@ void shell_start_screen() {
     cprintf(FOREGROUND_LIGHT_GREEN, "  dMP.aMP dMP.aMP dMP'AMF dMP.aMP dMP     dMP     dMP        dMP.aMP dP .dMP   \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, "  VMMMP'  VMMMP' dMP dMP dMMMMP' dMMMMMP dMMMMMP dMMMMMP     VMMMP'  VMMMP'    \r\n");
 
-    cprintf(FOREGROUND_LIGHT_AQUA, "\r\n\t Questo sistema operativo 'e in costruzione. [ver. 1.0.1b | 16.01.2024] \r\n");
+    cprintf(FOREGROUND_LIGHT_AQUA, "\r\n\t Questo sistema operativo 'e in costruzione. [ver. 1.0.1c | 25.01.2024] \r\n");
 }
 
 ///////////////////////////////////////
 //
 //  SHELL COMMANDS
 //
-    void execute_command(char* command, int cordell_derictive, char* path) {
+    void execute_command(char* command, int cordell_derictive, char* path, struct User* user) {
 
         ////////////////////////////////
         //
@@ -101,7 +100,7 @@ void shell_start_screen() {
         //
             if (cordell_derictive == CORDELL_DERICTIVE) {
                 cprintf(FOREGROUND_GREEN, "\r\n[PAROLA D'ORDINE]: ");
-                char* password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
+                char* password = input_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
                 int tries = 0;
 
                 char* pass = fread("boot\\shell.txt");
@@ -109,7 +108,7 @@ void shell_start_screen() {
                     cprintf(FOREGROUND_RED, "\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
                     free(password);
 
-                    password = keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
+                    password = input_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
                     if (++tries >= MAX_ATTEMPT_COUNT) 
                         return;
                 }
@@ -305,8 +304,8 @@ void shell_start_screen() {
                 }
 
                 for (int i = 0; i < tokenCount; i++)
-                    if (cordell_derictive == CORDELL_DERICTIVE) execute_command(lines[i], SUPER_DERICTIVE, path);
-                    else execute_command(lines[i], DEFAULT_DERICTIVE, path);
+                    if (cordell_derictive == CORDELL_DERICTIVE) execute_command(lines[i], SUPER_DERICTIVE, path, user);
+                    else execute_command(lines[i], DEFAULT_DERICTIVE, path, user);
 
                 free(command_for_split);
                 free(sector_data);

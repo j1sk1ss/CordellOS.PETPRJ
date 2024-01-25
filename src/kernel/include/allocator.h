@@ -3,7 +3,8 @@
 
 #include "memory.h"
 
-#define PAGE_SIZE 4096
+#define PAGE_SIZE               4096
+#define MAX_PAGE_ALIGNED_ALLOCS 32
 
 uint32_t get_memory();
 
@@ -18,3 +19,5 @@ void* calloc(size_t nelem, size_t elsize);
 
 void free(void *mem);
 void pfree(void* mem);
+
+void consolidate_free_blocks();

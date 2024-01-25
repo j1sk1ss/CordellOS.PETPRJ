@@ -78,7 +78,7 @@ void asm_executor(int *memory_array, int memory_index, int start, int end, struc
 		switch (intermediate_table[i]->opcode) {
 			case READ_INSTRUCTION:  
 				printf("\n\r");
-                memory_array[intermediate_table[i]->parameters[0]] = atoi(keyboard_read(VISIBLE_KEYBOARD, -1));
+                memory_array[intermediate_table[i]->parameters[0]] = atoi(input_read(VISIBLE_KEYBOARD, -1));
 			break; // READ Instruction //
 
 			case MOV_INSTRUCTION: 

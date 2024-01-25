@@ -94,7 +94,7 @@
 
 char get_char();
 char wait_char();
-char* keyboard_read(int mode, uint8_t color);
+char* input_read(int mode, uint8_t color);
 
 void directly_putclr(int x, int y, uint8_t color);
 void directly_putc(int x, int y, char character);

@@ -76,9 +76,8 @@ char get_character(char character) {
 
         char* keyboard_read(int mode, int color) {
             char* input = (char*)malloc(sizeof(char));  // Start with an empty string
-            memset(input, 0, sizeof(input));
-
             size_t input_size = 0;
+            
             while (1) {
                 if (x86_inb(0x64) & 0x1) {
                     char character = x86_inb(0x60);

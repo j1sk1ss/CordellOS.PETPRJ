@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "fatlib.h"
+#include "memory.h"
 
 void tstart(char* name, uint32_t address);
 void tkill();
@@ -11,6 +12,8 @@ void sleep(int milliseconds);
 void get_datetime(short* data);
 
 void* malloc(uint32_t size);
+void* realloc(void* ptr, size_t size);
+void* calloc(size_t nelem, size_t elsize);
 void free(void* ptr);
 
 int cexists(const char* path);

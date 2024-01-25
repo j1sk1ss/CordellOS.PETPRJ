@@ -61,4 +61,4 @@
 
 
 void shell();
-void execute_command(char* command, int cordell_derictive, char* path);
+void execute_command(char* command, int cordell_derictive, char* path, struct User* user);

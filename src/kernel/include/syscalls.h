@@ -8,6 +8,7 @@
 #include "fat.h"
 #include "time.h"
 #include "tasking.h"
+#include "allocator.h"
 
 // Screen managment through kprint 
 #define SYS_PRINT            0

@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include "string.h"
+#include "x86.h"
 #include "phys_manager.h"
 
 #define PAGES_PER_TABLE      1024
@@ -59,7 +60,7 @@ typedef struct {
     pd_entry entries[TABLES_PER_DIRECTORY];
 } page_directory;
 
-extern page_directory *current_page_directory;
+extern page_directory* current_page_directory;
 
 
 bool initialize_virtual_memory_manager(uint32_t kernell_address);
