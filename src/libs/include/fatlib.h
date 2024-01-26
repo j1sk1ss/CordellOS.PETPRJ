@@ -50,6 +50,7 @@ struct UFATFile {
 	char name[11];
 
     struct File* next;
+
 };
 
 struct UFATDirectory {
@@ -61,6 +62,7 @@ struct UFATDirectory {
 
     struct UFATFile* files;
     struct UFATDirectory* subDirectory;
+
 };
 
 struct UFATDate {
@@ -71,6 +73,13 @@ struct UFATDate {
 	uint16_t year;
 	uint16_t mounth;
 	uint16_t day;
+
+};
+
+struct UFATContent {
+	struct UFATDirectory* directory;
+	struct UFATFile* file;
+
 };
 
 void FATLIB_unload_directories_system(struct UFATDirectory* directory);
