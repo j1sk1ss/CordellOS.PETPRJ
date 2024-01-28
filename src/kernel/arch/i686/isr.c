@@ -33,7 +33,7 @@ void i686_isr_initialize() {
 void __attribute__((cdecl)) i686_isr_handler(Registers* regs) {
     if (regs->interrupt == 32) 
         if (taskManager->tasksCount > 0 && taskManager->currentTask >= 0) { // Check if multitasking enabled
-
+        
             //=====================
             // Create current state
 

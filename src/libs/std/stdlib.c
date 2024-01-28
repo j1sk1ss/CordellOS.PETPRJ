@@ -84,7 +84,7 @@ void* malloc(uint32_t size) {
         : "r" (size)
         : "%eax", "%ebx"
     );
-
+    
     return allocated_memory;
 }
 

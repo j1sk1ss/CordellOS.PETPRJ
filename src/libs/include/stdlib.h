@@ -5,6 +5,8 @@
 #include "fatlib.h"
 #include "memory.h"
 
+#define PAGE_SIZE 4096
+
 void tstart(char* name, uint32_t address);
 void tkill();
 

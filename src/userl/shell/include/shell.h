@@ -33,7 +33,7 @@
         #define COMMAND_USERS                           "users"
 
         #define COMMAND_CREATE_DIR                      "mkdir"
-        #define COMMAND_DELETE_DIR                      "rmdir"
+        #define COMMAND_CREATE_FILE                     "mkfile"
 
         #define COMMAND_IN_DIR                          "cd"
         #define COMMAND_OUT_DIR                         ".."
@@ -46,8 +46,7 @@
 
         #define COMMAND_GO_TO_MANAGER                   "mng"
 
-        #define COMMAND_CREATE_FILE                     "mkfile"
-        #define COMMAND_DELETE_FILE                     "rmfile"
+        #define COMMAND_DELETE_CONTENT                  "rmcontent"
 
         #define COMMAND_CALCULATOR                      "calc"
         #define COMMAND_SNAKE_GAME                      "snake"

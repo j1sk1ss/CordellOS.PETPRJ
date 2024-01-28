@@ -70,7 +70,7 @@ void syscall(SYSCall* regs) {
         case SYS_MALLOC:
             uint32_t size = regs->ebx;
             void* allocated_memory = kmalloc(size);
-            regs->eax = (uint32_t)allocated_memory;
+            regs->eax = allocated_memory;
         break;
 
         case SYS_FREE:

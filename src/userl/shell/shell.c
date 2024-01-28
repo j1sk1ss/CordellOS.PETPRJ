@@ -7,27 +7,28 @@
 //  |____/|_| |_|_____|_____|_____|
                                
 void shell() {
+
     char* curpath = (char*)malloc(4);
     strcpy(curpath, "BOOT");
     
     shell_start_screen();
     init_users();
     
-    /////////////
+    //=========================
     //  SHELL CORDELL PASSWORD
-    //
+    //=========================
+
         if (cexists("boot\\shell.txt") == 0) {
             mkfile("boot", "shell.txt");
             fwrite("boot\\shell.txt", "12345");
         }
-    //
-    //  SHELL CORDELL PASSWORD
-    /////////////
 
-    ////////////////////////////////////////////////////
-    //
+    //=========================
+    //  SHELL CORDELL PASSWORD
+    //=========================
     //  USER LOGIN
-    //
+    //=========================
+
         int attempts = 0;
         struct User* user = NULL;
         while (user == NULL) {
@@ -39,15 +40,15 @@ void shell() {
 
             user = login(user_login, user_pass, 0);
 
-            free(user_login);
             free(user_pass);
+            free(user_login);
 
             if (user == NULL)
                 if (++attempts > MAX_ATTEMPT_COUNT) {
                     cprintf(FOREGROUND_LIGHT_RED, "\r\nPassword o login errata, accedere alla modalita` ospite.\n\r");
                     user = (struct User*)malloc(sizeof(struct User*));
                     user->name = malloc(6);
-                    strcpy(user->name, "guest");
+                    strcpy(user->name, "guest\0");
                     
                     user->read_access   = 6;
                     user->write_access  = 6;
@@ -59,10 +60,10 @@ void shell() {
         }
 
         printf("\n");
-    //
+
+    //=========================
     //  USER LOGIN
-    //
-    ////////////////////////////////////////////////////
+    //=========================
 
     while (1) {
         cprintf(FOREGROUND_GREEN, "\r\n[%s: CORDELL OS]", user->name);
@@ -74,6 +75,8 @@ void shell() {
 
         free(command);
     }
+
+    free(curpath);
 }
 
 void shell_start_screen() {
@@ -85,19 +88,19 @@ void shell_start_screen() {
     cprintf(FOREGROUND_LIGHT_GREEN, "  dMP.aMP dMP.aMP dMP'AMF dMP.aMP dMP     dMP     dMP        dMP.aMP dP .dMP   \r\n");
     cprintf(FOREGROUND_LIGHT_GREEN, "  VMMMP'  VMMMP' dMP dMP dMMMMP' dMMMMMP dMMMMMP dMMMMMP     VMMMP'  VMMMP'    \r\n");
 
-    cprintf(FOREGROUND_LIGHT_AQUA, "\r\n\t Questo sistema operativo 'e in costruzione. [ver. 1.0.1c | 25.01.2024] \r\n");
+    cprintf(FOREGROUND_LIGHT_AQUA, "\r\n\t Questo sistema operativo 'e in costruzione. [ver. 1.0.2a | 28.01.2024] \r\n");
 }
 
-///////////////////////////////////////
-//
+//=========================
 //  SHELL COMMANDS
-//
+//=========================
+
     void execute_command(char* command, int cordell_derictive, char* path, struct User* user) {
 
-        ////////////////////////////////
-        //
+        //=========================
         //  PASSWORD VERIFICATION
-        //
+        //=========================
+
             if (cordell_derictive == CORDELL_DERICTIVE) {
                 cprintf(FOREGROUND_GREEN, "\r\n[PAROLA D'ORDINE]: ");
                 char* password = input_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
@@ -106,45 +109,40 @@ void shell_start_screen() {
                 char* pass = fread("boot\\shell.txt");
                 while (strcmp(password, pass) != 0) {
                     cprintf(FOREGROUND_RED, "\r\nPassword errata, riprova.\r\n[PAROLA D'ORDINE]: ");
-                    free(password);
 
+                    free(password);
                     password = input_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE);
-                    if (++tries >= MAX_ATTEMPT_COUNT) 
-                        return;
+
+                    if (++tries >= MAX_ATTEMPT_COUNT) return;
                 }
 
-                free(password);
                 free(pass);
+                free(password);
             }
 
-            if (cordell_derictive == SUPER_DERICTIVE)
-                cordell_derictive = CORDELL_DERICTIVE;
-        //
+            if (cordell_derictive == SUPER_DERICTIVE) cordell_derictive = CORDELL_DERICTIVE;
+
+        //=========================
         //  PASSWORD VERIFICATION
-        //
-        ////////////////////////////////
-        //
+        //=========================
         //  SPLIT COMMAND LINE TO ARGS
-        //
+        //=========================
+
             char* command_line[100];
             int tokenCount = 0;
 
-            char* command_for_split = (char*)malloc(strlen(command));
-            strcpy(command_for_split, command);
-
-            char* splitted = strtok(command_for_split, " ");
-            while(splitted) {
+            char* splitted = strtok(command, " ");
+            while(splitted != NULL) {
                 command_line[tokenCount++]  = splitted;
                 splitted                    = strtok(NULL, " ");
             }
 
-        //
+        //=========================
         //  SPLIT COMMAND LINE TO ARGS
-        //
-        ////////////////////////////////
-        //
+        //=========================
         //  DEFAULT SHELL COMMANDS CLEAR, ECHO AND HELP
-        //
+        //=========================
+
             if (strstr(command_line[0], COMMAND_HELP) == 0) {
                 printf("\r\n> Usa [%s] per ottenere aiuto",                                     COMMAND_HELP);
                 printf("\r\n> Utilizzare [%s] per la pulizia dello schermo",                    COMMAND_CLEAR);
@@ -158,10 +156,8 @@ void shell_start_screen() {
 
 
                 printf("\r\n> Usa [%s] <nome> per cretore dir",                                 COMMAND_CREATE_DIR);
-                printf("\r\n> Usa [%s] <nome> <path> per elimita dir",                          COMMAND_DELETE_DIR);
-
-                printf("\r\n> Usa [%s] <accesso [x x x]> <nome> <extension> per cretore file",  COMMAND_CREATE_FILE);
-                printf("\r\n> Usa [%s] <nome> <path> per elimita file",                         COMMAND_DELETE_FILE);
+                printf("\r\n> Usa [%s] <nome.extension> per cretore file",                      COMMAND_CREATE_FILE);
+                printf("\r\n> Usa [%s] <nome> per elimita file",                                COMMAND_DELETE_CONTENT);
 
                 printf("\r\n> Usa [%s] in dir per ottenere tutte le informazioni",              COMMAND_GO_TO_MANAGER);
                 printf("\r\n> Usa [%s] <nome> per entranto dir",                                COMMAND_IN_DIR);
@@ -184,121 +180,104 @@ void shell_start_screen() {
                 printf("\r\nGiorno: %i/%i/%i\tTempo: %i:%i:%i", data[3], data[4], data[5], 
                                                                 data[2], data[1], data[0]);
             }
-        //
+
+        //=========================
         //  DEFAULT SHELL COMMANDS CLEAR, ECHO AND HELP
-        //
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        //
+        //=========================
         //  FILE SYSTEM COMMANDS
-        //
+        //=========================
+
             else if (strstr(command_line[0], COMMAND_CREATE_DIR) == 0) mkdir(path, command_line[1]);
-            else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0) open_file_manager(user, path);                                             
-
+                                                       
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0) {
-                char* dname = malloc(strlen(command_line[1]));
-                strcpy(dname, command_line[1]);
-                str_uppercase(dname);
-
-                path = (FATLIB_change_path(path, dname));
-                if (cexists(path) == 0) {
-                    path = (FATLIB_change_path(path, NULL));
-                    printf("\nDirectory not exists.");
+                str_uppercase(command_line[1]);
+                char* dpath = FATLIB_change_path(path, command_line[1]);
+                if (cexists(dpath) == 0) {
+                    free(dpath);
+                    printf("\nLa directory non esiste.");
+                } else {
+                    free(path);
+                    path = dpath;
                 }
-
-                free(dname);
             }
             
             else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0) {
-                path = (FATLIB_change_path(path, NULL));
-                if (strlen(path) <= 1)
-                    path = "BOOT";
+                char* upath = FATLIB_change_path(path, NULL);
+                if (strlen(upath) <= 1) free(upath);
+                else {
+                    free(path);
+                    path = upath;
+                }
             }
             
-            else if (strstr(command_line[0], COMMAND_DELETE_DIR) == 0) {
-                path = (FATLIB_change_path(path, command_line[1]));
-                if (cexists(path) == 0) {
-                    path = (FATLIB_change_path(path, NULL));
-                    printf("Content is not a directory exists.\n");
+            else if (strstr(command_line[0], COMMAND_DELETE_CONTENT) == 0) {
+                char* rmpath = FATLIB_change_path(path, command_line[1]);
+                if (cexists(rmpath) == 0) {
+                    free(rmpath);
+                    printf("Il contenuto non esiste.\n");
                     return;
                 }
 
-                path = (FATLIB_change_path(path, NULL));
+                free(rmpath);
                 rmcontent(path, command_line[1]);
             }
             
             else if (strstr(command_line[0], COMMAND_CREATE_FILE) == 0) mkfile(path, command_line[1]);
 
-            else if (strstr(command_line[0], COMMAND_DELETE_FILE) == 0)  {    
-                path = (FATLIB_change_path(path, command_line[1]));
-                if (cexists(path) == 0) {
-                    path = (FATLIB_change_path(path, NULL));
-                    printf("Content is not a directory exists.\n");
-                    return;
-                }
-
-                path = (FATLIB_change_path(path, NULL));
-                rmcontent(path, command_line[1]);
-            }
-
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {
-                struct UFATDirectory* directory = opendir(path);
+                struct UFATDirectory* directory   = opendir(path);
                 struct UFATDirectory* current_dir = directory->subDirectory;
-                struct UFATFile* current_file = directory->files;
+                struct UFATFile* current_file     = directory->files;
 
-                if (current_dir != NULL) {
-                    printf("\r\n\t%s", current_dir->name);
+                printf("\n");
+                while (current_dir != NULL) {
+                    printf("\t%s", current_dir->name);
+                    current_dir = current_dir->next;
+                }
             
-                    while (current_dir->next != NULL) {
-                        current_dir = current_dir->next;
-                        printf("\t%s", current_dir->name);
-                    }
+                printf("\n");
+                while (current_file != NULL) {
+                    printf("\t%s.%s", current_file->name, current_file->extension);
+                    current_file = current_file->next;
                 }
 
-                if (current_file != NULL) {
-                    printf("\r\n\t%s.%s", current_file->name, current_file->extension);
-            
-                    while (current_file->next != NULL) {
-                        current_file = current_file->next;
-                        printf("\t%s.%s", current_file->name, current_file->extension);
-                    }
-                }
-
-                FATLIB_unload_files_system(current_file);
-                FATLIB_unload_directories_system(current_dir);
                 FATLIB_unload_directories_system(directory);
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_VIEW) == 0) {
-                path = (FATLIB_change_path(path, command_line[1]));
-                char* data = fread(path);
-                path = (FATLIB_change_path(path, NULL));
-
+                char* rpath = FATLIB_change_path(path, command_line[1]);
+                char* data = fread(rpath);
+                
                 printf("\r\n%s", data);
+
                 free(data);
+                free(rpath);
             }
-        //
+
+        //=========================
         //  FILE SYSTEM COMMANDS
-        //
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        //
+        //=========================
         //  APPLICATIONS
-        //
+        //=========================
+
+            else if (strstr(command_line[0], COMMAND_GO_TO_MANAGER) == 0) open_file_manager(user, path);  
+
             else if (strstr(command_line[0], COMMAND_FILE_EDIT) == 0) {
-                path = FATLIB_change_path(path, command_line[1]); 
-                text_editor_init(path, BACKGROUND_BLUE + FOREGROUND_BRIGHT_WHITE);
-                path = FATLIB_change_path(path, NULL);
+                char* edit_path = FATLIB_change_path(path, command_line[1]); 
+                text_editor_init(edit_path, BACKGROUND_BLACK + FOREGROUND_WHITE);
+                
+                free(edit_path);
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {
-                char* sector_data = fread(path);
-                char* command_for_split = (char*)malloc(strlen(sector_data));
-                strcpy(command_for_split, sector_data);
+                char* run_path    = FATLIB_change_path(path, command_line[1]);
+                char* sector_data = fread(run_path);
 
                 char* lines[100];
                 int tokenCount = 0;
 
-                char* splitted = strtok(command_for_split, "\n");
-                while(splitted) {
+                char* splitted = strtok(sector_data, "\n");
+                while(splitted != NULL) {
                     lines[tokenCount++] = splitted;
                     splitted = strtok(NULL, "\n");
                 }
@@ -307,24 +286,18 @@ void shell_start_screen() {
                     if (cordell_derictive == CORDELL_DERICTIVE) execute_command(lines[i], SUPER_DERICTIVE, path, user);
                     else execute_command(lines[i], DEFAULT_DERICTIVE, path, user);
 
-                free(command_for_split);
                 free(sector_data);
             }
-        //
+
+        //=========================
         //  APPLICATIONS  
-        //
-        ///////////////////////////////////////////////////////////////////////////////////////////
+        //=========================
 
-            else 
-                printf("\r\nComando sconosciuto. Forse hai dimenticato CORDELL?");
-
-
-        free(command_line);
-        free(command_for_split);
+            else printf("\r\nComando sconosciuto. Forse hai dimenticato CORDELL?");
 
         printf("\r\n");
     }
-//
+
+//=========================
 //  SHELL COMMANDS
-//
-////////////////////////////////////////////
+//=========================

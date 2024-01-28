@@ -130,11 +130,13 @@ void shell_start_screen() {
                     struct FATDirectory* current_dir = directory->subDirectory;
                     struct FATFile* current_file     = directory->files;
 
+                    kprintf("\n");
                     while (current_dir != NULL) {
                         kprintf("\t%s", current_dir->name);
                         current_dir = current_dir->next;
                     }
                 
+                    kprintf("\n");
                     while (current_file != NULL) {
                         kprintf("\t%s.%s", current_file->name, current_file->extension);
                         current_file = current_file->next;
@@ -155,7 +157,7 @@ void shell_start_screen() {
                 }
                 
                 struct FATContent* content = FAT_get_content(file_path);
-                char* data = FATLIB_read_content(content);
+                char* data = FAT_read_content(content);
 
                 kprintf("\r\n%s", data);
 
@@ -172,7 +174,7 @@ void shell_start_screen() {
                     return;
                 }
 
-                kprintf("\nCODE: [%i]\n", FATLIB_ELF_execute_content(exec_path, command_line[2], command_line[3]));
+                kprintf("\nCODE: [%i]\n", FAT_ELF_execute_content(exec_path, command_line[2], command_line[3]));
                 free(exec_path);
             }
 

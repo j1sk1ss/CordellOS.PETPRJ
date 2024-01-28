@@ -14,9 +14,7 @@ uint32_t heap_end       = 0;
 uint32_t heap_begin     = 0;
 uint32_t pheap_begin    = 0;
 uint32_t pheap_end      = 0;
-
 uint8_t* pheap_desc     = 0;
-
 uint32_t memory_used    = 0;
 
 uint32_t get_memory() {
@@ -37,7 +35,7 @@ uint32_t get_memory() {
 		heap_end    = pheap_begin;
 
 		memset((char*)heap_begin, 0, heap_end - heap_begin);
-		pheap_desc = (uint8_t *)malloc(MAX_PAGE_ALIGNED_ALLOCS);
+		pheap_desc = (uint8_t*)kmalloc(MAX_PAGE_ALIGNED_ALLOCS);
 	}
 
 	void mm_reset() {
@@ -48,7 +46,7 @@ uint32_t get_memory() {
 		heap_end    = pheap_begin;
 
 		memset((char*)heap_begin, 0, heap_end - heap_begin);
-		pheap_desc = (uint8_t*)malloc(MAX_PAGE_ALIGNED_ALLOCS);
+		pheap_desc = (uint8_t*)kmalloc(MAX_PAGE_ALIGNED_ALLOCS);
 	}
 
 //================================
@@ -96,7 +94,7 @@ uint32_t get_memory() {
 			if (a->status == 1) {
 				mem += a->size;
 				mem += sizeof(alloc_t);
-				mem += sizeof(uint32_t);
+				mem += 4;
 
 				continue;
 			}
@@ -116,7 +114,7 @@ uint32_t get_memory() {
 			// continue;
 			mem += a->size;
 			mem += sizeof(alloc_t);
-			mem += sizeof(uint32_t);
+			mem += 4;
 		}
 
 	nalloc:;
@@ -132,9 +130,9 @@ uint32_t get_memory() {
 
 		last_alloc += size;
 		last_alloc += sizeof(alloc_t);
-		last_alloc += sizeof(uint32_t);
+		last_alloc += 4;
 
-		memory_used += size + sizeof(uint32_t) + sizeof(alloc_t);
+		memory_used += size + 4 + sizeof(alloc_t);
 
 		memset((char*)((uint32_t)alloc + sizeof(alloc_t)), 0, size);
 		return (char*)((uint32_t)alloc + sizeof(alloc_t));
@@ -189,21 +187,21 @@ uint32_t get_memory() {
             if (!current_alloc->size) break;
             if (current_alloc->status == 0) {
                 // Current block is free, try to merge with the next block
-                uint8_t* next_mem = mem + current_alloc->size + sizeof(alloc_t) + sizeof(uint32_t);
+                uint8_t* next_mem = mem + current_alloc->size + sizeof(alloc_t) + 4;
 
                 if ((uint32_t)next_mem < last_alloc) {
                     alloc_t* next_alloc = (alloc_t*)next_mem;
 
                     if (next_alloc->status == 0) {
                         // Merge the two free blocks
-                        current_alloc->size += sizeof(alloc_t) + sizeof(uint32_t) + next_alloc->size;
+                        current_alloc->size += sizeof(alloc_t) + 4 + next_alloc->size;
                         continue;  // Continue to check the next block
                     }
                 }
             }
 
             // Move to the next block
-            mem += current_alloc->size + sizeof(alloc_t) + sizeof(uint32_t);
+            mem += current_alloc->size + sizeof(alloc_t) + 4;
         }
     }
 

@@ -4,7 +4,6 @@
 #include "include/fat.h"
 #include "include/elf.h"
 #include "include/kshell.h"
-#include "include/allocator.h"
 #include "include/tasking.h"
 #include "include/x86.h"
 #include "include/pit.h"
@@ -12,6 +11,8 @@
 #include "include/virt_manager.h"
 
 #include "multiboot.h"
+
+#include "../libs/include/stdlib.h"
 
 
 #define KERNEL_POS 0x00100000
@@ -71,7 +72,7 @@ void kernel_main(void) {
     //===================
 
         _init();
-
+        
     //===================
 
 
@@ -81,6 +82,7 @@ void kernel_main(void) {
     //===================
 
         mm_init(&kernel_end);
+        
 
     //===================
 
@@ -94,8 +96,8 @@ void kernel_main(void) {
     // - ISR initialization
     //===================
 
-        TASK_task_init();
         HAL_initialize();
+        TASK_task_init();
         
     //===================
 

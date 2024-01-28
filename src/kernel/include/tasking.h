@@ -6,7 +6,6 @@
 #include "x86.h"
 #include "stdio.h"
 #include "memory.h"
-#include "allocator.h"
 
 #include "../../libs/include/stdlib.h"
 

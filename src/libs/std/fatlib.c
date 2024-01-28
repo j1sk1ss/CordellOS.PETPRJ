@@ -67,8 +67,7 @@ char* FATLIB_change_path(const char* currentPath, const char* content) {
             strncpy(parentPath, currentPath, parentPathLen);
             parentPath[parentPathLen] = '\0';
 
-            free(currentPath);
-            currentPath = parentPath;
+            return strdup(parentPath);
         }
     } else {
         size_t newPathLen = strlen(currentPath) + strlen(content) + 2;
@@ -84,11 +83,8 @@ char* FATLIB_change_path(const char* currentPath, const char* content) {
         
         strcat(newPath, content);
 
-        free(currentPath);
-        currentPath = newPath;
+        return strdup(newPath);
     }
-
-    return strdup(currentPath);
 }
 
 void FATLIB_fatname2name(char* input, char* output) {
