@@ -1,6 +1,14 @@
 #pragma once
 
+#include "x86.h"
+#include "stdio.h"
+
 #include <stdint.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
 
     /////////////////
     //  COLORS

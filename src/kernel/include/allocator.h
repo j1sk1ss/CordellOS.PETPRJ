@@ -4,6 +4,8 @@
 #include <stddef.h>
 
 #include "memory.h"
+// #include "phys_manager.h"
+// #include "virt_manager.h"
 
 #define PAGE_SIZE               4096
 #define MAX_PAGE_ALIGNED_ALLOCS 32

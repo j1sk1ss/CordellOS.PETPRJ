@@ -8,8 +8,6 @@
 #include <include/vga_text.h>
 
 void HAL_initialize() {
-    VGA_clrscr();
-
     i686_gdt_initialize();
     i686_idt_initialize();
     i686_isr_initialize();

@@ -94,14 +94,9 @@ void syscall(SYSCall* regs) {
             FAT_edit_content(wfile_path, fdata);
         break;
 
-        // TODO: Don't copy. Just send pointer to allocated dir
         case SYS_OPENDIR:
             char* path = (char*)regs->ebx;
-            struct FATDirectory* user_dir = (struct FATDirectory*)regs->ecx;
-            struct FATDirectory* kdir = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(FAT_get_content(path)->directory->directory_meta), NULL, FALSE);
-
-            memcpy(user_dir, kdir, sizeof(struct FATDirectory));
-            FAT_unload_directories_system(kdir);
+            regs->eax = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(FAT_get_content(path)->directory->directory_meta), NULL, FALSE);
         break;
 
         case SYS_EXECUTE_FILE:
@@ -181,7 +176,7 @@ void syscall(SYSCall* regs) {
             int cpos_y = (int)regs->ecx;
             uint8_t new_color = (uint8_t)regs->edx;
 
-            VGA_putcolor(pos_x, pos_y, new_char);
+            VGA_putcolor(cpos_x, cpos_y, new_color);
         break;
 
         case SYS_CHANGE_META:

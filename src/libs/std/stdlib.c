@@ -172,13 +172,14 @@ void fwrite(const char* path, const char* data) {
 //  ECX - pointer to directory
 struct UFATDirectory* opendir(const char* path) {
     uint32_t path_ptr = (uint32_t)path;
-    struct UFATDirectory* directory = (struct UFATDirectory*)malloc(sizeof(struct UFATDirectory));
+    struct UFATDirectory* directory;
     __asm__ volatile(
         "movl $11, %%eax\n"
-        "movl %0, %%ebx\n"
-        "movl %1, %%ecx\n"
-        "int %2\n"
-        :
+        "movl %1, %%ebx\n"
+        "movl %2, %%ecx\n"
+        "int %3\n"
+        "movl %%eax, %0\n"
+        : "=r"(directory)
         : "r"(path_ptr), "r"(directory), "i"(SYSCALL_INTERRUPT)
         : "eax", "ebx", "ecx"
     );

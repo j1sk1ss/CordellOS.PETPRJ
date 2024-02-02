@@ -1,10 +1,4 @@
-#include <include/x86.h>
-
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "../../include/vga_text.h"
 
 const unsigned int SCREEN_WIDTH  = 80;      //  Default widgth of screens
 const unsigned int SCREEN_HEIGHT = 25;      //  Default height of screens

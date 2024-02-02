@@ -69,8 +69,7 @@ void flush_tlb_entry(virtual_address address) {
 }
 
 // Map a page
-bool map_page(void *phys_address, void *virt_address)
-{
+bool map_page(void *phys_address, void *virt_address) {
     // Get page
     page_directory *pd = current_page_directory;
 
@@ -131,28 +130,11 @@ bool initialize_virtual_memory_manager(uint32_t kernel_address) {
     page_table* table = (page_table*)allocate_blocks(1);
     if (!table) return false;   // Out of memory
 
-    // Allocate a 3GB page table
-    page_table* table3G = (page_table*)allocate_blocks(1);
-    if (!table3G) return false;   // Out of memory
-
     // Clear page tables
     memset(table, 0, sizeof(page_table));
-    memset(table3G, 0, sizeof(page_table));
-
-    // Identity map 1st 4MB of memory
-    for (uint32_t i = 0, frame = 0x0, virt = 0x0; i < 1024; i++, frame += PAGE_SIZE, virt += PAGE_SIZE) {
-        // Create new page
-        pt_entry page = 0;
-        SET_ATTRIBUTE(&page, PTE_PRESENT);
-        SET_ATTRIBUTE(&page, PTE_READ_WRITE);
-        SET_FRAME(&page, frame);
-
-        // Add page to 3GB page table
-        table3G->entries[PT_INDEX(virt)] = page;
-    }
 
     // Map kernel to 3GB+ addresses (higher half kernel)
-    for (uint32_t i = 0, frame = kernel_address, virt = 0xC0000000; i < 1024; i++, frame += PAGE_SIZE, virt += PAGE_SIZE) {
+    for (uint32_t i = 0, frame = kernel_address, virt = 0x0; i < 1024; i++, frame += PAGE_SIZE, virt += PAGE_SIZE) {
         // Create new page
         pt_entry page = 0;
         SET_ATTRIBUTE(&page, PTE_PRESENT);
@@ -163,27 +145,19 @@ bool initialize_virtual_memory_manager(uint32_t kernel_address) {
         table->entries[PT_INDEX(virt)] = page;
     }
 
-    pd_entry *entry = &dir->entries[PD_INDEX(0xC0000000)];
+    pd_entry *entry = &dir->entries[PD_INDEX(0x00000000)];
     SET_ATTRIBUTE(entry, PDE_PRESENT);
     SET_ATTRIBUTE(entry, PDE_READ_WRITE);
     SET_FRAME(entry, (physical_address)table); // 3GB directory entry points to default page table
 
-    pd_entry *entry2 = &dir->entries[PD_INDEX(0x00000000)];
-    SET_ATTRIBUTE(entry2, PDE_PRESENT);
-    SET_ATTRIBUTE(entry2, PDE_READ_WRITE);   
-    SET_FRAME(entry2, (physical_address)table3G); // Default dir entry points to 3GB page table
-
     // Switch to page directory
-    if (set_page_directory(dir) == false) {
-        return false;
-    }
+    if (set_page_directory(dir) == false) return false;
     
     // Enable paging: Set PG (paging) bit 31 and PE (protection enable) bit 0 of CR0
     asm (
-        "movl %%cr0, %%eax;"
-        "orl $0x80000001, %%eax;"
-        "movl %%eax, %%cr0"
-        : : : "eax"
+        "movl %cr0, %eax\n"
+        "orl $0x80000001, %eax\n"
+        "movl %eax, %cr0"
     );
 
     return true;

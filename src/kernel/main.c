@@ -21,12 +21,13 @@
 extern void _init();
 extern uint32_t kernel_base;
 extern uint32_t kernel_end;
+extern uint32_t grub_header_addr;
 
 //===================================================================
 // TODO List:
 //===================================================================
 //      1) Multiboot struct                                       [V]
-//      2) Phys and Virt manages                                  [ ]
+//      2) Phys and Virt manages                                  [?]
 //      3) ELF check v_addr                                       [ ]
 //      4) Paging (create error with current malloc) / allocators [V]
 //          4.1) Tasking with paging                              [ ]
@@ -40,13 +41,23 @@ extern uint32_t kernel_end;
 
 void kernel_main(void) {
 
-    struct multiboot_header* mb_header = (struct multiboot_header*)GRUB_HEADER_POS;
-    struct multiboot_memory_map_entry* memory_map = (struct multiboot_memory_map_entry*)mb_header->flags;
+    struct multiboot_header* mb_header = (struct multiboot_header*)(&grub_header_addr);
+    multiboot_info_t* mb_info          = (multiboot_info_t*)(&grub_header_addr);
 
-    if (mb_header->magic != GRUB_MAGIC) {
-        kprintf("[kernel.c 46] Multiboot error (Magic is wrong).\n");
+    if (mb_header->magic != MULTIBOOT2_HEADER_MAGIC) {
+        kprintf("[kernel.c 48] Multiboot error (Magic is wrong [%u]).\n", mb_header->magic);
         goto end;
     }
+
+    kprintf("MB FLAGS:        [0x%u]\n", mb_header->flags);
+    kprintf("MEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
+    kprintf("BOOT DEVICE:     [0x%u]\n", mb_info->boot_device);
+    kprintf("CMD LINE:        [%s]\n", mb_info->cmdline);
+
+    kprintf("VBE FRAMEBUFFER: [%u]\n", mb_info->framebuffer_addr);
+    kprintf("VBE MODE:        [%u]\n", mb_header->mode_type);
+    kprintf("VBE X:           [%u]\n", mb_info->framebuffer_height);
+    kprintf("VBE Y:           [%u]\n", mb_info->framebuffer_width);
 
     //===================
     // Phys & Virt memory manager initialization
@@ -55,7 +66,7 @@ void kernel_main(void) {
     //===================
     
         // uint32_t total_memory = memory_map->base_addr + memory_map->length - 1;
-        // initialize_memory_manager(&kernel_end + MEM_OFFSET, total_memory - (kernel_end + MEM_OFFSET));
+        // initialize_memory_manager(0x30000, total_memory);
         // initialize_memory_region(&kernel_end + MEM_OFFSET, total_memory - (kernel_end + MEM_OFFSET));
 
         // if (initialize_virtual_memory_manager(&kernel_end + MEM_OFFSET) == false) {
@@ -83,7 +94,6 @@ void kernel_main(void) {
 
         mm_init(&kernel_end);
         
-
     //===================
 
 
@@ -98,7 +108,7 @@ void kernel_main(void) {
 
         HAL_initialize();
         TASK_task_init();
-        
+
     //===================
 
 
@@ -155,5 +165,6 @@ void kernel_main(void) {
     //===================
     
 end:
+    kprintf("\n!!KERNEL END!!\n");
     for (;;);
 }
