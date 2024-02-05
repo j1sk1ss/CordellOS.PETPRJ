@@ -10,7 +10,7 @@ typedef struct {
     uint8_t Capabilities[4];
     uint32_t VideoModePtr;         // isa vbeFarPtr
     uint16_t TotalMemory;             // as # of 64KB blocks
-    uint8_t _Reserved[236+256];
+    uint8_t _Reserved[236 + 256];
 } __attribute__((packed)) VbeInfoBlock;
 
 typedef struct {

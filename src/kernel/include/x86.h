@@ -20,3 +20,4 @@ uint8_t __attribute__((cdecl)) i686_disableInterrupts();
 char __attribute__((cdecl)) x86_inputWait();
 
 void i686_io_wait();
+void i686_reboot();

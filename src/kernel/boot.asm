@@ -1,30 +1,46 @@
+; Some code taked from https://forum.osdev.org/viewtopic.php?f=1&t=28429
+
 ; Declare constants for the multiboot header.
 MBALIGN  equ  1 << 0            		  ; align loaded modules on page boundaries
 MEMINFO  equ  1 << 1            		  ; provide memory map
-; VBEMODE  equ  1 << 2 					  ; flag for VBE support
-MBFLAGS  equ  MBALIGN | MEMINFO ;| VBEMODE ; this is the Multiboot 'flag' field
+VBEMODE  equ  1 << 2 					  ; flag for VBE support
+MBFLAGS  equ  MBALIGN | MEMINFO | VBEMODE ; this is the Multiboot 'flag' field
 MAGIC    equ  0x1BADB002        		  ; 'magic number' lets bootloader find the header
 CHECKSUM equ -(MAGIC + MBFLAGS) 		  ; checksum of above, to prove we are multiboot
  
+HEADER_TAG_FB        equ 0x5
+HEADER_TAG_OPTIONAL  equ 0x1
+
 ; Declare a multiboot header that marks the program as a kernel. These are magic
 ; values that are documented in the multiboot standard. The bootloader will
 ; search for this signature in the first 8 KiB of the kernel file, aligned at a
 ; 32-bit boundary. The signature is in its own section so the header can be
 ; forced to be within the first 8 KiB of the kernel file.
 
-section .multiboot
-align 4
-	dd MAGIC
-	dd MBFLAGS
-	dd CHECKSUM
+; ============================
+;	MB STRUCT HEADER
+; ============================
 
-    ; dd 0 ; VBE mode info address
-    ; dd 0 ; VBE frame buffer address
-    ; dd 0 ; VBE frame buffer pitch
-    ; dd 800 ; VBE frame buffer width (example value)
-    ; dd 600 ; VBE frame buffer height (example value)
-    ; dd 32 ; VBE frame buffer bpp (example value)
+	section .multiboot
+	align 4
+
+	mb_header_start:
+		dd MAGIC
+		dd MBFLAGS
+		dd CHECKSUM
+
+		frame_buffer_start:
+			dd 0, 0, 0, 0, 0
+			dd 1  ; 1 - text mode, 0 - VGA mode
+			dd 1024, 768, 32
+		frame_buffer_end:
+
+	mb_header_end:
  
+; ============================
+;	MB STRUCT HEADER
+; ============================
+
 ; The multiboot standard does not define the value of the stack pointer register
 ; (esp) and it is up to the kernel to provide a stack. This allocates room for a
 ; small stack by creating a symbol at the bottom of it, then allocating 16384

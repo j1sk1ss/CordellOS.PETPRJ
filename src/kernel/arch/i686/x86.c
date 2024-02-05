@@ -1,5 +1,9 @@
 #include "../../include/x86.h"
 
+void i686_reboot() {
+    x86_outb(0x64, 0xFE);
+}
+
 uint16_t x86_inw(uint16_t port) {
     uint16_t r;
     asm("inw %1, %0" : "=a" (r) : "dN" (port));

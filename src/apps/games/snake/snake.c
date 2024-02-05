@@ -27,22 +27,25 @@
 #define N 100
 
 
+int globalVar = 1;
+
 int main(int args, char* argv[]) {
-	printf("SNAKE GAME v. 1.0\n");
+	clrscr();
+	printf("\nSNAKE GAME v. 1.0\nPress ENTER to start.\n");
     
     while (1) {
         char key = wait_char();
 		switch (key) {
 			case ENTER_BUTTON:
 				snake_start();
-				return -1;
+				return globalVar;
 
 			case F3_BUTTON:
-			return -1;
+			return globalVar;
 		}
     }
 
-	return args;
+	return globalVar;
 }
 
 typedef struct {
@@ -136,7 +139,7 @@ int loop(char map[V][H], int dead, int size, snake* snk, fruit* frt) {
 		if (input(map, dead, snk, size, frt, (*frt).x, (*frt).y) == -1) return -1;
 		update(map, snk, size, *frt);
 
-        sleep(10000);
+        sleep(1000);
 	} while (dead == 0);
 }
 

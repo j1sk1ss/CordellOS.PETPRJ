@@ -64,9 +64,6 @@ void initialize_memory_region(const uint32_t base_address, const uint32_t size) 
         unset_block(align++);
         used_blocks--;
     }
-
-    // Set 0 first block (bootloader, kernel data etc.)
-    // set_block(0);
 }
 
 // De-initialize region of memory (sets blocks as used/reserved)

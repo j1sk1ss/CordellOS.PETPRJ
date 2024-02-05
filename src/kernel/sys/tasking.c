@@ -48,10 +48,9 @@ Task* TASK_create_task(char* pname, uint32_t address) {
 	//=============================
 	// Allocate memory for new task
 
-		Task* task          = (Task*)malloc(sizeof(Task));
-		task->cpuState      = (CPUState*)malloc(sizeof(CPUState));
-
-		task->cpuState->esp = (uint32_t)malloc(PAGE_SIZE);
+		Task* task              = (Task*)malloc(sizeof(Task));
+		task->cpuState          = (CPUState*)malloc(sizeof(CPUState));
+		task->cpuState->esp     = (uint32_t)malloc(PAGE_SIZE);
 		uint32_t* stack_pointer = (uint32_t*)(task->cpuState->esp + PAGE_SIZE);
 
 		task->state = PROCESS_STATE_ALIVE;

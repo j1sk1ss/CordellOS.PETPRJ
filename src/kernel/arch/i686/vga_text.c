@@ -7,7 +7,7 @@ const uint8_t DEFAULT_COLOR      = 0x7;     //  Default color
 uint8_t* _screenBuffer = (uint8_t*)0xB8000; // Position of screen buffer in memory
 
 int _screenX = 0;                           //  Cursor position
-int _screenY = 0;                           //
+int _screenY = 0;
 
 
 int VGA_cursor_get_x() {

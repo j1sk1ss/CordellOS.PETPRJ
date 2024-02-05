@@ -46,6 +46,9 @@
 #define MULTIBOOT_INFO_VBE_INFO		    0x00000800
 #define MULTIBOOT_INFO_FRAMEBUFFER_INFO	0x00001000
 
+#define VBE_MODE                        0
+#define TEXT_MODE                       1
+
 #ifndef ASM_FILE
 
 typedef unsigned char		multiboot_uint8_t;

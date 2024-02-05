@@ -22,7 +22,7 @@ env.Append(
         env['PROJECTDIR'].Dir('src/libs')
     ],
 
-    ASFLAGS = [ '-I', env.Dir('.').srcnode(), '-f', 'elf' ]
+    ASFLAGS = [ '-I', env.Dir('.').srcnode(), '-f', 'elf32' ]
 )
 
 # Add boot.s to the sources
