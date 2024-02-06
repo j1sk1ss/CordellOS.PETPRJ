@@ -131,7 +131,6 @@ void free(void* ptr) {
 //  EAX - returned data
 char* fread(const char* path) {
     void* pointed_data;
-    uint32_t file_path_ptr = (uint32_t)path;
 
     __asm__ volatile(
         "movl $9, %%eax\n"
@@ -140,7 +139,7 @@ char* fread(const char* path) {
         "int %2\n"
         "movl %%eax, %0\n"
         : "=r"(pointed_data)
-        : "r"(file_path_ptr), "i"(SYSCALL_INTERRUPT)
+        : "r"((uint32_t)path), "i"(SYSCALL_INTERRUPT)
         : "eax", "ebx", "ecx", "edx"
     );
 
@@ -152,16 +151,13 @@ char* fread(const char* path) {
 //  EBX - path
 //  ECX - data
 void fwrite(const char* path, const char* data) {
-    uint32_t file_path_ptr = (uint32_t)path;
-    uint32_t data_ptr = (uint32_t)data;
-
     __asm__ volatile(
         "movl $10, %%eax\n"
         "movl %0, %%ebx\n"
         "movl %1, %%ecx\n"
         "int %2\n"
         :
-        : "r"(file_path_ptr), "r"(data_ptr), "i"(SYSCALL_INTERRUPT)
+        : "r"((uint32_t)path), "r"((uint32_t)data), "i"(SYSCALL_INTERRUPT)
         : "eax", "ebx", "ecx"
     );
 }
@@ -171,7 +167,6 @@ void fwrite(const char* path, const char* data) {
 //  EBX - path
 //  ECX - pointer to directory
 struct UFATDirectory* opendir(const char* path) {
-    uint32_t path_ptr = (uint32_t)path;
     struct UFATDirectory* directory;
     __asm__ volatile(
         "movl $11, %%eax\n"
@@ -180,7 +175,7 @@ struct UFATDirectory* opendir(const char* path) {
         "int %3\n"
         "movl %%eax, %0\n"
         : "=r"(directory)
-        : "r"(path_ptr), "r"(directory), "i"(SYSCALL_INTERRUPT)
+        : "r"((uint32_t)path), "r"(directory), "i"(SYSCALL_INTERRUPT)
         : "eax", "ebx", "ecx"
     );
 
@@ -193,7 +188,6 @@ struct UFATDirectory* opendir(const char* path) {
 //  ECX - result (0 - nexists)
 int cexists(const char* path) {
     int result;
-    uint32_t path_ptr = (uint32_t)path;
 
     __asm__ volatile(
         "movl $15, %%eax\n"
@@ -201,7 +195,7 @@ int cexists(const char* path) {
         "movl %1, %%ecx\n"
         "int %2\n"
         : 
-        : "r"(path_ptr), "r"(&result), "i"(SYSCALL_INTERRUPT)
+        : "r"((uint32_t)path), "r"(&result), "i"(SYSCALL_INTERRUPT)
         : "eax", "ebx"
     );
 
@@ -213,16 +207,13 @@ int cexists(const char* path) {
 //  EBX - path
 //  RCX - name (with extention)
 void mkfile(const char* path, const char* name) {
-    uint32_t file_path_ptr = (uint32_t)path;
-    uint32_t file_name_ptr = (uint32_t)name;
-
     __asm__ volatile(
         "movl $16, %%eax\n"
         "movl %0, %%ebx\n"
         "movl %1, %%ecx\n"
         "int %2\n"
         :
-        : "r"(file_path_ptr), "r"(file_name_ptr), "i"(SYSCALL_INTERRUPT)
+        : "r"((uint32_t)path), "r"((uint32_t)name), "i"(SYSCALL_INTERRUPT)
         : "eax", "ebx", "ecx"
     );
 }
@@ -232,16 +223,13 @@ void mkfile(const char* path, const char* name) {
 //  EBX - path
 //  ECX - name
 void mkdir(const char* path, const char* name) {
-    uint32_t dir_path_ptr = (uint32_t)path;
-    uint32_t dir_name_ptr = (uint32_t)name;
-
     __asm__ volatile(
         "movl $17, %%eax\n"
         "movl %0, %%ebx\n"
         "movl %1, %%ecx\n"
         "int %2\n"
         :
-        : "r"(dir_path_ptr), "r"(dir_name_ptr), "i"(SYSCALL_INTERRUPT)
+        : "r"((uint32_t)path), "r"((uint32_t)name), "i"(SYSCALL_INTERRUPT)
         : "eax", "ebx", "ecx"
     );
 }
@@ -251,16 +239,13 @@ void mkdir(const char* path, const char* name) {
 //  EBX - path
 //  ECX - name (if file - with extention)
 void rmcontent(const char* path, const char* name) {
-    uint32_t path_ptr = (uint32_t)path;
-    uint32_t content_ptr = (uint32_t)name;
-
     __asm__ volatile(
         "movl $18, %%eax\n"
         "movl %0, %%ebx\n"
         "movl %1, %%ecx\n"
         "int %2\n"
         :
-        : "r"(path_ptr), "r"(content_ptr), "i"(SYSCALL_INTERRUPT)
+        : "r"((uint32_t)path), "r"((uint32_t)name), "i"(SYSCALL_INTERRUPT)
         : "eax", "ebx", "ecx"
     );
 }
@@ -270,16 +255,13 @@ void rmcontent(const char* path, const char* name) {
 // EBX - path
 // ECX - new meta
 void chgcontent(const char* path, struct udirectory_entry* meta) {
-    uint32_t path_ptr = (uint32_t)path;
-    uint32_t content_ptr = (uint32_t)meta;
-
     __asm__ volatile(
         "movl $25, %%eax\n"
         "movl %0, %%ebx\n"
         "movl %1, %%ecx\n"
         "int %2\n"
         :
-        : "r"(path_ptr), "r"(content_ptr), "i"(SYSCALL_INTERRUPT)
+        : "r"((uint32_t)path), "r"((uint32_t)meta), "i"(SYSCALL_INTERRUPT)
         : "eax", "ebx", "ecx"
     );
 }
@@ -292,7 +274,6 @@ void chgcontent(const char* path, struct udirectory_entry* meta) {
 //  EDX - argv (array of args)
 int fexec(char* path, int args, char** argv) {
     int result = 0;
-    uint32_t file_path_ptr = (uint32_t)path;
 
     __asm__ volatile(
         "movl $12, %%eax\n"
@@ -302,7 +283,7 @@ int fexec(char* path, int args, char** argv) {
         "int %4\n"
         "movl %%eax, %0\n"
         : "=r"(result)
-        : "m"(file_path_ptr), "r"(args), "m"(argv), "i"(SYSCALL_INTERRUPT)
+        : "m"((uint32_t)path), "r"(args), "m"(argv), "i"(SYSCALL_INTERRUPT)
         : "eax", "ebx", "ecx", "edx"
     );
 

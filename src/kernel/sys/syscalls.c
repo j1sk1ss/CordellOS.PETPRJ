@@ -130,7 +130,7 @@ void syscall(SYSCall* regs) {
             char* mkdir_path = (char*)regs->ebx;
             char* mkdir_name = (char*)regs->ecx;
 
-            struct FATContent* mkdir_content = FAT_create_content(mkdir_name, TRUE, NULL);
+            struct FATContent* mkdir_content = FAT_create_content(mkdir_name, TRUE, "");
             FAT_put_content(mkdir_path, mkdir_content);
             FAT_unload_files_system(mkdir_content);
         break;

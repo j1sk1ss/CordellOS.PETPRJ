@@ -19,7 +19,7 @@ void kshell() {
 }
 
 void shell_start_screen() {
-    kprintf("Cordell Kernel [ver. 0.2e | 26.01.2024] \n\r");
+    kprintf("Cordell KShell [ver. 0.2f | 06.02.2024] \n\r");
     kprintf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n\r");
 }
 
