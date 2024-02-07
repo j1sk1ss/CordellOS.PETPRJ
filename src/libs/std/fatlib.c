@@ -120,6 +120,7 @@ void FATLIB_fatname2name(char* input, char* output) {
 
             break;
         }
+        
         output[counter] = input[counter2];		
     }
 

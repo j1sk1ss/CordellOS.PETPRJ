@@ -1,210 +1,121 @@
 #include "../include/allocator.h"
 
-#include <stddef.h>
-#include <stdint.h>
+//===========================
+//	GLOBAL VARS
+//===========================
 
-typedef struct {
-	uint8_t status;
-	uint32_t size;
-} alloc_t;
+	malloc_block_t *malloc_list_head = 0;
+	uint32_t malloc_virt_address     = 0x300000;
+	uint32_t malloc_phys_address     = 0;
+	uint32_t total_malloc_pages      = 0;
 
-uint32_t alloc_start 	= 0;
-uint32_t last_alloc     = 0;
-uint32_t heap_end       = 0;
-uint32_t heap_begin     = 0;
-uint32_t pheap_begin    = 0;
-uint32_t pheap_end      = 0;
-uint8_t* pheap_desc     = 0;
-uint32_t memory_used    = 0;
+//===========================
+//	GLOBAL VARS
+//===========================
+//	INITIALIZATION
+//	- Allocate page if needed
+//	- Create first malloc block
+//===========================
 
-uint32_t get_memory() {
-	return memory_used;
-}
+	void mm_init(const uint32_t bytes) {
+		total_malloc_pages = bytes / PAGE_SIZE;
+		if (bytes % PAGE_SIZE > 0) total_malloc_pages++;
 
-//================================
-//	ALLOCATORS INITIALIZATION
-//================================
-
-	void mm_init(uint32_t kernel_end) {
-		alloc_start = kernel_end + 0x1000;
-
-		last_alloc  = kernel_end + 0x1000;
-		heap_begin  = last_alloc;
-		pheap_end   = 0x400000;
-		pheap_begin = pheap_end - (MAX_PAGE_ALIGNED_ALLOCS * 4096);
-		heap_end    = pheap_begin;
-
-		memset((char*)heap_begin, 0, heap_end - heap_begin);
-		pheap_desc = (uint8_t*)kmalloc(MAX_PAGE_ALIGNED_ALLOCS);
-	}
-
-	void mm_reset() {
-		last_alloc  = alloc_start;
-		heap_begin  = last_alloc;
-		pheap_end   = 0x400000;
-		pheap_begin = pheap_end - (MAX_PAGE_ALIGNED_ALLOCS * 4096);
-		heap_end    = pheap_begin;
-
-		memset((char*)heap_begin, 0, heap_end - heap_begin);
-		pheap_desc = (uint8_t*)kmalloc(MAX_PAGE_ALIGNED_ALLOCS);
-	}
-
-//================================
-//	ALLOCATORS INITIALIZATION
-//================================
-//	ALLOCATORS
-//================================
-
-	void kfree(void* mem) {
-		alloc_t* alloc = (mem - sizeof(alloc_t));
-        if (alloc->status == 0 || alloc->size <= 0) return;
-
-		memory_used -= alloc->size + sizeof(alloc_t);
-		alloc->status = 0;
-
-        consolidate_free_blocks(); // Unite free blocks (if they placed in one location)
-	}
-
-	void kpfree(void* mem) {
-		if(mem < pheap_begin || mem > pheap_end) return;
-
-		/* Determine which page is it */
-		uint32_t ad = (uint32_t)mem;
-		ad -= pheap_begin;
-		ad /= PAGE_SIZE;
-
-		/* Now, ad has the id of the page */
-		pheap_desc[ad] = 0;
-		return;
-	}
-
-	void* kmalloc(size_t size) {
-		if (!size) return 0;
-
-		// Loop through blocks and find a block sized the same or bigger
-		uint8_t* mem = (uint8_t*)heap_begin;
-		while ((uint32_t)mem < last_alloc) {
-			alloc_t* a = (alloc_t*)mem;
-
-			// If the alloc has no size, we have reaced the end of allocation
-			if (!a->size) goto nalloc;
-
-			// If the alloc has a status of 1 (allocated), then add its size
-			// and the sizeof alloc_t to the memory and continue looking.
-			if (a->status == 1) {
-				mem += a->size;
-				mem += sizeof(alloc_t);
-				mem += 4;
-
-				continue;
-			}
-
-			// If the is not allocated, and its size is bigger or equal to the
-			// requested size, then adjust its size, set status and return the location.
-			if (a->size >= size) {
-				a->status = 1;
-
-				memset(mem + sizeof(alloc_t), 0, size);
-				memory_used += size + sizeof(alloc_t);
-				return (char*)(mem + sizeof(alloc_t));
-			}
-
-			// If it isn't allocated, but the size is not good, then
-			// add its size and the sizeof alloc_t to the pointer and
-			// continue;
-			mem += a->size;
-			mem += sizeof(alloc_t);
-			mem += 4;
+		malloc_phys_address = (uint32_t)allocate_blocks(total_malloc_pages);
+		malloc_list_head    = (malloc_block_t*)malloc_virt_address;
+		if (malloc_phys_address == NULL) {
+			kprintf("Allocated error\n");
+			return;
 		}
 
-	nalloc:;
-
-		if (last_alloc + size + sizeof(alloc_t) >= heap_end) {
-			kprintf("Cannot allocate %d bytes! Out of memory.\n", size);
-			return -1;
+		for (uint32_t i = 0, virt = malloc_virt_address; i < total_malloc_pages; i++, virt += PAGE_SIZE) {
+			map_page((void*)(malloc_phys_address + i * PAGE_SIZE), (void*)virt);
+			pt_entry* page = get_page(virt);
+			SET_ATTRIBUTE(page, PTE_READ_WRITE);
 		}
 
-		alloc_t* alloc  = (alloc_t*)last_alloc;
-		alloc->status   = 1;
-		alloc->size     = size;
-
-		last_alloc += size;
-		last_alloc += sizeof(alloc_t);
-		last_alloc += 4;
-
-		memory_used += size + 4 + sizeof(alloc_t);
-
-		memset((char*)((uint32_t)alloc + sizeof(alloc_t)), 0, size);
-		return (char*)((uint32_t)alloc + sizeof(alloc_t));
+		if (malloc_list_head) {
+			malloc_list_head->size = (total_malloc_pages * PAGE_SIZE) - sizeof(malloc_block_t);
+			malloc_list_head->free = true;
+			malloc_list_head->next = 0;
+		}
 	}
 
-	void* kpmalloc() {
-		for(int i = 0; i < MAX_PAGE_ALIGNED_ALLOCS; i++) {
-			if (pheap_desc[i]) continue;
+//===========================
+//	INITIALIZATION
+//===========================
+//	ALLOC FUNCTIONS
+//	- Splitting for splitting malloc blocks
+//	- KMalloc for allocating space
+//	- Merge free blocks for merging blocks in page
+//===========================
 
-			pheap_desc[i] = 1;
-			return (char*)(pheap_begin + i * PAGE_SIZE);
+	void kmalloc_split(malloc_block_t* node, const uint32_t size) {
+		malloc_block_t* new_node = (malloc_block_t*)((void*)node + size + sizeof(malloc_block_t));
+
+		new_node->size = node->size - size - sizeof(malloc_block_t);
+		new_node->free = true;
+		new_node->next = node->next;
+
+		node->size = size;
+		node->free = false;
+		node->next = new_node;
+	}
+
+	void* kmalloc(const uint32_t size) {
+		malloc_block_t* cur = 0;
+		if (size == 0) return 0;
+		if (!malloc_list_head->size) mm_init(size);
+
+		cur = malloc_list_head;
+		while (((cur->size < size) || !cur->free) && cur->next) cur = cur->next;
+		
+		if (size == cur->size) cur->free = false;
+		else if (cur->size > size + sizeof(malloc_block_t)) kmalloc_split(cur, size);
+		else {
+			uint8_t num_pages = 1;
+			while (cur->size + num_pages * PAGE_SIZE < size + sizeof(malloc_block_t))
+				num_pages++;
+
+			uint32_t virt = malloc_virt_address + total_malloc_pages * PAGE_SIZE;
+			for (uint8_t i = 0; i < num_pages; i++) {
+				pt_entry page = 0;
+				uint32_t* temp = allocate_page(&page);
+
+				map_page((void*)temp, (void*)virt);
+				SET_ATTRIBUTE(&page, PTE_READ_WRITE);
+				virt += PAGE_SIZE;
+				cur->size += PAGE_SIZE;
+				total_malloc_pages++;
+			}
+
+			kmalloc_split(cur, size);
 		}
 		
-		kprintf("pmalloc: FATAL: failure!\n");
-		return 0;
+		return (void*)cur + sizeof(malloc_block_t);
 	}
 
-	void* krealloc(void* ptr, size_t size) {
-		void* new_data = NULL;
-		if (size) {
-			if(!ptr) return malloc(size);
-
-			new_data = malloc(size);
-			if(new_data) {
-				memcpy(new_data, ptr, size);
-				free(ptr);
+	void merge_free_blocks(void) {
+		malloc_block_t* cur = malloc_list_head;
+		while (cur && cur->next) {
+			if (cur->free && cur->next->free) {
+				cur->size += (cur->next->size) + sizeof(malloc_block_t);
+				cur->next = cur->next->next;
 			}
+
+			cur = cur->next;
 		}
-
-		return new_data;
 	}
 
-	void* kcalloc(size_t nelem, size_t elsize) {
-		void* tgt = malloc(nelem * elsize);
-		if (tgt != NULL) 
-			memset(tgt, 0, nelem * elsize);
-
-		return tgt;
+	void kfree(void *ptr) {
+		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next) 
+			if ((void*)cur + sizeof(malloc_block_t) == ptr) {
+				cur->free = true;
+				merge_free_blocks();
+				break;
+			}
 	}
 
-//================================
-//	ALLOCATORS
-//================================
-//  MEMORY MANAGMENT
-//================================
-
-    void consolidate_free_blocks() {
-        uint8_t* mem = (uint8_t*)heap_begin;
-        while ((uint32_t)mem < last_alloc) {
-            alloc_t* current_alloc = (alloc_t*)mem;
-
-            if (!current_alloc->size) break;
-            if (current_alloc->status == 0) {
-                // Current block is free, try to merge with the next block
-                uint8_t* next_mem = mem + current_alloc->size + sizeof(alloc_t) + 4;
-
-                if ((uint32_t)next_mem < last_alloc) {
-                    alloc_t* next_alloc = (alloc_t*)next_mem;
-
-                    if (next_alloc->status == 0) {
-                        // Merge the two free blocks
-                        current_alloc->size += sizeof(alloc_t) + 4 + next_alloc->size;
-                        continue;  // Continue to check the next block
-                    }
-                }
-            }
-
-            // Move to the next block
-            mem += current_alloc->size + sizeof(alloc_t) + 4;
-        }
-    }
-
-//================================
-//  MEMORY MANAGMENT
-//================================
+//===========================
+//	ALLOC FUNCTIONS
+//===========================

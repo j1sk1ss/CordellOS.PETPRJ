@@ -67,6 +67,8 @@ Task* TASK_create_task(char* pname, uint32_t address) {
 			if (task->pid != -1) break;
 		}
 
+		asm ("mov %%cr3, %%eax":"=a"(task->cpuState->cr3));
+
 	// Allocate memory for new task
 	//=============================
 

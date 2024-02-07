@@ -53,6 +53,8 @@ void __attribute__((cdecl)) i686_isr_handler(Registers* regs) {
 
                 current_state->esp   = regs->kern_esp;
 
+                asm ("mov %%cr3, %%eax":"=a"(current_state->cr3));
+
             // Create current state
             //=====================
             
@@ -74,6 +76,8 @@ void __attribute__((cdecl)) i686_isr_handler(Registers* regs) {
 
                 regs->esp      = new_state->esp;
                 regs->kern_esp = new_state->esp;
+
+                asm ("mov %%eax, %%cr3": :"a"(new_state->cr3));
 
             // Update current state
             //=====================

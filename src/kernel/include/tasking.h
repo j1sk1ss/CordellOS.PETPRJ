@@ -20,6 +20,8 @@
 typedef struct {
     uint32_t edi, esi, ebp, kern_esp, ebx, edx, ecx, eax;
     uint32_t eip, cs, eflag, esp;
+
+    uint32_t cr3;
 } __attribute__((packed)) CPUState;
 
 typedef struct {

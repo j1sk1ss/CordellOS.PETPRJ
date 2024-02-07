@@ -5,6 +5,7 @@
 #include "string.h"
 #include "x86.h"
 #include "phys_manager.h"
+#include "isr.h"
 
 #define PAGES_PER_TABLE      1024
 #define TABLES_PER_DIRECTORY 1024
@@ -65,15 +66,15 @@ extern page_directory* current_page_directory;
 
 bool initialize_virtual_memory_manager(uint32_t kernell_address);
 
-pt_entry *get_pt_entry(page_table *pt, virtual_address address);
-pd_entry *get_pd_entry(page_table *pd, virtual_address address);
-pt_entry *get_page(const virtual_address address);
+pt_entry* get_pt_entry(page_table* pt, virtual_address address);
+pd_entry* get_pd_entry(page_table* pd, virtual_address address);
+pt_entry* get_page(const virtual_address address);
 
-void *allocate_page(pt_entry *page);
-void free_page(pt_entry *page);
+void* allocate_page(pt_entry* page);
+void free_page(pt_entry* page);
 
-bool set_page_directory(page_directory *pd);
+bool set_page_directory(page_directory* pd);
 void flush_tlb_entry(virtual_address address);
 
-bool map_page(void *phys_address, void *virt_address);
-void unmap_page(void *virt_address);
+bool map_page(void* phys_address, void* virt_address);
+void unmap_page(void* virt_address);

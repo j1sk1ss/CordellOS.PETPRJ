@@ -10,9 +10,9 @@
 #define BLOCKS_PER_BYTE 8        // Using a bitmap, each byte will hold 8 bits/blocks
 
 // Global variables
-static uint32_t *memory_map = 0;
-static uint32_t max_blocks  = 0;
-static uint32_t used_blocks = 0;
+extern uint32_t* memory_map;
+extern uint32_t max_blocks;
+extern uint32_t used_blocks;
 
 
 void initialize_memory_manager(const uint32_t start_address, const uint32_t size);

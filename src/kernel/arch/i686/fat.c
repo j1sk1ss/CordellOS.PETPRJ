@@ -426,13 +426,14 @@
 			}
 
 			else {
-				if ((file_metadata->attributes & FILE_DIRECTORY) != FILE_DIRECTORY) {
+				if ((file_metadata->attributes & FILE_DIRECTORY) != FILE_DIRECTORY) {			
 					struct FATFile* file = malloc(sizeof(struct FATFile));
 					file->file_meta = *file_metadata;
 
+					file->next = NULL;
+
 					char* name = malloc(strlen(file_metadata->file_name));
 					strcpy(name, file_metadata->file_name);
-
 					strncpy(file->name, strtok(name, " "), 11);
 					strncpy(file->extension, strtok(NULL, " "), 4);
 					
@@ -450,6 +451,10 @@
 						struct FATDirectory* upperDir = malloc(sizeof(struct FATDirectory));
 						upperDir->directory_meta = *file_metadata;
 
+						upperDir->subDirectory = NULL;
+						upperDir->files        = NULL;
+						upperDir->next         = NULL;
+
 						if ((file_metadata->attributes & FILE_LONG_NAME) != FILE_LONG_NAME) {
 							char* name = malloc(strlen(file_metadata->file_name));
 							strcpy(name, file_metadata->file_name);
@@ -461,7 +466,7 @@
 							struct FATDirectory* current = currentDirectory->subDirectory;
 							while (current->next != NULL) 
 								current = current->next;
-				
+
 							current->next = upperDir;
 						}
 					}
@@ -860,16 +865,18 @@
 			}
 		}
 
-		fatContent->directory 					= malloc(sizeof(struct FATDirectory)); 
+		fatContent->directory = malloc(sizeof(struct FATDirectory)); 
+
 		fatContent->directory->directory_meta 	= file_info;
+		fatContent->directory->files            = NULL;
+		fatContent->directory->subDirectory     = NULL;
+		fatContent->directory->next             = NULL;
 
 		char* name = malloc(strlen(file_info.file_name));
 		strcpy(name, file_info.file_name);
 		strncpy(fatContent->directory->name, strtok(name, " "), 11);
 
 		fatContent->file = NULL;
-
-		fatContent->directory->directory_meta = file_info;
 		if ((file_info.attributes & FILE_DIRECTORY) != FILE_DIRECTORY) {
 			if ((unsigned short)bytes_per_sector * (unsigned short)sectors_per_cluster + file_info.file_size > 262144) {
 				kprintf("File too large.\n");
@@ -877,14 +884,14 @@
 				return -3;
 			}
 
-			fatContent->directory 	= NULL; // Mark that this content is noa a directory
+			fatContent->directory 	= NULL; // Mark that this content is not a directory
 			fatContent->file 		= malloc(sizeof(struct FATFile));
-
-			int cluster = GET_CLUSTER_FROM_ENTRY(file_info);
+			fatContent->file->next  = NULL;
 
 			uint32_t* content = NULL;
 			int content_size = 0;
-
+			
+			int cluster = GET_CLUSTER_FROM_ENTRY(file_info);
 			while (cluster < END_CLUSTER_32) {
 				uint32_t* new_content = (uint32_t*)realloc(content, (content_size + 1) * sizeof(uint32_t));
 				if (new_content == NULL) {
@@ -910,7 +917,7 @@
 				}
 			}
 			
-			fatContent->file->data = (char*)malloc((content_size) * sizeof(uint32_t));
+			fatContent->file->data = malloc(content_size * sizeof(uint32_t));
 			memcpy(fatContent->file->data, content, content_size * sizeof(uint32_t));
 			fatContent->file->data_size = content_size;
 			free(content);
@@ -930,20 +937,20 @@
 
 	char* FAT_read_content(struct FATContent* data) {
 		int totalSize = sectors_per_cluster * SECTOR_SIZE * data->file->data_size;
-		char* result = (char*)malloc(totalSize);
+		char* result  = (char*)malloc(totalSize);
 		memset(result, 0, totalSize);
-		
+
 		int offset = 0;
 		for (int i = 0; i < data->file->data_size; i++) {
 			uint8_t* content_part = FAT_cluster_read(data->file->data[i]);
 			int size = SECTOR_SIZE * sectors_per_cluster;
-
+			
 			memcpy(result + offset, content_part, size);
 			free(content_part);
 
 			offset += size;
 		}
-
+		
 		return result;
 	}
 
@@ -1736,19 +1743,9 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 	}
 
 	void FAT_unload_directories_system(struct FATDirectory* directory) {
-		struct FATFile* current_file = directory->files;
-		struct FATFile* next_file    = NULL;
-		while (current_file != NULL) {
-			next_file = current_file->next;
-			free(current_file);
-			current_file = next_file;
-		}
-
-		if (directory->subDirectory != NULL)
-			FAT_unload_directories_system(directory->subDirectory);
-
-		if (directory->next != NULL) 
-			FAT_unload_directories_system(directory->next);
+		if (directory->files != NULL) FAT_unload_files_system(directory->files);
+		if (directory->subDirectory != NULL) FAT_unload_directories_system(directory->subDirectory);
+		if (directory->next != NULL) FAT_unload_directories_system(directory->next);
 
 		free(directory);
 	}
@@ -1756,7 +1753,8 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 	void FAT_unload_files_system(struct FATFile* file) {
 		struct FATFile* current_file = file;
 		struct FATFile* next_file    = NULL;
-		while (current_file != NULL) {
+
+		while (current_file->next != NULL) {
 			next_file = current_file->next;
 			free(current_file);
 			current_file = next_file;
@@ -1787,11 +1785,8 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 	}
 
 	void FAT_unload_content_system(struct FATContent* content) {
-		if (content->directory != NULL)
-			FAT_unload_directories_system(content->directory);
-		
-		if (content->file != NULL)
-			FAT_unload_files_system(content->file);
+		if (content->directory != NULL) FAT_unload_directories_system(content->directory);
+		if (content->file != NULL)      FAT_unload_files_system(content->file);
 	}
 
 //========================================================================================

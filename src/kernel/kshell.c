@@ -1,7 +1,7 @@
 #include "include/kshell.h"
 
 int exit = 0;
-char* current_path;
+char* current_path = NULL;
 
 void kshell() {
     current_path = (char*)malloc(4);
@@ -123,6 +123,7 @@ void shell_start_screen() {
                 };
             }
 
+            // TODO: page fault
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {
                 struct FATContent* content = FAT_get_content(current_path);
                 if (content->directory != NULL) {

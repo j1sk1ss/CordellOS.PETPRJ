@@ -10,11 +10,11 @@ void* memcpy(void* destination, const void* source, uint16_t num) {
     return destination;
 }
 
-void* memset(void* pointer, int value, uint16_t num) {
+void* memset(void* pointer, uint8_t value, uint16_t num) {
     uint8_t* u8Ptr = (uint8_t *)pointer;
 
     for (uint16_t i = 0; i < num; i++)
-        u8Ptr[i] = (uint8_t)value;
+        u8Ptr[i] = value;
 
     return pointer;
 }

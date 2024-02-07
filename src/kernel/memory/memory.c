@@ -1,3 +1,5 @@
+// TODO: delete and replace with shared lib memory.c
+
 #include "../include/memory.h"
 
 void* memcpy(void* destination, const void* source, uint16_t num) {
@@ -10,18 +12,18 @@ void* memcpy(void* destination, const void* source, uint16_t num) {
     return destination;
 }
 
-void* memset(void* pointer, int value, uint16_t num) {
-    uint8_t* u8Ptr = (uint8_t *)pointer;
+void* memset(void* pointer, uint8_t value, uint16_t num) {
+    uint8_t* u8Ptr = (uint8_t*)pointer;
 
-    for (uint16_t i = 0; i < num; i++)
-        u8Ptr[i] = (uint8_t)value;
+    for (uint16_t i = 0; i < num; i++) 
+        u8Ptr[i] = value;
 
     return pointer;
 }
 
 int memcmp(const void* firstPointer, const void* secondPointer, uint16_t num) {
-    const uint8_t* u8Ptr1 = (const uint8_t *)firstPointer;
-    const uint8_t* u8Ptr2 = (const uint8_t *)secondPointer;
+    const uint8_t* u8Ptr1 = (const uint8_t*)firstPointer;
+    const uint8_t* u8Ptr2 = (const uint8_t*)secondPointer;
 
     for (uint16_t i = 0; i < num; i++)
         if (u8Ptr1[i] != u8Ptr2[i])
@@ -31,7 +33,7 @@ int memcmp(const void* firstPointer, const void* secondPointer, uint16_t num) {
 }
 
 void* seg_offset_to_linear(void* address) {
-    uint32_t offset = (uint32_t)(address) & 0xFFFF;
+    uint32_t offset  = (uint32_t)(address) & 0xFFFF;
     uint32_t segment = (uint32_t)(address) >> 16;
 
     return (void*)(segment * 16 + offset);

@@ -10,6 +10,7 @@
 #include "include/phys_manager.h"
 #include "include/virt_manager.h"
 
+#include "../libs/include/stdlib.h"
 #include "multiboot.h"
 
 
@@ -21,12 +22,13 @@ extern uint32_t kernel_end;
 // TODO List:
 //===================================================================
 //      1) Multiboot struct                                       [V]
-//      2) Phys and Virt manages                                  [?]
+//      2) Phys and Virt manages                                  [V]
 //      3) ELF check v_addr                                       [ ]
 //          3.1) Fix global and static vars                       [ ]
 //      4) Paging (create error with current malloc) / allocators [?]
-//          4.1) Tasking with paging                              [ ]
-//          4.2) ELF exec with tasking and paging                 [ ]
+//          4.-1) Random Page fault (Null error de Italia)        [ ]
+//          4.1) Tasking with paging                              [V]
+//          4.2) ELF exec with tasking and paging                 [V]
 //      5) VBE / VESA                                             [?]
 //      6) Keyboard to int                                        [ ]
 //      7) Reboot outportb(0x64, 0xFE);                           [V]
@@ -45,25 +47,38 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - VBE data
     //===================
 
-        kprintf("\n = CORDELL KERNEL = \n =   [ ver. 1 ]   = \n\n");
+        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 2 ]   = \n\n");
 
         if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-            kprintf("[kernel.c 54] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
+            kprintf("[kernel.c 51] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
             goto end;
         }
 
-        kprintf("MB FLAGS:        [0x%u]\n", mb_info->flags);
-        kprintf("MEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
-        kprintf("BOOT DEVICE:     [0x%u]\n", mb_info->boot_device);
-        kprintf("CMD LINE:        [%s]\n", mb_info->cmdline);
-        kprintf("VBE MODE:        [%u]\n", mb_info->vbe_mode);
-
         if (mb_info->vbe_mode == TEXT_MODE) {
-            kprintf("\n = VBE INFO = \n\n");
+            kprintf("\n\t = GENERAL INFO = \n");
+            kprintf("MB FLAGS:        [0x%u]\n", mb_info->flags);
+            kprintf("MEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
+            kprintf("BOOT DEVICE:     [0x%u]\n", mb_info->boot_device);
+            kprintf("CMD LINE:        [%s]\n", mb_info->cmdline);
+            kprintf("VBE MODE:        [%u]\n", mb_info->vbe_mode);
+
+            kprintf("\n\t = VBE INFO = \n");
             kprintf("VBE FRAMEBUFFER: [%u]\n", mb_info->framebuffer_addr);
             kprintf("VBE X:           [%u]\n", mb_info->framebuffer_height);
             kprintf("VBE Y:           [%u]\n", mb_info->framebuffer_width);
         }
+
+    //===================
+    // Phys & Virt memory manager initialization
+    // - Phys blocks
+    // - Virt pages
+    //===================
+    
+        uint32_t reserved         = &kernel_end;
+        uint32_t total_memory     = mb_info->mem_upper + (mb_info->mem_lower << 10);
+        uint32_t avaliable_memory = total_memory - (reserved + MEM_OFFSET);
+
+        initialize_memory_manager(0x30000, total_memory); // init phys manager
 
         //===================
         // Memory test
@@ -72,11 +87,12 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         //===================
 
             if (mb_info->flags & (1 << 1)) {
-                kprintf("\nMEMORY MAP AVALIABLE:\n");
+                kprintf("\n\t = MEMORY INFO = \n");
                 multiboot_memory_map_t* mmap_entry = (multiboot_memory_map_t*)mb_info->mmap_addr;
                 while ((uint32_t)mmap_entry < mb_info->mmap_addr + mb_info->mmap_length) {
-                    kprintf("REGION |  LEN: [%u]  |  ADDR: [%u]  |  TYPE: [%u] \n", mmap_entry->len, mmap_entry->addr, mmap_entry->type);
                     if (mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
+                        kprintf("REGION |  LEN: [%u]  |  ADDR: [%u]  |  TYPE: [%u] \t", mmap_entry->len, mmap_entry->addr, mmap_entry->type);
+                        initialize_memory_region(mmap_entry->addr, mmap_entry->len);
                         const uint32_t pattern = 0xC08DE77;
 
                         uint32_t* ptr = (uint32_t*)mmap_entry->addr;
@@ -89,14 +105,14 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
                         ptr = (uint32_t*)mmap_entry->addr;
                         while (ptr < end) {
                             if (*ptr != pattern) {
-                                kprintf("Memory test failed at address %p\n", ptr);
+                                kprintf("memory test failed at address %u\n", ptr);
                                 return;
                             }
 
                             ++ptr;
                         }
 
-                        kprintf("Memory test passed!\n");
+                        kprintf("memory test passed!\n");
                     }
 
                     mmap_entry = (multiboot_memory_map_t*)((uint32_t)mmap_entry + mmap_entry->size + sizeof(mmap_entry->size));
@@ -109,33 +125,24 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         // Memory test
         //===================
 
-    //===================
-    // Phys & Virt memory manager initialization
-    // - Phys blocks
-    // - Virt pages
-    //===================
-    
-        uint32_t reserved = &kernel_end;
-        uint32_t total_memory = mb_info->mem_upper + (mb_info->mem_lower << 10);
-        uint32_t avaliable_memory = total_memory - (reserved + MEM_OFFSET);
+        deinitialize_memory_region(0x1000, 0x11000); 
+        deinitialize_memory_region(0x30000, max_blocks / BLOCKS_PER_BYTE);
 
-        initialize_memory_manager(0x30000, total_memory);
-        deinitialize_memory_region(0x00000, reserved);
-        initialize_memory_region(reserved + MEM_OFFSET, avaliable_memory);
-
-        // Reboot cause. Error in asm part with cr0 register. Maybe wrong stack creation
         if (initialize_virtual_memory_manager(0x100000) == false) {
-            kprintf("[kernel.c 131] Virtual memory can`t be init.\n");
+            kprintf("[kernel.c 130] Virtual memory can`t be init.\n");
             goto end;
         }
-        
-    //===================
-    // Heap allocator initialization
-    // - Initializing first memory block
-    //===================
 
-        mm_init(&kernel_end);
-        
+        //===================
+        // Heap initialization
+        //===================
+
+            malloc_virt_address = 0x300000;
+
+        //===================
+        // Heap initialization
+        //===================
+
     //===================
     // HAL initialization
     // - Tasking init
@@ -147,7 +154,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
 
         HAL_initialize();
         TASK_task_init();
-
+        
     //===================
 
     kprintf("Kernel base: %u\nKernel end: %u\n\n", &kernel_base, &kernel_end);
@@ -181,13 +188,14 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
 
         if (FAT_content_exists("boot\\boot.txt") == 1) {
-           struct FATContent* boot_config = FAT_get_content("boot\\boot.txt");
-           char* config = FAT_read_content(boot_config);
-           if (config[0] == '1') kshell();
+            struct FATContent* boot_config = FAT_get_content("boot\\boot.txt");
+            char* config = FAT_read_content(boot_config);
 
-           FAT_unload_content_system(boot_config);
-           kfree(config);
-           
+            if (config[0] == '1') kshell();
+
+            FAT_unload_content_system(boot_config);
+            kfree(config);
+            
         } else kshell();
 
     //===================
@@ -196,7 +204,6 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - Idle task
     //===================
 
-        mm_reset(); // TODO: This is odd. Not normal when we should reset manager
         START_PROCESS("userl", FAT_ELF_execute_content("boot\\userl\\userl-s.elf", NULL, NULL));
         TASK_start_tasking();
 

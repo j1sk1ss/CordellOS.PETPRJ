@@ -69,7 +69,12 @@ void syscall(SYSCall* regs) {
 
         case SYS_MALLOC:
             uint32_t size = regs->ebx;
+            if (!malloc_list_head)
+                mm_init(size);
+
             void* allocated_memory = kmalloc(size);
+            merge_free_blocks();
+            
             regs->eax = allocated_memory;
         break;
 
