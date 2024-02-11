@@ -1,31 +1,25 @@
 #include "../include/fatlib.h"
 
 void FATLIB_unload_directories_system(struct UFATDirectory* directory) {
-    struct UFATFile* current_file = directory->files;
-    struct UFATFile* next_file    = NULL;
-    while (current_file != NULL) {
-        next_file = current_file->next;
-        free(current_file);
-        current_file = next_file;
-    }
+    if (directory == NULL) return;
+    if (directory->files != NULL) FATLIB_unload_files_system(directory->files);
+    if (directory->subDirectory != NULL) FATLIB_unload_directories_system(directory->subDirectory);
+    if (directory->next != NULL) FATLIB_unload_directories_system(directory->next);
+    if (directory->data_pointer != NULL) free(directory->data_pointer);
 
-    if (directory->subDirectory != NULL)
-        FATLIB_unload_directories_system(directory->subDirectory);
-
-    if (directory->next != NULL) 
-        FATLIB_unload_directories_system(directory->next);
-
+    free(directory->name);
     free(directory);
 }
 
 void FATLIB_unload_files_system(struct UFATFile* file) {
-    struct UFATFile* current_file = file;
-    struct UFATFile* next_file    = NULL;
-    while (current_file != NULL) {
-        next_file = current_file->next;
-        free(current_file);
-        current_file = next_file;
-    }
+    if (file == NULL) return;
+    if (file->next != NULL) FATLIB_unload_files_system(file->next);
+    if (file->data_pointer != NULL) free(file->data_pointer);
+    if (file->data != NULL) free(file->data);
+
+    free(file->name);
+    free(file->extension);
+    free(file);
 }
 
 struct UFATDate* FATLIB_get_date(short data, int type) {
@@ -52,6 +46,7 @@ struct UFATDate* FATLIB_get_date(short data, int type) {
     return NULL;
 }
 
+// TODO: Page fault
 char* FATLIB_change_path(const char* currentPath, const char* content) {
     if (content == NULL || content[0] == '\0') {
         const char* lastSeparator = strrchr(currentPath, '\\');
@@ -70,12 +65,9 @@ char* FATLIB_change_path(const char* currentPath, const char* content) {
             return strdup(parentPath);
         }
     } else {
-        size_t newPathLen = strlen(currentPath) + strlen(content) + 2;
+        int newPathLen = strlen(currentPath) + strlen(content) + 2;
         char* newPath = (char*)malloc(newPathLen);
-        if (newPath == NULL) {
-            printf("Memory allocation failed\n");
-            return NULL;
-        }
+        if (newPath == NULL) return NULL;
 
         strcpy(newPath, currentPath);
         if (newPath[strlen(newPath) - 1] != '\\') 

@@ -5,8 +5,8 @@
 
 #include "x86.h"
 #include "stdio.h"
-#include "memory.h"
 
+#include "../../libs/include/memory.h"
 #include "../../libs/include/stdlib.h"
 
 #define TASKS_MAX             256

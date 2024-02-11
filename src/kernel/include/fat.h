@@ -1,13 +1,13 @@
 #ifndef FAT_H_
 #define FAT_H_
 
-#include "string.h"    // String lib
 #include "ata.h"       // Lib for reading and writing ATA PIO sectors
-#include "memory.h"    // Lib for working with memory
 #include "elf.h"       // Not important for base implementation. ELF executer
 #include "date_time.h" // Not important for base implementation. Date time getter from CMOS
 
+#include "../../libs/include/memory.h"
 #include "../../libs/include/stdlib.h"  // Allocators (basic malloc required)
+#include "../../libs/include/string.h"
 
 #define SECTOR_OFFSET		23000
 
@@ -172,23 +172,24 @@ typedef struct long_entry {
 
 struct FATFile {
 	directory_entry_t file_meta;
+	void* data_pointer;
 
-	int data_size;  // Size of array 
-	uint32_t* data; // Array of clusters with file data
+	int data_size;
+	uint32_t* data;
 
-	char extension[4];
-	char name[11];
+	char* extension;
+	char* name;
 
     struct File* next;
 };
 
 struct FATDirectory {
 	directory_entry_t directory_meta;
+	void* data_pointer;
 
-	char name[11];
+	char* name;
 
 	struct FATDirectory* next;
-
     struct FATFile* files;
     struct FATDirectory* subDirectory;
 };

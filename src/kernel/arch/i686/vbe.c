@@ -1,5 +1,4 @@
 #include "../../include/vbe.h"
-#include "../../include/memory.h"
 
 bool VBE_GetControllerInfo(VbeInfoBlock* info) {
     if (x86_Video_GetVbeInfo(info) == 0) {

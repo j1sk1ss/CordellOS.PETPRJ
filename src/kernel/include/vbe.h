@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "../../libs/include/memory.h"
+
+
 typedef struct {
     char VbeSignature[4];             // == "VESA"
     uint16_t VbeVersion;                 // == 0x0300 for VBE 3.0
@@ -50,6 +53,7 @@ typedef struct {
 	uint16_t off_screen_mem_size;	// size of memory in the framebuffer but not being displayed on the screen
 	uint8_t reserved1[206];
 } __attribute__ ((packed)) VbeModeInfo;
+
 
 bool VBE_GetControllerInfo(VbeInfoBlock* info);
 bool VBE_GetModeInfo(uint16_t mode, VbeModeInfo* info);

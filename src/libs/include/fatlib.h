@@ -42,6 +42,7 @@ typedef struct udirectory_entry {
 
 struct UFATFile {
 	udirectory_entry_t file_meta;
+	void* data_pointer;
 
 	int data_size;
 	uint32_t* data;
@@ -55,6 +56,7 @@ struct UFATFile {
 
 struct UFATDirectory {
 	udirectory_entry_t directory_meta;
+	void* data_pointer;
 
 	char name[11];
 

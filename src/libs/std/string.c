@@ -67,23 +67,16 @@ int strstr(const char* haystack, const char* needle) {
 }
 
 char* strcpy(char* dst, const char* src) {
-    char* origDst = dst;
-    if (dst == NULL) return NULL;
+    if (strlen(src) <= 0) return NULL;
 
-    if (src == NULL) {
-        *dst = '\0';
-        return dst;
-    }
+	int	i = 0;
+	while (src[i]) {
+		dst[i] = src[i];
+		i++;
+	}
 
-    while (*src) {
-        *dst = *src;
-
-        ++src;
-        ++dst;
-    }
-    
-    *dst = '\0';
-    return origDst;
+	dst[i] = '\0';
+	return (dst);
 }
 
 unsigned strlen(const char* str) {
@@ -262,30 +255,22 @@ void* __rawmemchr (const void* s, int c_in) {
         if ((((longword + magic_bits) ^ ~longword) & ~magic_bits) != 0) {
                 const unsigned char *cp = (const unsigned char *) (longword_ptr - 1);
 
-                if (cp[0] == c)
-                    return (void*) cp;
-                if (cp[1] == c)
-                    return (void*) &cp[1];
-                if (cp[2] == c)
-                    return (void*) &cp[2];
-                if (cp[3] == c)
-                    return (void*) &cp[3];
+                if (cp[0] == c) return (void*)cp;
+                if (cp[1] == c) return (void*)&cp[1];
+                if (cp[2] == c) return (void*)&cp[2];
+                if (cp[3] == c) return (void*)&cp[3];
 
                 #if LONG_MAX > 2147483647
-                    if (cp[4] == c)
-                        return (void*) &cp[4];
-                    if (cp[5] == c)
-                        return (void*) &cp[5];
-                    if (cp[6] == c)
-                        return (void*) &cp[6];
-                    if (cp[7] == c)
-                        return (void*) &cp[7];
+                    if (cp[4] == c) return (void*) &cp[4];
+                    if (cp[5] == c) return (void*) &cp[5];
+                    if (cp[6] == c) return (void*) &cp[6];
+                    if (cp[7] == c) return (void*) &cp[7];
                 #endif
             }
     }
 }
 
-char *strpbrk (const char *s, const char *accept) {
+char* strpbrk (const char* s, const char* accept) {
     while (*s != '\0') {
         const char *a = accept;
         while (*a != '\0')
@@ -299,9 +284,9 @@ char *strpbrk (const char *s, const char *accept) {
 }
 
 size_t strspn(const char* s, const char* accept) {
-  const char *p;
-  const char *a;
-  size_t count = 0;
+    const char *p;
+    const char *a;
+    size_t count = 0;
 
     for (p = s; *p != '\0'; ++p) {
         for (a = accept; *a != '\0'; ++a)
@@ -312,36 +297,29 @@ size_t strspn(const char* s, const char* accept) {
         else ++count;
     }
 
-  return count;
+    return count;
 }
 
 static char* olds;
-char* strtok(char* s, const char* delim){
-    char *token;
+char* strtok (char* s, const char* delim){
+    char* token;
+    if (s == NULL) s = olds;
 
-    if (s == NULL)
-        s = olds;
-
-    /* Scan leading delimiters.  */
     s += strspn (s, delim);
     if (*s == '\0') {
       olds = s;
       return NULL;
     }
 
-    /* Find the end of the token.  */
     token = s;
     s = strpbrk(token, delim);
-    if (s == NULL)
-        /* This token finishes the string.  */
-        olds = __rawmemchr(token, '\0');
+    if (s == NULL) olds = __rawmemchr(token, '\0');
     else {
-        /* Terminate the token and make OLDS point past it.  */
         *s = '\0';
         olds = s + 1;
     }
 
-  return token;
+    return token;
 }
 
 char* strtok_r(char* s, const char* delim, char** last) {
@@ -349,29 +327,18 @@ char* strtok_r(char* s, const char* delim, char** last) {
 	int c, sc;
 	char* tok;
 
-	if (s == NULL && (s = *last) == NULL)
-		return (NULL);
-	/*
-	 * Skip (span) leading delimiters (s += strspn(s, delim), sort of).
-	 */
+	if (s == NULL && (s = *last) == NULL) return (NULL);
 cont:
 	c = *s++;
 	for (spanp = (char *)delim; (sc = *spanp++) != 0;) 
-	    if (c == sc)
-		    goto cont;
+        if (c == sc) goto cont;
 
-	if (c == 0) {		/* no non-delimiter characters */
+	if (c == 0) {
 	    *last = NULL;
 		return (NULL);
 	}
 
 	tok = s - 1;
-
-	/*
-	 * Scan token (scan for delimiters: s += strcspn(s, delim), sort of).
-	 * Note that delim must have one NUL; we stop if we see that, too.
-	 */
-
 	for (;;) {
 		c = *s++;
 		spanp = (char *)delim;
@@ -389,21 +356,26 @@ cont:
 	}
 }
 
-void backspace_string(char** str, size_t size) {
-    char* buffer = (char*)malloc(size);
-    memset(buffer, 0, sizeof(buffer));
+char* add_char_to_string(char* str, char character) {
+    int len = strlen(str);
+    char* buffer = malloc(len + 2);
+    if (buffer == NULL || str == NULL) return str;
 
-    if (buffer == NULL) {
-        free(buffer);
-        return;
-    }
+    strcpy(buffer, str);
 
-    strcpy(buffer, *str);
+    buffer[len] = character;
+    buffer[len + 1] = '\0';
 
-    buffer[size] = '\0';
+    free(str);
+    return buffer;
+}
 
-    free(*str);
-    *str = buffer;   
+char* backspace_string(char* str) {
+    int len = strlen(str) - 1;
+    if (len < 0) return str;
+
+    str[len] = '\0';
+    return str;  
 }
 
 void fit_string(char* str, size_t size, char character) {
@@ -436,20 +408,6 @@ char place_char_in_text(char* text, char character, int x_position, int y_positi
     text[pos] = character;
 
     return replaced_character;
-}
-
-void add_char_to_string(char** str, size_t size, char character) {
-    char* buffer = (char*)malloc(size + 1);
-    if (buffer == NULL) 
-        return;
-
-    strcpy(buffer, *str);
-
-    buffer[size - 1] = character;
-    buffer[size]     = '\0';
-
-    free(*str);
-    *str = buffer;
 }
 
 void add_string_to_string(char** str, char* string) {
@@ -553,35 +511,32 @@ char* itoa(int n) {
     return str;
 }
 
-char* strncpy(char *dst, const char *src, size_t n) {
-	if (n != 0) {
-		char *d = dst;
-		const char *s = src;
+char* strncpy(char* dst, const char* src, int n) {
+	int	i = 0;
+	while (i < n && src[i]) {
+		dst[i] = src[i];
+		i++;
+	}
 
-		do {
-            if ((*d++ = *s++) == 0) {
-                while (--n != 0)
-                    *d++ = 0;
-                    
-                break;
-            }
-        } while (--n != 0);
-    }
+	while (i < n) {
+		dst[i] = '\0';
+		i++;
+	}
 
 	return (dst);
 }
 
-char* strdup(const char *src) {
-	char	*new;
-	int		i;
-	int		size;
+char* strdup(const char* src) {
+	char* new;
+	int	i;
+	int	size;
 
 	size = 0;
 	while (src[size])
 		size++;
 
 	if (!(new = malloc(sizeof(char) * (size + 1))))
-		return (NULL);
+		return NULL;
 
 	i = 0;
 	while (src[i]) {
@@ -591,7 +546,7 @@ char* strdup(const char *src) {
 
 	new[i] = '\0';
 
-	return (new);
+	return new;
 }
 
 int str_islower(int c) {

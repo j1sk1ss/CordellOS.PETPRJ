@@ -4,12 +4,12 @@
 #include <stdint.h>
 
 #include "stdio.h"
-#include "string.h"
-#include "memory.h"
 #include "x86.h"
 #include "vga_text.h"
 
+#include "../../libs/include/memory.h"
 #include "../../libs/include/stdlib.h"
+#include "../../libs/include/string.h"
 
 #define HIDDEN_KEYBOARD         0
 #define VISIBLE_KEYBOARD        1

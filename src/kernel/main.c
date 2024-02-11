@@ -25,8 +25,8 @@ extern uint32_t kernel_end;
 //      2) Phys and Virt manages                                  [V]
 //      3) ELF check v_addr                                       [ ]
 //          3.1) Fix global and static vars                       [ ]
-//      4) Paging (create error with current malloc) / allocators [?]
-//          4.-1) Random Page fault (Null error de Italia)        [ ]
+//      4) Paging (create error with current malloc) / allocators [V]
+//          4.-1) Random Page fault (Null error de Italia)        [V]
 //          4.1) Tasking with paging                              [V]
 //          4.2) ELF exec with tasking and paging                 [V]
 //      5) VBE / VESA                                             [?]
@@ -35,7 +35,6 @@ extern uint32_t kernel_end;
 //      8.-1) Syscalls to std libs                                [V]
 //      8) DOOM?                                                  [ ]
 //===================================================================
-
 
 void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t esp) {
     
@@ -47,22 +46,22 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - VBE data
     //===================
 
-        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 2 ]   = \n\n");
+        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 3 ]   = \n\n");
 
         if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-            kprintf("[kernel.c 51] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
+            kprintf("[kernel.c 53] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
             goto end;
         }
 
         if (mb_info->vbe_mode == TEXT_MODE) {
-            kprintf("\n\t = GENERAL INFO = \n");
+            kprintf("\n\t =  GENERAL INFO  = \n");
             kprintf("MB FLAGS:        [0x%u]\n", mb_info->flags);
             kprintf("MEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
             kprintf("BOOT DEVICE:     [0x%u]\n", mb_info->boot_device);
             kprintf("CMD LINE:        [%s]\n", mb_info->cmdline);
             kprintf("VBE MODE:        [%u]\n", mb_info->vbe_mode);
 
-            kprintf("\n\t = VBE INFO = \n");
+            kprintf("\n\t =    VBE INFO    = \n");
             kprintf("VBE FRAMEBUFFER: [%u]\n", mb_info->framebuffer_addr);
             kprintf("VBE X:           [%u]\n", mb_info->framebuffer_height);
             kprintf("VBE Y:           [%u]\n", mb_info->framebuffer_width);
@@ -74,11 +73,8 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - Virt pages
     //===================
     
-        uint32_t reserved         = &kernel_end;
         uint32_t total_memory     = mb_info->mem_upper + (mb_info->mem_lower << 10);
-        uint32_t avaliable_memory = total_memory - (reserved + MEM_OFFSET);
-
-        initialize_memory_manager(0x30000, total_memory); // init phys manager
+        initialize_memory_manager(0x30000, total_memory);
 
         //===================
         // Memory test
@@ -87,7 +83,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         //===================
 
             if (mb_info->flags & (1 << 1)) {
-                kprintf("\n\t = MEMORY INFO = \n");
+                kprintf("\n\t =  MEMORY  INFO  = \n");
                 multiboot_memory_map_t* mmap_entry = (multiboot_memory_map_t*)mb_info->mmap_addr;
                 while ((uint32_t)mmap_entry < mb_info->mmap_addr + mb_info->mmap_length) {
                     if (mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
@@ -127,9 +123,8 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
 
         deinitialize_memory_region(0x1000, 0x11000); 
         deinitialize_memory_region(0x30000, max_blocks / BLOCKS_PER_BYTE);
-
         if (initialize_virtual_memory_manager(0x100000) == false) {
-            kprintf("[kernel.c 130] Virtual memory can`t be init.\n");
+            kprintf("[kernel.c 128] Virtual memory can`t be init.\n");
             goto end;
         }
 
@@ -186,14 +181,13 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
     // Kernel shell part
     //===================
-
+    
         if (FAT_content_exists("boot\\boot.txt") == 1) {
             struct FATContent* boot_config = FAT_get_content("boot\\boot.txt");
             char* config = FAT_read_content(boot_config);
+            FAT_unload_content_system(boot_config);
 
             if (config[0] == '1') kshell();
-
-            FAT_unload_content_system(boot_config);
             kfree(config);
             
         } else kshell();

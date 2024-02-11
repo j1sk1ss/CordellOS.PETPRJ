@@ -4,12 +4,12 @@
 
 #include "fat.h"
 #include "stdio.h"
-#include "string.h"
 #include "keyboard.h"
 #include "date_time.h"
 #include "tasking.h"
 
 #include "../../libs/include/fatlib.h"
+#include "../../libs/include/string.h"
 
 //   ____  _   _ _____ _     _     
 //  / ___|| | | | ____| |   | |    
@@ -30,6 +30,7 @@
         #define COMMAND_HELP                            "aiuto"
         #define COMMAND_VERSION                         "ver"
         #define COMMAND_DISK_DATA                       "disk-data"
+        #define COMMAND_MEM_DATA                        "mem-data"
         #define COMMAND_CLEAR                           "clear" 
         #define COMMAND_TIME                            "date"
         #define COMMAND_ECHO                            "eco"

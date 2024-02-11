@@ -67,7 +67,6 @@ char* keyboard_edit(char* previous_data, int color) {
     get_start_positions(input, &x_cursor, &y_cursor);
 
     cprintf(color, "%s", input);
-    size_t input_size = strlen(input);
 
     while (1) {
         char currentCharacter = wait_char();
@@ -114,7 +113,7 @@ char* keyboard_edit(char* previous_data, int color) {
             }
 
             else if (currentCharacter == BACKSPACE_BUTTON) {
-                if (strlen(input) > 0 && input_size > 0) {
+                if (strlen(input) > 0) {
                     if (place_char_in_text(input, '\253', x_cursor, y_cursor) == '\n') {
                         cursor_set(80, coords[1] - 1);
                         cursor_place_to_line();
@@ -130,7 +129,6 @@ char* keyboard_edit(char* previous_data, int color) {
                     cursor_set(coords[0], coords[1]);
                     directly_putc(coords[0], coords[1], NULL);
 
-                    input_size--;
                     fit_string(input, strlen(input), '\253');
 
                     update_screen(input, coords[0], coords[1]);
@@ -141,7 +139,7 @@ char* keyboard_edit(char* previous_data, int color) {
 
             else if (currentCharacter == ENTER_BUTTON) {
                 cprintf(color, "\n");                        
-                add_char_to_string(&input, ++input_size, '\n');
+                add_char_to_string(&input, '\n');
 
                 x_cursor = 0;
                 y_cursor++;
@@ -149,7 +147,7 @@ char* keyboard_edit(char* previous_data, int color) {
 
             else {
                 cprintf(color, "%c", currentCharacter);
-                add_char_to_string(&input, ++input_size, currentCharacter);
+                add_char_to_string(&input, currentCharacter);
 
                 if (++x_cursor >= 80) {
                     x_cursor = 0;

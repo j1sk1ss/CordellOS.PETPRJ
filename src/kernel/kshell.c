@@ -4,22 +4,24 @@ int exit = 0;
 char* current_path = NULL;
 
 void kshell() {
-    current_path = (char*)malloc(4);
+    current_path = (char*)malloc(5);
 	strcpy(current_path, "BOOT");
 
     shell_start_screen();
     while (exit == 0) {
         kprintf("\r\n[KERNEL] $%s> ", current_path);
-        char* command = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
+        char* input = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
+        char* command = input;
+
         execute_command(command);
-        free(command);
+        free(input);
     }
 
     free(current_path);
 }
 
 void shell_start_screen() {
-    kprintf("Cordell KShell [ver. 0.2f | 06.02.2024] \n\r");
+    kprintf("Cordell KShell [ver. 0.3a | 10.02.2024] \n\r");
     kprintf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n\r");
 }
 
@@ -68,10 +70,11 @@ void shell_start_screen() {
                 kprintf("\n");
             }
 
-            else if (strstr(command_line[0], COMMAND_EXIT)    == 0) exit = 1;
-            else if (strstr(command_line[0], COMMAND_VERSION) == 0) shell_start_screen();
-            else if (strstr(command_line[0], COMMAND_CLEAR)   == 0) VGA_clrscr();
-            else if (strstr(command_line[0], COMMAND_ECHO)    == 0) kprintf("\r\n%s", command_line[1]);
+            else if (strstr(command_line[0], COMMAND_EXIT)     == 0) exit = 1;
+            else if (strstr(command_line[0], COMMAND_VERSION)  == 0) shell_start_screen();
+            else if (strstr(command_line[0], COMMAND_CLEAR)    == 0) VGA_clrscr();
+            else if (strstr(command_line[0], COMMAND_ECHO)     == 0) kprintf("\r\n%s", command_line[1]);
+            else if (strstr(command_line[0], COMMAND_MEM_DATA) == 0) print_kmalloc_map();
 
             else if (strstr(command_line[0], COMMAND_DISK_DATA) == 0) {
                 kprintf("\r\nDisk-data kernel utility ver 0.2b\n");
@@ -104,6 +107,7 @@ void shell_start_screen() {
                     kprintf("\nLa directory non esiste.");
                     return;
                 }
+
                 else if (FAT_get_content(current_path)->file != NULL) {
                     free(dir_path);
                     kprintf("\nQuesta non e' una directory.");
@@ -118,12 +122,11 @@ void shell_start_screen() {
                 current_path = FATLIB_change_path(current_path, NULL);
                 if (strlen(current_path) <= 1) {
                     free(current_path);
-                    current_path = malloc(4);
+                    current_path = malloc(5);
                     strcpy(current_path, "BOOT");
                 };
             }
 
-            // TODO: page fault
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {
                 struct FATContent* content = FAT_get_content(current_path);
                 if (content->directory != NULL) {
@@ -136,16 +139,16 @@ void shell_start_screen() {
                         kprintf("\t%s", current_dir->name);
                         current_dir = current_dir->next;
                     }
-                
+
                     kprintf("\n");
                     while (current_file != NULL) {
                         kprintf("\t%s.%s", current_file->name, current_file->extension);
                         current_file = current_file->next;
                     }
-
+                    
                     FAT_unload_directories_system(directory);
                 }
-
+                
                 FAT_unload_content_system(content);
             }
 
@@ -183,7 +186,7 @@ void shell_start_screen() {
         //  FILE SYSTEM COMMANDS
         //====================
 
-            else kprintf("\r\nComando sconosciuto.");
+            else kprintf("\r\nComando [%s] sconosciuto.", command_line[0]);
 
         kprintf("\r\n");
     }

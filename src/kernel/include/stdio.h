@@ -6,7 +6,8 @@
 #include <stddef.h>
 
 #include "vga_text.h"
-#include "string.h"
+
+#include "../../libs/include/string.h"
 
 void clrscr();
 void kputc(char c);

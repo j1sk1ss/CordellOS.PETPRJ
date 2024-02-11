@@ -4,12 +4,10 @@
 //
 //  READ SECTOR FROM DISK BY LBA ADRESS
 //
-
     uint8_t* ATA_read_sector(uint32_t lba) {
         ATA_ata_wait();
         uint8_t* buffer = (uint8_t*)malloc(SECTOR_SIZE);
-        if (buffer == NULL) 
-            return NULL;
+        if (buffer == NULL) return NULL;
 
         x86_outb(DRIVE_REGISTER, 0xE0 | (0x00 << 4) | ((lba >> 24) & 0x0F));
         x86_outb(FEATURES_REGISTER, 0x00);
@@ -46,19 +44,14 @@
         memset(buffer, 0, SECTOR_SIZE * sector_count);
         for (uint32_t i = 0; i < sector_count; i++) {
             uint8_t* sector_data = ATA_read_sector(lba + i);
-            if (sector_data == NULL) {
-                free(buffer);
-                return NULL;
-            }
-
-            // Copy the sector data to the buffer
+            if (sector_data == NULL) return NULL;
+            
             memcpy(buffer + i * SECTOR_SIZE, sector_data, SECTOR_SIZE);
             free(sector_data);
         }
 
         return buffer;
     }
-
 //
 //  READ SECTOR FROM DISK BY LBA ADRESS
 //
@@ -66,7 +59,6 @@
 //
 //  WRITE DATA TO SECTOR ON DISK BY LBA ADRESS
 //
-
     int ATA_write_sector(uint32_t lba, const uint8_t* buffer) {
         if (lba == BOOT_SECTOR) return -1;
 
@@ -84,7 +76,6 @@
             if (--timeout < 0) return -1;
             else continue;
         
-        // Write the sector data from the buffer.
         for (int i = 0; i < SECTOR_SIZE / 2; i++) {
             uint16_t data = *((uint16_t*)(buffer + i * 2));
             x86_outw(DATA_REGISTER, data);
@@ -105,7 +96,6 @@
 
         return 1;
     }
-
 //
 //  WRITE DATA TO SECTOR ON DISK BY LBA ADRESS
 //
@@ -113,7 +103,6 @@
 //
 //  OTHER FUNCTIONS
 //
-
     // Function that add data to sector
     void ATA_append_sector(uint32_t lba, char* append_data) {
         char* previous_data = ATA_read_sector(lba);
@@ -213,7 +202,6 @@
 
         return sectors;
     }
-
 //
 //  OTHER FUNCTIONS
 //

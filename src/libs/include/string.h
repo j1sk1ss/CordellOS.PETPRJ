@@ -33,8 +33,8 @@ void reverse(char* str, int len);
 char* double_to_string(double value);
 double atof(const char *str);
 
-void backspace_string(char** str, size_t size);
-void add_char_to_string(char** str, size_t size, char character);
+char* backspace_string(char* str);
+char* add_char_to_string(char* str, char character);
 void add_string_to_string(char** str, char* string);
 
 wchar_t* utf16_to_codepoint(wchar_t*  strin, int* codePointg);
@@ -43,7 +43,7 @@ char* codepoint_to_utf8(int codePoint, char* stringOutput);
 int	atoi(char *str);
 char* itoa(int n);
 
-char* strncpy(char *dst, const char *src, size_t n);
+char* strncpy(char *dst, const char *src, int n);
 char* strdup(const char *src);
 
 void str_uppercase(char* str);

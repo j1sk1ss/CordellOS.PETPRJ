@@ -1,11 +1,11 @@
 #include <stdint.h>
 
 #include "x86.h"
-#include "memory.h"
-#include "string.h"
 #include "stdio.h"
 
+#include "../../libs/include/memory.h"
 #include "../../libs/include/stdlib.h"
+#include "../../libs/include/string.h"
 
 #define BOOT_SECTOR                 0
 #define SECTOR_SIZE                 512

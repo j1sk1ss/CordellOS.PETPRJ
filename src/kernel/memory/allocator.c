@@ -4,7 +4,7 @@
 //	GLOBAL VARS
 //===========================
 
-	malloc_block_t *malloc_list_head = 0;
+	malloc_block_t* malloc_list_head = NULL;
 	uint32_t malloc_virt_address     = 0x300000;
 	uint32_t malloc_phys_address     = 0;
 	uint32_t total_malloc_pages      = 0;
@@ -34,10 +34,10 @@
 			SET_ATTRIBUTE(page, PTE_READ_WRITE);
 		}
 
-		if (malloc_list_head) {
+		if (malloc_list_head != NULL) {
 			malloc_list_head->size = (total_malloc_pages * PAGE_SIZE) - sizeof(malloc_block_t);
 			malloc_list_head->free = true;
-			malloc_list_head->next = 0;
+			malloc_list_head->next = NULL;
 		}
 	}
 
@@ -50,6 +50,43 @@
 //	- Merge free blocks for merging blocks in page
 //===========================
 
+	uint32_t kmalloc_total_free() {
+		uint32_t total_free = 0;
+		if (malloc_list_head->free = true) total_free += malloc_list_head->size + sizeof(malloc_block_t);
+		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next)
+			if (cur->next != NULL)
+				if (cur->next->free == true) total_free += cur->next->size + sizeof(malloc_block_t);
+		
+		return total_free;
+	}
+
+	uint32_t kmalloc_total_avaliable() {
+		uint32_t total_free = malloc_list_head->size + sizeof(malloc_block_t);
+		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next)
+			if (cur->next != NULL)
+				total_free += cur->next->size + sizeof(malloc_block_t);
+		
+		return total_free;
+	}
+
+	void print_kmalloc_map() {
+		kprintf(
+			"\n|%iB(%i)|",
+			malloc_list_head->size + sizeof(malloc_block_t),
+			malloc_list_head->free == true ? 1 : 0
+		);
+
+		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next)
+			if (cur->next != NULL)
+				kprintf(
+					"%iB(%i)|",
+					cur->next->size + sizeof(malloc_block_t),
+					cur->next->free == true ? 1 : 0
+				);
+
+		kprintf(" TOTAL: [%iB]\n", kmalloc_total_avaliable());
+	}
+
 	void kmalloc_split(malloc_block_t* node, const uint32_t size) {
 		malloc_block_t* new_node = (malloc_block_t*)((void*)node + size + sizeof(malloc_block_t));
 
@@ -61,14 +98,13 @@
 		node->free = false;
 		node->next = new_node;
 	}
-
+	
 	void* kmalloc(const uint32_t size) {
-		malloc_block_t* cur = 0;
-		if (size == 0) return 0;
-		if (!malloc_list_head->size) mm_init(size);
+		if (size <= 0) return 0;
+		if (malloc_list_head == NULL) mm_init(size);
 
-		cur = malloc_list_head;
-		while (((cur->size < size) || !cur->free) && cur->next) cur = cur->next;
+		malloc_block_t* cur = malloc_list_head;
+		while (((cur->size < (size + sizeof(malloc_block_t))) || cur->free == false) && cur->next != NULL) cur = cur->next;
 		
 		if (size == cur->size) cur->free = false;
 		else if (cur->size > size + sizeof(malloc_block_t)) kmalloc_split(cur, size);
@@ -83,7 +119,8 @@
 				uint32_t* temp = allocate_page(&page);
 
 				map_page((void*)temp, (void*)virt);
-				SET_ATTRIBUTE(&page, PTE_READ_WRITE);
+				SET_ATTRIBUTE(&page, PTE_READ_WRITE); // TODO: new page create error (present)
+
 				virt += PAGE_SIZE;
 				cur->size += PAGE_SIZE;
 				total_malloc_pages++;
@@ -97,19 +134,24 @@
 
 	void merge_free_blocks(void) {
 		malloc_block_t* cur = malloc_list_head;
-		while (cur && cur->next) {
-			if (cur->free && cur->next->free) {
+		while (cur != NULL && cur->next != NULL) {
+			if (cur->free == true && cur->next->free == true) {
 				cur->size += (cur->next->size) + sizeof(malloc_block_t);
-				cur->next = cur->next->next;
+				
+				if (cur->next->next != NULL) cur->next = cur->next->next;
+				else {
+					cur->next = NULL;
+					break;
+				}
 			}
 
 			cur = cur->next;
 		}
 	}
 
-	void kfree(void *ptr) {
+	void kfree(void* ptr) {
 		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next) 
-			if ((void*)cur + sizeof(malloc_block_t) == ptr) {
+			if ((void*)cur + sizeof(malloc_block_t) == ptr && cur->free == false) {
 				cur->free = true;
 				merge_free_blocks();
 				break;

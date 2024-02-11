@@ -31,13 +31,12 @@ pt_entry* get_page(const virtual_address address) {
 }
 
 // Allocate a page of memory
-void* allocate_page(pt_entry *page) {
+void* allocate_page(pt_entry* page) {
     void* block = allocate_blocks(1);
-    if (block != NULL) {
+    if (block != 0) {
         SET_FRAME(page, (physical_address)block);
         SET_ATTRIBUTE(page, PTE_PRESENT);
-    }
-    else kprintf("Page allocation error!\n");
+    } else kprintf("Page allocation error!\n");
 
     return block;
 }

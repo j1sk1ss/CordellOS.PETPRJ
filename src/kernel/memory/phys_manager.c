@@ -69,9 +69,8 @@ void deinitialize_memory_region(const uint32_t base_address, const uint32_t size
 
 uint32_t* allocate_blocks(const uint32_t num_blocks) {
     if ((max_blocks - used_blocks) <= num_blocks) return 0;   
-
     int32_t starting_block = find_first_free_blocks(num_blocks);
-    if (starting_block == -1) return NULL;
+    if (starting_block == -1) return 0;
 
     for (uint32_t i = 0; i < num_blocks; i++)
         set_block(starting_block + i);

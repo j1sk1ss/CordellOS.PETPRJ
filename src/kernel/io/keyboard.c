@@ -56,9 +56,7 @@ unsigned char alphabet[128] = {
 };
 
 int key_press() {
-    if (x86_inb(0x64) & 0x1)
-        return 1;
-
+    if (x86_inb(0x64) & 0x1) return 1;
     return 0;
 }
 
@@ -66,8 +64,7 @@ char get_character(char character) {
     return alphabet[character];
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
+//==================================================================================
 //   ____  _   _ _____ _     _       _  _________   ______   ___    _    ____  ____  
 //  / ___|| | | | ____| |   | |     | |/ / ____\ \ / / __ ) / _ \  / \  |  _ \|  _ \ 
 //  \___ \| |_| |  _| | |   | |     | ' /|  _|  \ V /|  _ \| | | |/ _ \ | |_) | | | |
@@ -75,23 +72,19 @@ char get_character(char character) {
 //  |____/|_| |_|_____|_____|_____| |_|\_\_____| |_| |____/ \___/_/   \_\_| \_\____/ 
 
         char* keyboard_read(int mode, int color) {
-            char* input = (char*)malloc(sizeof(char));  // Start with an empty string
-            size_t input_size = 0;
+            char* input = malloc(1);
+            input[0] = '\0';
             
             while (1) {
                 if (x86_inb(0x64) & 0x1) {
                     char character = x86_inb(0x60);
-
                     if (!(character & 0x80)) {
                         char currentCharacter = alphabet[character];
                         if (currentCharacter != ENTER_BUTTON) {
                             if (currentCharacter == BACKSPACE_BUTTON) {
-                                if (input_size > 0) {
-                                    backspace_string(&input, --input_size);
-                                    VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
-                                    VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), NULL);
-                                }
-
+                                input = backspace_string(input);
+                                VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
+                                VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), NULL);
                                 continue;
                             }
 
@@ -99,9 +92,8 @@ char get_character(char character) {
                                 if (color != -1) kcprintf(color, "%c", currentCharacter);
                                 else kprintf("%c", currentCharacter);
 
-                            add_char_to_string(&input, ++input_size, currentCharacter);
-                        }
-                        else break;
+                            input = add_char_to_string(input, currentCharacter);
+                        } else break;
                     }
                 }
             }
@@ -109,12 +101,7 @@ char get_character(char character) {
             return input;
         }
 
-////
-////    
-////
-////
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
+//==================================================================================
 //   _   _    ___     _____ ____    _  _____ ___ ___  _   _   _  _________   ______   ___    _    ____  ____  
 //  | \ | |  / \ \   / /_ _/ ___|  / \|_   _|_ _/ _ \| \ | | | |/ / ____\ \ / / __ ) / _ \  / \  |  _ \|  _ \ 
 //  |  \| | / _ \ \ / / | | |  _  / _ \ | |  | | | | |  \| | | ' /|  _|  \ V /|  _ \| | | |/ _ \ | |_) | | | |
@@ -139,9 +126,4 @@ char get_character(char character) {
             }
         }
 
-////
-////    
-////
-////
-/////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
+//==================================================================================

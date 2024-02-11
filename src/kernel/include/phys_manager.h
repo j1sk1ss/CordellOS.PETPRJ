@@ -2,12 +2,15 @@
 
 #include <stdint.h>
 
-#include "memory.h"
 #include "stdio.h"
+
+#include "../../libs/include/memory.h"
+
 
 #define MEM_OFFSET      0x10000
 #define BLOCK_SIZE      4096     // Size of 1 block of memory, 4KB
 #define BLOCKS_PER_BYTE 8        // Using a bitmap, each byte will hold 8 bits/blocks
+
 
 // Global variables
 extern uint32_t* memory_map;
