@@ -48,10 +48,26 @@ void* ELF_read(const char* path) {
     uint32_t buffer_size = mem_max - mem_min;
     uint32_t buffer_alignment = align - 1;
 
-    ELF_exe_buffer = malloc(buffer_size);
-    memset(ELF_exe_buffer, 0, sizeof(ELF_exe_buffer));
+    int pages = buffer_size / PAGE_SIZE;
+    if (buffer_size % PAGE_SIZE > 0) pages++;
+
+    ELF_exe_buffer = (void*)ELF_VIRT_LOCATION;
+    uint32_t virtual_address = ELF_VIRT_LOCATION;
+
+    for (uint8_t i = 0; i < pages; i++) {
+        pt_entry page = 0;
+        uint32_t* temp = allocate_page(&page);
+
+        map_page((void*)temp, (void*)virtual_address);
+        SET_ATTRIBUTE(&page, PTE_READ_WRITE);
+
+        virtual_address += PAGE_SIZE;
+    }
+
+    memset(ELF_exe_buffer, 0, sizeof(buffer_size));
+
     if (ELF_exe_buffer == NULL) {
-        kprintf("\r\nError: Could not malloc() enough memory for program\r\n");
+        kprintf("\r\nError: Could not allocate enough memory for program\r\n");
         free(file_content);
         return NULL;
     }

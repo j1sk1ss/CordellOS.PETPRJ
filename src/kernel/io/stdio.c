@@ -1,13 +1,24 @@
 #include "../include/stdio.h"
 
+bool is_vesa = false;
+
 void kfputc(char c, uint8_t file, int color) {
     if (color == 1) kcputc(c, file);
-    else VGA_putc(c);
+    else {
+        if (!is_vesa) VGA_putc(c);
+        else VESA_putc(c);
+    }
 }
 
 void kcputc(char c, uint8_t color) {
-    VGA_putc(c);
-    VGA_putcolor(VGA_cursor_get_x() - 1, VGA_cursor_get_y(), color);
+    if (!is_vesa) {
+        VGA_putc(c);
+        VGA_putcolor(VGA_cursor_get_x() - 1, VGA_cursor_get_y(), color);
+    }
+    else {
+        // TODO: VESA color
+        VESA_putc(c);
+    }
 }
 
 void kfputs(const char* str, uint8_t file, int color) {
@@ -18,6 +29,7 @@ void kfputs(const char* str, uint8_t file, int color) {
 }
 
 void kset_color(int color) {
+    // TODO: Vesa screen + Vesa clrs
     VGA_set_color(color);
 }
 

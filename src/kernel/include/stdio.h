@@ -6,8 +6,13 @@
 #include <stddef.h>
 
 #include "vga_text.h"
+#include "vesa_text.h"
 
 #include "../../libs/include/string.h"
+
+
+extern bool is_vesa;
+
 
 void clrscr();
 void kputc(char c);

@@ -43,6 +43,7 @@
         #define COMMAND_FILE_RUN                        "fuga"
 
         #define COMMAND_EXIT                            "exit"
+        #define COMMAND_REBOOT                          "riavviare"
 
     //  COMMANDS
     /////////////////

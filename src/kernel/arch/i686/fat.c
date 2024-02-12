@@ -36,7 +36,7 @@
 		}
 
 		fat_BS_t* bootstruct = (fat_BS_t*)cluster_data;
-		total_sectors = (bootstruct->total_sectors_16 == 0)? bootstruct->total_sectors_32 : bootstruct->total_sectors_16;
+		total_sectors = (bootstruct->total_sectors_16 == 0) ? bootstruct->total_sectors_32 : bootstruct->total_sectors_16;
 		fat_size = (bootstruct->table_size_16 == 0) ? ((fat_extBS_32_t*)(bootstruct->extended_section))->table_size_32 : bootstruct->table_size_16;
 
 		int root_dir_sectors = ((bootstruct->root_entry_count * 32) + (bootstruct->bytes_per_sector - 1)) / bootstruct->bytes_per_sector;
@@ -58,7 +58,7 @@
 		first_fat_sector    = bootstruct->reserved_sector_count;
 		ext_root_cluster    = ((fat_extBS_32_t*)(bootstruct->extended_section))->root_cluster;
 
-		free(bootstruct);
+		free(cluster_data);
 		return 0;
 	}
 
@@ -130,8 +130,6 @@
 			unsigned int fat_offset 	= clusterNum * (fat_type == 16 ? 2 : 4);
 			unsigned int fat_sector 	= first_fat_sector + (fat_offset / cluster_size);
 			unsigned int ent_offset 	= fat_offset % cluster_size;
-
-			//at this point you need to read from sector "fat_sector" on the disk into "FAT_table".
 			
 			uint8_t* cluster_data = ATA_read_sectors(fat_sector, sectors_per_cluster);
 			if (cluster_data == NULL) {
@@ -142,7 +140,6 @@
 			unsigned int table_value = *(unsigned int*)&cluster_data[ent_offset];
 			if (fat_type == 32) table_value &= 0x0FFFFFFF;
 
-			//the variable "table_value" now has the information you need about the next cluster in the chain.
 			free(cluster_data);
 			return table_value;
 		}
@@ -855,7 +852,7 @@
 //   \____\___/|_| \_| |_| |_____|_| \_| |_|    \____|_____| |_|  
 //
 //========================================================================================
-// Returns: -1 is general error, -2 is directory not found, -3 is path specified is a directory instead of a file
+// Returns: -1 is general error, -2 is content not found
 
 	struct FATContent* FAT_get_content(const char* filePath) {
 		struct FATContent* fatContent = malloc(sizeof(struct FATContent));
@@ -875,7 +872,7 @@
 		}
 		
 		directory_entry_t content_meta;
-		for (unsigned int iterator = 0; iterator <= strlen(filePath); iterator++) {
+		for (unsigned int iterator = 0; iterator <= strlen(filePath); iterator++) 
 			if (filePath[iterator] == '\\' || filePath[iterator] == '\0') {
 				memset(fileNamePart, '\0', 256);
 				memcpy(fileNamePart, filePath + start, iterator - start);
@@ -895,15 +892,8 @@
 				start = iterator + 1;
 				active_cluster = GET_CLUSTER_FROM_ENTRY(content_meta);
 			}
-		}
 		
 		if ((content_meta.attributes & FILE_DIRECTORY) != FILE_DIRECTORY) {
-			if ((unsigned short)bytes_per_sector * (unsigned short)sectors_per_cluster + content_meta.file_size > 262144) {
-				kprintf("File too large.\n");
-				FAT_unload_content_system(fatContent);
-				return -3;
-			}
-
 			fatContent->file 		       = malloc(sizeof(struct FATFile));
 			fatContent->file->name         = malloc(8);
 			fatContent->file->extension    = malloc(4);
@@ -921,7 +911,6 @@
 					return -1;
 				}
 
-				// Add the current cluster to the content array
 				new_content[content_size] = cluster;
 
 				content = new_content;
@@ -1004,7 +993,14 @@
 		if (programEntry == NULL) return 0;
 		
 		int result_code = programEntry(args, argv);
-		free(ELF_exe_buffer);
+
+		pt_entry* page = get_page(ELF_VIRT_LOCATION);
+		if (PAGE_PHYS_ADDRESS(page) && TEST_ATTRIBUTE(page, PTE_PRESENT)) {
+			free_page(page);
+			unmap_page((uint32_t*)ELF_VIRT_LOCATION);
+			flush_tlb_entry(ELF_VIRT_LOCATION);
+		}
+
 		return result_code;
 	}
 

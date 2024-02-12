@@ -71,17 +71,17 @@
 
 	void print_kmalloc_map() {
 		kprintf(
-			"\n|%iB(%i)|",
+			"\n|%i(%c)|",
 			malloc_list_head->size + sizeof(malloc_block_t),
-			malloc_list_head->free == true ? 1 : 0
+			malloc_list_head->free == true ? 'F' : 'O'
 		);
 
 		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next)
 			if (cur->next != NULL)
 				kprintf(
-					"%iB(%i)|",
+					"%i(%c)|",
 					cur->next->size + sizeof(malloc_block_t),
-					cur->next->free == true ? 1 : 0
+					cur->next->free == true ? 'F' : 'O'
 				);
 
 		kprintf(" TOTAL: [%iB]\n", kmalloc_total_avaliable());
@@ -103,9 +103,18 @@
 		if (size <= 0) return 0;
 		if (malloc_list_head == NULL) mm_init(size);
 
+		// Find a block
 		malloc_block_t* cur = malloc_list_head;
-		while (((cur->size < (size + sizeof(malloc_block_t))) || cur->free == false) && cur->next != NULL) cur = cur->next;
+		while (cur->next != NULL) {
+			if (cur->free == true) {
+				if (cur->size == size) break;
+				if (cur->size > size + sizeof(malloc_block_t)) break;
+			}
+			
+			cur = cur->next;
+		}
 		
+		// Work with block
 		if (size == cur->size) cur->free = false;
 		else if (cur->size > size + sizeof(malloc_block_t)) kmalloc_split(cur, size);
 		else {

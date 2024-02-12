@@ -27,8 +27,6 @@
 #define N 100
 
 
-int globalVar = 1;
-
 int main(int args, char* argv[]) {
 	clrscr();
 	printf("\nSNAKE GAME v. 1.0\nPress ENTER to start.\n");
@@ -38,14 +36,14 @@ int main(int args, char* argv[]) {
 		switch (key) {
 			case ENTER_BUTTON:
 				snake_start();
-				return globalVar;
+				return 1;
 
 			case F3_BUTTON:
-			return globalVar;
+			return 1;
 		}
     }
 
-	return globalVar;
+	return -1;
 }
 
 typedef struct {
@@ -202,17 +200,15 @@ void update(char map[V][H], snake* snk, int size, fruit frt) {
 }
 
 void intro_data2(char map[V][H], snake* snk, int size, fruit frt) {
-	int i;
-
-	for (i = size - 1; i > 0; i--) { // 0 is the head. so we going decresing until extremities
+	for (int i = size - 1; i > 0; i--) {
 		snk[i].x = snk[i - 1].x;
 		snk[i].y = snk[i - 1].y;
 	}
 
-	snk[0].x += snk[0].movX; // plus movemenrts
+	snk[0].x += snk[0].movX;
 	snk[0].y += snk[0].movY;
 
-	for (i = 0; i < size; i++) 
+	for (int i = 0; i < size; i++) 
 		map[snk[i].y][snk[i].x] = snk[i].imagen;
 	
 	map[frt.y][frt.x] = 'M';

@@ -4,6 +4,7 @@ int exit = 0;
 char* current_path = NULL;
 
 void kshell() {
+    kprintf("[NOTA: QUESTA E` UNA MODALITA` TESTO VGA]\n");
     current_path = (char*)malloc(5);
 	strcpy(current_path, "BOOT");
 
@@ -21,7 +22,7 @@ void kshell() {
 }
 
 void shell_start_screen() {
-    kprintf("Cordell KShell [ver. 0.3a | 10.02.2024] \n\r");
+    kprintf("Cordell KShell [ver. 0.3b | 11.02.2024] \n\r");
     kprintf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n\r");
 }
 
@@ -40,8 +41,8 @@ void shell_start_screen() {
 
             char* splitted = strtok(command, " ");
             while(splitted) {
-                command_line[tokenCount++]  = splitted;
-                splitted                    = strtok(NULL, " ");
+                command_line[tokenCount++] = splitted;
+                splitted                   = strtok(NULL, " ");
             }
 
         //====================
@@ -55,22 +56,28 @@ void shell_start_screen() {
                 kprintf("\r\n> Utilizzare [%s] per la pulizia dello schermo",                    COMMAND_CLEAR);
                 kprintf("\r\n> Usa [%s] per l'eco",                                              COMMAND_ECHO);
                 kprintf("\r\n> Usa [%s] per vista questo giorno",                                COMMAND_TIME);
+                kprintf("\n");
 
                 kprintf("\r\n> Utilizza la [%s] per vista versione",                             COMMAND_VERSION);
                 kprintf("\r\n> Utilizza la [%s] per vista disk-data informazione",               COMMAND_DISK_DATA);
+                kprintf("\n");
 
                 kprintf("\r\n> Usa [%s] <nome> per entranto dir",                                COMMAND_IN_DIR);
                 kprintf("\r\n> Usa [%s] per uscire di dir",                                      COMMAND_OUT_DIR);
                 kprintf("\r\n> Usa [%s] per guardare tutto cosa in dir",                         COMMAND_LIST_DIR);
+                kprintf("\n");
 
                 kprintf("\r\n> Usa [%s] per guardare tutto data in file",                        COMMAND_FILE_VIEW);
                 kprintf("\r\n> Usa [%s] per run file",                                           COMMAND_FILE_RUN);
+                kprintf("\n");
 
+                kprintf("\r\n> Utilizzare [%s] per riavviare il sistema operativo",              COMMAND_REBOOT);
                 kprintf("\r\n> Utilizzare [%s] per uscire dal kernel",                           COMMAND_EXIT);
                 kprintf("\n");
             }
 
             else if (strstr(command_line[0], COMMAND_EXIT)     == 0) exit = 1;
+            else if (strstr(command_line[0], COMMAND_REBOOT)   == 0) i686_reboot();
             else if (strstr(command_line[0], COMMAND_VERSION)  == 0) shell_start_screen();
             else if (strstr(command_line[0], COMMAND_CLEAR)    == 0) VGA_clrscr();
             else if (strstr(command_line[0], COMMAND_ECHO)     == 0) kprintf("\r\n%s", command_line[1]);
@@ -108,23 +115,28 @@ void shell_start_screen() {
                     return;
                 }
 
-                else if (FAT_get_content(current_path)->file != NULL) {
+                struct FATContent* content = FAT_get_content(dir_path);
+                if (content->file != NULL) {
+                    FAT_unload_content_system(content);
                     free(dir_path);
                     kprintf("\nQuesta non e' una directory.");
                     return;
                 }
 
+                FAT_unload_content_system(content);
                 free(current_path);
                 current_path = dir_path;
             }
             
             else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0) {
-                current_path = FATLIB_change_path(current_path, NULL);
-                if (strlen(current_path) <= 1) {
-                    free(current_path);
-                    current_path = malloc(5);
-                    strcpy(current_path, "BOOT");
+                char* up_path = FATLIB_change_path(current_path, NULL);
+                if (up_path == NULL) {
+                    up_path = malloc(5);
+                    strcpy(up_path, "BOOT");
                 };
+
+                free(current_path);
+                current_path = up_path;
             }
 
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {
