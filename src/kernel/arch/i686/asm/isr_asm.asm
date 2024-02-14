@@ -1,12 +1,12 @@
 [bits 32]
 
-extern i686_isr_handler
+extern i386_isr_handler
 
 
 %macro ISR_NOERRORCODE 1
 
-global i686_ISR%1:
- i686_ISR%1:
+global i386_ISR%1:
+ i386_ISR%1:
     push 0                  ; pusg dummy error code
     push %1                 ; push interrupt number
     jmp isr_common
@@ -15,8 +15,8 @@ global i686_ISR%1:
 
 %macro ISR_ERRORCODE 1
 
-global i686_ISR%1:
- i686_ISR%1:
+global i386_ISR%1:
+ i386_ISR%1:
     push %1                 ; push interrupt number
     jmp isr_common
 
@@ -38,7 +38,7 @@ isr_common:
     mov gs, ax
 
     push esp                 ; pass pointer stack to C
-    call i686_isr_handler
+    call i386_isr_handler
     add esp, 4
 
     pop eax                  ; restore old segment

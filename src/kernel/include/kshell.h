@@ -7,6 +7,8 @@
 #include "keyboard.h"
 #include "date_time.h"
 #include "tasking.h"
+#include "vga_text.h"
+#include "vesa_text.h"
 
 #include "../../libs/include/fatlib.h"
 #include "../../libs/include/string.h"

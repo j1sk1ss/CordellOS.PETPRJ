@@ -20,17 +20,17 @@ static const char* const _exceptions[] = {
     "Security Cordell-Exception", ""
 };
 
-void i686_ISR_InitializeGates();
+void i386_ISR_InitializeGates();
 
-void i686_isr_initialize() {
-    i686_ISR_InitializeGates();
+void i386_isr_initialize() {
+    i386_ISR_InitializeGates();
     for (int i = 0; i < 256; i++)
-        i686_idt_enableGate(i);
+        i386_idt_enableGate(i);
 
-    i686_isr_registerHandler(0x80, syscall);
+    i386_isr_registerHandler(0x80, syscall);
 }
 
-void __attribute__((cdecl)) i686_isr_handler(Registers* regs) {
+void __attribute__((cdecl)) i386_isr_handler(Registers* regs) {
     if (regs->interrupt == 32) 
         if (taskManager->tasksCount > 0 && taskManager->currentTask >= 0) { // Check if multitasking enabled
         
@@ -99,7 +99,7 @@ void __attribute__((cdecl)) i686_isr_handler(Registers* regs) {
     }
 }
 
-void i686_isr_registerHandler(int interrupt, ISRHandler handler) {
+void i386_isr_registerHandler(int interrupt, ISRHandler handler) {
     _isrHandlers[interrupt] = handler;
-    i686_idt_enableGate(interrupt);
+    i386_idt_enableGate(interrupt);
 }

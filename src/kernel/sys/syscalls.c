@@ -40,8 +40,8 @@ void syscall(SYSCall* regs) {
         case SYS_GET_KEY_KEYBOARD:
             char* key_buffer = (char*)regs->ecx;
             char key = '\0';
-            if (x86_inb(0x64) & 0x1) {
-                key = x86_inb(0x60);
+            if (i386_inb(0x64) & 0x1) {
+                key = i386_inb(0x60);
                 key = get_character(key);
             }
 

@@ -59,10 +59,10 @@ void VGA_putcolor(int x, int y, uint8_t color) {
 void VGA_setcursor(int x, int y) {
     uint16_t pos = y * SCREEN_WIDTH + x;
 
-    x86_outb(0x3D4, 0x0F);                          // First value is port on VGA, second - value 
-    x86_outb(0x3D5, (uint8_t)(pos & 0xFF));         // for this register
-    x86_outb(0x3D4, 0x0E);                          // Check of. docs for info about this ports
-    x86_outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));  //
+    i386_outb(0x3D4, 0x0F);                          // First value is port on VGA, second - value 
+    i386_outb(0x3D5, (uint8_t)(pos & 0xFF));         // for this register
+    i386_outb(0x3D4, 0x0E);                          // Check of. docs for info about this ports
+    i386_outb(0x3D5, (uint8_t)((pos >> 8) & 0xFF));  //
 
     _screenX = x;
     _screenY = y;

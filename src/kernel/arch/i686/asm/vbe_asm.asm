@@ -1,5 +1,5 @@
-global x86_Video_GetVbeInfo
-x86_Video_GetVbeInfo:
+global i386_Video_GetVbeInfo
+i386_Video_GetVbeInfo:
 
     mov ax, 0x4F00
     lea di, [esi + 16]  ; Set DI to the offset where the mode info structure starts
@@ -12,8 +12,8 @@ x86_Video_GetVbeInfo:
     ret
 
 
-global x86_Video_GetModeInfo
-x86_Video_GetModeInfo:
+global i386_Video_GetModeInfo
+i386_Video_GetModeInfo:
 
     mov ax, 0x4F01
     xor cx, cx  ; Set CX to 0 to request information about the current video mode
@@ -27,8 +27,8 @@ x86_Video_GetModeInfo:
     ret
 
 
-global x86_Video_SetMode
-x86_Video_SetMode:
+global i386_Video_SetMode
+i386_Video_SetMode:
 
     mov ax, 0x4F02
     mov bx, [esp + 4]  ; Get the desired VBE mode from the function argument

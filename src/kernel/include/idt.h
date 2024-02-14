@@ -2,8 +2,8 @@
 
 #include <stdint.h>
 
-#define i686_GDT_CODE_SEGMENT 0x08
-#define i686_GDT_DATA_SEGMENT 0x10
+#define i386_GDT_CODE_SEGMENT 0x08
+#define i386_GDT_DATA_SEGMENT 0x10
 
 typedef enum {
     IDT_FLAG_GATE_TASK                      = 0x05,
@@ -22,8 +22,8 @@ typedef enum {
     IDT_FLAG_PRESENT                        = 0x80,
 } IDT_FLAGS;
 
-void i686_idt_initialize();
-void i686_idt_disableGate(int interrupt);
-void i686_idt_enableGate(int interrupt);
+void i386_idt_initialize();
+void i386_idt_disableGate(int interrupt);
+void i386_idt_enableGate(int interrupt);
 
-void i686_idt_setGate(int interrupt, void* base, uint16_t segmentDescriptor, uint8_t flags);
+void i386_idt_setGate(int interrupt, void* base, uint16_t segmentDescriptor, uint8_t flags);

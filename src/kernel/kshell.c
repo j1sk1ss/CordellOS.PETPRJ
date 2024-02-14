@@ -77,12 +77,14 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_EXIT)     == 0) exit = 1;
-            else if (strstr(command_line[0], COMMAND_REBOOT)   == 0) i686_reboot();
+            else if (strstr(command_line[0], COMMAND_REBOOT)   == 0) i386_reboot();
             else if (strstr(command_line[0], COMMAND_VERSION)  == 0) shell_start_screen();
-            else if (strstr(command_line[0], COMMAND_CLEAR)    == 0) VGA_clrscr();
             else if (strstr(command_line[0], COMMAND_ECHO)     == 0) kprintf("\r\n%s", command_line[1]);
             else if (strstr(command_line[0], COMMAND_MEM_DATA) == 0) print_kmalloc_map();
-
+            else if (strstr(command_line[0], COMMAND_CLEAR)    == 0) 
+                if (!is_vesa) VGA_clrscr();
+                else VESA_clrscr();
+                
             else if (strstr(command_line[0], COMMAND_DISK_DATA) == 0) {
                 kprintf("\r\nDisk-data kernel utility ver 0.2b\n");
                 kprintf("FAT TYPE:             [%i]\n", fat_type);

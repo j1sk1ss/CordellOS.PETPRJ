@@ -21,13 +21,13 @@ enum {
 };
  
 int get_update_in_progress_flag() {
-    x86_outb(cmos_address, 0x0A);
-    return (x86_inb(cmos_data) & 0x80);
+    i386_outb(cmos_address, 0x0A);
+    return (i386_inb(cmos_data) & 0x80);
 }
  
 unsigned char get_RTC_register(int reg) {
-      x86_outb(cmos_address, reg);
-      return x86_inb(cmos_data);
+      i386_outb(cmos_address, reg);
+      return i386_inb(cmos_data);
 }
  
 void datetime_read_rtc() {

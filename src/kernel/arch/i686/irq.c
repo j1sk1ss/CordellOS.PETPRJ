@@ -1,8 +1,4 @@
 #include "../../include/irq.h"
-#include "../../include/pic.h"
-#include "../../include/i8259.h"
-#include "../../include/x86.h"
-#include "../../include/stdio.h"
 
 #include <util/arrays.h>
 #include <stddef.h>
@@ -12,17 +8,16 @@
 IRQHandler _handler[16];
 static const PICDriver* _PICDriver = NULL; 
 
-void i686_irq_handler(Registers* regs) {
+void i386_irq_handler(Registers* regs) {
     int irq = regs->interrupt - PIC_REMAP_OFFSET;
-    
     uint8_t pic_isr = i8259_readIRQInServiceRegisters();
     uint8_t pic_irr = i8259_readIRQRequestRegisters();
 
-    // send EOI
+    if (irq == 12) _handler[irq](regs);
     _PICDriver->SendEndOfInterrupt(irq);
 }
 
-void i686_irq_initialize() {
+void i386_irq_initialize() {
     const PICDriver* drivers[] = {
         i8259_getDriver(),
     };
@@ -34,21 +29,23 @@ void i686_irq_initialize() {
         kprintf("Cordell Warning: NO PIC!\n");
         return;
     }
-
+    
     kprintf("PIC %s finded!\n", _PICDriver->Name);
-    _PICDriver->Initialize(PIC_REMAP_OFFSET, PIC_REMAP_OFFSET + 8, false);
+    _PICDriver->Initialize(PIC_REMAP_OFFSET, PIC_REMAP_OFFSET + 12, false);
 
     // Reg ISR handlers
     for (int i = 0; i < 16; i++)
-        i686_isr_registerHandler(PIC_REMAP_OFFSET + i, i686_irq_handler);
+        i386_isr_registerHandler(PIC_REMAP_OFFSET + i, i386_irq_handler);
 
     // Enable interrups
-    i686_enableInterrupts();
+    i386_enableInterrupts();
 
     _PICDriver->Unmask(0);
     _PICDriver->Unmask(1);
+    _PICDriver->Unmask(2);
+    _PICDriver->Unmask(12);
 }
 
-void i686_irq_registerHandler(int irq, IRQHandler handler) {
+void i386_irq_registerHandler(int irq, IRQHandler handler) {
     _handler[irq] = handler;
 }

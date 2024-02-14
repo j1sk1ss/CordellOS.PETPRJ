@@ -988,6 +988,19 @@
 		return result;
 	}
 
+	void FAT_read_content2buffer(struct FATContent* data, uint32_t* buffer) {
+		int offset = 0;
+		for (int i = 0; i < data->file->data_size; i++) {
+			uint8_t* content_part = FAT_cluster_read(data->file->data[i]);
+			int size = SECTOR_SIZE * sectors_per_cluster;
+			
+			memcpy(buffer + offset, content_part, size);
+			free(content_part);
+
+			offset += size;
+		}
+	}
+
 	int FAT_ELF_execute_content(char* path, int args, char* argv[]) {
 		int (*programEntry)(int, char* argv[]) = (int (*)(int, char* argv[]))(ELF_read(path));
 		if (programEntry == NULL) return 0;

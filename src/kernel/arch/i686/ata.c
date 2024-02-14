@@ -9,16 +9,16 @@
         uint8_t* buffer = (uint8_t*)malloc(SECTOR_SIZE);
         if (buffer == NULL) return NULL;
 
-        x86_outb(DRIVE_REGISTER, 0xE0 | (0x00 << 4) | ((lba >> 24) & 0x0F));
-        x86_outb(FEATURES_REGISTER, 0x00);
-        x86_outb(SECTOR_COUNT_REGISTER, 1);
-        x86_outb(LBA_ADRESS_REGISTER, (uint8_t)(lba & 0xFF));
-        x86_outb(CYLINDER_LOW_REGISTER, (uint8_t)((lba >> 8) & 0xFF));
-        x86_outb(CYLINDER_HIGH_REGISTER, (uint8_t)((lba >> 16) & 0xFF));
-        x86_outb(STATUS_REGISTER, ATA_CMD_READ_PIO);
+        i386_outb(DRIVE_REGISTER, 0xE0 | (0x00 << 4) | ((lba >> 24) & 0x0F));
+        i386_outb(FEATURES_REGISTER, 0x00);
+        i386_outb(SECTOR_COUNT_REGISTER, 1);
+        i386_outb(LBA_ADRESS_REGISTER, (uint8_t)(lba & 0xFF));
+        i386_outb(CYLINDER_LOW_REGISTER, (uint8_t)((lba >> 8) & 0xFF));
+        i386_outb(CYLINDER_HIGH_REGISTER, (uint8_t)((lba >> 16) & 0xFF));
+        i386_outb(STATUS_REGISTER, ATA_CMD_READ_PIO);
 
         int timeout = 9000000;
-        while ((x86_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
+        while ((i386_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
             if (--timeout < 0) {
                 free(buffer);
                 return NULL;
@@ -26,7 +26,7 @@
             else continue;
 
         for (int n = 0; n < SECTOR_SIZE / 2; n++) {
-            uint16_t value = x86_inw(DATA_REGISTER);
+            uint16_t value = i386_inw(DATA_REGISTER);
             buffer[n * 2] = value & 0xFF;
             buffer[n * 2 + 1] = value >> 8;
         }
@@ -63,22 +63,22 @@
         if (lba == BOOT_SECTOR) return -1;
 
         ATA_ata_wait();
-        x86_outb(DRIVE_REGISTER, 0xE0 | ((lba >> 24) & 0x0F));
-        x86_outb(FEATURES_REGISTER, 0x00);
-        x86_outb(SECTOR_COUNT_REGISTER, 1);
-        x86_outb(LBA_ADRESS_REGISTER, (uint8_t)lba);
-        x86_outb(CYLINDER_LOW_REGISTER, (uint8_t)(lba >> 8));
-        x86_outb(CYLINDER_HIGH_REGISTER, (uint8_t)(lba >> 16));
-        x86_outb(STATUS_REGISTER, ATA_CMD_WRITE_PIO);
+        i386_outb(DRIVE_REGISTER, 0xE0 | ((lba >> 24) & 0x0F));
+        i386_outb(FEATURES_REGISTER, 0x00);
+        i386_outb(SECTOR_COUNT_REGISTER, 1);
+        i386_outb(LBA_ADRESS_REGISTER, (uint8_t)lba);
+        i386_outb(CYLINDER_LOW_REGISTER, (uint8_t)(lba >> 8));
+        i386_outb(CYLINDER_HIGH_REGISTER, (uint8_t)(lba >> 16));
+        i386_outb(STATUS_REGISTER, ATA_CMD_WRITE_PIO);
 
         int timeout = 9000000;
-        while ((x86_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
+        while ((i386_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
             if (--timeout < 0) return -1;
             else continue;
         
         for (int i = 0; i < SECTOR_SIZE / 2; i++) {
             uint16_t data = *((uint16_t*)(buffer + i * 2));
-            x86_outw(DATA_REGISTER, data);
+            i386_outw(DATA_REGISTER, data);
         }
 
         return 1;

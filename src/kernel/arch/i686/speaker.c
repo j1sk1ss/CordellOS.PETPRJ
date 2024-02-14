@@ -49,25 +49,25 @@ void set_pit_channel_mode_frequency(const uint8_t channel, const uint8_t operati
      */
 
     // Send the command byte, always sending lobyte/hibyte for access mode
-    x86_outb(0x43, (channel << 6) | (0x3 << 4) | (operating_mode << 1));
+    i386_outb(0x43, (channel << 6) | (0x3 << 4) | (operating_mode << 1));
 
     // Send the frequency divider to the input channel
-    x86_outb(0x40 + channel, (uint8_t)frequency);           // Low byte
-    x86_outb(0x40 + channel, (uint8_t)(frequency >> 8));    // High byte
+    i386_outb(0x40 + channel, (uint8_t)frequency);           // Low byte
+    i386_outb(0x40 + channel, (uint8_t)(frequency >> 8));    // High byte
 
     asm("sti");
 }
 
 // Enable PC Speaker
 void enable_pc_speaker() {
-    uint8_t temp = x86_inb(PC_SPEAKER_PORT);
-    x86_outb(PC_SPEAKER_PORT, temp | 3);  // Set first 2 bits to turn on speaker
+    uint8_t temp = i386_inb(PC_SPEAKER_PORT);
+    i386_outb(PC_SPEAKER_PORT, temp | 3);  // Set first 2 bits to turn on speaker
 }
 
 // Disable PC Speaker
 void disable_pc_speaker() {
-    uint8_t temp = x86_inb(PC_SPEAKER_PORT);
-    x86_outb(PC_SPEAKER_PORT, temp & 0xFC);  // Clear first 2 bits to turn off speaker
+    uint8_t temp = i386_inb(PC_SPEAKER_PORT);
+    i386_outb(PC_SPEAKER_PORT, temp & 0xFC);  // Clear first 2 bits to turn off speaker
 }
 
 // Play a note for a given duration

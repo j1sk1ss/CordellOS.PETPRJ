@@ -1,7 +1,7 @@
 [bits 32]
 
-global i686_idt_load
-i686_idt_load:
+global i386_idt_load
+i386_idt_load:
     push ebp                    ; save old frame
     mov ebp, esp                ; init new call frame
 

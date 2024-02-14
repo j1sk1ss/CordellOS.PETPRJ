@@ -11,7 +11,7 @@ void* memcpy(void* destination, const void* source, uint16_t num) {
 }
 
 void* memset(void* pointer, uint8_t value, uint16_t num) {
-    uint8_t* u8Ptr = (uint8_t *)pointer;
+    uint8_t* u8Ptr = (uint8_t*)pointer;
 
     for (uint16_t i = 0; i < num; i++)
         u8Ptr[i] = value;
@@ -37,15 +37,15 @@ void* seg_offset_to_linear(void* address) {
     return (void*)(segment * 16 + offset);
 }
 
-void* memmove(void *dest, const void *src, size_t len) {
-    char *d = dest;
-    const char *s = src;
+void* memmove(void* dest, const void* src, size_t len) {
+    char* d       = dest;
+    const char* s = src;
     if (d < s)
         while (len--)
             *d++ = *s++;
     else {
-      char *lasts = s + (len-1);
-      char *lastd = d + (len-1);
+      char* lasts = s + (len - 1);
+      char* lastd = d + (len - 1);
         while (len--)
             *lastd-- = *lasts--;
     }

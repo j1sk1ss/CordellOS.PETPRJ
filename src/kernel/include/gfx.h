@@ -7,19 +7,19 @@
 #include "font.h"
 
 #include "../multiboot.h"
-
 #include "../../libs/include/math.h"
 
-// 32 bit ARGB colors
-#define BLACK      0x00000000 
-#define WHITE      0x00FFFFFF 
-#define DARK_GRAY  0x00222222
-#define LIGHT_GRAY 0x00DDDDDD
-#define RED        0x00FF0000 
-#define GREEN      0x0000FF00 
-#define BLUE       0x000000FF 
-#define YELLOW     0x00FFFF00 
-#define PURPLE     0x00FF00FF
+
+#define BLACK       0x00000000 
+#define WHITE       0x00FFFFFF 
+#define DARK_GRAY   0x00222222
+#define LIGHT_GRAY  0x00DDDDDD
+#define RED         0x00FF0000 
+#define GREEN       0x0000FF00 
+#define BLUE        0x000000FF 
+#define YELLOW      0x00FFFF00 
+#define PURPLE      0x00FF00FF
+#define TRANSPARENT 0x10000000
 
 #define ROUND(a) ((int)(a + 0.5))
 
@@ -114,18 +114,10 @@ extern vbe_mode_info_t gfx_mode;
 void GFX_init(struct multiboot_info* mb_info);
 
 void GFX_draw_pixel(uint16_t X, uint16_t Y, uint32_t color);
-void GFX_draw_line(Point start, Point end, uint32_t color);
-void GFX_draw_triangle(Point vertex0, Point vertex1, Point vertex2, uint32_t color);
-void GFX_draw_rect(Point top_left, Point bottom_right, uint32_t color);
-void GFX_draw_polygon(Point vertex_array[], uint8_t num_vertices, uint32_t color);
-void GFX_draw_circle(Point center, uint16_t radius, uint32_t color);
-
-void GFX_boundary_fill(uint16_t X, uint16_t Y, uint32_t fill_color, uint32_t boundary_color);
-void GFX_fill_triangle_solid(Point p0, Point p1, Point p2, uint32_t color);
+uint32_t GFX_get_pixel(uint16_t X, uint16_t Y);
 void GFX_fill_rect_solid(Point top_left, Point bottom_right, uint32_t color);
-void GFX_fill_polygon_solid(Point vertex_array[], uint8_t num_vertices, uint32_t color);
-void GFX_fill_circle_solid(Point center, uint16_t radius, uint32_t color);
 
 void GFX_put_char(int x, int y, int c, uint32_t foreground, uint32_t background);
+int GFX_get_char(int x, int y);
 
 uint32_t GFX_convert_color(const uint32_t color);

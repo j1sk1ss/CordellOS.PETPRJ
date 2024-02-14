@@ -29,21 +29,18 @@ void kfputs(const char* str, uint8_t file, int color) {
 }
 
 void kset_color(int color) {
-    // TODO: Vesa screen + Vesa clrs
-    VGA_set_color(color);
+    if (!is_vesa) VGA_set_color(color);
+    else {
+        Point fpoint, spoint;
+
+        fpoint.X = 0;
+        fpoint.Y = 0;
+        spoint.X = gfx_mode.x_resolution;
+        spoint.Y = gfx_mode.y_resolution;
+
+        GFX_fill_rect_solid(fpoint, spoint, color);
+    }
 }
-
-#define PRINTF_STATE_NORMAL         0
-#define PRINTF_STATE_LENGTH         1
-#define PRINTF_STATE_LENGTH_SHORT   2
-#define PRINTF_STATE_LENGTH_LONG    3
-#define PRINTF_STATE_SPEC           4
-
-#define PRINTF_LENGTH_DEFAULT       0
-#define PRINTF_LENGTH_SHORT_SHORT   1
-#define PRINTF_LENGTH_SHORT         2
-#define PRINTF_LENGTH_LONG          3
-#define PRINTF_LENGTH_LONG_LONG     4
 
 const char _HexChars[] = "0123456789abcdef";
 
@@ -175,7 +172,6 @@ void kvfprintf(uint8_t file, const char* fmt, va_list args, int color) {
                         number  = true;
                     break;
 
-                    // ignore invalid spec
                     default:    
                         break;
                 }
@@ -281,8 +277,7 @@ void kprint_hex_table(const char* data, size_t length) {
     for (size_t i = 0; i < length; ++i) {
         kprintf("%c%c ", '0' + ((unsigned char)data[i] >> 4), '0' + ((unsigned char)data[i] & 0x0F));
 
-        if ((i + 1) % 16 == 0 || i == length - 1) {
+        if ((i + 1) % 16 == 0 || i == length - 1) 
             kprintf("\n");
-        }
     }
 }

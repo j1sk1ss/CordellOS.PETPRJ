@@ -16,7 +16,7 @@ void TASK_task_init() {
 }
 
 void TASK_start_tasking() {
-	i686_disableInterrupts();
+	i386_disableInterrupts();
 
 	// Load stack to esp
 	asm ("mov %%eax, %%esp": :"a"(taskManager->tasks[0]->cpuState->esp));
@@ -37,7 +37,7 @@ void TASK_start_tasking() {
 	// Set multitasking on
 	taskManager->currentTask = 0;
 
-	i686_enableInterrupts();
+	i386_enableInterrupts();
 
 	// Return from interrupt and execute process
 	asm ("iret");
@@ -171,7 +171,7 @@ int TASK_add_task(Task* task) {
 }
 
 CPUState* TASK_task_switch(CPUState* state) {
-	i686_disableInterrupts();
+	i386_disableInterrupts();
 
 	taskManager->tasks[taskManager->currentTask]->cpuState = state;
 
@@ -187,6 +187,6 @@ CPUState* TASK_task_switch(CPUState* state) {
 		new_task = taskManager->tasks[taskManager->currentTask];
 	}
 
-	i686_enableInterrupts();
+	i386_enableInterrupts();
 	return new_task->cpuState;
 }

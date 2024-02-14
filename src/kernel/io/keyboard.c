@@ -56,7 +56,7 @@ unsigned char alphabet[128] = {
 };
 
 int key_press() {
-    if (x86_inb(0x64) & 0x1) return 1;
+    if (i386_inb(0x64) & 0x1) return 1;
     return 0;
 }
 
@@ -76,15 +76,19 @@ char get_character(char character) {
             input[0] = '\0';
             
             while (1) {
-                if (x86_inb(0x64) & 0x1) {
-                    char character = x86_inb(0x60);
+                if (i386_inb(0x64) & 0x1) {
+                    char character = i386_inb(0x60);
                     if (!(character & 0x80)) {
                         char currentCharacter = alphabet[character];
                         if (currentCharacter != ENTER_BUTTON) {
                             if (currentCharacter == BACKSPACE_BUTTON) {
                                 input = backspace_string(input);
-                                VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
-                                VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), NULL);
+
+                                if (!is_vesa) {
+                                    VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
+                                    VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), NULL);
+                                } else VESA_backspace();
+
                                 continue;
                             }
 
@@ -110,8 +114,8 @@ char get_character(char character) {
 
         char keyboard_navigation() {
             while (1) 
-                if (x86_inb(0x64) & 0x1) {
-                    char character = x86_inb(0x60);
+                if (i386_inb(0x64) & 0x1) {
+                    char character = i386_inb(0x60);
                     if (!(character & 0x80)) {
                         return alphabet[character];
                     }

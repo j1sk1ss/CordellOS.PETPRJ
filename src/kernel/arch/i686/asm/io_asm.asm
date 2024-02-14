@@ -5,19 +5,19 @@
 
 ; Output byte to port
 ;
-; void __attribute__((cdecl)) x86_outb(uint16_t port, uint8_t data);
+; void __attribute__((cdecl)) i386_outb(uint16_t port, uint8_t data);
 ;
-global i686_panic
-i686_panic:
+global i386_panic
+i386_panic:
     cli
     hlt
 
-global i686_enableInterrupts
-i686_enableInterrupts:
+global i386_enableInterrupts
+i386_enableInterrupts:
     sti
     ret
 
-global i686_disableInterrupts
-i686_disableInterrupts:
+global i386_disableInterrupts
+i386_disableInterrupts:
     cli
     ret

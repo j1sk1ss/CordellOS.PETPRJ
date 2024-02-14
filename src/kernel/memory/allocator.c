@@ -159,9 +159,11 @@
 	}
 
 	void kfree(void* ptr) {
+		if (ptr == NULL) return;
 		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next) 
 			if ((void*)cur + sizeof(malloc_block_t) == ptr && cur->free == false) {
 				cur->free = true;
+				memset(ptr, 0, cur->size);
 				merge_free_blocks();
 				break;
 			}

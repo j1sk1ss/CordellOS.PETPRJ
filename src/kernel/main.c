@@ -9,6 +9,9 @@
 #include "include/pit.h"
 #include "include/phys_manager.h"
 #include "include/virt_manager.h"
+#include "include/bitmap.h"
+#include "include/mouse.h"
+#include "include/keyboard.h"
 
 #include "multiboot.h"
 
@@ -29,7 +32,7 @@ extern uint32_t kernel_end;
 //          4.1) Tasking with paging                              [V]
 //          4.2) ELF exec with tasking and paging                 [V]
 //      5) VBE / VESA                                             [V]
-//          5.1) VBE kernel                                       [?]
+//          5.1) VBE kernel                                       [V]
 //      6) Keyboard to int                                        [ ]
 //      7) Reboot outportb(0x64, 0xFE);                           [V]
 //          8.-1) Syscalls to std libs                            [V]
@@ -48,10 +51,10 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - VBE data
     //===================
 
-        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 3 ]   = \n\n");
+        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 4 ]   = \n\n");
 
         if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-            kprintf("[kernel.c 53] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
+            kprintf("[kernel.c 54] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
             goto end;
         }
 
@@ -66,8 +69,9 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
 
         kprintf("\n\t =    VBE INFO    = \n");
         kprintf("VBE FRAMEBUFFER: [%u]\n", mb_info->framebuffer_addr);
-        kprintf("VBE X:           [%u]\n", mb_info->framebuffer_height);
-        kprintf("VBE Y:           [%u]\n", mb_info->framebuffer_width);
+        kprintf("VBE Y:           [%u]\n", mb_info->framebuffer_height);
+        kprintf("VBE X:           [%u]\n", mb_info->framebuffer_width);
+        kprintf("VBE BPP:         [%u]\n", mb_info->framebuffer_bpp);
 
     //===================
     // Phys & Virt memory manager initialization
@@ -123,14 +127,29 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         // Memory test
         //===================
 
-        deinitialize_memory_region(0x1000, 0x11000); 
+        deinitialize_memory_region(0x1000, 0x11000);
         deinitialize_memory_region(0x30000, max_blocks / BLOCKS_PER_BYTE);
-        deinitialize_memory_region(mb_info->framebuffer_addr, mb_info->framebuffer_height * mb_info->framebuffer_width * (mb_info->framebuffer_bpp / 8));
         if (initialize_virtual_memory_manager(0x100000) == false) {
             kprintf("[kernel.c 130] Virtual memory can`t be init.\n");
             goto end;
         }
 
+        //===================
+        // Map framebuffer
+        //===================
+
+            uint32_t fb_size_in_bytes = gfx_mode.y_resolution * gfx_mode.x_resolution * (gfx_mode.bits_per_pixel / 2);
+            uint32_t fb_size_in_pages = fb_size_in_bytes / PAGE_SIZE;
+            if (fb_size_in_pages % PAGE_SIZE > 0) fb_size_in_pages++;
+    
+            fb_size_in_pages *= 2;
+            for (uint32_t i = 0, fb_start = gfx_mode.physical_base_pointer; i < fb_size_in_pages; i++, fb_start += PAGE_SIZE)
+                map_page((void*)fb_start, (void*)fb_start);
+
+            deinitialize_memory_region(gfx_mode.physical_base_pointer, fb_size_in_pages * BLOCK_SIZE);
+
+        //===================
+        // Map framebuffer
         //===================
         // Heap initialization
         //===================
@@ -158,15 +177,16 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     kprintf("Kernel base: %u\nKernel end: %u\n\n", &kernel_base, &kernel_end);
 
     //===================
-    // Keyboard initialization
+    // Keyboard & Mouse initialization
     // - Keyboard activation
     //===================
 
-        x86_init_keyboard();
+        i386_init_keyboard();
+        i386_init_mouse();
 
     //===================
 
-    kprintf("Keyboard initialized\n\n");
+    kprintf("Keyboard & mouse initialized [%i]\n\n", i386_detect_ps2_mouse());
 
     //===================
     // FAT and FS initialization
@@ -184,7 +204,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
     // Kernel shell part
     //===================
-    
+
         if (FAT_content_exists("boot\\boot.txt") == 1) {
             struct FATContent* boot_config = FAT_get_content("boot\\boot.txt");
             char* config = FAT_read_content(boot_config);

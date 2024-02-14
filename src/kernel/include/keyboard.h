@@ -6,6 +6,7 @@
 #include "stdio.h"
 #include "x86.h"
 #include "vga_text.h"
+#include "vesa_text.h"
 
 #include "../../libs/include/memory.h"
 #include "../../libs/include/stdlib.h"
@@ -34,4 +35,4 @@ char* keyboard_read(int mode, int color);
 char keyboard_navigation();
 void keyboard_wait(char symbol);
 
-void __attribute__((cdecl)) x86_init_keyboard();
+void __attribute__((cdecl)) i386_init_keyboard();

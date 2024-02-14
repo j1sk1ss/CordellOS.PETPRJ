@@ -286,6 +286,7 @@ extern unsigned int ext_root_cluster;
 	int FAT_content_exists(const char* filePath);
 	struct FATContent* FAT_get_content(const char* filePath);
 	char* FAT_read_content(struct FATContent* data);
+	void FAT_read_content2buffer(struct FATContent* data, uint32_t* buffer);
 	int FAT_put_content(const char* filePath, struct FATContent* content);
 	int FAT_delete_content(const char* filePath, const char* name);
 	struct FATContent* FAT_create_content(char* name, BOOL directory, char* extension);

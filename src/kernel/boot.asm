@@ -29,8 +29,8 @@ CHECKSUM equ -(MAGIC + MBFLAGS)
 		dd 0x00000000
 
 		frame_buffer_start:
-			dd 1
-			dd 1920, 1080, 32
+			dd 0
+			dd 1280, 720, 32
 		frame_buffer_end:
 
 	mb_header_end:
