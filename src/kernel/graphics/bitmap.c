@@ -10,44 +10,26 @@ bitmap_t* BMP_create(char* file_path) {
         return NULL;
     }
 
-    char* file_data    = FAT_read_content(content);
-    char* data_pointer = file_data;
-    FAT_unload_content_system(content);
+    uint8_t* header = calloc(sizeof(bmp_fileheader_t), 1);
+    FAT_read_content2buffer(content, header, 0, sizeof(bmp_fileheader_t));
 
-    bmp_fileheader_t* h = data_pointer;
-    unsigned int offset = h->bfOffBits;
+    bmp_fileheader_t* h = header;
+    uint32_t offset     = h->bfOffBits;
 
-    bmp_infoheader_t* info = data_pointer + sizeof(bmp_fileheader_t);
-    ret->width        = info->biWidth;
-    ret->height       = info->biHeight;
-    ret->image_bytes  = (void*)((unsigned int)data_pointer + offset);
-    ret->buf          = data_pointer;
-    ret->total_size   = content->file->file_meta.file_size;
-    ret->bpp          = info->biBitCount;
-    ret->data_pointer = file_data;
+    free(header);
 
+    uint8_t* info = calloc(sizeof(bmp_infoheader_t), 1);
+    FAT_read_content2buffer(content, info, sizeof(bmp_fileheader_t), sizeof(bmp_infoheader_t));
+
+    bmp_infoheader_t* inf = info;
+    ret->width            = inf->biWidth;
+    ret->height           = inf->biHeight;
+    ret->header_offset    = offset;
+    ret->file             = content;
+    ret->bpp              = inf->biBitCount;
+
+    free(info);
     return ret;
-}
-
-void BMP_display(bitmap_t* bmp) {
-    if (bmp == NULL) {
-        kprintf("Invalid bitmap\n");
-        return;
-    }
-
-    if (bmp->width > gfx_mode.x_resolution || bmp->height > gfx_mode.y_resolution) {
-        kprintf("Invalid resolution of bitmap\n");
-        return;
-    }
-    
-    for (int y = bmp->height - 1; y >= 0; y--) {
-        for (int x = 0; x < bmp->width; x++) {
-            unsigned int pixel_offset = y * bmp->width + x;
-            unsigned int color_index = pixel_offset * (bmp->bpp / 8);
-            uint32_t color = *(uint32_t*)(bmp->image_bytes + color_index);
-            GFX_draw_pixel(x, bmp->height - 1 - y, color);
-        }
-    }
 }
 
 void BMP_display_at(bitmap_t* bmp, int screen_x, int screen_y) {
@@ -57,22 +39,37 @@ void BMP_display_at(bitmap_t* bmp, int screen_x, int screen_y) {
     }
 
     if (bmp->width > gfx_mode.x_resolution || bmp->height > gfx_mode.y_resolution) {
-        kprintf("Invalid resolution of bitmap\n");
+        kprintf("Invalid resolution of bitmap W%i H%i\n", bmp->width, bmp->height);
         return;
     }
-
+    
     for (int y = bmp->height - 1; y >= 0; y--) {
+        uint32_t bytes_per_pixel = bmp->bpp / 8;
+        uint32_t line_size       = bmp->width * bytes_per_pixel;
+
+        uint32_t offset      = bmp->header_offset + y * line_size;
+        uint8_t* line_bytes = calloc(line_size * sizeof(uint8_t), 1);
+
+        FAT_read_content2buffer(bmp->file, line_bytes, offset, line_size);
+
         for (int x = 0; x < bmp->width; x++) {
-            unsigned int pixel_offset = y * bmp->width + x;
-            unsigned int color_index = pixel_offset * (bmp->bpp / 8);
-            uint32_t color = *(uint32_t*)(bmp->image_bytes + color_index);
+            uint32_t color_index = x * bytes_per_pixel;
+            uint8_t blue  = line_bytes[color_index];
+            uint8_t green = line_bytes[color_index + 1];
+            uint8_t red   = line_bytes[color_index + 2];
+            
+            // Combine the individual color components into a 32-bit color value
+            uint32_t color = (red << 16) | (green << 8) | blue;
+            
             GFX_draw_pixel(x + screen_x, (bmp->height - 1 - y) + screen_y, color);
         }
+
+        free(line_bytes);
     }
 }
 
 void BMP_unload(bitmap_t* bitmap) {
     if (bitmap == NULL) return;
-    free(bitmap->data_pointer);
+    FAT_unload_content_system(bitmap->file);
     free(bitmap);
 }

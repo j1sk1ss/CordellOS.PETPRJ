@@ -275,9 +275,11 @@ void kprint_buffer(const char* msg, const void* buffer, uint32_t count) {
 
 void kprint_hex_table(const char* data, size_t length) {
     for (size_t i = 0; i < length; ++i) {
-        kprintf("%c%c ", '0' + ((unsigned char)data[i] >> 4), '0' + ((unsigned char)data[i] & 0x0F));
+        kprintf("%c%c ", '0' + ((unsigned char)*data >> 4), '0' + ((unsigned char)*data & 0x0F));
 
         if ((i + 1) % 16 == 0 || i == length - 1) 
             kprintf("\n");
+
+        data++;
     }
 }

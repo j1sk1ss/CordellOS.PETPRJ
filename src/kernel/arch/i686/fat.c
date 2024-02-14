@@ -988,16 +988,22 @@
 		return result;
 	}
 
-	void FAT_read_content2buffer(struct FATContent* data, uint32_t* buffer) {
-		int offset = 0;
-		for (int i = 0; i < data->file->data_size; i++) {
-			uint8_t* content_part = FAT_cluster_read(data->file->data[i]);
-			int size = SECTOR_SIZE * sectors_per_cluster;
-			
-			memcpy(buffer + offset, content_part, size);
-			free(content_part);
+	void FAT_read_content2buffer(struct FATContent* data, uint8_t* buffer, uint32_t offset, uint32_t size) {
+		uint32_t data_seek     = offset % (sectors_per_cluster * SECTOR_SIZE);
+		uint32_t cluster_seek  = offset / (sectors_per_cluster * SECTOR_SIZE);
+		uint32_t data_position = 0;
 
-			offset += size;
+		for (int i = cluster_seek; i < data->file->data_size && data_position < size; i++) {
+			uint8_t* content_part = FAT_cluster_read(data->file->data[i]);
+			uint32_t copy_size = (i == cluster_seek) 
+				? min(SECTOR_SIZE * sectors_per_cluster - data_seek, size - data_position) 
+				: min(SECTOR_SIZE * sectors_per_cluster, size - data_position);
+
+			memcpy(buffer + data_position, content_part + data_seek, copy_size);
+			free(content_part);
+			
+			data_position += copy_size;
+			data_seek = 0;
 		}
 	}
 

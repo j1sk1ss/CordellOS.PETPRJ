@@ -27,17 +27,22 @@ extern uint32_t kernel_end;
 //      2) Phys and Virt manages                                  [V]
 //      3) ELF check v_addr                                       [ ]
 //          3.1) Fix global and static vars                       [ ]
+//          3.2) Loading ELF without malloc for fdata             [ ]
 //      4) Paging (create error with current malloc) / allocators [V]
 //          4.0) Random Page fault (Null error de Italia)         [V]
 //          4.1) Tasking with paging                              [V]
 //          4.2) ELF exec with tasking and paging                 [V]
 //      5) VBE / VESA                                             [V]
-//          5.1) VBE kernel                                       [V]
+//          5.0) VBE kernel                                       [V]
 //      6) Keyboard to int                                        [ ]
 //      7) Reboot outportb(0x64, 0xFE);                           [V]
-//          8.-1) Syscalls to std libs                            [V]
-//          8.0) VBE userland                                     [ ]
-//      8) DOOM?                                                  [ ]
+//      8) Mouse support                                          [V]
+//          8.0) Std lib for graphics                             [ ]
+//          8.1) Loading BMP without malloc for fdata             [V]
+//          8.1) Syscalls to std libs                             [V]
+//          8.2) VBE userland                                     [ ]
+//      9) Malloc optimization                                    [ ]
+//      10) DOOM?                                                 [ ]
 //===================================================================
 
 
@@ -51,7 +56,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - VBE data
     //===================
 
-        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 4 ]   = \n\n");
+        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 5 ]   = \n\n");
 
         if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
             kprintf("[kernel.c 54] Multiboot error (Magic is wrong [%u]).\n", mb_magic);

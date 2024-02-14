@@ -4,7 +4,7 @@ int exit = 0;
 char* current_path = NULL;
 
 void kshell() {
-    kprintf("[NOTA: QUESTA E` UNA MODALITA` TESTO VGA]\n");
+    if (!is_vesa) kprintf("[NOTA: QUESTA E` UNA MODALITA` TESTO VGA]\n");
     current_path = (char*)malloc(5);
 	strcpy(current_path, "BOOT");
 
@@ -22,7 +22,7 @@ void kshell() {
 }
 
 void shell_start_screen() {
-    kprintf("Cordell KShell [ver. 0.3b | 11.02.2024] \n\r");
+    kprintf("Cordell KShell [ver. 0.3c | 15.02.2024] \n\r");
     kprintf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n\r");
 }
 

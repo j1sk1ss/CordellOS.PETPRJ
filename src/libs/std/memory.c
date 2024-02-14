@@ -1,10 +1,20 @@
 #include "../include/memory.h"
 
 void* memcpy(void* destination, const void* source, uint16_t num) {
-    uint8_t* u8Dst = (uint8_t *)destination;
-    const uint8_t* u8Src = (const uint8_t *)source;
+    uint8_t* u8Dst = (uint8_t*)destination;
+    const uint8_t* u8Src = (const uint8_t*)source;
 
     for (uint16_t i = 0; i < num; i++)
+        u8Dst[i] = u8Src[i];
+
+    return destination;
+}
+
+void* memcpy_off(void* destination, const void* source, uint16_t offset, uint16_t num) {
+    uint8_t* u8Dst = (uint8_t*)destination;
+    const uint8_t* u8Src = (const uint8_t*)source;
+
+    for (uint16_t i = offset; i < offset + num; i++)
         u8Dst[i] = u8Src[i];
 
     return destination;

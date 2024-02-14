@@ -37,8 +37,10 @@ typedef struct bitmap {
 
     unsigned int width;
     unsigned int height;
-    char* image_bytes;
-    char* buf;
+
+    struct FATContent* file;
+    uint32_t header_offset;
+
     unsigned int total_size;
     uint32_t bpp;
 
@@ -57,7 +59,6 @@ typedef struct palette {
 
 bitmap_t* BMP_create(char* filename);
 
-void BMP_display(bitmap_t* bmp);
 void BMP_display_at(bitmap_t* bmp, int screen_x, int screen_y);
 void BMP_unload(bitmap_t* bitmap);
 
