@@ -9,6 +9,7 @@
 #include "../../libs/include/memory.h"
 #include "../../libs/include/stdlib.h"
 
+
 #define TASKS_MAX             256
 
 #define PROCESS_STATE_ALIVE   0 
@@ -17,11 +18,13 @@
 
 #define START_PROCESS(name, address)    TASK_add_task(TASK_create_task(name, address))
 
+
 typedef struct {
     uint32_t edi, esi, ebp, kern_esp, ebx, edx, ecx, eax;
-    uint32_t eip, cs, eflag, esp;
+    uint32_t eip, cs, eflag, esp, cr3;
 
-    uint32_t cr3;
+    uint32_t virtual;
+
 } __attribute__((packed)) CPUState;
 
 typedef struct {
@@ -47,6 +50,9 @@ extern TaskManager* taskManager;
 
 void TASK_task_init();
 void TASK_start_tasking();
+
+void TASK_stop_tasking();
+void TASK_continue_tasking();
 
 Task* TASK_create_task(char* pname, uint32_t address);
 int TASK_add_task(Task* task);

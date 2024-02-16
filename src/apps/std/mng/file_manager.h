@@ -4,9 +4,6 @@
 #include "../../../libs/include/stdlib.h"
 #include "../../../libs/include/stdio.h"
 
-#include "user.h"
-#include "text_editor.h"
-
 
 #define ROWS            14
 #define LINE_OFFSEET    4
@@ -27,4 +24,4 @@
 #define DELETE_POS      3
 
 
-void open_file_manager(struct User* user, char* path);
+void open_file_manager(char* path);

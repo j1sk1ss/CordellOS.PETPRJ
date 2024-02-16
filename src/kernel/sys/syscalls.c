@@ -19,12 +19,13 @@ void syscall(SYSCall* regs) {
         break;
 
         case SYS_CLEAR:
-            VGA_clrscr();
+            if (!is_vesa) VGA_clrscr();
+            else VESA_clrscr();
         break;
 
         case SYS_SCREEN_COLOR:
             char screen_color = (char)regs->ecx;
-            VGA_set_color(screen_color);
+            kset_color(screen_color);
         break;
 
         case SYS_SLEEP:
@@ -151,7 +152,8 @@ void syscall(SYSCall* regs) {
             int scr_x = (int)regs->ebx;
             int scr_y = (int)regs->ecx;
 
-            scrresult[0] = VGA_getchr(scr_x, scr_y);
+            if (!is_vesa) scrresult[0] = VGA_getchr(scr_x, scr_y);
+            else scrresult[0] = GFX_get_char(scr_x, scr_y);
         break;
 
         case SYS_GET_CURSOR:
@@ -165,7 +167,8 @@ void syscall(SYSCall* regs) {
             int cur_x = (int)regs->ebx;
             int cur_y = (int)regs->ecx;
 
-            VGA_setcursor(cur_x, cur_y);
+            if (!is_vesa) VGA_setcursor(cur_x, cur_y);
+            else VESA_set_cursor(cur_x, cur_y);
         break;
 
         case SYS_SET_SCRCHAR:
@@ -173,7 +176,8 @@ void syscall(SYSCall* regs) {
             int pos_y = (int)regs->ecx;
             char new_char = (char)regs->edx;
 
-            VGA_putchr(pos_x, pos_y, new_char);
+            if (!is_vesa) VGA_putchr(pos_x, pos_y, new_char);
+            else GFX_put_char(pos_x, pos_y, new_char, WHITE, BLACK);
         break;
 
         case SYS_SET_SCRCOLOR:
@@ -200,6 +204,22 @@ void syscall(SYSCall* regs) {
 
         case SYS_KILL_PROCESS:
             __kill();
+        break;
+
+        case SYS_PUT_PIXEL:
+            uint16_t npix_x = (uint16_t)regs->ebx;
+            uint16_t npix_y = (uint16_t)regs->ecx;
+            uint32_t pixel  = (uint32_t)regs->edx;
+
+            GFX_draw_pixel(npix_x, npix_y, pixel);
+        break;
+
+        case SYS_GET_PIXEL:
+            uint32_t* pixelresult = (uint32_t*)regs->ecx;
+            uint16_t pix_x        = (uint16_t)regs->ebx;
+            uint16_t pix_y        = (uint16_t)regs->ecx;
+
+            pixelresult[0] = GFX_get_pixel(pix_x, pix_y);
         break;
     }
 }

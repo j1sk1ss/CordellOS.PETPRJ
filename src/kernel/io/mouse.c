@@ -1,5 +1,5 @@
-#include "../../include/mouse.h" 
-
+#include "../include/mouse.h" 
+// TODO: Page fault 
 mouse_state_t mouse_state;
 screen_state_t screen_state;
 
@@ -71,16 +71,25 @@ void i386_mouse_handler(Registers* regs) {
     }
 }
 
-void MOUSE_place() {
+void PSMS_show() {
+    while (1) place();
+}
+
+void place() {
+    if (screen_state.x < 0 || screen_state.y < 0) {
+        screen_state.x = mouse_state.x;
+        screen_state.y = mouse_state.y;
+    }
+
     if (screen_state.x == mouse_state.x && screen_state.y == mouse_state.y) return;
     if (screen_state.x != -1 && screen_state.y != -1) 
         for (uint16_t i = screen_state.x; i < screen_state.x + MOUSE_XSIZE; i++)
             for (uint16_t j = screen_state.y; j < screen_state.y + MOUSE_YSIZE; j++) 
                 GFX_draw_pixel(i, j, screen_state.buffer[(i - screen_state.x) * MOUSE_XSIZE + (j - screen_state.y)]);
-
+                
     screen_state.x = mouse_state.x;
     screen_state.y = mouse_state.y;
-
+    
     for (uint16_t i = screen_state.x; i < screen_state.x + MOUSE_XSIZE; i++)
         for (uint16_t j = screen_state.y; j < screen_state.y + MOUSE_YSIZE; j++) {
             screen_state.buffer[(i - screen_state.x) * MOUSE_XSIZE + (j - screen_state.y)] = GFX_get_pixel(i, j);

@@ -1,5 +1,4 @@
-#include "../include/text_editor.h"
-// complete porting
+#include "text_editor.h"
 
 void cursor_place_to_line() {
     int coords[2];

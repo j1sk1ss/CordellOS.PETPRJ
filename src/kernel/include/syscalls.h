@@ -44,7 +44,11 @@
 
 // Multitasking 
 #define SYS_START_PROCESS    26
-#define SYS_KILL_PROCESS     27 //
+#define SYS_KILL_PROCESS     27
+
+// Graphics
+#define SYS_PUT_PIXEL        28
+#define SYS_GET_PIXEL        29 //
 
 
 typedef struct {

@@ -4,10 +4,10 @@
 
 #include "stdio.h"
 #include "x86.h"
-#include "font.h"
 
 #include "../multiboot.h"
 #include "../../libs/include/math.h"
+#include "../../libs/include/font.h"
 
 
 #define BLACK       0x00000000 

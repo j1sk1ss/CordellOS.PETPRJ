@@ -5,8 +5,6 @@
 #include "../../../libs/include/fatlib.h"
 #include "../../../libs/include/stdlib.h"
 
-#include "user.h"
-
 #define STACK_SIZE              100
 #define MEMORY_SIZE             100
 #define VARIABLE_MEMORY_START   8
@@ -85,9 +83,9 @@ struct blocks_table{
 	int instr_no;  // instruction number after start
 };
 
-int asm_execute(char* file_data, struct User* user);
+int asm_execute(char* file_data);
 
 void display_symbol_table();
 void display_intermediate_table();
 void display_block_table();
-void asm_executor(int *memory_array, int memory_index, int start, int end, struct User* user);
+void asm_executor(int *memory_array, int memory_index, int start, int end);

@@ -1,5 +1,6 @@
 #include "../include/keyboard.h"
 
+// Shift keyboard converter from https://github.com/cstack/osdev/blob/master/drivers/keyboard.c#L8
 
 //   _  _________   __  ____   ___    _    ____  ____  
 //  | |/ / ____\ \ / / | __ ) / _ \  / \  |  _ \|  _ \ 
@@ -24,9 +25,9 @@ unsigned char alphabet[128] = {
     't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',	                    /* Enter key */
     0,			                                                        /* 29   - Control */
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',	                /* 39 */
-    '\'', '`',   0,		                                                /* Left shift */
+    '\'', '`', '\252',		                                            /* Left shift */
     '\\', 'z', 'x', 'c', 'v', 'b', 'n',			                        /* 49 */
-    'm', ',', '.', '/',   0,				                            /* Right shift */
+    'm', ',', '.', '/',  '\253',				                        /* Right shift */
     '*',
     0,	                                                                /* Alt */
     ' ',	                                                            /* Space bar */
@@ -55,6 +56,27 @@ unsigned char alphabet[128] = {
     0,	                                                                /* All other keys are undefined */
 };
 
+unsigned char shift_alphabet[128] = {
+  0, 0, '!', '@', '#', '$', '%', '^',
+  '&', '*', '(', ')', '_', '+', 0, 0,
+  'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
+  'O', 'P', '{', '}', '\n', 0, 'A', 'S',
+  'D', 'F', 'G', 'H', 'J', 'K', 'L', ':',
+  '"', '~', '\252', '|', 'Z', 'X', 'C', 'V',
+  'B', 'N', 'M', '<', '>', '?', '\253', 0, 0,
+  ' ', 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0,
+};
+
+bool lshift_pressed;
+bool rshift_pressed;
+bool extended_scan_code;
+bool key_pressed[128];
+
 int key_press() {
     if (i386_inb(0x64) & 0x1) return 1;
     return 0;
@@ -78,8 +100,15 @@ char get_character(char character) {
             while (1) {
                 if (i386_inb(0x64) & 0x1) {
                     char character = i386_inb(0x60);
+                    if (character < 0 || character >= 128) continue;
+
+                    key_pressed[character] = false;
                     if (!(character & 0x80)) {
-                        char currentCharacter = alphabet[character];
+                        key_pressed[character] = true;
+                        char currentCharacter  = alphabet[character];
+
+                        if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) currentCharacter = shift_alphabet[character];
+                        if (currentCharacter == LSHIFT_BUTTON || currentCharacter == RSHIFT_BUTTON) continue;
                         if (currentCharacter != ENTER_BUTTON) {
                             if (currentCharacter == BACKSPACE_BUTTON) {
                                 input = backspace_string(input);
@@ -99,10 +128,19 @@ char get_character(char character) {
                             input = add_char_to_string(input, currentCharacter);
                         } else break;
                     }
+
+                    if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) {
+                        key_pressed[LSHIFT] = false;
+                        key_pressed[RSHIFT] = false;
+                    }
                 }
             }
 
             return input;
+        }
+
+        void keyboard_irq(Registers* regs) {
+
         }
 
 //==================================================================================

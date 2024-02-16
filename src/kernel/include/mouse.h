@@ -46,4 +46,5 @@ int i386_detect_ps2_mouse();
 
 mouse_state_t i386_mouse_state();
 
-void MOUSE_place();
+void PSMS_show();
+void place();

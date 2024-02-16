@@ -46,7 +46,29 @@ void VESA_putc(char c) {
             break;
 
         default:
-            GFX_put_char(cursor_x, cursor_y, c, 0xFFFFFFFF, 0);
+            GFX_put_char(cursor_x, cursor_y, c, WHITE, BLACK);
+            cursor_x += CHAR_X;
+            break;
+    }
+}
+
+void VESA_cputc(char c, uint32_t color) {
+    int _tabSize = 4;
+    if (cursor_x + CHAR_X >= gfx_mode.x_resolution) 
+        VESA_newline();
+
+    switch (c) {
+        case '\n':
+            VESA_newline();
+            break;
+
+        case '\t':
+            for (int i = 0; i < _tabSize - ((gfx_mode.x_resolution) / CHAR_X % _tabSize); i++)
+                VESA_putc(' ');
+            break;
+
+        default:
+            GFX_put_char(cursor_x, cursor_y, c, color, BLACK);
             cursor_x += CHAR_X;
             break;
     }

@@ -14,11 +14,7 @@ void kcputc(char c, uint8_t color) {
     if (!is_vesa) {
         VGA_putc(c);
         VGA_putcolor(VGA_cursor_get_x() - 1, VGA_cursor_get_y(), color);
-    }
-    else {
-        // TODO: VESA color
-        VESA_putc(c);
-    }
+    } else VESA_cputc(c, color);
 }
 
 void kfputs(const char* str, uint8_t file, int color) {

@@ -6,12 +6,13 @@
 #include "stdio.h"
 #include "keyboard.h"
 #include "date_time.h"
-#include "tasking.h"
 #include "vga_text.h"
 #include "vesa_text.h"
+#include "bitmap.h"
 
 #include "../../libs/include/fatlib.h"
 #include "../../libs/include/string.h"
+#include "../../libs/include/stdlib.h"
 
 //   ____  _   _ _____ _     _     
 //  / ___|| | | | ____| |   | |    
@@ -41,6 +42,7 @@
         #define COMMAND_OUT_DIR                         ".."
         #define COMMAND_LIST_DIR                        "dir"
 
+        #define COMMAND_BMP_SHOW                        "guardare"
         #define COMMAND_FILE_VIEW                       "vista"
         #define COMMAND_FILE_RUN                        "fuga"
 

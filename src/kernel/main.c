@@ -9,7 +9,6 @@
 #include "include/pit.h"
 #include "include/phys_manager.h"
 #include "include/virt_manager.h"
-#include "include/bitmap.h"
 #include "include/mouse.h"
 #include "include/keyboard.h"
 
@@ -27,22 +26,26 @@ extern uint32_t kernel_end;
 //      2) Phys and Virt manages                                  [V]
 //      3) ELF check v_addr                                       [ ]
 //          3.1) Fix global and static vars                       [ ]
-//          3.2) Loading ELF without malloc for fdata             [ ]
+//          3.2) Loading ELF without malloc for fdata             [V]
 //      4) Paging (create error with current malloc) / allocators [V]
 //          4.0) Random Page fault (Null error de Italia)         [V]
 //          4.1) Tasking with paging                              [V]
 //          4.2) ELF exec with tasking and paging                 [V]
 //      5) VBE / VESA                                             [V]
 //          5.0) VBE kernel                                       [V]
-//      6) Keyboard to int                                        [ ]
+//      6) Keyboard to int                                        [V]
 //      7) Reboot outportb(0x64, 0xFE);                           [V]
 //      8) Mouse support                                          [V]
-//          8.0) Std lib for graphics                             [ ]
+//          8.0) Std lib for graphics                             [?]
 //          8.1) Loading BMP without malloc for fdata             [V]
 //          8.1) Syscalls to std libs                             [V]
 //          8.2) VBE userland                                     [ ]
-//      9) Malloc optimization                                    [ ]
-//      10) DOOM?                                                 [ ]
+//      9) Malloc optimization                                    [?]
+//      10) Bags                                                  [ ]
+//          10.0) Tasking page fault                              [ ]
+//          10.1) Mouse page fault                                [ ]
+//          10.2) Tasking with page allocator                     [ ]
+//      11) DOOM?                                                 [ ]
 //===================================================================
 
 
@@ -56,10 +59,10 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - VBE data
     //===================
 
-        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 5 ]   = \n\n");
+        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 6 ]   = \n\n");
 
         if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-            kprintf("[kernel.c 54] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
+            kprintf("[kernel.c 60] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
             goto end;
         }
 
@@ -135,7 +138,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         deinitialize_memory_region(0x1000, 0x11000);
         deinitialize_memory_region(0x30000, max_blocks / BLOCKS_PER_BYTE);
         if (initialize_virtual_memory_manager(0x100000) == false) {
-            kprintf("[kernel.c 130] Virtual memory can`t be init.\n");
+            kprintf("[kernel.c 136] Virtual memory can`t be init.\n");
             goto end;
         }
 
@@ -211,14 +214,19 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
 
         if (FAT_content_exists("boot\\boot.txt") == 1) {
+
             struct FATContent* boot_config = FAT_get_content("boot\\boot.txt");
             char* config = FAT_read_content(boot_config);
             FAT_unload_content_system(boot_config);
 
-            if (config[0] == '1') kshell();
+            if (config[1] == '1') START_PROCESS("kmouse", PSMS_show);
+            if (config[0] == '1') START_PROCESS("kshell", kshell);
+
             kfree(config);
             
-        } else kshell();
+        } else START_PROCESS("kshell", kshell);
+
+        TASK_start_tasking();
 
     //===================
     // User land part
@@ -226,7 +234,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - Idle task
     //===================
 
-        START_PROCESS("userl", FAT_ELF_execute_content("boot\\userl\\userl-s.elf", NULL, NULL)); // user-l.elf creates make errors with new memory managment 
+        START_PROCESS("userl", FAT_ELF_execute_content("boot\\userl\\userl.elf", NULL, NULL));
         TASK_start_tasking();
 
     //===================

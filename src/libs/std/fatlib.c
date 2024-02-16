@@ -46,7 +46,6 @@ struct UFATDate* FATLIB_get_date(short data, int type) {
     return NULL;
 }
 
-// TODO: Page fault
 // Return NULL if can`t make updir command
 char* FATLIB_change_path(const char* currentPath, const char* content) {
     if (content == NULL || content[0] == '\0') {

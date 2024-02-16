@@ -103,45 +103,66 @@
 		if (size <= 0) return 0;
 		if (malloc_list_head == NULL) mm_init(size);
 
+		//=============
 		// Find a block
-		malloc_block_t* cur = malloc_list_head;
-		while (cur->next != NULL) {
-			if (cur->free == true) {
-				if (cur->size == size) break;
-				if (cur->size > size + sizeof(malloc_block_t)) break;
+		//=============
+
+			merge_free_blocks();
+			malloc_block_t* cur = malloc_list_head;
+			while (cur->next != NULL) {
+				if (cur->free == true) {
+					if (cur->size == size) break;
+					if (cur->size > size + sizeof(malloc_block_t)) break;
+				}
+				
+				cur = cur->next;
 			}
-			
-			cur = cur->next;
-		}
-		
+
+		//=============
+		// Find a block
+		//=============
 		// Work with block
-		if (size == cur->size) cur->free = false;
-		else if (cur->size > size + sizeof(malloc_block_t)) kmalloc_split(cur, size);
-		else {
-			uint8_t num_pages = 1;
-			while (cur->size + num_pages * PAGE_SIZE < size + sizeof(malloc_block_t))
-				num_pages++;
-
-			uint32_t virt = malloc_virt_address + total_malloc_pages * PAGE_SIZE;
-			for (uint8_t i = 0; i < num_pages; i++) {
-				pt_entry page = 0;
-				uint32_t* temp = allocate_page(&page);
-
-				map_page((void*)temp, (void*)virt);
-				SET_ATTRIBUTE(&page, PTE_READ_WRITE); // TODO: new page create error (present)
-
-				virt += PAGE_SIZE;
-				cur->size += PAGE_SIZE;
-				total_malloc_pages++;
-			}
-
-			kmalloc_split(cur, size);
-		}
+		//=============
 		
+			if (size == cur->size) cur->free = false;
+			else if (cur->size > size + sizeof(malloc_block_t)) kmalloc_split(cur, size);
+			else {
+				//=============
+				// Allocate new page
+				//=============
+					
+					uint8_t num_pages = 1;
+					while (cur->size + num_pages * PAGE_SIZE < size + sizeof(malloc_block_t))
+						num_pages++;
+
+					uint32_t virt = malloc_virt_address + total_malloc_pages * PAGE_SIZE;
+					for (uint8_t i = 0; i < num_pages; i++) {
+						pt_entry page = 0;
+						uint32_t* temp = allocate_page(&page);
+
+						map_page((void*)temp, (void*)virt);
+						SET_ATTRIBUTE(&page, PTE_READ_WRITE);
+
+						virt += PAGE_SIZE;
+						cur->size += PAGE_SIZE;
+						total_malloc_pages++;
+					}
+
+					kmalloc_split(cur, size);
+
+				//=============
+				// Allocate new page
+				//=============
+			}
+		
+		//=============
+		// Work with block
+		//=============
+
 		return (void*)cur + sizeof(malloc_block_t);
 	}
 
-	void merge_free_blocks(void) {
+	void merge_free_blocks() {
 		malloc_block_t* cur = malloc_list_head;
 		while (cur != NULL && cur->next != NULL) {
 			if (cur->free == true && cur->next->free == true) {
@@ -165,6 +186,7 @@
 				cur->free = true;
 				memset(ptr, 0, cur->size);
 				merge_free_blocks();
+
 				break;
 			}
 	}

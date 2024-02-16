@@ -2,19 +2,26 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "stdio.h"
 #include "x86.h"
 #include "vga_text.h"
 #include "vesa_text.h"
+#include "isr.h"
 
 #include "../../libs/include/memory.h"
 #include "../../libs/include/stdlib.h"
 #include "../../libs/include/string.h"
 
+
+#define KBD_DATA_PORT           0x60
+
 #define HIDDEN_KEYBOARD         0
 #define VISIBLE_KEYBOARD        1
 
+#define LSHIFT_BUTTON           '\252'
+#define RSHIFT_BUTTON           '\253'
 #define F4_BUTTON               '\254'
 #define F3_BUTTON               '\255'
 #define F2_BUTTON               '\7'
@@ -27,6 +34,10 @@
 
 #define ENTER_BUTTON            '\n'
 #define BACKSPACE_BUTTON        '\b'
+
+#define LSHIFT                  0x2A
+#define RSHIFT                  0x36
+
 
 int key_press();
 char get_character(char character);

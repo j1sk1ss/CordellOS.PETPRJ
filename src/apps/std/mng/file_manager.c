@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include "../include/file_manager.h"
+#include "file_manager.h"
 
 void keyboard_wait(char symbol) {
     while (1) {
@@ -30,7 +30,7 @@ int set_line_color(int line, uint8_t color, int upper) {
         directly_putclr(i, (line + LINE_OFFSEET) - upper, color);
 }
 
-void open_file_manager(struct User* user, char* path) {
+void open_file_manager(char* path) {
     char* file_manager_path = malloc(strlen(path));
     strcpy(file_manager_path, path);
 
@@ -70,7 +70,7 @@ void open_file_manager(struct User* user, char* path) {
         }
 
         else if (user_action == ENTER_BUTTON || user_action == BACKSPACE_BUTTON) {
-            execute_item(user, user_action, &file_manager_path, &row_position);
+            execute_item(user_action, &file_manager_path, &row_position);
             clrscr();
             print_directory_data(file_manager_path, upper_border);
         }
@@ -102,14 +102,14 @@ void open_file_manager(struct User* user, char* path) {
         }
 
         else if (user_action == F4_BUTTON) {
-            execute_item(user, user_action, &file_manager_path, &row_position);
+            execute_item(user_action, &file_manager_path, &row_position);
             clrscr();
             print_directory_data(file_manager_path, upper_border);
         }
     }
 }
 
-void execute_item(struct User* user, char action_type, char** path, int* row) {
+void execute_item(char action_type, char** path, int* row) {
     if (*row == 0 && action_type != BACKSPACE_BUTTON) {
         *path = FATLIB_change_path(*path, NULL);
         if (strlen(*path) <= 1) {

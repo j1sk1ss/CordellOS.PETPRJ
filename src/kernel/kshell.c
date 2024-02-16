@@ -19,6 +19,7 @@ void kshell() {
     }
 
     free(current_path);
+    tkill();
 }
 
 void shell_start_screen() {
@@ -68,6 +69,7 @@ void shell_start_screen() {
                 kprintf("\n");
 
                 kprintf("\r\n> Usa [%s] per guardare tutto data in file",                        COMMAND_FILE_VIEW);
+                kprintf("\r\n> Usa [%s] per guardare bmp",                                       COMMAND_BMP_SHOW);
                 kprintf("\r\n> Usa [%s] per run file",                                           COMMAND_FILE_RUN);
                 kprintf("\n");
 
@@ -174,13 +176,37 @@ void shell_start_screen() {
                     return;
                 }
                 
+                kprintf("\n");
+
                 struct FATContent* content = FAT_get_content(file_path);
-                char* data = FAT_read_content(content);
+                int data_size = 0;
+                while (data_size < content->file->file_meta.file_size) {
+                    int copy_size = min(content->file->file_meta.file_size - data_size, 128);
+                    char* data    = (char*)malloc(copy_size);
+                    FAT_read_content2buffer(content, data, data_size, copy_size);
 
-                kprintf("\r\n%s", data);
+                    kprintf("%s");
 
-                free(data);
+                    free(data);
+                    data_size += copy_size;
+                }
+                
                 FAT_unload_content_system(content);
+                free(file_path);
+            }
+
+            else if (strstr(command_line[0], COMMAND_BMP_SHOW) == 0) {
+                char* file_path = FATLIB_change_path(current_path, command_line[1]);
+                if (FAT_content_exists(file_path) == 0) {
+                    kprintf("\nLa file non esiste.");
+                    free(file_path);
+                    return;
+                }
+
+                struct bitmap* bitmap = BMP_create(file_path);
+                BMP_display_at(bitmap, atoi(command_line[2]), atoi(command_line[3]));
+                BMP_unload(bitmap);
+
                 free(file_path);
             }
 

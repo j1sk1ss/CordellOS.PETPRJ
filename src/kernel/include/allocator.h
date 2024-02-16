@@ -32,5 +32,5 @@ void print_kmalloc_map();
 void mm_init(const uint32_t bytes);
 void kmalloc_split(malloc_block_t *node, const uint32_t size);
 void *kmalloc(const uint32_t size);
-void merge_free_blocks(void);
+void merge_free_blocks();
 void kfree(void *ptr);
