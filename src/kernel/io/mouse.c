@@ -1,8 +1,8 @@
 #include "../include/mouse.h" 
-// TODO: Page fault 
+
+
 mouse_state_t mouse_state;
 screen_state_t screen_state;
-
 int32_t __cursor_bitmap__[] = {
     WHITE, TRANSPARENT, TRANSPARENT, TRANSPARENT, TRANSPARENT,
     WHITE, WHITE, TRANSPARENT, TRANSPARENT, TRANSPARENT,
@@ -11,20 +11,15 @@ int32_t __cursor_bitmap__[] = {
     TRANSPARENT, WHITE, WHITE, TRANSPARENT, TRANSPARENT,
 };
 
+
 void i386_mouse_wait(uint8_t a_type) {
 	uint32_t timeout = 100000;
 	if (!a_type) {
-		while (--timeout) 
-			if ((i386_inb(MOUSE_STATUS) & MOUSE_BBIT) == 1) 
-				return;
-        
+		while (--timeout) if ((i386_inb(MOUSE_STATUS) & MOUSE_BBIT) == 1) return;
 		return;
 	} 
     else {
-		while (--timeout) 
-			if (!((i386_inb(MOUSE_STATUS) & MOUSE_ABIT))) 
-				return;
-        
+		while (--timeout) if (!((i386_inb(MOUSE_STATUS) & MOUSE_ABIT))) return;
 		return;
 	}
 }
@@ -76,6 +71,7 @@ void PSMS_show() {
 }
 
 void place() {
+    if (!is_vesa) return;
     if (screen_state.x < 0 || screen_state.y < 0) {
         screen_state.x = mouse_state.x;
         screen_state.y = mouse_state.y;
@@ -95,7 +91,7 @@ void place() {
             screen_state.buffer[(i - screen_state.x) * MOUSE_XSIZE + (j - screen_state.y)] = GFX_get_pixel(i, j);
 
             int32_t color = __cursor_bitmap__[(i - screen_state.x) * MOUSE_XSIZE + (j - screen_state.y)];
-            if (color != TRANSPARENT) GFX_draw_pixel(i, j, color);
+            GFX_draw_pixel(i, j, color);
         }
 }
 
@@ -134,6 +130,8 @@ int i386_init_mouse() {
     return 1;
 }
 
+//=========================
+// Function that detects mouse on device
 // 0 - no mouse
 // 1 - mouse
 int i386_detect_ps2_mouse() {
@@ -142,6 +140,8 @@ int i386_detect_ps2_mouse() {
     else return 1;
 }
 
+//=========================
+// Function that returns mouse state
 mouse_state_t i386_mouse_state() {
     return mouse_state;
 }

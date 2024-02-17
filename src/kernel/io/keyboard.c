@@ -98,7 +98,10 @@ char get_character(char character) {
             input[0] = '\0';
             
             while (1) {
-                if (i386_inb(0x64) & 0x1) {
+                uint8_t status = i386_inb(0x64);
+                if (status & 0x1) {
+                    if (status & 0x20) continue;
+
                     char character = i386_inb(0x60);
                     if (character < 0 || character >= 128) continue;
 
@@ -140,7 +143,7 @@ char get_character(char character) {
         }
 
         void keyboard_irq(Registers* regs) {
-
+            // TODO: Implement
         }
 
 //==================================================================================

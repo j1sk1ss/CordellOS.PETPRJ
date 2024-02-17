@@ -38,6 +38,7 @@ void GFX_init(struct multiboot_info* mb_info) {
 }
 
 void GFX_draw_pixel(uint16_t X, uint16_t Y, uint32_t color) {
+    if (color == TRANSPARENT) return;
     uint8_t* framebuffer    = (uint8_t*)gfx_mode.physical_base_pointer; 
     uint8_t bytes_per_pixel = (gfx_mode.bits_per_pixel + 1) / 8;
 

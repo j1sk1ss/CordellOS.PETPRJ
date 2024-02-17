@@ -32,7 +32,7 @@ void* allocate_page(pt_entry* page) {
 }
 
 void free_page(pt_entry* page) {
-    void *address = (void*)PAGE_PHYS_ADDRESS(page);
+    void* address = (void*)PAGE_PHYS_ADDRESS(page);
     if (address) free_blocks(address, 1);
 
     CLEAR_ATTRIBUTE(page, PTE_PRESENT);
@@ -84,15 +84,15 @@ void unmap_page(void *virt_address) {
     CLEAR_ATTRIBUTE(page, PTE_PRESENT);
 }
 
-void page_fault(Registers regs) {
+void page_fault(Registers* regs) {
 	uint32_t faulting_address;
 	asm ("mov %%cr2, %0" : "=r" (faulting_address));
 
-	int present	 = !(regs.error & 0x1);	    // When set, the page fault was caused by a page-protection violation. When not set, it was caused by a non-present page.
-	int rw		 = regs.error & 0x2;		// When set, the page fault was caused by a write access. When not set, it was caused by a read access.
-	int us		 = regs.error & 0x4;		// When set, the page fault was caused while CPL = 3. This does not necessarily mean that the page fault was a privilege violation.
-	int reserved = regs.error & 0x8;		// When set, one or more page directory entries contain reserved bits which are set to 1. This only applies when the PSE or PAE flags in CR4 are set to 1.
-	int id		 = regs.error & 0x10;		// When set, the page fault was caused by an instruction fetch. This only applies when the No-Execute bit is supported and enabled.
+	int present	 = !(regs->error & 0x1);	    // When set, the page fault was caused by a page-protection violation. When not set, it was caused by a non-present page.
+	int rw		 = regs->error & 0x2;		// When set, the page fault was caused by a write access. When not set, it was caused by a read access.
+	int us		 = regs->error & 0x4;		// When set, the page fault was caused while CPL = 3. This does not necessarily mean that the page fault was a privilege violation.
+	int reserved = regs->error & 0x8;		// When set, one or more page directory entries contain reserved bits which are set to 1. This only applies when the PSE or PAE flags in CR4 are set to 1.
+	int id		 = regs->error & 0x10;		// When set, the page fault was caused by an instruction fetch. This only applies when the No-Execute bit is supported and enabled.
 
 	kprintf("Page fault! ( ");
 	if (present) kprintf("present ");

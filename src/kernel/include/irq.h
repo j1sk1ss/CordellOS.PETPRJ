@@ -1,4 +1,5 @@
-#pragma once
+#ifndef IRQ_H
+#define IRQ_H
 
 #include "pic.h"
 #include "i8259.h"
@@ -10,3 +11,5 @@ typedef void (*IRQHandler)(Registers* regs);
 
 void i386_irq_initialize();
 void i386_irq_registerHandler(int irq, IRQHandler handler);
+
+#endif

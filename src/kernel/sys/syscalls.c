@@ -1,6 +1,10 @@
 #include "../include/syscalls.h"
 
-void syscall(SYSCall* regs) {
+void i386_syscalls_init() {
+    i386_isr_registerHandler(0x80, syscall);
+}
+ 
+void syscall(Registers* regs) {
     switch (regs->eax) {
         case SYS_PRINT:
             const char* data = (const char*)regs->ecx;

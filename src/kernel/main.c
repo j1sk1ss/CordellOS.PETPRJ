@@ -11,6 +11,8 @@
 #include "include/virt_manager.h"
 #include "include/mouse.h"
 #include "include/keyboard.h"
+#include "include/allocator.h"
+#include "include/syscalls.h"
 
 #include "multiboot.h"
 
@@ -24,8 +26,8 @@ extern uint32_t kernel_end;
 //===================================================================
 //      1) Multiboot struct                                       [V]
 //      2) Phys and Virt manages                                  [V]
-//      3) ELF check v_addr                                       [ ]
-//          3.1) Fix global and static vars                       [ ]
+//      3) ELF check v_addr                                       [V]
+//          3.1) Fix global and static vars                       [V]
 //          3.2) Loading ELF without malloc for fdata             [V]
 //      4) Paging (create error with current malloc) / allocators [V]
 //          4.0) Random Page fault (Null error de Italia)         [V]
@@ -41,9 +43,9 @@ extern uint32_t kernel_end;
 //          8.1) Syscalls to std libs                             [V]
 //          8.2) VBE userland                                     [ ]
 //      9) Malloc optimization                                    [?]
-//      10) Bags                                                  [ ]
-//          10.0) Tasking page fault                              [ ]
-//          10.1) Mouse page fault                                [ ]
+//      10) Bags                                                  [?]
+//          10.0) Tasking page fault                              [?]
+//          10.1) Mouse page fault                                [V]
 //          10.2) Tasking with page allocator                     [ ]
 //      11) DOOM?                                                 [ ]
 //===================================================================
@@ -143,29 +145,20 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         }
 
         //===================
-        // Map framebuffer
+        // Map framebuffer to his original phys address
         //===================
 
-            uint32_t fb_size_in_bytes = gfx_mode.y_resolution * gfx_mode.x_resolution * (gfx_mode.bits_per_pixel / 2);
-            uint32_t fb_size_in_pages = fb_size_in_bytes / PAGE_SIZE;
-            if (fb_size_in_pages % PAGE_SIZE > 0) fb_size_in_pages++;
+            uint32_t framebuffer_pages = (gfx_mode.y_resolution * gfx_mode.x_resolution * (gfx_mode.bits_per_pixel / 2)) / PAGE_SIZE;
+            if (framebuffer_pages % PAGE_SIZE > 0) framebuffer_pages++;
     
-            fb_size_in_pages *= 2;
-            for (uint32_t i = 0, fb_start = gfx_mode.physical_base_pointer; i < fb_size_in_pages; i++, fb_start += PAGE_SIZE)
+            framebuffer_pages *= 2;
+            for (uint32_t i = 0, fb_start = gfx_mode.physical_base_pointer; i < framebuffer_pages; i++, fb_start += PAGE_SIZE)
                 map_page((void*)fb_start, (void*)fb_start);
 
-            deinitialize_memory_region(gfx_mode.physical_base_pointer, fb_size_in_pages * BLOCK_SIZE);
+            deinitialize_memory_region(gfx_mode.physical_base_pointer, framebuffer_pages * BLOCK_SIZE);
 
         //===================
-        // Map framebuffer
-        //===================
-        // Heap initialization
-        //===================
-
-            malloc_virt_address = 0x300000;
-
-        //===================
-        // Heap initialization
+        // Map framebuffer to his original phys address
         //===================
 
     //===================
@@ -178,7 +171,8 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
 
         HAL_initialize();
-        TASK_task_init();
+        i386_syscalls_init();
+        i386_task_init();
         
     //===================
 
@@ -206,7 +200,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         FAT_initialize();
 
     //===================
-
+    
     kprintf("FAT driver initialized\nTC:[%u]\tSPC:[%u]\tBPS:[%u]\n\n", total_clusters, sectors_per_cluster, bytes_per_sector);
 
     //===================
@@ -214,16 +208,14 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
 
         if (FAT_content_exists("boot\\boot.txt") == 1) {
-
             struct FATContent* boot_config = FAT_get_content("boot\\boot.txt");
             char* config = FAT_read_content(boot_config);
             FAT_unload_content_system(boot_config);
-
+            
             if (config[1] == '1') START_PROCESS("kmouse", PSMS_show);
             if (config[0] == '1') START_PROCESS("kshell", kshell);
 
             kfree(config);
-            
         } else START_PROCESS("kshell", kshell);
 
         TASK_start_tasking();
@@ -235,7 +227,6 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
 
         START_PROCESS("userl", FAT_ELF_execute_content("boot\\userl\\userl.elf", NULL, NULL));
-        TASK_start_tasking();
 
     //===================
     

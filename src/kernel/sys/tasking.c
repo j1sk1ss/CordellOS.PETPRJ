@@ -3,38 +3,12 @@
 // TODO: make process that clean another processes
 
 TaskManager* taskManager;
+bool tasking = false;
 
 
 //==================
 // Task interaction
 //==================
-
-	int task_position = -1;
-	void TASK_stop_tasking() {
-		task_position = taskManager->currentTask;
-		taskManager->currentTask = -1;
-	}
-
-	void TASK_continue_tasking() {
-		taskManager->currentTask = task_position;
-	}
-
-//==================
-// Task interaction
-//==================
-// Task manager
-//==================
-
-	void TASK_task_init() {
-		taskManager = malloc(sizeof(TaskManager));
-		if (taskManager == NULL) {
-			kprintf("Unnable to allocate memory!\n");
-			kernel_panic("\nTASKING ERROR!");
-		}
-
-		taskManager->tasksCount = 0;
-		TASK_stop_tasking();
-	}
 
 	void TASK_start_tasking() {
 		i386_disableInterrupts();
@@ -57,24 +31,53 @@ TaskManager* taskManager;
 		
 		// Set multitasking on
 		taskManager->currentTask = 0;
-		task_position = 0;
+		tasking = true;
 
 		i386_enableInterrupts();
 
 		// Return from interrupt and execute process
-		asm ("iret");
+		asm ("iret");		
+	}
+
+	void TASK_stop_tasking() {
+		tasking = false;
+	}
+
+	void TASK_continue_tasking() {
+		tasking = true;
+	}
+
+//==================
+// Task interaction
+//==================
+// Task manager
+//==================
+
+	void i386_task_init() {
+		taskManager = calloc(sizeof(TaskManager), 1);
+		if (taskManager == NULL) {
+			kprintf("Unnable to allocate memory!\n");
+			kernel_panic("\nTASKING ERROR!");
+		}
+
+		taskManager->tasksCount  = 0;
+		taskManager->currentTask = -1;
+
+		i386_irq_registerHandler(0, TASK_task_switch);
 	}
 
 	Task* TASK_create_task(char* pname, uint32_t address) {
 
 		//=============================
 		// Allocate memory for new task
+		//=============================
 
-			Task* task     = (Task*)malloc(sizeof(Task));
-			task->cpuState = (CPUState*)malloc(sizeof(CPUState));
+			Task* task     = (Task*)calloc(sizeof(Task), 1);
+			task->cpuState = (Registers*)calloc(sizeof(Registers), 1);
 
 			//=============================
 			// Find new pid
+			//=============================
 
 				task->state = PROCESS_STATE_ALIVE;
 				task->pid   = -1;
@@ -96,22 +99,27 @@ TaskManager* taskManager;
 					free(task);
 				}
 
+			//=============================
 			// Find new pid
 			//=============================
 			// Allocate data for stack
+			//=============================
 
-				task->cpuState->esp     = (uint32_t)malloc(PAGE_SIZE);
-				task->cpuState->virtual = task->cpuState->esp;
+				task->cpuState->esp     = (uint32_t)calloc(PAGE_SIZE, 1);
+				task->virtual_address   = task->cpuState->esp;
 				uint32_t* stack_pointer = (uint32_t*)(task->cpuState->esp + PAGE_SIZE);
 
-				asm ("mov %%cr3, %%eax":"=a"(task->cpuState->cr3));
+				asm ("mov %%cr3, %%eax":"=a"(task->page_directory));
 
+			//=============================
 			// Allocate data for stack
 			//=============================
 
+		//=============================
 		// Allocate memory for new task
 		//=============================
 		// Fill EBP stack
+		//=============================
 
 			*--stack_pointer = 0x00000202; // eflags
 			*--stack_pointer = 0x8; // cs
@@ -131,9 +139,11 @@ TaskManager* taskManager;
 			*--stack_pointer = 0x10; // es
 			*--stack_pointer = 0x10; // gs
 
+		//=============================
 		// Fill EBP stack
 		//=============================
 		// Fill registers
+		//=============================
 
 			task->cpuState->eflag = 0x00000202;
 			task->cpuState->cs    = 0x8;
@@ -149,6 +159,7 @@ TaskManager* taskManager;
 			task->cpuState->ebp = task->cpuState->esp + PAGE_SIZE;
 			task->cpuState->esp = (uint32_t)stack_pointer;
 
+		//=============================
 		// Fill registers
 		//==============================
 
@@ -156,7 +167,7 @@ TaskManager* taskManager;
 	}
 
 	void destroy_task(Task* task) {
-		free((uint32_t*)task->cpuState->virtual);
+		free((uint32_t*)task->virtual_address);
 		free(task->cpuState);
 		free(task);
 	}
@@ -170,8 +181,7 @@ TaskManager* taskManager;
 
 	void __kill() { // TODO: complete multitask disabling when tasks == 0
 		TASK_stop_tasking();
-		_kill(taskManager->tasks[task_position]->pid);
-
+		_kill(taskManager->tasks[taskManager->currentTask]->pid);
 		TASK_continue_tasking();
 	}
 
@@ -186,39 +196,39 @@ TaskManager* taskManager;
 
 	int _TASK_add_task(Task* task) {
 		if (taskManager->tasksCount >= 256) return -1;
-
 		taskManager->tasks[taskManager->tasksCount++] = task;
+		
 		return task->pid;
 	}
 
 	int TASK_add_task(Task* task) {
 		TASK_stop_tasking();
-
 		_TASK_add_task(task);
-
 		TASK_continue_tasking();
+
 		return task->pid;
 	}
 
-	CPUState* TASK_task_switch(CPUState* state) { // TODO: Cpu state switchs with errors. Mem leak and pages
-		i386_disableInterrupts();
-
+	void TASK_task_switch(Registers* regs) {
+		if (tasking == false) return;
+		
 		Task* task = taskManager->tasks[taskManager->currentTask];
-		task->cpuState->eflag = state->eflag;
-		task->cpuState->cs    = state->cs;
-		task->cpuState->eip   = state->eip;
-		task->cpuState->eax   = state->eax;
-		task->cpuState->ebx   = state->ebx;
-		task->cpuState->ecx   = state->ecx;
-		task->cpuState->edx   = state->edx;
-		task->cpuState->esi   = state->esi;
-		task->cpuState->edi   = state->edi;
-		task->cpuState->ebp   = state->ebp;
 
-		task->cpuState->esp      = state->esp;
-		task->cpuState->kern_esp = state->esp;
+		task->cpuState->eflag = regs->eflag;
+		task->cpuState->cs    = regs->cs;
+		task->cpuState->eip   = regs->eip;
+		task->cpuState->eax   = regs->eax;
+		task->cpuState->ebx   = regs->ebx;
+		task->cpuState->ecx   = regs->ecx;
+		task->cpuState->edx   = regs->edx;
+		task->cpuState->esi   = regs->esi;
+		task->cpuState->edi   = regs->edi;
+		task->cpuState->ebp   = regs->ebp;
 
-		free(state);
+		task->cpuState->esp      = regs->esp;
+		task->cpuState->kern_esp = regs->esp;
+
+		asm ("mov %%cr3, %%eax":"=a"(task->page_directory));
 
 		if (++taskManager->currentTask >= taskManager->tasksCount)
 				taskManager->currentTask = 0;
@@ -231,8 +241,21 @@ TaskManager* taskManager;
 			new_task = taskManager->tasks[taskManager->currentTask];
 		}
 
-		i386_enableInterrupts();
-		return new_task->cpuState;
+		regs->eflag = new_task->cpuState->eflag;
+		regs->cs    = new_task->cpuState->cs;
+		regs->eip   = new_task->cpuState->eip;
+		regs->eax   = new_task->cpuState->eax;
+		regs->ebx   = new_task->cpuState->ebx;
+		regs->ecx   = new_task->cpuState->ecx;
+		regs->edx   = new_task->cpuState->edx;
+		regs->esi   = new_task->cpuState->esi;
+		regs->edi   = new_task->cpuState->edi;
+		regs->ebp   = new_task->cpuState->ebp;
+
+		regs->esp      = new_task->cpuState->esp;
+		regs->kern_esp = new_task->cpuState->esp;
+
+		asm ("mov %%eax, %%cr3": :"a"(new_task->page_directory));
 	}
 
 //==================

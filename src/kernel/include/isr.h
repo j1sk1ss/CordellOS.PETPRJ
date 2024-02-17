@@ -2,14 +2,13 @@
 #define ISR_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "pit.h"
-#include "tasking.h"
 #include "idt.h"
 #include "gdt.h"
 #include "x86.h"
 #include "stdio.h"
-#include "syscalls.h"
 
 typedef struct {
     uint32_t ds;                                            // data segment pushed by us

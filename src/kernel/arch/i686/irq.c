@@ -5,7 +5,7 @@
 
 #define PIC_REMAP_OFFSET 0x20
 
-IRQHandler _handler[16];
+IRQHandler _handler[16] = { NULL };
 static const PICDriver* _PICDriver = NULL; 
 
 void i386_irq_handler(Registers* regs) {
@@ -13,14 +13,12 @@ void i386_irq_handler(Registers* regs) {
     uint8_t pic_isr = i8259_readIRQInServiceRegisters();
     uint8_t pic_irr = i8259_readIRQRequestRegisters();
 
-    if (irq == 12) _handler[irq](regs);
+    if (_handler[irq] != NULL) _handler[irq](regs);
     _PICDriver->SendEndOfInterrupt(irq);
 }
 
 void i386_irq_initialize() {
-    const PICDriver* drivers[] = {
-        i8259_getDriver(),
-    };
+    const PICDriver* drivers[] = { i8259_getDriver(), };
 
     for (int i = 0; i < SIZE(drivers); i++) 
         if (drivers[i]->Probe()) _PICDriver = drivers[i];
@@ -33,16 +31,14 @@ void i386_irq_initialize() {
     kprintf("PIC %s finded!\n", _PICDriver->Name);
     _PICDriver->Initialize(PIC_REMAP_OFFSET, PIC_REMAP_OFFSET + 12, false);
 
-    // Reg ISR handlers
     for (int i = 0; i < 16; i++)
         i386_isr_registerHandler(PIC_REMAP_OFFSET + i, i386_irq_handler);
 
-    // Enable interrups
     i386_enableInterrupts();
 
-    _PICDriver->Unmask(0);
+    _PICDriver->Unmask(0); // PIT
     _PICDriver->Unmask(1);
-    _PICDriver->Unmask(2);
+    _PICDriver->Unmask(2); // Mouse
     _PICDriver->Unmask(12);
 }
 

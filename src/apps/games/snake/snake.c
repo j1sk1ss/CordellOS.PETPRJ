@@ -3,7 +3,6 @@
 #include "../../../libs/include/stdio.h"
 #include "../../../libs/include/fatlib.h"
 
-#define VERSION	1
 
 #define F4_BUTTON               '\254'
 #define F3_BUTTON               '\255'
@@ -43,7 +42,7 @@ int main(int args, char* argv[]) {
 		}
     }
 
-	return -1;
+	return 1;
 }
 
 typedef struct {

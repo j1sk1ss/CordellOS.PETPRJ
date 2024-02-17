@@ -1008,17 +1008,24 @@
 	}
 
 	int FAT_ELF_execute_content(char* path, int args, char* argv[]) {
-		int (*programEntry)(int, char* argv[]) = (int (*)(int, char* argv[]))(ELF_read(path));
+		struct ELF32_program* program = ELF_read(path);
+
+		int (*programEntry)(int, char* argv[]) = (int (*)(int, char* argv[]))(program->entry_point);
 		if (programEntry == NULL) return 0;
 		
 		int result_code = programEntry(args, argv);
 
-		pt_entry* page = get_page(ELF_VIRT_LOCATION);
-		if (PAGE_PHYS_ADDRESS(page) && TEST_ATTRIBUTE(page, PTE_PRESENT)) {
-			free_page(page);
-			unmap_page((uint32_t*)ELF_VIRT_LOCATION);
-			flush_tlb_entry(ELF_VIRT_LOCATION);
+		for (uint32_t i = 0; i < program->pages_count; i++) {
+			pt_entry* page = get_page(program->pages[i]);
+			if (PAGE_PHYS_ADDRESS(page) && TEST_ATTRIBUTE(page, PTE_PRESENT)) {
+				free_page(page);
+				unmap_page((uint32_t*)program->pages[i]);
+				flush_tlb_entry(program->pages[i]);
+			}
 		}
+
+		free(program->pages);
+		free(program);
 
 		return result_code;
 	}
