@@ -35,10 +35,13 @@ extern uint32_t kernel_end;
 //          4.2) ELF exec with tasking and paging                 [V]
 //      5) VBE / VESA                                             [V]
 //          5.0) VBE kernel                                       [V]
+//          5.1) Double buffering                                 [ ]
 //      6) Keyboard to int                                        [V]
 //      7) Reboot outportb(0x64, 0xFE);                           [V]
 //      8) Mouse support                                          [V]
 //          8.0) Std lib for graphics                             [?]
+//              8.0.0) Objects                                    [V]
+//              8.0.1) Click event                                [ ]
 //          8.1) Loading BMP without malloc for fdata             [V]
 //          8.1) Syscalls to std libs                             [V]
 //          8.2) VBE userland                                     [ ]
@@ -61,10 +64,10 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - VBE data
     //===================
 
-        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 6 ]   = \n\n");
+        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 7 ]   = \n\n");
 
         if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-            kprintf("[kernel.c 60] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
+            kprintf("[kernel.c 73] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
             goto end;
         }
 
@@ -140,7 +143,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         deinitialize_memory_region(0x1000, 0x11000);
         deinitialize_memory_region(0x30000, max_blocks / BLOCKS_PER_BYTE);
         if (initialize_virtual_memory_manager(0x100000) == false) {
-            kprintf("[kernel.c 136] Virtual memory can`t be init.\n");
+            kprintf("[kernel.c 149] Virtual memory can`t be init.\n");
             goto end;
         }
 
@@ -163,17 +166,18 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
 
     //===================
     // HAL initialization
-    // - Tasking init
     // - IRQ initialization
     // - GDT initialization
     // - IDT initialization
     // - ISR initialization
+    // - Tasking init
+    // - Syscalls init
     //===================
 
         HAL_initialize();
         i386_syscalls_init();
         i386_task_init();
-        
+
     //===================
 
     kprintf("Kernel base: %u\nKernel end: %u\n\n", &kernel_base, &kernel_end);
@@ -181,6 +185,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
     // Keyboard & Mouse initialization
     // - Keyboard activation
+    // - Mouse activation
     //===================
 
         i386_init_keyboard();
@@ -219,17 +224,11 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         } else START_PROCESS("kshell", kshell);
 
         TASK_start_tasking();
-
-    //===================
-    // User land part
-    // - Shell
-    // - Idle task
-    //===================
-
-        START_PROCESS("userl", FAT_ELF_execute_content("boot\\userl\\userl.elf", NULL, NULL));
-
-    //===================
     
+    //===================
+    // Kernel shell part
+    //===================
+
 end:
     kprintf("\n!!KERNEL END!!\n");
     for (;;);

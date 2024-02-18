@@ -1,11 +1,14 @@
 #ifndef BITMAP_H
 #define BITMAP_H
 
-#include "gfx.h"
+#include "graphics.h"
 #include "stdio.h"
-#include "fat.h"
+#include "fatlib.h"
+#include "stdlib.h"
 
-#include "../../libs/include/stdlib.h"
+
+#define LOAD_PART   64
+
 
 typedef struct tagBITMAPFILEHEADER {
 
@@ -35,10 +38,13 @@ typedef struct tagBITMAPINFOHEADER {
 
 typedef struct bitmap {
 
+    unsigned int x;
+    unsigned int y;
+
     unsigned int width;
     unsigned int height;
 
-    struct FATContent* file;
+    struct UFATContent* file;
     uint32_t header_offset;
 
     unsigned int total_size;
@@ -57,9 +63,9 @@ typedef struct palette {
 
 } palette_t;
 
-bitmap_t* BMP_create(char* filename);
+bitmap_t* BMP_create(char* filename, int screen_x, int screen_y);
 
-void BMP_display_at(bitmap_t* bmp, int screen_x, int screen_y);
+void BMP_display(bitmap_t* bmp);
 void BMP_unload(bitmap_t* bitmap);
 
 #endif

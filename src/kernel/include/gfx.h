@@ -61,6 +61,7 @@ typedef struct {
 	uint8_t direct_color_mode_info;
 
 	uint32_t physical_base_pointer;
+	uint32_t virtual_second_buffer;
 	uint32_t reserved2;
 	uint16_t reserved3;
 

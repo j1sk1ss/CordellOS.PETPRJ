@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FATLIB_H_
+#define FATLIB_H_
 
 #include "stdlib.h"
 #include "stdio.h"
@@ -51,7 +52,6 @@ struct UFATFile {
 	char name[11];
 
     struct File* next;
-
 };
 
 struct UFATDirectory {
@@ -64,7 +64,6 @@ struct UFATDirectory {
 
     struct UFATFile* files;
     struct UFATDirectory* subDirectory;
-
 };
 
 struct UFATDate {
@@ -75,17 +74,16 @@ struct UFATDate {
 	uint16_t year;
 	uint16_t mounth;
 	uint16_t day;
-
 };
 
 struct UFATContent {
 	struct UFATDirectory* directory;
 	struct UFATFile* file;
-
 };
 
 void FATLIB_unload_directories_system(struct UFATDirectory* directory);
 void FATLIB_unload_files_system(struct UFATFile* file);
+void FATLIB_unload_content_system(struct UFATContent* content);
 
 char* FATLIB_change_path(const char* currentPath, const char* content);
 
@@ -95,3 +93,5 @@ void FATLIB_fatname2name(char* input, char* output);
 char* FATLIB_name2fatname(char* input);
 
 struct udirectory_entry* FATLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+
+#endif

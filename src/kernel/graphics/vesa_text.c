@@ -26,8 +26,7 @@ void VESA_newline() {
     if(cursor_y >= gfx_mode.y_resolution) {
         cursor_y = gfx_mode.y_resolution - CHAR_Y;
         VESA_scrollback(CHAR_Y);
-    } 
-    else cursor_y += CHAR_Y;
+    } else cursor_y += CHAR_Y;
 }
 
 void VESA_putc(char c) {

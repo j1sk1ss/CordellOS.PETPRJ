@@ -130,7 +130,7 @@
 				//=============
 				// Allocate new page
 				//=============
-					
+				
 					uint8_t num_pages = 1;
 					while (cur->size + num_pages * PAGE_SIZE < size + sizeof(malloc_block_t))
 						num_pages++;

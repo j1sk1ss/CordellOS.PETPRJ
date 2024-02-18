@@ -131,7 +131,6 @@ void free(void* ptr) {
 //  EAX - returned data
 char* fread(const char* path) {
     void* pointed_data;
-
     __asm__ volatile(
         "movl $9, %%eax\n"
         "movl %1, %%ebx\n"
@@ -144,6 +143,26 @@ char* fread(const char* path) {
     );
 
     return pointed_data;
+}
+
+//====================================================================
+// Function get pixel from framebuffer by coordinates
+// EBX - content pointer
+// ECX - data offset
+// EDX - buffer pointer
+// ESI - buffer len / data len
+void fread_off(struct UFATContent* content, int offset, uint8_t* buffer, int len) {
+    __asm__ volatile(
+        "movl $33, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "movl %2, %%edx\n"
+        "movl %3, %%esi\n"
+        "int $0x80\n"
+        :
+        : "g"(content), "g"(offset), "g"(buffer), "g"(len)
+        : "eax", "ebx", "ecx", "edx", "esi"
+    );
 }
 
 //====================================================================
@@ -180,6 +199,26 @@ struct UFATDirectory* opendir(const char* path) {
     );
 
     return directory;
+}
+
+//====================================================================
+//  Returns linked list of dir content by path
+//  EBX - path
+//  ECX - pointer to directory
+struct UFATContent* get_content(const char* path) {
+    struct UFATContent* content;
+    __asm__ volatile(
+        "movl $30, %%eax\n"
+        "movl %1, %%ebx\n"
+        "movl %2, %%ecx\n"
+        "int %3\n"
+        "movl %%eax, %0\n"
+        : "=r"(content)
+        : "r"((uint32_t)path), "r"(content), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx"
+    );
+
+    return content;
 }
 
 //====================================================================
@@ -274,7 +313,6 @@ void chgcontent(const char* path, struct udirectory_entry* meta) {
 //  EDX - argv (array of args)
 int fexec(char* path, int args, char** argv) {
     int result = 0;
-
     __asm__ volatile(
         "movl $12, %%eax\n"
         "movl %1, %%ebx\n"

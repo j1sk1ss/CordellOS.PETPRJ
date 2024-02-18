@@ -8,6 +8,7 @@ struct ELF32_program* ELF_read(const char* path) {
     struct FATContent* content = FAT_get_content(path);
     if (content->file == NULL) {
         kprintf("File not found\n");
+        FAT_unload_content_system(content);
         return NULL;
     }
 
@@ -21,12 +22,14 @@ struct ELF32_program* ELF_read(const char* path) {
         if (ehdr->e_ident[0] != '\x7f' || ehdr->e_ident[1] != 'E') {
             kprintf("\r\nError: Not ELF.\r\n");
             free(header);
+            FAT_unload_content_system(content);
             return NULL;
         }
 
         if (ehdr->e_type != ET_EXEC && ehdr->e_type != ET_DYN) {
             kprintf("\r\nError: Program is not an executable or dynamic executable.\r\n");
             free(header);
+            FAT_unload_content_system(content);
             return NULL;
         }
 
@@ -58,19 +61,17 @@ struct ELF32_program* ELF_read(const char* path) {
 
             uint32_t program_pages    = phdr[i].p_memsz / PAGE_SIZE;
             uint32_t virtual_address  = phdr[i].p_vaddr;
-            uint32_t physical_address = phdr[i].p_paddr;
             program->pages[i] = phdr[i].p_vaddr;
 
             if (phdr[i].p_memsz % PAGE_SIZE > 0) program_pages++;
             for (uint32_t i = 0; i < program_pages; i++) {
-                pt_entry page  = physical_address;
+                pt_entry page  = 0;
                 uint32_t* temp = allocate_page(&page);
 
                 map_page((void*)temp, (void*)virtual_address);
                 SET_ATTRIBUTE(&page, PTE_READ_WRITE);
 
-                virtual_address  += PAGE_SIZE;
-                physical_address += PAGE_SIZE;
+                virtual_address += PAGE_SIZE;
             }
 
             memset(phdr[i].p_vaddr, 0, phdr[i].p_memsz);

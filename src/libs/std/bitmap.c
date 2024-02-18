@@ -1,0 +1,85 @@
+#include "../include/bitmap.h"
+
+bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
+    bitmap_t* ret = malloc(sizeof(bitmap_t));
+    struct UFATContent* content = get_content(file_path);
+    if (content->file == NULL) {
+        printf("File not found\n");
+        BMP_unload(ret);
+        FATLIB_unload_content_system(content);
+        return NULL;
+    }
+
+    uint8_t* header = calloc(sizeof(bmp_fileheader_t), 1);
+    fread_off(content, 0, header, sizeof(bmp_fileheader_t));
+
+    bmp_fileheader_t* h = header;
+    uint32_t offset     = h->bfOffBits;
+
+    free(header);
+
+    uint8_t* info = calloc(sizeof(bmp_infoheader_t), 1);
+    fread_off(content, sizeof(bmp_fileheader_t), info, sizeof(bmp_infoheader_t));
+
+    bmp_infoheader_t* inf = info;
+    ret->width            = inf->biWidth;
+    ret->height           = inf->biHeight;
+    ret->header_offset    = offset;
+    ret->file             = content;
+    ret->bpp              = inf->biBitCount;
+    ret->x                = screen_x;
+    ret->y                = screen_y;
+
+    free(info);
+    
+    return ret;
+}
+
+void BMP_display(bitmap_t* bmp) {
+    if (bmp == NULL) {
+        printf("Invalid bitmap\n");
+        return;
+    }
+
+    if (bmp->width > get_resolution_x() || bmp->height > get_resolution_y()) {
+        printf("Invalid resolution of bitmap W%i H%i\n", bmp->width, bmp->height);
+        return;
+    }
+    
+    uint32_t bytes_per_pixel = bmp->bpp / 8;
+    uint32_t line_size       = bmp->width * bytes_per_pixel;
+    uint32_t load_size       = LOAD_PART * bytes_per_pixel;
+
+    for (int y = bmp->height - 1; y >= 0; y--) {
+        uint32_t offset     = bmp->header_offset + y * line_size;
+        uint32_t image_part = 0;
+        uint32_t line_part  = 0;
+
+        while (image_part < line_size) {
+            uint8_t* bytes = calloc(load_size, 1);
+            fread_off(bmp->file, offset + image_part, bytes, load_size);
+
+            for (int x = 0; x < LOAD_PART; x++) {
+                uint32_t color_index = x * bytes_per_pixel;
+
+                uint8_t blue  = bytes[color_index];
+                uint8_t green = bytes[color_index + 1];
+                uint8_t red   = bytes[color_index + 2];
+
+                if (x + line_part < bmp->width)
+                    put_pixel(x + bmp->x + line_part, (bmp->height - 1 - y) + bmp->y, (red << 16) | (green << 8) | blue);
+            }
+
+            free(bytes);
+
+            image_part += load_size;
+            line_part  += LOAD_PART;
+        }
+    }
+}
+
+void BMP_unload(bitmap_t* bitmap) {
+    if (bitmap == NULL) return;
+    FATLIB_unload_content_system(bitmap->file);
+    free(bitmap);
+}

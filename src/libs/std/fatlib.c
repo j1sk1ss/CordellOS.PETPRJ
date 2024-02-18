@@ -22,6 +22,14 @@ void FATLIB_unload_files_system(struct UFATFile* file) {
     free(file);
 }
 
+void FATLIB_unload_content_system(struct UFATContent* content) {
+    if (content == NULL) return;
+    if (content->directory != NULL) FATLIB_unload_directories_system(content->directory);
+    if (content->file != NULL) FATLIB_unload_files_system(content->file);
+    
+    free(content);
+}
+
 struct UFATDate* FATLIB_get_date(short data, int type) {
     struct UFATDate* date = malloc(sizeof(struct UFATDate));
     switch (type) {
@@ -182,7 +190,6 @@ unsigned short FATLIB_current_time() {
     return (data[2] << 11) | (data[1] << 5) | (data[0] / 2);
 }
 
-	//clock nor date has been implemented yet
 unsigned short FATLIB_current_date() {
     short data[7];
     get_datetime(&data);
@@ -196,7 +203,6 @@ unsigned short FATLIB_current_date() {
     return reversed_data;
 }
 
-//clock hasn't been implemented yet
 unsigned char FATLIB_current_time_temths() {
     short data[7];
     get_datetime(&data);
@@ -205,11 +211,6 @@ unsigned char FATLIB_current_time_temths() {
 
 int FATLIB_name_check(char * input) {
     short retVal = 0;
-
-    //Invalid Values:
-    /*Values less than 0x20 except for the special case of 0x05 in DIR_Name[0] described above.
-         0x22, 0x2A, 0x2B, 0x2C, 0x2E, 0x2F, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, 0x5B, 0x5C, 0x5D,
-        and 0x7C.*/
     unsigned short iterator;
     for (iterator = 0; iterator < 11; iterator++) {
         if (input[iterator] < 0x20 && input[iterator] != 0x05) {

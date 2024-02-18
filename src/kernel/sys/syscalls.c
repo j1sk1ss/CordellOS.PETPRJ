@@ -55,7 +55,7 @@ void syscall(Registers* regs) {
 
         case SYS_AREAD_KEYBOARD:
             uint8_t keyborad_color = (uint8_t)regs->edx;
-            int keyboard_mode = (int)regs->ebx;
+            int keyboard_mode      = (int)regs->ebx;
 
             regs->eax = keyboard_read(keyboard_mode, keyborad_color);
         break;
@@ -90,38 +90,43 @@ void syscall(Registers* regs) {
         break;
 
         case SYS_READ_FILE:
-            char* rfile_path = (char*)regs->ebx;
+            char* rfile_path           = (char*)regs->ebx;
             struct FATContent* content = FAT_get_content(rfile_path);
-            regs->eax = (uint32_t)FAT_read_content(content);
+            regs->eax                  = (uint32_t)FAT_read_content(content);
             
             FAT_unload_content_system(content);
         break;
 
         case SYS_WRITE_FILE:
             char* wfile_path = (char*)regs->ebx;
-            char* fdata = (char*)regs->ecx;
+            char* fdata      = (char*)regs->ecx;
 
             FAT_edit_content(wfile_path, fdata);
         break;
 
         case SYS_OPENDIR:
             char* path = (char*)regs->ebx;
-            regs->eax = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(FAT_get_content(path)->directory->directory_meta), NULL, FALSE);
+            regs->eax  = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(FAT_get_content(path)->directory->directory_meta), NULL, FALSE);
+        break;
+
+        case SYS_GET_CONTENT:
+            char* content_path = (char*)regs->ebx;
+            regs->eax = FAT_get_content(content_path);
         break;
 
         case SYS_EXECUTE_FILE:
             char* exec_path = (char*)regs->ebx;
-            char** argv = (char**)regs->edx;
-            int args = (int)regs->ecx;
-            int eresult = (int)regs->eax;
+            char** argv     = (char**)regs->edx;
+            int args        = (int)regs->ecx;
+            int eresult     = (int)regs->eax;
 
             eresult = FAT_ELF_execute_content(exec_path, args, argv);
         break;
 
         case SYS_CEXISTS:
             int* cresult = (int*)regs->ecx;
-            char* epath = (char *)regs->ebx;
-            cresult[0] = FAT_content_exists(epath);
+            char* epath  = (char *)regs->ebx;
+            cresult[0]   = FAT_content_exists(epath);
         break;
 
         case SYS_FCREATE:
@@ -219,11 +224,20 @@ void syscall(Registers* regs) {
         break;
 
         case SYS_GET_PIXEL:
-            uint32_t* pixelresult = (uint32_t*)regs->ecx;
+            uint32_t* pixelresult = (uint32_t*)regs->edx;
             uint16_t pix_x        = (uint16_t)regs->ebx;
             uint16_t pix_y        = (uint16_t)regs->ecx;
 
             pixelresult[0] = GFX_get_pixel(pix_x, pix_y);
+        break;
+
+        case SYS_READ_FILE_OFF:
+            struct FATContent* read_off_file = (struct FATContent*)regs->ebx;
+            int offset                       = (int)regs->ecx;
+            uint8_t* offset_buffer           = (uint8_t*)regs->edx;
+            int offset_len                   = (int)regs->esi;
+            
+            FAT_read_content2buffer(read_off_file, offset_buffer, offset, offset_len);
         break;
     }
 }

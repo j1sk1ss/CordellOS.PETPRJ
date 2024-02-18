@@ -11,7 +11,7 @@ void kshell() {
     shell_start_screen();
     while (exit == 0) {
         kprintf("\r\n[KERNEL] $%s> ", current_path);
-        char* input = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
+        char* input   = keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE);
         char* command = input;
 
         execute_command(command);
@@ -23,7 +23,7 @@ void kshell() {
 }
 
 void shell_start_screen() {
-    kprintf("Cordell KShell [ver. 0.3c | 15.02.2024] \n\r");
+    kprintf("Cordell KShell [ver. 0.3d | 18.02.2024] \n\r");
     kprintf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n\r");
 }
 
@@ -32,6 +32,8 @@ void shell_start_screen() {
 //====================
 
     void execute_command(char* command) {
+
+        if (strlen(command) <= 0) return;
 
         //====================
         //  SPLIT COMMAND LINE TO ARGS
@@ -137,7 +139,7 @@ void shell_start_screen() {
                 if (up_path == NULL) {
                     up_path = malloc(5);
                     strcpy(up_path, "BOOT");
-                };
+                }
 
                 free(current_path);
                 current_path = up_path;
@@ -203,8 +205,8 @@ void shell_start_screen() {
                     return;
                 }
 
-                struct bitmap* bitmap = BMP_create(file_path);
-                BMP_display_at(bitmap, atoi(command_line[2]), atoi(command_line[3]));
+                struct bitmap* bitmap = BMP_create(file_path, atoi(command_line[2]), atoi(command_line[3]));
+                BMP_display(bitmap);
                 BMP_unload(bitmap);
 
                 free(file_path);
