@@ -1,6 +1,12 @@
-#pragma once
+#ifndef _KSHELL_H_
+#define _KSHELL_H_
+
 
 #include <stddef.h>
+#include <fatlib.h>
+#include <string.h>
+#include <stdlib.h>
+#include <bitmap.h>
 
 #include "fat.h"
 #include "stdio.h"
@@ -8,11 +14,6 @@
 #include "date_time.h"
 #include "vga_text.h"
 #include "vesa_text.h"
-
-#include "../../libs/include/fatlib.h"
-#include "../../libs/include/string.h"
-#include "../../libs/include/stdlib.h"
-#include "../../libs/include/bitmap.h"
 
 //   ____  _   _ _____ _     _     
 //  / ___|| | | | ____| |   | |    
@@ -56,3 +57,6 @@
 /////////////////
 
 void kshell();
+
+
+#endif

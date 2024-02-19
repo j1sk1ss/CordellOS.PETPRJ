@@ -1,7 +1,7 @@
 import os
 
 from SCons.Environment import Environment
-from build_scripts.utility import glob_recursive
+from build_scripts.utility import glob_recursive, find_index, is_file_name
 
 
 Import('TARGET_ENVIRONMENT')
@@ -9,20 +9,16 @@ TARGET_ENVIRONMENT: Environment
 
 env = TARGET_ENVIRONMENT.Clone()
 env.Append(
-    CCFLAGS=[
-        '-fpic'
-    ],
-
     LINKFLAGS = [
-        '-Wl,-Map=' + env.File('snake.map').path
+        '-Wl,-Map=' + env.File('calc.map').path
     ],
 
     CPPPATH = [ 
         env.Dir('.').srcnode(),
-        env['PROJECTDIR'].Dir('src/libs')
+        env['PROJECTDIR'].Dir('src/libs/include')
     ],
 
-    ASFLAGS = [ '-I', env.Dir('.').srcnode(), '-f', 'elf32' ]
+    ASFLAGS = [ '-I', env.Dir('.').srcnode(), '-f', 'elf' ]
 )
 
 # Add boot.s to the sources
@@ -47,10 +43,6 @@ objects = [
     *static_libs,
 ]
 
-snake = env.Program('snake.elf', objects)
-snake_stripped = env.Command('snake-s.elf', snake, '$STRIP -o $TARGET $SOURCE')
-
-env.Default(snake_stripped)
-
-Export('snake')
-Export('snake_stripped')
+calc = env.Program('calc.elf', objects)
+Export('calc')
+Default(calc)

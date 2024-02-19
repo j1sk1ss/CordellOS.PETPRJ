@@ -6,7 +6,7 @@
 
 #define ASMCALL __attribute__((cdecl))
 #define asm __asm__ volatile
-
+#define UNUSED_PORT 0x80
 #define kernel_panic(data) kprintf(data);i386_panic();
 
 uint16_t i386_inw(uint16_t port);

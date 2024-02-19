@@ -1,12 +1,14 @@
 #include "../../include/irq.h"
+#include "../../util/arrays.h"
 
-#include <util/arrays.h>
 #include <stddef.h>
+
 
 #define PIC_REMAP_OFFSET 0x20
 
 IRQHandler _handler[16] = { NULL };
 static const PICDriver* _PICDriver = NULL; 
+
 
 void i386_irq_handler(Registers* regs) {
     int irq = regs->interrupt - PIC_REMAP_OFFSET;

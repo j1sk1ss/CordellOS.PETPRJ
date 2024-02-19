@@ -11,6 +11,230 @@ int blocks_index = 0;
 struct blocks_table** block_tab = NULL;
 
 
+int main(int args, char* argv[]) {
+	if (args <= 0) return -1;
+
+	char* file_data = fread(argv[0]);
+	char* file_pointer = file_data;
+
+	intermediate_index = 0;
+	symbol_index	   = 0;
+	blocks_index       = 0;
+
+	int stack[STACK_SIZE], top = -1;
+	int memory_array[MEMORY_SIZE];
+	int memory_index = VARIABLE_MEMORY_START - 1 ;  // 0 to 7 are already reserved
+
+	symbol_tab = (struct symbol_table**)malloc(sizeof(struct symbol_table*) * 25);
+	for (int i = 0; i < 25; i++)
+		symbol_tab[i] = (struct symbol_table*)malloc(sizeof(struct symbol_table));
+
+	intermediate_table = (struct intermediate_lang**)malloc(sizeof(struct intermediate_lang*)*50);
+	for (int i = 0; i < 50; i++)
+		intermediate_table[i] = (struct intermediate_lang*)malloc(sizeof(struct intermediate_lang));
+
+	block_tab = (struct blocks_table**)malloc(sizeof(struct blocks_table*) * 50);
+	for (int i = 0; i < 50; i++)
+		block_tab[i] = (struct blocks_table*)malloc(sizeof(struct blocks_table));
+
+    // Determine the number of lines (count the newline characters)
+    int num_lines = 0;
+    char* newline_pos = file_data;
+    while (*newline_pos) {
+        if (*newline_pos == '\n') 
+            num_lines++;
+        
+        newline_pos++;
+    }
+
+    // Allocate an array of char* to store the lines
+    char** lines 	= (char**)malloc(num_lines * sizeof(char*));
+    char* raw_line 	= strtok(file_data, "\n");
+    int line_index 	= 0;
+
+    while (raw_line != NULL) {
+        lines[line_index] = (char*)malloc(strlen(raw_line) + 2);
+
+        strcat(lines[line_index], raw_line);
+		strcat(lines[line_index], "\n");
+    	strcat(lines[line_index], "\0");
+
+        line_index++;
+        raw_line = strtok(NULL, "\n");
+    }
+
+	char tokens[10][10];
+	char *buffer = (char*)malloc(10 * sizeof(char));
+
+	int index = 0;
+
+	// before start //
+	while (1) {
+		if (strcmp(lines[index], "start-\n\0") == 0) 
+			break;
+		
+		int row = 0, buffer_index = 0;
+
+		// generating tokens //
+		for (int i = 0; lines[index][i] != '\0'; i++) {
+			if (lines[index][i] == ' ' || lines[index][i] == '\n') {
+				buffer[buffer_index] = '\0';
+				buffer_index = 0;
+
+				strcpy(tokens[row++], buffer);
+				free(buffer);
+                
+				buffer = (char*)malloc(10 * sizeof(char));
+			}
+			else buffer[buffer_index++] = lines[index][i];
+		}
+
+		// generating tokens //
+		if (strcmp(tokens[0], "data") == 0)
+			data_func(tokens, memory_array, &memory_index);
+		else if (strcmp(tokens[0], "const") == 0)
+			const_func(tokens, memory_array, &memory_index);
+
+		index++;
+
+		if (index > 11)
+			return -1;
+	}
+	// before start //
+
+	// after start//
+	char instruction[INSTRUCTION_LENGTH], param[PARAMETERS_LENGTH];
+	int opcode = -1, instruction_number = 0;
+
+	while (index <= num_lines) {
+		instruction_number++;
+		if (lines[index][strlen(lines[index]) - 2] == '-'){
+			lines[index][strlen(lines[index]) - 2] = '\0';
+			block_tab[blocks_index]->instr_no = instruction_number--;
+			strcpy(block_tab[blocks_index++]->name, lines[index++]);
+
+			continue;
+		}
+
+		int i = 0, j = 0;
+		while (lines[index][i] != ' ' && lines[index][i] != '\0' && lines[index][i] != '\n' && j < sizeof(instruction) - 1 ) 
+			instruction[j++] = lines[index][i++];
+		instruction[j] = '\0';
+
+		while (lines[index][i] == ' ') i++;
+		
+		j = 0;
+		while (lines[index][i] != '\0' && j < sizeof(param) - 1 && lines[index][i] != '\n') param[j++] = lines[index][i++];
+		param[j] = '\0';
+		
+		opcode = generate_operation_code(instruction);
+		switch (opcode) {
+		    case MOV_INSTRUCTION: 
+				mov_func(param, instruction_number);
+			break;
+
+			case ADD_INSTRUCTION:
+				bianryOperations_func(opcode, param, instruction_number);
+			break;
+
+			case SUB_INSTRUCTION:
+				bianryOperations_func(opcode, param, instruction_number);
+			break;
+
+			case MUL_INSTRUCTION:
+				bianryOperations_func(opcode, param, instruction_number);
+			break;
+
+			case JMP_INSTRUCTION: 
+				if (strcmp(instruction, "else") == 0) else_func(instruction_number, stack, &top);
+				else jump_func(param, instruction_number);
+			break;
+
+			case IF_INSTRUCTION:
+				if_func(param, instruction_number, stack, &top);
+			break;
+
+			case PRINT_INSTRUCTION:
+				print_func(param, instruction_number);
+			break;
+
+			case READ_INSTRUCTION:
+				read_func(param, instruction_number);
+			break;
+
+			case EIF_INSTRUCTION:
+				endif_func(instruction_number, stack, &top);
+				instruction_number--;
+			break;
+
+			case END_INSTRUCTION:
+				goto ending;
+
+			case PRINTS_INSTRUCTION:
+				prints_func(param, instruction_number);
+			break;
+
+			case MKFILE_INSTRUCTION:
+				mkfile_func(param, instruction_number);
+			break;
+
+			case RMFILE_INSTRUCTION:
+				rmfile_func(param, instruction_number);
+			break;
+
+			case WFILE_INSTRUCTION:
+				wfile_func(param, instruction_number);
+			break;
+
+			case RFILE_INSTRUCTION:
+				rfile_func(param, instruction_number);
+			break;
+
+			case FOR_INSTRUCTION:
+				for_func(param, instruction_number, stack, &top);
+			break;
+
+			case EFOR_INSTRUCTION:
+				endfor_func(instruction_number, stack, &top);
+				instruction_number--;
+			break;
+
+			case WHILE_INSTRUCTION:
+				while_func(param, instruction_number, stack, &top);
+			break;
+
+			case EWHILE_INSTRUCTION:
+				endwhile_func(instruction_number, stack, &top);
+				instruction_number--;
+			break;
+
+			case PRINTL_INSTRUCTION:
+				printl_func(param, instruction_number);
+			break;
+
+			case CLEAR_INSTRUCTION:
+				clear_func(instruction_number);
+			break;
+		}
+
+        index++;
+	}
+ending: 
+
+	asm_executor(memory_array, memory_index, 0, intermediate_index);
+	
+	for (int i = 0; i < 25; i++) free(symbol_tab[i]);
+	for (int i = 0; i < 50; i++) free(intermediate_table[i]);
+	for (int i = 0; i < 50; i++) free(block_tab[i]);
+	
+	free(symbol_tab);
+	free(intermediate_table);
+	free(block_tab);
+	free(file_pointer);
+
+	return 0;
+}
+
 void const_func(char(*tokens)[10], int *memory, int *memory_index) {
 	if (symbol_index == 0){
 		symbol_tab[symbol_index]->address = VARIABLE_MEMORY_START;
@@ -470,226 +694,7 @@ void jump_func(char *param, int instruction_number){
 	return;
 }
 
-int asm_execute(char* file_data) {
-	intermediate_index = 0;
-	symbol_index	   = 0;
-	blocks_index       = 0;
 
-	int stack[STACK_SIZE], top = -1;
-	int memory_array[MEMORY_SIZE];
-	int memory_index = VARIABLE_MEMORY_START - 1 ;  // 0 to 7 are already reserved
-
-	symbol_tab = (struct symbol_table**)malloc(sizeof(struct symbol_table*) * 25);
-	for (int i = 0; i < 25; i++)
-		symbol_tab[i] = (struct symbol_table*)malloc(sizeof(struct symbol_table));
-
-	intermediate_table = (struct intermediate_lang**)malloc(sizeof(struct intermediate_lang*)*50);
-	for (int i = 0; i < 50; i++)
-		intermediate_table[i] = (struct intermediate_lang*)malloc(sizeof(struct intermediate_lang));
-
-	block_tab = (struct blocks_table**)malloc(sizeof(struct blocks_table*) * 50);
-	for (int i = 0; i < 50; i++)
-		block_tab[i] = (struct blocks_table*)malloc(sizeof(struct blocks_table));
-
-    // Determine the number of lines (count the newline characters)
-    int num_lines = 0;
-    char* newline_pos = file_data;
-    while (*newline_pos) {
-        if (*newline_pos == '\n') 
-            num_lines++;
-        
-        newline_pos++;
-    }
-
-    // Allocate an array of char* to store the lines
-    char** lines 	= (char**)malloc(num_lines * sizeof(char*));
-    char* raw_line 	= strtok(file_data, "\n");
-    int line_index 	= 0;
-
-    while (raw_line != NULL) {
-        lines[line_index] = (char*)malloc(strlen(raw_line) + 2);
-
-        strcat(lines[line_index], raw_line);
-		strcat(lines[line_index], "\n");
-    	strcat(lines[line_index], "\0");
-
-        line_index++;
-        raw_line = strtok(NULL, "\n");
-    }
-
-	char tokens[10][10];
-	char *buffer = (char*)malloc(10 * sizeof(char));
-
-	int index = 0;
-
-	// before start //
-	while (1) {
-		if (strcmp(lines[index], "start-\n\0") == 0) 
-			break;
-		
-		int row = 0, buffer_index = 0;
-
-		// generating tokens //
-		for (int i = 0; lines[index][i] != '\0'; i++) {
-			if (lines[index][i] == ' ' || lines[index][i] == '\n') {
-				buffer[buffer_index] = '\0';
-				buffer_index = 0;
-
-				strcpy(tokens[row++], buffer);
-				free(buffer);
-                
-				buffer = (char*)malloc(10 * sizeof(char));
-			}
-			else buffer[buffer_index++] = lines[index][i];
-		}
-
-		// generating tokens //
-		if (strcmp(tokens[0], "data") == 0)
-			data_func(tokens, memory_array, &memory_index);
-		else if (strcmp(tokens[0], "const") == 0)
-			const_func(tokens, memory_array, &memory_index);
-
-		index++;
-
-		if (index > 11)
-			return -1;
-	}
-	// before start //
-
-	// after start//
-	char instruction[INSTRUCTION_LENGTH], param[PARAMETERS_LENGTH];
-	int opcode = -1, instruction_number = 0;
-
-	while (index <= num_lines) {
-		instruction_number++;
-		if (lines[index][strlen(lines[index]) - 2] == '-'){
-			lines[index][strlen(lines[index]) - 2] = '\0';
-			block_tab[blocks_index]->instr_no = instruction_number--;
-			strcpy(block_tab[blocks_index++]->name, lines[index++]);
-
-			continue;
-		}
-
-		int i = 0, j = 0;
-		while (lines[index][i] != ' ' && lines[index][i] != '\0' && lines[index][i] != '\n' && j < sizeof(instruction) - 1 ) 
-			instruction[j++] = lines[index][i++];
-		instruction[j] = '\0';
-
-		while (lines[index][i] == ' ') i++;
-		
-		j = 0;
-		while (lines[index][i] != '\0' && j < sizeof(param) - 1 && lines[index][i] != '\n') param[j++] = lines[index][i++];
-		param[j] = '\0';
-		
-		opcode = generate_operation_code(instruction);
-		switch (opcode) {
-		    case MOV_INSTRUCTION: 
-				mov_func(param, instruction_number);
-			break;
-
-			case ADD_INSTRUCTION:
-				bianryOperations_func(opcode, param, instruction_number);
-			break;
-
-			case SUB_INSTRUCTION:
-				bianryOperations_func(opcode, param, instruction_number);
-			break;
-
-			case MUL_INSTRUCTION:
-				bianryOperations_func(opcode, param, instruction_number);
-			break;
-
-			case JMP_INSTRUCTION: 
-				if (strcmp(instruction, "else") == 0) else_func(instruction_number, stack, &top);
-				else jump_func(param, instruction_number);
-			break;
-
-			case IF_INSTRUCTION:
-				if_func(param, instruction_number, stack, &top);
-			break;
-
-			case PRINT_INSTRUCTION:
-				print_func(param, instruction_number);
-			break;
-
-			case READ_INSTRUCTION:
-				read_func(param, instruction_number);
-			break;
-
-			case EIF_INSTRUCTION:
-				endif_func(instruction_number, stack, &top);
-				instruction_number--;
-			break;
-
-			case END_INSTRUCTION:
-				goto ending;
-
-			case PRINTS_INSTRUCTION:
-				prints_func(param, instruction_number);
-			break;
-
-			case MKFILE_INSTRUCTION:
-				mkfile_func(param, instruction_number);
-			break;
-
-			case RMFILE_INSTRUCTION:
-				rmfile_func(param, instruction_number);
-			break;
-
-			case WFILE_INSTRUCTION:
-				wfile_func(param, instruction_number);
-			break;
-
-			case RFILE_INSTRUCTION:
-				rfile_func(param, instruction_number);
-			break;
-
-			case FOR_INSTRUCTION:
-				for_func(param, instruction_number, stack, &top);
-			break;
-
-			case EFOR_INSTRUCTION:
-				endfor_func(instruction_number, stack, &top);
-				instruction_number--;
-			break;
-
-			case WHILE_INSTRUCTION:
-				while_func(param, instruction_number, stack, &top);
-			break;
-
-			case EWHILE_INSTRUCTION:
-				endwhile_func(instruction_number, stack, &top);
-				instruction_number--;
-			break;
-
-			case PRINTL_INSTRUCTION:
-				printl_func(param, instruction_number);
-			break;
-
-			case CLEAR_INSTRUCTION:
-				clear_func(instruction_number);
-			break;
-		}
-
-        index++;
-	}
-ending: 
-
-	// executing the program //
-	asm_executor(memory_array, memory_index, 0, intermediate_index);
-	// executing the program //
-
-	for (int i = 0; i < 25; i++) free(symbol_tab[i]);
-	free(symbol_tab);
-
-	for (int i = 0; i < 50; i++) free(intermediate_table[i]);
-	free(intermediate_table);
-
-	for (int i = 0; i < 50; i++) free(block_tab[i]);
-	free(block_tab);
-
-	return 0;
-}
 
 void display_symbol_table() {
 	printf("\n---------------Symbol Table is ----------\n");

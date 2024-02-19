@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _MOUSE_H_
+#define _MOUSE_H_
+
 
 #include "x86.h"
 #include "irq.h"
@@ -48,3 +50,6 @@ mouse_state_t i386_mouse_state();
 
 void PSMS_show();
 void place();
+
+
+#endif

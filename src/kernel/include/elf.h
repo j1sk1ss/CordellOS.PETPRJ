@@ -4,16 +4,15 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <memory.h>
+#include <math.h>
+#include <stdlib.h>
 
 #include "elf.h"
 #include "fat.h"
 #include "stdio.h"
 #include "virt_manager.h"
 #include "phys_manager.h"
-
-#include "../../libs/include/memory.h"
-#include "../../libs/include/math.h"
-#include "../../libs/include/stdlib.h"
 
 
 #define EI_NIDENT (16)

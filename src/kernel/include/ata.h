@@ -1,11 +1,14 @@
+#ifndef __ATA_H__
+#define __ATA_H__
+
 #include <stdint.h>
+#include <memory.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "x86.h"
 #include "stdio.h"
 
-#include "../../libs/include/memory.h"
-#include "../../libs/include/stdlib.h"
-#include "../../libs/include/string.h"
 
 #define BOOT_SECTOR                 0
 #define SECTOR_SIZE                 512
@@ -28,6 +31,7 @@
 #define ATAPI_CMD_READ              0xA8
 #define ATAPI_CMD_EJECT             0x1B
 
+
 bool ATA_is_sector_empty(const uint8_t* sector_data);
 bool ATA_is_current_sector_empty(uint32_t LBA);
 
@@ -44,3 +48,6 @@ uint32_t ATA_find_empty_sector(uint32_t offset);
 
 int ATA_global_sector_count();
 int ATA_global_sector_empty();
+
+
+#endif

@@ -1,15 +1,15 @@
 #ifndef TASKING_H
 #define TASKING_H
 
+
 #include <stdint.h>
 #include <stdbool.h>
+#include <memory.h>
+#include <stdlib.h>
 
 #include "x86.h"
 #include "stdio.h"
 #include "irq.h"
-
-#include "../../libs/include/memory.h"
-#include "../../libs/include/stdlib.h"
 
 
 #define TASKS_MAX             256
@@ -59,5 +59,6 @@ void TASK_task_switch(Registers* state);
 
 void __kill();
 void _kill(int pid);
+
 
 #endif // TASKING_H

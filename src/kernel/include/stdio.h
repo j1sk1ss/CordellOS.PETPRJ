@@ -4,11 +4,10 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <string.h>
 
 #include "vga_text.h"
 #include "vesa_text.h"
-
-#include "../../libs/include/string.h"
 
 
 #define PRINTF_STATE_NORMAL         0

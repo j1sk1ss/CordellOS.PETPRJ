@@ -1,7 +1,8 @@
 #include "../../include/idt.h"
+#include "../../util/binary.h"
 
 #include <stdint.h>
-#include <util/binary.h>
+
 
 typedef struct {
     uint16_t BaseLow;
@@ -16,9 +17,11 @@ typedef struct {
     IDTEntry* Ptr;
 } __attribute__((packed)) IDTDescriptor;
 
+
 IDTEntry _idt[256];
 
 IDTDescriptor _IDTDescriptor = { sizeof(_idt) - 1, _idt };
+
 
 void __attribute__((cdecl)) i386_idt_load(IDTDescriptor* idtDescriptor);
 

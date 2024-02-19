@@ -1,12 +1,12 @@
 #pragma once
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "x86.h"
 #include "phys_manager.h"
 #include "isr.h"
 
-#include "../../libs/include/string.h"
 
 #define PAGES_PER_TABLE      1024
 #define TABLES_PER_DIRECTORY 1024

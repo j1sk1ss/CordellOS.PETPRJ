@@ -1,15 +1,16 @@
 /*
  * pc_speaker.h: Definitions and functions for emulated (maybe hardware?) pc speaker
+ * Code taked from: https://github.com/queso-fuego/amateuros/blob/master/include/sound/pc_speaker.h
  */
 #include "../../include/speaker.h"
 
-static uint32_t bpm_ms = 0;
-static uint32_t whole_note_duration     = 0;
-static uint32_t half_note_duration      = 0;
-static uint32_t quarter_note_duration   = 0;
-static uint32_t eigth_note_duration     = 0;
-static uint32_t sixteenth_note_duration = 0;
-static uint32_t thirty2nd_note_duration = 0;
+uint32_t bpm_ms                  = 0;
+uint32_t whole_note_duration     = 0;
+uint32_t half_note_duration      = 0;
+uint32_t quarter_note_duration   = 0;
+uint32_t eigth_note_duration     = 0;
+uint32_t sixteenth_note_duration = 0;
+uint32_t thirty2nd_note_duration = 0;
 
 void set_pit_channel_mode_frequency(const uint8_t channel, const uint8_t operating_mode, const uint16_t frequency) {
     // Invalid input
@@ -70,36 +71,23 @@ void disable_pc_speaker() {
     i386_outb(PC_SPEAKER_PORT, temp & 0xFC);  // Clear first 2 bits to turn off speaker
 }
 
-// Play a note for a given duration
 void play_note(const note_freq_t note, const uint32_t ms_duration) {
     set_pit_channel_mode_frequency(2, 3, note);
-
-    // Note: Assuming PIT channel 0 is set to 1000hz or 1ms rate
     TIME_sleep_milliseconds(ms_duration);
 }
 
 // Rest for a given duration
-void rest(const uint32_t ms_duration)
-{
+void rest(const uint32_t ms_duration) {
     set_pit_channel_mode_frequency(2, 3, 40);
-
-    // Note: Assuming PIT channel 0 is set to 1000hz or 1ms rate
     TIME_sleep_milliseconds(ms_duration);
 }
 
-// Set beats per minute value
-void set_bpm(const uint32_t bpm) 
-{
-    // Assuming PIT channel 0 is set to 1000hz or 1ms
+void set_bpm(const uint32_t bpm) {
     bpm_ms = 60000/bpm;
 }
 
-// Set time signature
-// TODO: Use beats per measure value later?
-void set_time_signature(const uint8_t beats_per_measure, const beat_type_t beat_type)
-{
-    (void)beats_per_measure;    // Silence compiler warnings
-
+void set_time_signature(const uint8_t beats_per_measure, const beat_type_t beat_type) {
+    (void)beats_per_measure;
     switch(beat_type) {
         case WHOLE:
             whole_note_duration     = bpm_ms;
@@ -152,77 +140,59 @@ void set_time_signature(const uint8_t beats_per_measure, const beat_type_t beat_
     }
 }
 
-void whole_note(const note_freq_t note)
-{
+void whole_note(const note_freq_t note) {
     play_note(note, whole_note_duration);
 }
 
-void half_note(const note_freq_t note)
-{
+void half_note(const note_freq_t note) {
     play_note(note, half_note_duration);
 }
 
-void quarter_note(const note_freq_t note)
-{
+void quarter_note(const note_freq_t note) {
     play_note(note, quarter_note_duration);
 }
 
-void eigth_note(const note_freq_t note)
-{
+void eigth_note(const note_freq_t note) {
     play_note(note, eigth_note_duration);
 }
 
-void sixteenth_note(const note_freq_t note)
-{
+void sixteenth_note(const note_freq_t note) {
     play_note(note, sixteenth_note_duration);
 }
 
-void thirty2nd_note(const note_freq_t note)
-{
+void thirty2nd_note(const note_freq_t note) {
     play_note(note, thirty2nd_note_duration);
 }
 
-void whole_rest(void)
-{
+void whole_rest(void) {
     rest(whole_note_duration);
 }
 
-void half_rest(void)
-{
+void half_rest(void) {
     rest(half_note_duration);
 }
 
-void quarter_rest(void)
-{
+void quarter_rest(void) {
     rest(quarter_note_duration);
 }
 
-void eigth_rest(void)
-{
+void eigth_rest(void) {
     rest(eigth_note_duration);
 }
 
-void sixteenth_rest(void)
-{
+void sixteenth_rest(void) {
     rest(sixteenth_note_duration);
 }
 
-void thirty2nd_rest(void)
-{
+void thirty2nd_rest(void) {
     rest(thirty2nd_note_duration);
 }
 
-// Dotted notes play for their time duration + half of their time duration
-// TODO: Add more dotted* functions
-void dotted_eigth_note(const note_freq_t note)
-{
+void dotted_eigth_note(const note_freq_t note) {
     play_note(note, eigth_note_duration + sixteenth_note_duration);
 }
 
-// Triplets play 3 notes in the span of 2
-// TODO: Add more triplet* functions
-void eigth_triplet(const note_freq_t note1, const note_freq_t note2, const note_freq_t note3)
-{
+void eigth_triplet(const note_freq_t note1, const note_freq_t note2, const note_freq_t note3) {
     uint32_t temp = quarter_note_duration / 3;
 
     play_note(note1, temp);

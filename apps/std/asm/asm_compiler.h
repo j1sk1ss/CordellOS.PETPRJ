@@ -1,9 +1,9 @@
 #define _CRT_SECURE_NO_WARNINGS
 
-#include "../../../libs/include/stdio.h"
-#include "../../../libs/include/string.h"
-#include "../../../libs/include/fatlib.h"
-#include "../../../libs/include/stdlib.h"
+#include <stdio.h>
+#include <string.h>
+#include <fatlib.h>
+#include <stdlib.h>
 
 #define STACK_SIZE              100
 #define MEMORY_SIZE             100

@@ -5,9 +5,9 @@
 #include "elf.h"       // Not important for base implementation. ELF executer
 #include "date_time.h" // Not important for base implementation. Date time getter from CMOS
 
-#include "../../libs/include/memory.h"
-#include "../../libs/include/stdlib.h"  // Allocators (basic malloc required)
-#include "../../libs/include/string.h"
+#include <memory.h>
+#include <stdlib.h>  // Allocators (basic malloc required)
+#include <string.h>
 
 #define SECTOR_OFFSET		23000
 

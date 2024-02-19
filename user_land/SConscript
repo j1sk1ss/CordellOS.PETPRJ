@@ -1,7 +1,7 @@
 import os
 
 from SCons.Environment import Environment
-from build_scripts.utility import glob_recursive, find_index, is_file_name
+from build_scripts.utility import glob_recursive
 
 
 Import('TARGET_ENVIRONMENT')
@@ -9,16 +9,20 @@ TARGET_ENVIRONMENT: Environment
 
 env = TARGET_ENVIRONMENT.Clone()
 env.Append(
+    CCFLAGS=[
+        '-fpic'
+    ],
+
     LINKFLAGS = [
-        '-Wl,-Map=' + env.File('calc.map').path
+        '-Wl,-Map=' + env.File('userl.map').path
     ],
 
     CPPPATH = [ 
         env.Dir('.').srcnode(),
-        env['PROJECTDIR'].Dir('src/libs')
+        env['PROJECTDIR'].Dir('src/libs/include')
     ],
 
-    ASFLAGS = [ '-I', env.Dir('.').srcnode(), '-f', 'elf' ]
+    ASFLAGS = [ '-I', env.Dir('.').srcnode(), '-f', 'elf32' ]
 )
 
 # Add boot.s to the sources
@@ -43,10 +47,5 @@ objects = [
     *static_libs,
 ]
 
-calc = env.Program('calc.elf', objects)
-calc_stripped = env.Command('calc-stripped.elf', calc, '$STRIP -o $TARGET $SOURCE')
-
-env.Default(calc_stripped)
-
-Export('calc')
-Export('calc_stripped')
+userl = env.Program('userl.elf', objects)
+Export('userl')

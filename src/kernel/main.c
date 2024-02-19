@@ -13,6 +13,7 @@
 #include "include/keyboard.h"
 #include "include/allocator.h"
 #include "include/syscalls.h"
+#include "include/speaker.h"
 
 #include "multiboot.h"
 
@@ -45,8 +46,10 @@ extern uint32_t kernel_end;
 //          8.1) Loading BMP without malloc for fdata             [V]
 //          8.1) Syscalls to std libs                             [V]
 //          8.2) VBE userland                                     [ ]
+//              8.2.0) VBE file manager                           [ ]
+//              8.2.1) VBE text editor                            [ ]
 //      9) Malloc optimization                                    [?]
-//      10) Bags                                                  [?]
+//      10) Bugs                                                  [?]
 //          10.0) Tasking page fault                              [?]
 //          10.1) Mouse page fault                                [V]
 //          10.2) Tasking with page allocator                     [ ]

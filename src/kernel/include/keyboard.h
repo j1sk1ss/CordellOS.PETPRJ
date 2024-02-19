@@ -1,18 +1,19 @@
-#pragma once
+#ifndef _KEYBOARD_H_
+#define _KEYBOARD_H_
+
 
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <memory.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "stdio.h"
 #include "x86.h"
 #include "vga_text.h"
 #include "vesa_text.h"
 #include "isr.h"
-
-#include "../../libs/include/memory.h"
-#include "../../libs/include/stdlib.h"
-#include "../../libs/include/string.h"
 
 
 #define KBD_DATA_PORT           0x60
@@ -47,3 +48,6 @@ char keyboard_navigation();
 void keyboard_wait(char symbol);
 
 void __attribute__((cdecl)) i386_init_keyboard();
+
+
+#endif

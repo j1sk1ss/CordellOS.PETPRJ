@@ -1,6 +1,6 @@
-#include "../../../libs/include/fatlib.h"
-#include "../../../libs/include/memory.h"
-#include "../../../libs/include/stdlib.h"
+#include <fatlib.h>
+#include <memory.h>
+#include <stdlib.h>
 
 #define LINE "+-----------------+-------------------+-----------+---------------------------+\n"
 

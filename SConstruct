@@ -153,8 +153,9 @@ SConscript('src/libs/SConscript', variant_dir=variantDir + '/libs', duplicate=0)
 # SConscript('src/userl/SConscript', variant_dir=variantDir + '/userl', duplicate=0)
 
 # Apps
-SConscript('src/apps/games/snake/SConscript', variant_dir=variantDir + '/apps/games/snake', duplicate=0)
-SConscript('src/apps/std/calc/SConscript', variant_dir=variantDir + '/apps/std/calc', duplicate=0)
+SConscript('apps/games/snake/SConscript', variant_dir=variantDir + '/apps/games/snake', duplicate=0)
+SConscript('apps/std/calc/SConscript', variant_dir=variantDir + '/apps/std/calc', duplicate=0)
+SConscript('apps/std/asm/SConscript', variant_dir=variantDir + '/apps/std/asm', duplicate=0)
 
 # Kernel
 SConscript('src/kernel/SConscript', variant_dir=variantDir + '/kernel', duplicate=0)

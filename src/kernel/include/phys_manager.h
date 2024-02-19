@@ -1,10 +1,9 @@
 #pragma once
 
+#include <memory.h>
 #include <stdint.h>
 
 #include "stdio.h"
-
-#include "../../libs/include/memory.h"
 
 
 #define MEM_OFFSET      0x10000

@@ -23,3 +23,7 @@ uint8_t i386_inb(uint16_t port) {
 void i386_outb(uint16_t port, uint8_t data) {
     asm("outb %1, %0" : : "dN" (port), "a" (data));
 }
+
+void i386_io_wait() {
+    i386_outb(UNUSED_PORT, 0);
+}

@@ -2,11 +2,10 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <memory.h>
 
 #include "phys_manager.h"
 #include "virt_manager.h"
-
-#include "../../libs/include/memory.h"
 
 
 #define PAGE_SIZE               4096

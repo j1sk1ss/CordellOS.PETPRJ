@@ -3,7 +3,7 @@
 #include "gfx.h"
 #include "keyboard.h"
 
-#include "../../libs/include/memory.h"
+#include <memory.h>
 
 
 void VESA_clrscr();

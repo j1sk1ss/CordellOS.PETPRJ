@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../../libs/include/fatlib.h"
-#include "../../../libs/include/stdlib.h"
-#include "../../../libs/include/stdio.h"
+#include <fatlib.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 
 #define ROWS            14

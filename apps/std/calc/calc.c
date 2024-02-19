@@ -1,12 +1,9 @@
-#include "../../../libs/include/stdio.h"
+#include <stdio.h>
 
-#define F3_BUTTON               '\255'
-#define ENTER_BUTTON            '\n'
 
 int main(int args, char* argv[]) {
     while (1) {
-        char message[35] = "Enter expression (e.g., 5 + 3): ";
-        printf(message);
+        printf("Enter expression (e.g., 5 + 3): ");
 
         int operand1 = 0;
         while (1) {
@@ -46,15 +43,13 @@ int main(int args, char* argv[]) {
             case '/':
                 if (operand2 != 0) result = operand1 / operand2;
                 else {
-                    char error[26] = "Error: Division by zero\n";
-                    printf(error);
+                    printf("Error: Division by zero\n");
                     continue;
                 }
             break;
 
             default:
-                char warn[26] = "Error: Invalid operator\n";
-                printf(warn);
+                printf("Error: Invalid operator\n");
             continue;
         }
 
@@ -66,14 +61,15 @@ int main(int args, char* argv[]) {
         printf(result_buffer);
         putc('\n');
 
-        char exit_message[40] = "Press F3 to exit or ENTER to continue\n";
-        printf(exit_message);
-        while (1) {
+        result = 0;
+        printf("Press F3 to exit or ENTER to continue\n");
+        while (result == 0) {
             switch (wait_char()) {
                 case F3_BUTTON:
                 return -1;
 
                 case ENTER_BUTTON:
+                    result = 1;
                 break;
 
                 default:
@@ -88,38 +84,33 @@ int main(int args, char* argv[]) {
 }
 
 void int_to_string(int num, char* buffer, int buffer_size) {
-    int i = 0;
+    int i    = 0;
     int temp = num;
     
-    // Handle the case where the number is 0 separately
     if (num == 0) {
         buffer[0] = '0';
         buffer[1] = '\0';
         return;
     }
 
-    // Handle negative numbers
     if (num < 0) {
         buffer[i++] = '-';
         temp = -temp;
     }
 
-    // Calculate the number of digits
     int digits = 0;
     while (temp > 0) {
         temp /= 10;
         digits++;
     }
 
-    // Fill the buffer with digits
     for (int j = 0; j < digits; j++) {
         int divisor = 1;
-        for (int k = 0; k < digits - j - 1; k++) {
+        for (int k = 0; k < digits - j - 1; k++) 
             divisor *= 10;
-        }
+
         buffer[i++] = '0' + ((num / divisor) % 10);
     }
 
-    // Null-terminate the string
     buffer[i] = '\0';
 }

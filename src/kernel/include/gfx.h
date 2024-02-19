@@ -1,13 +1,15 @@
-#pragma once
+#ifndef GFX_H_
+#define GFX_H_
+
 
 #include <stdint.h>
+#include <math.h>
+#include <font.h>
 
 #include "stdio.h"
 #include "x86.h"
 
 #include "../multiboot.h"
-#include "../../libs/include/math.h"
-#include "../../libs/include/font.h"
 
 
 #define BLACK       0x00000000 
@@ -122,3 +124,6 @@ void GFX_put_char(int x, int y, int c, uint32_t foreground, uint32_t background)
 int GFX_get_char(int x, int y);
 
 uint32_t GFX_convert_color(const uint32_t color);
+
+
+#endif
