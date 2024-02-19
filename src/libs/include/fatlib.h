@@ -5,6 +5,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+
 #define FILE_READ_ONLY      0x01
 #define FILE_HIDDEN         0x02
 #define FILE_SYSTEM         0x04
@@ -23,6 +24,7 @@
 #define BAD_TERMINATION         0x04
 #define NOT_CONVERTED_YET       0x08
 #define TOO_MANY_DOTS           0x10
+
 
 typedef struct udirectory_entry {
 	unsigned char file_name[11];
@@ -48,22 +50,21 @@ struct UFATFile {
 	int data_size;
 	uint32_t* data;
 
-	char extension[4];
-	char name[11];
+	char* extension;
+	char* name;
 
-    struct File* next;
+    struct UFATFile* next;
 };
 
 struct UFATDirectory {
 	udirectory_entry_t directory_meta;
 	void* data_pointer;
 
-	char name[11];
+	char* name;
 
-	struct UFATDirectory* next;
-
-    struct UFATFile* files;
-    struct UFATDirectory* subDirectory;
+	struct FATDirectory* next;
+    struct FATFile* files;
+    struct FATDirectory* subDirectory;
 };
 
 struct UFATDate {
@@ -80,6 +81,7 @@ struct UFATContent {
 	struct UFATDirectory* directory;
 	struct UFATFile* file;
 };
+
 
 void FATLIB_unload_directories_system(struct UFATDirectory* directory);
 void FATLIB_unload_files_system(struct UFATFile* file);

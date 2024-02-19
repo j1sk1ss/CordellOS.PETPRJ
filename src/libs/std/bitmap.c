@@ -1,5 +1,6 @@
 #include "../include/bitmap.h"
 
+
 bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
     bitmap_t* ret = malloc(sizeof(bitmap_t));
     struct UFATContent* content = get_content(file_path);
@@ -22,13 +23,13 @@ bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
     fread_off(content, sizeof(bmp_fileheader_t), info, sizeof(bmp_infoheader_t));
 
     bmp_infoheader_t* inf = info;
-    ret->width            = inf->biWidth;
-    ret->height           = inf->biHeight;
-    ret->header_offset    = offset;
-    ret->file             = content;
-    ret->bpp              = inf->biBitCount;
-    ret->x                = screen_x;
-    ret->y                = screen_y;
+    ret->width         = inf->biWidth;
+    ret->height        = inf->biHeight;
+    ret->header_offset = offset;
+    ret->file          = content;
+    ret->bpp           = inf->biBitCount;
+    ret->x             = screen_x;
+    ret->y             = screen_y;
 
     free(info);
     
@@ -42,7 +43,7 @@ void BMP_display(bitmap_t* bmp) {
     }
 
     if (bmp->width > get_resolution_x() || bmp->height > get_resolution_y()) {
-        printf("Invalid resolution of bitmap W%i H%i\n", bmp->width, bmp->height);
+        printf("Invalid resolution of bitmap W: [%i] H: [%i]\n", bmp->width, bmp->height);
         return;
     }
     
@@ -66,8 +67,8 @@ void BMP_display(bitmap_t* bmp) {
                 uint8_t green = bytes[color_index + 1];
                 uint8_t red   = bytes[color_index + 2];
 
-                if (x + line_part < bmp->width)
-                    put_pixel(x + bmp->x + line_part, (bmp->height - 1 - y) + bmp->y, (red << 16) | (green << 8) | blue);
+                if (x + line_part < bmp->width) put_pixel(x + bmp->x + line_part, (bmp->height - 1 - y) + bmp->y, (red << 16) | (green << 8) | blue);
+                else break;
             }
 
             free(bytes);
@@ -79,7 +80,6 @@ void BMP_display(bitmap_t* bmp) {
 }
 
 void BMP_unload(bitmap_t* bitmap) {
-    if (bitmap == NULL) return;
-    FATLIB_unload_content_system(bitmap->file);
-    free(bitmap);
+    if (bitmap->file != NULL) FATLIB_unload_content_system(bitmap->file);
+    if (bitmap != NULL) free(bitmap);
 }

@@ -33,6 +33,7 @@ void shell_start_screen() {
 
     void execute_command(char* command) {
 
+        if (command == NULL) return;
         if (strlen(command) <= 0) return;
 
         //====================
@@ -204,11 +205,11 @@ void shell_start_screen() {
                     free(file_path);
                     return;
                 }
-
+                
                 struct bitmap* bitmap = BMP_create(file_path, atoi(command_line[2]), atoi(command_line[3]));
+                
                 BMP_display(bitmap);
                 BMP_unload(bitmap);
-
                 free(file_path);
             }
 

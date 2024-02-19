@@ -115,6 +115,7 @@ void* calloc(size_t nelem, size_t elsize) {
 //  Free alocated memory
 //  EBX - pointer to allocated memory
 void free(void* ptr) {
+    if (ptr == NULL) return;
     __asm__ volatile(
         "movl $8, %%eax\n"
         "movl %0, %%ebx\n"

@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <bitmap.h>
 
 #include "include/hal.h"
 #include "include/fat.h"
