@@ -4,6 +4,7 @@
 
 TaskManager* taskManager;
 bool tasking = false;
+uint32_t v_addr = 0x5000000;
 
 
 //==================
@@ -105,7 +106,8 @@ bool tasking = false;
 			// Allocate data for stack
 			//=============================
 
-				task->cpuState->esp     = (uint32_t)calloc(PAGE_SIZE, 1);
+				mallocp(v_addr);
+				task->cpuState->esp     = v_addr;
 				task->virtual_address   = task->cpuState->esp;
 				uint32_t* stack_pointer = (uint32_t*)(task->cpuState->esp + PAGE_SIZE);
 
@@ -163,11 +165,13 @@ bool tasking = false;
 		// Fill registers
 		//==============================
 
+		v_addr += PAGE_SIZE;
+
 		return task;
 	}
 
 	void destroy_task(Task* task) {
-		free((uint32_t*)task->virtual_address);
+		freep((uint32_t*)task->virtual_address);
 		free(task->cpuState);
 		free(task);
 	}

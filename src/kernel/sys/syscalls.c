@@ -80,10 +80,22 @@ void syscall(Registers* regs) {
         regs->eax = allocated_memory;
     } 
     
+    else if (regs->eax == SYS_PAGE_MALLOC) {
+        uint32_t address = regs->ebx;
+        kmallocp(address);
+        regs->eax = address;
+    } 
+
     else if (regs->eax == SYS_FREE) {
         void* ptr_to_free = (void*)regs->ebx;
         if (ptr_to_free != NULL)
             kfree(ptr_to_free);
+    }
+
+    else if (regs->eax == SYS_PAGE_FREE) {
+        void* ptr_to_free = (void*)regs->ebx;
+        if (ptr_to_free != NULL)
+            kfreep(ptr_to_free);
     }
 
     else if (regs->eax == SYS_READ_FILE) {
@@ -162,13 +174,21 @@ void syscall(Registers* regs) {
     
     else if (regs->eax == SYS_GET_CURSOR) {
         int* cursor_cords = (int*)regs->ecx;
-        cursor_cords[0] = VGA_cursor_get_x();
-        cursor_cords[1] = VGA_cursor_get_y();
+
+        if (!is_vesa) {
+            cursor_cords[0] = VGA_cursor_get_x();
+            cursor_cords[1] = VGA_cursor_get_y();
+        }
+        else {
+            cursor_cords[0] = VESA_get_cursor_x();
+            cursor_cords[1] = VESA_get_cursor_y();
+        }
     } 
     
     else if (regs->eax == SYS_SET_CURSOR) {
         int x = (int)regs->ebx;
         int y = (int)regs->ecx;
+        
         if (!is_vesa) VGA_setcursor(x, y);
         else VESA_set_cursor(x, y);
     } 

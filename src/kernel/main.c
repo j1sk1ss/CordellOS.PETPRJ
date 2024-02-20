@@ -24,10 +24,11 @@ extern uint32_t kernel_end;
 
 
 //===================================================================
-// TODO List:
+// TODO List:                                                     | |
 //===================================================================
 //      1) Multiboot struct                                       [V]
 //      2) Phys and Virt manages                                  [V]
+//          2.0) Make page and phys prints for debug              [ ]
 //      3) ELF check v_addr                                       [V]
 //          3.1) Fix global and static vars                       [V]
 //          3.2) Loading ELF without malloc for fdata             [V]
@@ -37,6 +38,7 @@ extern uint32_t kernel_end;
 //          4.2) ELF exec with tasking and paging                 [V]
 //      5) VBE / VESA                                             [V]
 //          5.0) VBE kernel                                       [V]
+//              5.0.1) Kshell scrolling                           [ ]
 //          5.1) Double buffering                                 [ ]
 //      6) Keyboard to int                                        [V]
 //      7) Reboot outportb(0x64, 0xFE);                           [V]
@@ -46,14 +48,18 @@ extern uint32_t kernel_end;
 //              8.0.1) Click event                                [ ]
 //          8.1) Loading BMP without malloc for fdata             [V]
 //          8.1) Syscalls to std libs                             [V]
+//              8.1.0) Syscalls for content change                [ ]
+//              8.1.1) Syscalls for content delete                [V]
+//              8.1.2) Syscalls for kmallocp and freep            [V]
 //          8.2) VBE userland                                     [ ]
 //              8.2.0) VBE file manager                           [ ]
 //              8.2.1) VBE text editor                            [ ]
 //      9) Malloc optimization                                    [?]
 //      10) Bugs                                                  [?]
-//          10.0) Tasking page fault                              [?]
+//          10.0) Tasking page fault (In case when we use more    [?]
+//                then one task)                                  | |
 //          10.1) Mouse page fault                                [V]
-//          10.2) Tasking with page allocator                     [ ]
+//          10.2) Tasking with page allocator                     [V]
 //      11) DOOM?                                                 [ ]
 //===================================================================
 
@@ -158,6 +164,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
             uint32_t framebuffer_pages = (gfx_mode.y_resolution * gfx_mode.x_resolution * (gfx_mode.bits_per_pixel / 2)) / PAGE_SIZE;
             if (framebuffer_pages % PAGE_SIZE > 0) framebuffer_pages++;
     
+            // multiplication 2 for hardware
             framebuffer_pages *= 2;
             for (uint32_t i = 0, fb_start = gfx_mode.physical_base_pointer; i < framebuffer_pages; i++, fb_start += PAGE_SIZE)
                 map_page((void*)fb_start, (void*)fb_start);

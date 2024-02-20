@@ -23,7 +23,7 @@ void kshell() {
 }
 
 void shell_start_screen() {
-    kprintf("Cordell KShell [ver. 0.3d | 18.02.2024] \n\r");
+    kprintf("Cordell KShell [ver. 0.3e | 20.02.2024] \n\r");
     kprintf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n\r");
 }
 
@@ -64,6 +64,8 @@ void shell_start_screen() {
 
                 kprintf("\r\n> Utilizza la [%s] per vista versione",                             COMMAND_VERSION);
                 kprintf("\r\n> Utilizza la [%s] per vista disk-data informazione",               COMMAND_DISK_DATA);
+                kprintf("\r\n> Utilizza la [%s] per vista mem-data informazione",                COMMAND_MEM_DATA);
+                kprintf("\r\n> Utilizza la [%s] per vista page-data informazione",               COMMAND_PAGE_DATA);
                 kprintf("\n");
 
                 kprintf("\r\n> Usa [%s] <nome> per entranto dir",                                COMMAND_IN_DIR);
@@ -81,12 +83,13 @@ void shell_start_screen() {
                 kprintf("\n");
             }
 
-            else if (strstr(command_line[0], COMMAND_EXIT)     == 0) exit = 1;
-            else if (strstr(command_line[0], COMMAND_REBOOT)   == 0) i386_reboot();
-            else if (strstr(command_line[0], COMMAND_VERSION)  == 0) shell_start_screen();
-            else if (strstr(command_line[0], COMMAND_ECHO)     == 0) kprintf("\r\n%s", command_line[1]);
-            else if (strstr(command_line[0], COMMAND_MEM_DATA) == 0) print_kmalloc_map();
-            else if (strstr(command_line[0], COMMAND_CLEAR)    == 0) 
+            else if (strstr(command_line[0], COMMAND_EXIT)      == 0) exit = 1;
+            else if (strstr(command_line[0], COMMAND_REBOOT)    == 0) i386_reboot();
+            else if (strstr(command_line[0], COMMAND_VERSION)   == 0) shell_start_screen();
+            else if (strstr(command_line[0], COMMAND_ECHO)      == 0) kprintf("\r\n%s", command_line[1]);
+            else if (strstr(command_line[0], COMMAND_MEM_DATA)  == 0) print_kmalloc_map();
+            else if (strstr(command_line[0], COMMAND_PAGE_DATA) == 0) print_page_map(command_line[1][0]);
+            else if (strstr(command_line[0], COMMAND_CLEAR)     == 0) 
                 if (!is_vesa) VGA_clrscr();
                 else VESA_clrscr();
                 

@@ -114,6 +114,7 @@ char get_character(char character) {
                         if (currentCharacter == LSHIFT_BUTTON || currentCharacter == RSHIFT_BUTTON) continue;
                         if (currentCharacter != ENTER_BUTTON) {
                             if (currentCharacter == BACKSPACE_BUTTON) {
+                                if (strlen(input) <= 0) continue;
                                 input = backspace_string(input);
 
                                 if (!is_vesa) {

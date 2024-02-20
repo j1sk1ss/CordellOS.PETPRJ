@@ -60,7 +60,6 @@ bool map_page(void* phys_address, void* virt_address) {
         if (!table) return false;
 
         memset(table, 0, sizeof(page_table));
-
         pd_entry* entry = &pd->entries[PD_INDEX((uint32_t)virt_address)];
 
         SET_ATTRIBUTE(entry, PDE_PRESENT);
@@ -88,7 +87,7 @@ void page_fault(Registers* regs) {
 	uint32_t faulting_address;
 	asm ("mov %%cr2, %0" : "=r" (faulting_address));
 
-	int present	 = !(regs->error & 0x1);	    // When set, the page fault was caused by a page-protection violation. When not set, it was caused by a non-present page.
+	int present	 = !(regs->error & 0x1);	// When set, the page fault was caused by a page-protection violation. When not set, it was caused by a non-present page.
 	int rw		 = regs->error & 0x2;		// When set, the page fault was caused by a write access. When not set, it was caused by a read access.
 	int us		 = regs->error & 0x4;		// When set, the page fault was caused while CPL = 3. This does not necessarily mean that the page fault was a privilege violation.
 	int reserved = regs->error & 0x8;		// When set, one or more page directory entries contain reserved bits which are set to 1. This only applies when the PSE or PAE flags in CR4 are set to 1.
@@ -153,4 +152,32 @@ bool initialize_virtual_memory_manager(uint32_t memory_start) {
     asm ("movl %CR0, %EAX; orl $0x80000001, %EAX; movl %EAX, %CR0");
     i386_isr_registerHandler(14, page_fault);
     return true;
+}
+
+void print_page_map(char arg) {
+    int free = 0;
+    int occupied = 0;
+
+    kprintf("\n");
+
+    page_directory* pd = current_page_directory;
+    for (int pd_index = 0; pd_index < TABLES_PER_DIRECTORY; pd_index++) {
+        pd_entry* pd_entry = &pd->entries[pd_index];
+
+        if ((*pd_entry & PDE_PRESENT) == PDE_PRESENT) {
+            page_table* pt = (page_table*)PAGE_PHYS_ADDRESS(pd_entry);
+
+            for (int pt_index = 0; pt_index < PAGES_PER_TABLE; pt_index++) {
+                pt_entry* page = &pt->entries[pt_index];
+
+                if (*page & PTE_PRESENT) occupied++;
+                else free++;
+                
+                if (arg != 'c') kprintf("addr: %u [%c]\n", PAGE_PHYS_ADDRESS(page), (*page & PTE_PRESENT) ? 'O' : 'F');
+            }
+        }
+    }
+
+    kprintf("FREE: [%i] | OCCUP: [%i]\n", free, occupied);
+    kprintf("FREE: [%iB] | OCCUP: [%iB]\n", free * PAGE_SIZE, occupied * PAGE_SIZE);
 }

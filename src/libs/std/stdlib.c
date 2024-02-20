@@ -88,6 +88,25 @@ void* malloc(uint32_t size) {
     return allocated_memory;
 }
 
+//====================================================================
+//  Allocate memory and return pointer
+//  EBX - v_addr
+//  EAX - returned v_addr of page
+void* mallocp(uint32_t v_addr) {
+    void* allocated_v_addr;
+    __asm__ volatile(
+        "movl $35, %%eax\n"
+        "movl %1, %%ebx\n"
+        "int $0x80\n"
+        "movl %%eax, %0\n"
+        : "=r" (allocated_v_addr)
+        : "r" (v_addr)
+        : "%eax", "%ebx"
+    );
+    
+    return allocated_v_addr;
+}
+
 void* realloc(void* ptr, size_t size) {
     void* new_data = NULL;
     if (size) {
@@ -118,6 +137,21 @@ void free(void* ptr) {
     if (ptr == NULL) return;
     __asm__ volatile(
         "movl $8, %%eax\n"
+        "movl %0, %%ebx\n"
+        "int $0x80\n"
+        :
+        : "r" (ptr)
+        : "%eax", "%ebx"
+    );
+}
+
+//====================================================================
+//  Free alocated memory
+//  EBX - pointer to allocated memory
+void freep(void* ptr) {
+    if (ptr == NULL) return;
+    __asm__ volatile(
+        "movl $34, %%eax\n"
         "movl %0, %%ebx\n"
         "int $0x80\n"
         :

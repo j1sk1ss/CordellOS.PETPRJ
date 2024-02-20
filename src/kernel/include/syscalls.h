@@ -32,11 +32,13 @@
 #define SYS_AREAD_KEYBOARD   19
 #define SYS_TIME             6
 #define SYS_MALLOC           7
+#define SYS_PAGE_MALLOC      35 //
 #define SYS_FREE             8
+#define SYS_PAGE_FREE        34
 
 // FS managment (FAT32)
 #define SYS_READ_FILE        9
-#define SYS_READ_FILE_OFF    33 //
+#define SYS_READ_FILE_OFF    33
 #define SYS_WRITE_FILE       10
 #define SYS_OPENDIR          11
 #define SYS_GET_CONTENT      30

@@ -35,6 +35,7 @@
         #define COMMAND_VERSION                         "ver"
         #define COMMAND_DISK_DATA                       "disk-data"
         #define COMMAND_MEM_DATA                        "mem-data"
+        #define COMMAND_PAGE_DATA                       "page-data"
         #define COMMAND_CLEAR                           "clear" 
         #define COMMAND_TIME                            "date"
         #define COMMAND_ECHO                            "eco"

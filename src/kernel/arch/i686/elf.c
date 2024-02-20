@@ -65,12 +65,7 @@ struct ELF32_program* ELF_read(const char* path) {
 
             if (phdr[i].p_memsz % PAGE_SIZE > 0) program_pages++;
             for (uint32_t i = 0; i < program_pages; i++) {
-                pt_entry page  = 0;
-                uint32_t* temp = allocate_page(&page);
-
-                map_page((void*)temp, (void*)virtual_address);
-                SET_ATTRIBUTE(&page, PTE_READ_WRITE);
-
+                mallocp(virtual_address);
                 virtual_address += PAGE_SIZE;
             }
 

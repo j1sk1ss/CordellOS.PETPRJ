@@ -26,7 +26,7 @@ void GFX_init(struct multiboot_info* mb_info) {
             uint8_t mask = 1 << 7;
             uint32_t* abs_row = chars + CHAROFF(c) + (row * 8);
             for(int i = 0; i < 8; i++) {
-                if(font.Bitmap[offset + row] & mask) abs_row[i] = 0xFFFFFFFF;
+                if(font.Bitmap[offset + row] & mask) abs_row[i] = WHITE;
                 else abs_row[i] = BLACK;
                 
                 mask = (mask >> 1);

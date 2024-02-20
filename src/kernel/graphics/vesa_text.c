@@ -10,7 +10,7 @@ void VESA_scrollback(int lines) {
     uint8_t* screenBuffer = (uint8_t*)gfx_mode.physical_base_pointer;
 
     memmove(screenBuffer, screenBuffer + scrollBytes, screenSize - scrollBytes);
-    
+
     Point fpoint, spoint;
     
     fpoint.X = 0;
@@ -24,9 +24,10 @@ void VESA_scrollback(int lines) {
 void VESA_newline() {
     cursor_x = 0;
     if(cursor_y >= gfx_mode.y_resolution) {
-        cursor_y = gfx_mode.y_resolution - CHAR_Y;
         VESA_scrollback(CHAR_Y);
-    } else cursor_y += CHAR_Y;
+        cursor_y = gfx_mode.y_resolution - CHAR_Y;
+    } 
+    else cursor_y += CHAR_Y;
 }
 
 void VESA_putc(char c) {
@@ -98,4 +99,12 @@ void VESA_clrscr() {
 
     cursor_x = 0;
     cursor_y = 0;
+}
+
+int VESA_get_cursor_x() {
+    return cursor_x;
+}
+
+int VESA_get_cursor_y() {
+    return cursor_y;
 }

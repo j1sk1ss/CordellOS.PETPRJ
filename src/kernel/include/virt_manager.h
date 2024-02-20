@@ -20,10 +20,12 @@
 #define TEST_ATTRIBUTE(entry, attr)  (*entry & attr)
 #define SET_FRAME(entry, address)    (*entry = (*entry & ~0x7FFFF000) | address)   // Only set address/frame, not flags
 
+
 typedef uint32_t pt_entry;  // Page table entry
 typedef uint32_t pd_entry;  // Page directory entry
 typedef uint32_t physical_address; 
 typedef uint32_t virtual_address; 
+
 
 typedef enum {
     PTE_PRESENT       = 0x01,
@@ -79,3 +81,5 @@ void flush_tlb_entry(virtual_address address);
 
 bool map_page(void* phys_address, void* virt_address);
 void unmap_page(void* virt_address);
+
+void print_page_map(char arg);

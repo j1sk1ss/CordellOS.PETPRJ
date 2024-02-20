@@ -35,9 +35,11 @@
 		}
 
 		if (malloc_list_head != NULL) {
-			malloc_list_head->size = (total_malloc_pages * PAGE_SIZE) - sizeof(malloc_block_t);
-			malloc_list_head->free = true;
-			malloc_list_head->next = NULL;
+			malloc_list_head->v_addr = malloc_virt_address;
+			malloc_list_head->pcount = total_malloc_pages;
+			malloc_list_head->size   = (total_malloc_pages * PAGE_SIZE) - sizeof(malloc_block_t);
+			malloc_list_head->free   = true;
+			malloc_list_head->next   = NULL;
 		}
 	}
 
@@ -90,15 +92,25 @@
 	void kmalloc_split(malloc_block_t* node, const uint32_t size) {
 		malloc_block_t* new_node = (malloc_block_t*)((void*)node + size + sizeof(malloc_block_t));
 
-		new_node->size = node->size - size - sizeof(malloc_block_t);
-		new_node->free = true;
-		new_node->next = node->next;
+		new_node->size   = node->size - size - sizeof(malloc_block_t);
+		new_node->free   = true;
+		new_node->next   = node->next;
+		new_node->v_addr = node->v_addr;
 
-		node->size = size;
-		node->free = false;
-		node->next = new_node;
+		node->size   = size;
+		node->free   = false;
+		node->next   = new_node;
+		node->pcount -= (size / PAGE_SIZE) + 1;
 	}
 	
+	void* kmallocp(uint32_t v_addr) {
+		pt_entry page  = 0;
+		uint32_t* temp = allocate_page(&page);
+
+		map_page((void*)temp, (void*)v_addr);
+		SET_ATTRIBUTE(&page, PTE_READ_WRITE);
+	}
+
 	void* kmalloc(const uint32_t size) {
 		if (size <= 0) return 0;
 		if (malloc_list_head == NULL) mm_init(size);
@@ -167,7 +179,6 @@
 		while (cur != NULL && cur->next != NULL) {
 			if (cur->free == true && cur->next->free == true) {
 				cur->size += (cur->next->size) + sizeof(malloc_block_t);
-				
 				if (cur->next->next != NULL) cur->next = cur->next->next;
 				else {
 					cur->next = NULL;
@@ -189,6 +200,33 @@
 
 				break;
 			}
+
+		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next) {
+			if ((void*)cur + sizeof(malloc_block_t) == ptr && cur->free == false) {
+				uint32_t num_pages = cur->pcount;
+				for (uint32_t i = 0; i < num_pages; i++) {
+					uint32_t v_addr = cur->v_addr + i * PAGE_SIZE;
+					kfreep((void*)v_addr);
+				}
+
+				// Mark the block as free and clear memory content
+				cur->free = true;
+				memset(ptr, 0, cur->size);
+
+				// Merge adjacent free blocks
+				merge_free_blocks();
+				break;
+			}
+		}
+	}
+
+	void kfreep(void* v_addr) {
+		pt_entry* page = get_page(v_addr);
+		if (PAGE_PHYS_ADDRESS(page) && TEST_ATTRIBUTE(page, PTE_PRESENT)) {
+			free_page(page);
+			unmap_page((uint32_t*)v_addr);
+			flush_tlb_entry(v_addr);
+		}
 	}
 
 //===========================

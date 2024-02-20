@@ -47,6 +47,6 @@ objects = [
     *static_libs,
 ]
 
-asmc = env.Program('asmc.elf', objects)
-Export('asmc')
-Default(asmc)
+asm = env.Program('asm.elf', objects)
+Export('asm')
+Default(asm)

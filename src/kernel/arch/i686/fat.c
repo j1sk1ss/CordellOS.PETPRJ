@@ -1015,14 +1015,8 @@
 		
 		int result_code = programEntry(args, argv);
 
-		for (uint32_t i = 0; i < program->pages_count; i++) {
-			pt_entry* page = get_page(program->pages[i]);
-			if (PAGE_PHYS_ADDRESS(page) && TEST_ATTRIBUTE(page, PTE_PRESENT)) {
-				free_page(page);
-				unmap_page((uint32_t*)program->pages[i]);
-				flush_tlb_entry(program->pages[i]);
-			}
-		}
+		for (uint32_t i = 0; i < program->pages_count; i++) 
+			freep(program->pages[i]);
 
 		free(program->pages);
 		free(program);
