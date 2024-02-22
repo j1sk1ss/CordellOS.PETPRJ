@@ -1,6 +1,34 @@
+#include <fatlib.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <stdint.h>
 
-#include "file_manager.h"
+
+#define ROWS            14
+#define LINE_OFFSEET    4
+
+#define LINE        "+-------------+--------+----------+----------+-----------+------+-------------+\n"
+#define HEADER      "| NAME        | TYPE   | CREATED  | MODIF    | ACCESS    | EXT  | SIZE        |\n"
+#define UPPED_DIR   "|     ...     | NONE   | N/A      | N/A      | N/A       | N/A  | N/A         |\n"
+#define EMPTY       "|             |        |          |          |           |      |             |\n"
+
+#define EDIT_LINE   "| EDIT                                                                        |\n"
+#define VIEW_LINE   "| VIEW                                                                        |\n"
+#define RENAME_LINE "| RENAME                                                                      |\n"
+#define DELETE_LINE "| DELETE                                                                      |\n"
+
+#define EDIT_POS        0
+#define VIEW_POS        1
+#define RENAME_POS      2
+#define DELETE_POS      3
+
+
+int row_position = 1;
+struct UFATContent* current_directory;
+
+int upper_border = 0;
+int down_border = 14;
+
 
 void keyboard_wait(char symbol) {
     while (1) {
@@ -25,21 +53,16 @@ char* convert_date(int day, int month, int year) {
     return date;
 }
 
-int set_line_color(int line, uint8_t color, int upper) {
-    for (int i = 0; i < 80; i++) 
-        directly_putclr(i, (line + LINE_OFFSEET) - upper, color);
+int set_line_color(int line, uint8_t color) {
+    for (int i = 0; i < 80; i++) directly_putclr(i, (line + LINE_OFFSEET) - upper_border, color);
 }
 
 void open_file_manager(char* path) {
     char* file_manager_path = malloc(strlen(path));
     strcpy(file_manager_path, path);
 
-    int row_position = 1;
-    int upper_border = 0;
-    int down_border  = 14;
-
     clrscr();
-    print_directory_data(file_manager_path, upper_border);
+    print_directory_data(file_manager_path);
 
     while(1) {
         char user_action = wait_char();
@@ -49,11 +72,11 @@ void open_file_manager(char* path) {
                 down_border--;
 
                 clrscr();
-                print_directory_data(file_manager_path, upper_border);
+                print_directory_data(file_manager_path);
             }
 
-            set_line_color(row_position--, BACKGROUND_BLACK + FOREGROUND_WHITE, upper_border);
-            set_line_color(row_position, BACKGROUND_RED + FOREGROUND_WHITE, upper_border);
+            set_line_color(row_position--, BACKGROUND_BLACK + FOREGROUND_WHITE);
+            set_line_color(row_position, BACKGROUND_RED + FOREGROUND_WHITE);
         }
 
         else if (user_action == DOWN_ARROW_BUTTON && row_position < down_border) {
@@ -62,17 +85,17 @@ void open_file_manager(char* path) {
                 down_border++;
 
                 clrscr();
-                print_directory_data(file_manager_path, upper_border);
+                print_directory_data(file_manager_path);
             }
 
-            set_line_color(row_position++, BACKGROUND_BLACK + FOREGROUND_WHITE, upper_border);
-            set_line_color(row_position, BACKGROUND_RED + FOREGROUND_WHITE, upper_border);
+            set_line_color(row_position++, BACKGROUND_BLACK + FOREGROUND_WHITE);
+            set_line_color(row_position, BACKGROUND_RED + FOREGROUND_WHITE);
         }
 
         else if (user_action == ENTER_BUTTON || user_action == BACKSPACE_BUTTON) {
-            execute_item(user_action, &file_manager_path, &row_position);
+            execute_item(user_action, &file_manager_path);
             clrscr();
-            print_directory_data(file_manager_path, upper_border);
+            print_directory_data(file_manager_path);
         }
 
         else if (user_action == F3_BUTTON) {
@@ -88,7 +111,7 @@ void open_file_manager(char* path) {
             free(dir_name); 
 
             clrscr();
-            print_directory_data(file_manager_path, upper_border);
+            print_directory_data(file_manager_path);
         }
 
         else if (user_action == F2_BUTTON) {
@@ -98,19 +121,19 @@ void open_file_manager(char* path) {
             free(file_name);
 
             clrscr();
-            print_directory_data(file_manager_path, upper_border);
+            print_directory_data(file_manager_path);
         }
 
         else if (user_action == F4_BUTTON) {
-            execute_item(user_action, &file_manager_path, &row_position);
+            execute_item(user_action, &file_manager_path);
             clrscr();
-            print_directory_data(file_manager_path, upper_border);
+            print_directory_data(file_manager_path);
         }
     }
 }
 
-void execute_item(char action_type, char** path, int* row) {
-    if (*row == 0 && action_type != BACKSPACE_BUTTON) {
+void execute_item(char action_type, char** path) {
+    if (row_position == 0 && action_type != BACKSPACE_BUTTON) {
         *path = FATLIB_change_path(*path, NULL);
         if (strlen(*path) <= 1) {
             free(*path);
@@ -129,7 +152,7 @@ void execute_item(char action_type, char** path, int* row) {
         struct UFATDirectory* currentDir = opendir(*path);
         struct UFATDirectory* subdir     = currentDir->subDirectory;
         while (subdir != NULL) {
-            if (rows++ == *row) {
+            if (rows++ == row_position) {
                 if (action_type == ENTER_BUTTON) 
                     *path = FATLIB_change_path(*path, subdir->name);
 
@@ -179,8 +202,8 @@ void execute_item(char action_type, char** path, int* row) {
             char name[25]; 
             FATLIB_fatname2name(currentFile->file_meta.file_name, name);
 
-            if (rows++ == *row) {
-                *row = 1;
+            if (rows++ == row_position) {
+                row_position = 1;
 
                 //=========================
                 //  EDIT
@@ -199,17 +222,17 @@ void execute_item(char action_type, char** path, int* row) {
                             };
 
                             for (int i = EDIT_POS; i <= DELETE_POS; i++) {
-                                if (*row == i) cprintf(BACKGROUND_RED + FOREGROUND_WHITE, lines[i]);
+                                if (row_position == i) cprintf(BACKGROUND_RED + FOREGROUND_WHITE, lines[i]);
                                 else printf(lines[i]);
 
                                 printf(LINE);
                             }
 
                             char user_action = wait_char();
-                            if (user_action == UP_ARROW_BUTTON && *row > 0) *row--;
-                            else if (user_action == DOWN_ARROW_BUTTON && *row < 4) *row++;
+                            if (user_action == UP_ARROW_BUTTON && row_position > 0) row_position--;
+                            else if (user_action == DOWN_ARROW_BUTTON && row_position < 4) row_position++;
                             else if (user_action == ENTER_BUTTON) {
-                                switch (*row) {
+                                switch (row_position) {
                                     case EDIT_POS:
                                         *path = (FATLIB_change_path(*path, name));
                                         text_editor_init(*path, BACKGROUND_BLACK + FOREGROUND_WHITE);
@@ -392,10 +415,10 @@ void execute_item(char action_type, char** path, int* row) {
 
 }
 
-void print_directory_data(char* path, int upper) {
+void print_directory_data(char* path) {
     printf("Directory: [%s]\n%s%s%s", path, LINE, HEADER, LINE);
 
-    int rows = upper;
+    int rows = upper_border;
     int all_rows = 0;
     if (all_rows++ == rows) {
         printf(UPPED_DIR);
@@ -476,6 +499,6 @@ void print_directory_data(char* path, int upper) {
 
     FATLIB_unload_directories_system(currentDir);
 
-    for (int i = 0; i < 15 - (rows - upper); i++) printf(EMPTY);
+    for (int i = 0; i < 15 - (rows - upper_border); i++) printf(EMPTY);
     printf("%s[F1 - MKDIR] [F2 - MKFILE] [F3 - EXIT] [F4 - EDIT] [ENTER - EXEC] [BSPACE - RM]\n", LINE);
 }

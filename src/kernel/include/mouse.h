@@ -6,6 +6,7 @@
 #include "irq.h"
 #include "stdio.h"
 
+
 #define MOUSE_IRQ   12
 #define MOUSE_XSIZE 5
 #define MOUSE_YSIZE 5

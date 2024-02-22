@@ -1,7 +1,9 @@
 #include "../include/vesa_text.h"
 
+
 int cursor_x = 0;
 int cursor_y = 0;
+
 
 void VESA_scrollback(int lines) {
     uint32_t bytesPerLine = gfx_mode.x_resolution * (gfx_mode.bits_per_pixel / 8);
@@ -19,6 +21,7 @@ void VESA_scrollback(int lines) {
     spoint.Y = gfx_mode.y_resolution;
     
     GFX_fill_rect_solid(fpoint, spoint, BLACK);
+    // GFX_buffer2buffer();
 }
 
 void VESA_newline() {
@@ -52,7 +55,7 @@ void VESA_putc(char c) {
     }
 }
 
-void VESA_cputc(char c, uint32_t color) {
+void VESA_cputc(char c, uint32_t fcolor, uint32_t bcolor) {
     int _tabSize = 4;
     if (cursor_x + CHAR_X >= gfx_mode.x_resolution) 
         VESA_newline();
@@ -68,7 +71,7 @@ void VESA_cputc(char c, uint32_t color) {
             break;
 
         default:
-            GFX_put_char(cursor_x, cursor_y, c, color, BLACK);
+            GFX_put_char(cursor_x, cursor_y, c, fcolor, bcolor);
             cursor_x += CHAR_X;
             break;
     }

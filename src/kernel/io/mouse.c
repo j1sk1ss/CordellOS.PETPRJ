@@ -17,7 +17,7 @@ void i386_mouse_wait(uint8_t a_type) {
 	if (!a_type) {
 		while (--timeout) if ((i386_inb(MOUSE_STATUS) & MOUSE_BBIT) == 1) return;
 		return;
-	} 
+	}
     else {
 		while (--timeout) if (!((i386_inb(MOUSE_STATUS) & MOUSE_ABIT))) return;
 		return;
@@ -81,7 +81,7 @@ void place() {
     if (screen_state.x != -1 && screen_state.y != -1) 
         for (uint16_t i = screen_state.x; i < screen_state.x + MOUSE_XSIZE; i++)
             for (uint16_t j = screen_state.y; j < screen_state.y + MOUSE_YSIZE; j++) 
-                GFX_draw_pixel(i, j, screen_state.buffer[(i - screen_state.x) * MOUSE_XSIZE + (j - screen_state.y)]);
+                GFX_vdraw_pixel(i, j, screen_state.buffer[(i - screen_state.x) * MOUSE_XSIZE + (j - screen_state.y)]);
                 
     screen_state.x = mouse_state.x;
     screen_state.y = mouse_state.y;
@@ -91,7 +91,7 @@ void place() {
             screen_state.buffer[(i - screen_state.x) * MOUSE_XSIZE + (j - screen_state.y)] = GFX_get_pixel(i, j);
 
             int32_t color = __cursor_bitmap__[(i - screen_state.x) * MOUSE_XSIZE + (j - screen_state.y)];
-            GFX_draw_pixel(i, j, color);
+            GFX_vdraw_pixel(i, j, color);
         }
 }
 

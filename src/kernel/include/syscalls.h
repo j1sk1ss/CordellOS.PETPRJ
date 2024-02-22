@@ -32,7 +32,7 @@
 #define SYS_AREAD_KEYBOARD   19
 #define SYS_TIME             6
 #define SYS_MALLOC           7
-#define SYS_PAGE_MALLOC      35 //
+#define SYS_PAGE_MALLOC      35
 #define SYS_FREE             8
 #define SYS_PAGE_FREE        34
 
@@ -58,6 +58,8 @@
 #define SYS_GET_PIXEL        29
 #define SYS_GET_RESOLUTION_X 31
 #define SYS_GET_RESOLUTION_Y 32
+#define SYS_VPUT_PIXEL       37 //
+#define SYS_FBUFFER_SWIPE    36
 
 
 void i386_syscalls_init();

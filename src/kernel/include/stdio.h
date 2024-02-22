@@ -8,6 +8,7 @@
 
 #include "vga_text.h"
 #include "vesa_text.h"
+#include "gfx.h"
 
 
 #define PRINTF_STATE_NORMAL         0
@@ -26,7 +27,7 @@
 extern bool is_vesa;
 
 
-void clrscr();
+void kclrscr();
 void kputc(char c);
 void kputs(const char* str);
 void kprintf(const char* fmt, ...);

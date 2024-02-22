@@ -34,6 +34,8 @@ struct GUIobject {
 };
 
 
+void swipe_buffers();
+
 int get_resolution_x();
 int get_resolution_y();
 
@@ -47,6 +49,7 @@ void display_gui_object(struct GUIobject* object);
 void unload_gui_object(struct GUIobject* object);
 
 void put_pixel(int x, int y, int color);
+void vput_pixel(int x, int y, int color);
 int get_pixel(int x, int y);
 
 #endif

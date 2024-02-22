@@ -19,6 +19,7 @@
 #define CLEAR_ATTRIBUTE(entry, attr) (*entry &= ~attr)
 #define TEST_ATTRIBUTE(entry, attr)  (*entry & attr)
 #define SET_FRAME(entry, address)    (*entry = (*entry & ~0x7FFFF000) | address)   // Only set address/frame, not flags
+#define OFFSET_IN_PAGE(address)      ((uint32_t)(address) & 0xFFF)
 
 
 typedef uint32_t pt_entry;  // Page table entry
@@ -82,4 +83,5 @@ void flush_tlb_entry(virtual_address address);
 bool map_page(void* phys_address, void* virt_address);
 void unmap_page(void* virt_address);
 
+physical_address virtual2physical(void* virt_address);
 void print_page_map(char arg);

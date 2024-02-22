@@ -9,6 +9,8 @@
 #define UNUSED_PORT 0x80
 #define kernel_panic(data) kprintf(data);i386_panic();
 
+uint32_t i386_inl(uint16_t port);
+void i386_outl(uint16_t port, uint32_t data);
 uint16_t i386_inw(uint16_t port);
 void i386_outw(uint16_t port, uint16_t data);
 uint8_t i386_inb(uint16_t port);

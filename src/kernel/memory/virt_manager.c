@@ -154,6 +154,29 @@ bool initialize_virtual_memory_manager(uint32_t memory_start) {
     return true;
 }
 
+physical_address virtual2physical(void* virt_address) {
+    page_directory* pd = current_page_directory;
+    pd_entry* pd_entry = &pd->entries[PD_INDEX((uint32_t)virt_address)];
+
+    if ((*pd_entry & PTE_PRESENT) != PTE_PRESENT) {
+        // The page table for this virtual address is not present.
+        // You might want to handle this case based on your requirements.
+        return NULL;
+    }
+
+    page_table* pt = (page_table*)PAGE_PHYS_ADDRESS(pd_entry);
+    pt_entry* pt_entry = &pt->entries[PT_INDEX((uint32_t)virt_address)];
+
+    if ((*pt_entry & PTE_PRESENT) != PTE_PRESENT) {
+        // The page for this virtual address is not present.
+        // You might want to handle this case based on your requirements.
+        return NULL;
+    }
+
+    physical_address phys_address = PAGE_PHYS_ADDRESS(pt_entry) | OFFSET_IN_PAGE((uint32_t)virt_address);
+    return phys_address;
+}
+
 void print_page_map(char arg) {
     int free = 0;
     int occupied = 0;

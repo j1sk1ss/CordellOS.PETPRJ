@@ -23,7 +23,7 @@ void kshell() {
 }
 
 void shell_start_screen() {
-    kprintf("Cordell KShell [ver. 0.3e | 20.02.2024] \n\r");
+    kprintf("Cordell KShell [ver. 0.3e | 21.02.2024] \n\r");
     kprintf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n\r");
 }
 
@@ -59,28 +59,19 @@ void shell_start_screen() {
                 kprintf("\r\n> Usa [%s] per ottenere aiuto",                                     COMMAND_HELP);
                 kprintf("\r\n> Utilizzare [%s] per la pulizia dello schermo",                    COMMAND_CLEAR);
                 kprintf("\r\n> Usa [%s] per l'eco",                                              COMMAND_ECHO);
-                kprintf("\r\n> Usa [%s] per vista questo giorno",                                COMMAND_TIME);
-                kprintf("\n");
-
+                kprintf("\r\n> Usa [%s] per vista questo giorno\n",                              COMMAND_TIME);
                 kprintf("\r\n> Utilizza la [%s] per vista versione",                             COMMAND_VERSION);
                 kprintf("\r\n> Utilizza la [%s] per vista disk-data informazione",               COMMAND_DISK_DATA);
                 kprintf("\r\n> Utilizza la [%s] per vista mem-data informazione",                COMMAND_MEM_DATA);
-                kprintf("\r\n> Utilizza la [%s] per vista page-data informazione",               COMMAND_PAGE_DATA);
-                kprintf("\n");
-
+                kprintf("\r\n> Utilizza la [%s] per vista page-data informazione\n",             COMMAND_PAGE_DATA);
                 kprintf("\r\n> Usa [%s] <nome> per entranto dir",                                COMMAND_IN_DIR);
                 kprintf("\r\n> Usa [%s] per uscire di dir",                                      COMMAND_OUT_DIR);
-                kprintf("\r\n> Usa [%s] per guardare tutto cosa in dir",                         COMMAND_LIST_DIR);
-                kprintf("\n");
-
+                kprintf("\r\n> Usa [%s] per guardare tutto cosa in dir\n",                       COMMAND_LIST_DIR);
                 kprintf("\r\n> Usa [%s] per guardare tutto data in file",                        COMMAND_FILE_VIEW);
                 kprintf("\r\n> Usa [%s] per guardare bmp",                                       COMMAND_BMP_SHOW);
-                kprintf("\r\n> Usa [%s] per run file",                                           COMMAND_FILE_RUN);
-                kprintf("\n");
-
+                kprintf("\r\n> Usa [%s] per run file\n",                                         COMMAND_FILE_RUN);
                 kprintf("\r\n> Utilizzare [%s] per riavviare il sistema operativo",              COMMAND_REBOOT);
-                kprintf("\r\n> Utilizzare [%s] per uscire dal kernel",                           COMMAND_EXIT);
-                kprintf("\n");
+                kprintf("\r\n> Utilizzare [%s] per uscire dal kernel\n",                         COMMAND_EXIT);
             }
 
             else if (strstr(command_line[0], COMMAND_EXIT)      == 0) exit = 1;
@@ -89,9 +80,7 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_ECHO)      == 0) kprintf("\r\n%s", command_line[1]);
             else if (strstr(command_line[0], COMMAND_MEM_DATA)  == 0) print_kmalloc_map();
             else if (strstr(command_line[0], COMMAND_PAGE_DATA) == 0) print_page_map(command_line[1][0]);
-            else if (strstr(command_line[0], COMMAND_CLEAR)     == 0) 
-                if (!is_vesa) VGA_clrscr();
-                else VESA_clrscr();
+            else if (strstr(command_line[0], COMMAND_CLEAR)     == 0) kclrscr();
                 
             else if (strstr(command_line[0], COMMAND_DISK_DATA) == 0) {
                 kprintf("\r\nDisk-data kernel utility ver 0.2b\n");

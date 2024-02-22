@@ -15,6 +15,11 @@
 #include "include/allocator.h"
 #include "include/syscalls.h"
 #include "include/speaker.h"
+#include "include/rtl8139.h"
+#include "include/pci.h"
+#include "include/arp.h"
+#include "include/dhcp.h"
+#include "include/udp.h"
 
 #include "multiboot.h"
 
@@ -23,50 +28,56 @@ extern uint32_t kernel_base;
 extern uint32_t kernel_end;
 
 
-//===================================================================
-// TODO List:                                                     | |
-//===================================================================
-//      1) Multiboot struct                                       [V]
-//      2) Phys and Virt manages                                  [V]
-//          2.0) Make page and phys prints for debug              [ ]
-//      3) ELF check v_addr                                       [V]
-//          3.1) Fix global and static vars                       [V]
-//          3.2) Loading ELF without malloc for fdata             [V]
-//      4) Paging (create error with current malloc) / allocators [V]
-//          4.0) Random Page fault (Null error de Italia)         [V]
-//          4.1) Tasking with paging                              [V]
-//          4.2) ELF exec with tasking and paging                 [V]
-//      5) VBE / VESA                                             [V]
+//======================================================================================================================================
+// TODO List:                                                     | | Features:                                                      | |
+// ? - WIP                                                        | |                                                                | |
+// V - complete                                                   | |                                                                | |
+//======================================================================================================================================
+//      1) Multiboot struct                                       [V]   1) Physical memory manager                                   | |
+//      2) Phys and Virt manages                                  [V]   2) Virtual memory manager (paging)                           | |
+//          2.0) Make page and phys prints for debug              [?]   3) Multitasking                                              | |
+//      3) ELF check v_addr                                       [V]   4) Syscalls                                                  | |
+//          3.1) Fix global and static vars                       [V]       4.0) Std libs for userl programs                         | |
+//          3.2) Loading ELF without malloc for fdata             [V]       4.1) Cordell-ASM compiler                                | |
+//      4) Paging (create error with current malloc) / allocators [V]   5) Mouse & keyboard support                                  | |
+//          4.0) Random Page fault (Null error de Italia)         [V]   6) VBE support                                               | |
+//          4.1) Tasking with paging                              [V]   7) ELF support                                               | |
+//          4.2) ELF exec with tasking and paging                 [V]   8) BMP support                                               | |
+//      5) VBE / VESA                                             [V]   9) FAT32/16/12 support                                       | |
 //          5.0) VBE kernel                                       [V]
 //              5.0.1) Kshell scrolling                           [ ]
 //          5.1) Double buffering                                 [ ]
 //      6) Keyboard to int                                        [V]
 //      7) Reboot outportb(0x64, 0xFE);                           [V]
 //      8) Mouse support                                          [V]
-//          8.0) Std lib for graphics                             [?]
+//          8.0) Std lib for graphics                             [V]
 //              8.0.0) Objects                                    [V]
-//              8.0.1) Click event                                [ ]
+//              8.0.1) Click event                                [V]
 //          8.1) Loading BMP without malloc for fdata             [V]
 //          8.1) Syscalls to std libs                             [V]
-//              8.1.0) Syscalls for content change                [ ]
+//              8.1.0) Syscalls for content change                [V]
 //              8.1.1) Syscalls for content delete                [V]
 //              8.1.2) Syscalls for kmallocp and freep            [V]
 //          8.2) VBE userland                                     [ ]
-//              8.2.0) VBE file manager                           [ ]
-//              8.2.1) VBE text editor                            [ ]
-//      9) Malloc optimization                                    [?]
+//              8.2.0) VBE file manager                           [?]
+//              8.2.1) VBE text editor                            [?]
+//      9) Malloc optimization                                    [ ]
 //      10) Bugs                                                  [?]
-//          10.0) Tasking page fault (In case when we use more    [?]
+//          10.0) Tasking page fault (In case when we use more    [V]
 //                then one task)                                  | |
-//          10.1) Mouse page fault                                [V]
+//          10.1) Mouse page fault                                [?]
 //          10.2) Tasking with page allocator                     [V]
-//      11) DOOM?                                                 [ ]
-//===================================================================
+//      11) Ethernet                                              [ ]
+//          11.0) ethernet                                        [ ]
+//          11.1) IP Udp, Arp                                     [ ]
+//      12) DOOM?                                                 [ ]
+//======================================================================================================================================
 
 
 void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t esp) {
     
     //===================
+    // GFX init
     // MB Information
     // - Video mode data
     // - MM data
@@ -74,15 +85,13 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - VBE data
     //===================
 
-        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 7 ]   = \n\n");
-
         if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-            kprintf("[kernel.c 73] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
+            kprintf("[kernel.c 89] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
             goto end;
         }
 
         if (mb_info->vbe_mode != TEXT_MODE) GFX_init(mb_info);
-
+        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 8 ]   = \n\n");
         kprintf("\n\t =  GENERAL INFO  = \n");
         kprintf("MB FLAGS:        [0x%u]\n", mb_info->flags);
         kprintf("MEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
@@ -153,7 +162,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         deinitialize_memory_region(0x1000, 0x11000);
         deinitialize_memory_region(0x30000, max_blocks / BLOCKS_PER_BYTE);
         if (initialize_virtual_memory_manager(0x100000) == false) {
-            kprintf("[kernel.c 149] Virtual memory can`t be init.\n");
+            kprintf("[kernel.c 165] Virtual memory can`t be init.\n");
             goto end;
         }
 
@@ -161,7 +170,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         // Map framebuffer to his original phys address
         //===================
 
-            uint32_t framebuffer_pages = (gfx_mode.y_resolution * gfx_mode.x_resolution * (gfx_mode.bits_per_pixel / 2)) / PAGE_SIZE;
+            uint32_t framebuffer_pages = gfx_mode.buffer_size / PAGE_SIZE;
             if (framebuffer_pages % PAGE_SIZE > 0) framebuffer_pages++;
     
             // multiplication 2 for hardware
@@ -176,16 +185,20 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         //===================
 
     //===================
+    // Tasking init
+    // Syscalls init
+    // RTL init
+    // ARP init
     // HAL initialization
     // - IRQ initialization
     // - GDT initialization
     // - IDT initialization
     // - ISR initialization
-    // - Tasking init
-    // - Syscalls init
     //===================
 
         HAL_initialize();
+        pci_init();
+        pit_init();
         i386_syscalls_init();
         i386_task_init();
 
@@ -194,7 +207,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     kprintf("Kernel base: %u\nKernel end: %u\n\n", &kernel_base, &kernel_end);
 
     //===================
-    // Keyboard & Mouse initialization
+    // Drivers
     // - Keyboard activation
     // - Mouse activation
     //===================
@@ -228,6 +241,11 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
             char* config = FAT_read_content(boot_config);
             FAT_unload_content_system(boot_config);
             
+            if (config[2] == '1') {
+                i386_init_rtl8139();
+                arp_init();
+            }
+
             if (config[1] == '1') START_PROCESS("kmouse", PSMS_show);
             if (config[0] == '1') START_PROCESS("kshell", kshell);
 

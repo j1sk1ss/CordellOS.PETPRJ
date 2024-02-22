@@ -1,5 +1,6 @@
 #include "../include/syscalls.h"
 
+
 void i386_syscalls_init() {
     i386_isr_registerHandler(0x80, syscall);
 }
@@ -230,6 +231,13 @@ void syscall(Registers* regs) {
         GFX_draw_pixel(x, y, pixel);
     } 
     
+    else if (regs->eax == SYS_VPUT_PIXEL) {
+        uint16_t x      = (uint16_t)regs->ebx;
+        uint16_t y      = (uint16_t)regs->ecx;
+        uint32_t pixel  = (uint32_t)regs->edx;
+        GFX_vdraw_pixel(x, y, pixel);
+    } 
+
     else if (regs->eax == SYS_GET_PIXEL) {
         uint32_t* pixel = (uint32_t*)regs->edx;
         uint16_t x      = (uint16_t)regs->ebx;
@@ -243,5 +251,9 @@ void syscall(Registers* regs) {
         uint8_t* offset_buffer           = (uint8_t*)regs->edx;
         int offset_len                   = (int)regs->esi;
         FAT_read_content2buffer(read_off_file, offset_buffer, offset, offset_len);
+    }
+
+    else if (regs->eax == SYS_FBUFFER_SWIPE) {
+        GFX_buffer2buffer();
     }
 }

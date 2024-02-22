@@ -2,13 +2,31 @@
 
 
 //====================================================================
-// Function directly in screen put pixel by coordinates
+// Function put pixel by coordinates
 // EBX - x
 // ECX - y
 // EDX - pixel data
 void put_pixel(int x, int y, int color) {
     __asm__ volatile(
         "movl $28, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "movl %2, %%edx\n"
+        "int $0x80\n"
+        :
+        : "r"(x), "r"(y), "r"(color)
+        : "eax", "ebx", "ecx"
+    );
+}
+
+//====================================================================
+// Function directly in video memory put pixel by coordinates
+// EBX - x
+// ECX - y
+// EDX - pixel data
+void vput_pixel(int x, int y, int color) {
+    __asm__ volatile(
+        "movl $37, %%eax\n"
         "movl %0, %%ebx\n"
         "movl %1, %%ecx\n"
         "movl %2, %%edx\n"
@@ -76,6 +94,21 @@ int get_resolution_y() {
     );
 
     return result;
+}
+
+//====================================================================
+// Function swipe video buffer with second buffer
+void swipe_buffers() {
+    __asm__ volatile(
+        "movl $36, %%eax\n"
+        "movl $0, %%ebx\n"
+        "movl $1, %%ecx\n"
+        "movl $0, %%edx\n"
+        "int $0x80\n"
+        :
+        :
+        : "eax", "ebx", "ecx"
+    );
 }
 
 void display_gui_object(struct GUIobject* object) {

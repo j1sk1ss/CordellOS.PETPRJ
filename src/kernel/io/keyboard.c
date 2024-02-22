@@ -49,7 +49,7 @@ unsigned char alphabet[128] = {
     '\3',	                                                            /* Down Arrow */
     0,	                                                                /* Page Down */
     0,	                                                                /* Insert Key */
-    0,	                                                                /* Delete Key */
+    '\251',	                                                            /* Delete Key */
     0,   0,   0,                        
     0,	                                                                /* F11 Key */
     0,	                                                                /* F12 Key */
@@ -72,10 +72,12 @@ unsigned char shift_alphabet[128] = {
   0, 0, 0, 0, 0, 0, 0,
 };
 
+
 bool lshift_pressed;
 bool rshift_pressed;
 bool extended_scan_code;
 bool key_pressed[128];
+
 
 int key_press() {
     if (i386_inb(0x64) & 0x1) return 1;

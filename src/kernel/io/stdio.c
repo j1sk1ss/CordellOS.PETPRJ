@@ -1,6 +1,16 @@
 #include "../include/stdio.h"
 
+
 bool is_vesa = false;
+
+
+void kclrscr() {
+    if (is_vesa) {
+        VESA_clrscr();
+        // GFX_buffer2buffer();
+    }
+    else VGA_clrscr();
+}
 
 void kfputc(char c, uint8_t file, int color) {
     if (color == 1) kcputc(c, file);
@@ -14,7 +24,7 @@ void kcputc(char c, uint8_t color) {
     if (!is_vesa) {
         VGA_putc(c);
         VGA_putcolor(VGA_cursor_get_x() - 1, VGA_cursor_get_y(), color);
-    } else VESA_cputc(c, color);
+    } else VESA_cputc(c, color, BLACK);
 }
 
 void kfputs(const char* str, uint8_t file, int color) {
@@ -52,8 +62,7 @@ void kfprintf_unsigned(uint8_t file, unsigned long long number, int radix, int c
     } while (number > 0);
 
     // print number in reverse order
-    while (--pos >= 0)
-        kfputc(buffer[pos], file, color);
+    while (--pos >= 0) kfputc(buffer[pos], file, color);
 }
 
 void kfprintf_signed(uint8_t file, long long number, int radix, int color) {
@@ -61,8 +70,7 @@ void kfprintf_signed(uint8_t file, long long number, int radix, int color) {
         kfputc('-', file, color);
         kfprintf_unsigned(file, -number, radix, color);
     }
-    else 
-        kfprintf_unsigned(file, number, radix, color);
+    else kfprintf_unsigned(file, number, radix, color);
 }
 
 void kvfprintf(uint8_t file, const char* fmt, va_list args, int color) {
@@ -108,8 +116,8 @@ void kvfprintf(uint8_t file, const char* fmt, va_list args, int color) {
 
             case PRINTF_STATE_LENGTH_SHORT:
                 if (*fmt == 'h') {
-                    length  = PRINTF_LENGTH_SHORT_SHORT;
-                    state   = PRINTF_STATE_SPEC;
+                    length = PRINTF_LENGTH_SHORT_SHORT;
+                    state  = PRINTF_STATE_SPEC;
                 }
                 else 
                     goto PRINTF_STATE_SPEC_;
@@ -168,8 +176,7 @@ void kvfprintf(uint8_t file, const char* fmt, va_list args, int color) {
                         number  = true;
                     break;
 
-                    default:    
-                        break;
+                    default: break;
                 }
 
                 if (number) {
@@ -210,11 +217,11 @@ void kvfprintf(uint8_t file, const char* fmt, va_list args, int color) {
                 }
 
                 // reset state
-                state   = PRINTF_STATE_NORMAL;
-                length  = PRINTF_LENGTH_DEFAULT;
-                radix   = 10;
-                sign    = false;
-                number  = false;
+                state  = PRINTF_STATE_NORMAL;
+                length = PRINTF_LENGTH_DEFAULT;
+                radix  = 10;
+                sign   = false;
+                number = false;
 
                 break;
         }
@@ -272,10 +279,7 @@ void kprint_buffer(const char* msg, const void* buffer, uint32_t count) {
 void kprint_hex_table(const char* data, size_t length) {
     for (size_t i = 0; i < length; ++i) {
         kprintf("%c%c ", '0' + ((unsigned char)*data >> 4), '0' + ((unsigned char)*data & 0x0F));
-
-        if ((i + 1) % 16 == 0 || i == length - 1) 
-            kprintf("\n");
-
+        if ((i + 1) % 16 == 0 || i == length - 1) kprintf("\n");
         data++;
     }
 }

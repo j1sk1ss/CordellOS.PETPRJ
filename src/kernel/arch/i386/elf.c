@@ -2,10 +2,8 @@
 
 
 struct ELF32_program* ELF_read(const char* path) {
-
     struct ELF32_program* program = calloc(sizeof(struct ELF32_program), 1);
-
-    struct FATContent* content = FAT_get_content(path);
+    struct FATContent* content    = FAT_get_content(path);
     if (content->file == NULL) {
         kprintf("File not found\n");
         FAT_unload_content_system(content);

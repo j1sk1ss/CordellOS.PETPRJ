@@ -4,7 +4,7 @@
 
 TaskManager* taskManager;
 bool tasking = false;
-uint32_t v_addr = 0x5000000;
+uint32_t v_addr = 0x500000;
 
 
 //==================
@@ -63,6 +63,9 @@ uint32_t v_addr = 0x5000000;
 
 		taskManager->tasksCount  = 0;
 		taskManager->currentTask = -1;
+		
+		for (int i = 0; i < TASKS_MAX; i++)
+			taskManager->tasks[i] = NULL;
 
 		i386_irq_registerHandler(0, TASK_task_switch);
 	}
@@ -217,6 +220,7 @@ uint32_t v_addr = 0x5000000;
 		if (tasking == false) return;
 		
 		Task* task = taskManager->tasks[taskManager->currentTask];
+		if (task == NULL) return;
 
 		task->cpuState->eflag = regs->eflag;
 		task->cpuState->cs    = regs->cs;
@@ -245,6 +249,7 @@ uint32_t v_addr = 0x5000000;
 			new_task = taskManager->tasks[taskManager->currentTask];
 		}
 
+		if (new_task == NULL) return;
 		regs->eflag = new_task->cpuState->eflag;
 		regs->cs    = new_task->cpuState->cs;
 		regs->eip   = new_task->cpuState->eip;

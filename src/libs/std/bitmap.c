@@ -67,7 +67,7 @@ void BMP_display(bitmap_t* bmp) {
                 uint8_t green = bytes[color_index + 1];
                 uint8_t red   = bytes[color_index + 2];
 
-                if (x + line_part < bmp->width) put_pixel(x + bmp->x + line_part, (bmp->height - 1 - y) + bmp->y, (red << 16) | (green << 8) | blue);
+                if (x + line_part < bmp->width) vput_pixel(x + bmp->x + line_part, (bmp->height - 1 - y) + bmp->y, (red << 16) | (green << 8) | blue);
                 else break;
             }
 
@@ -77,6 +77,8 @@ void BMP_display(bitmap_t* bmp) {
             line_part  += LOAD_PART;
         }
     }
+
+    // swipe_buffers();
 }
 
 void BMP_unload(bitmap_t* bitmap) {

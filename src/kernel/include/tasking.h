@@ -12,7 +12,7 @@
 #include "irq.h"
 
 
-#define TASKS_MAX             256
+#define TASKS_MAX             10
 
 #define PROCESS_STATE_ALIVE   0 
 #define PROCESS_STATE_STRANGE 1
@@ -30,7 +30,6 @@ typedef struct {
 
     uint32_t virtual_address;
     uint32_t page_directory;
-
 } Task;
 
 typedef struct {
@@ -38,7 +37,6 @@ typedef struct {
 
     int tasksCount;
     int currentTask;
-
 } TaskManager;
 
 

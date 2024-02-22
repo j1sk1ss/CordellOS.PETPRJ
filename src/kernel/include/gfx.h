@@ -64,6 +64,7 @@ typedef struct {
 
 	uint32_t physical_base_pointer;
 	uint32_t virtual_second_buffer;
+	uint32_t buffer_size;
 	uint32_t reserved2;
 	uint16_t reserved3;
 
@@ -117,6 +118,7 @@ extern vbe_mode_info_t gfx_mode;
 void GFX_init(struct multiboot_info* mb_info);
 
 void GFX_draw_pixel(uint16_t X, uint16_t Y, uint32_t color);
+void GFX_vdraw_pixel(uint16_t X, uint16_t Y, uint32_t color);
 uint32_t GFX_get_pixel(uint16_t X, uint16_t Y);
 void GFX_fill_rect_solid(Point top_left, Point bottom_right, uint32_t color);
 
@@ -124,6 +126,7 @@ void GFX_put_char(int x, int y, int c, uint32_t foreground, uint32_t background)
 int GFX_get_char(int x, int y);
 
 uint32_t GFX_convert_color(const uint32_t color);
+void GFX_buffer2buffer();
 
 
 #endif

@@ -21,6 +21,7 @@
 #define HIDDEN_KEYBOARD         0
 #define VISIBLE_KEYBOARD        1
 
+#define DEL_BUTTON              '\252'
 #define LSHIFT_BUTTON           '\252'
 #define RSHIFT_BUTTON           '\253'
 #define F4_BUTTON               '\254'

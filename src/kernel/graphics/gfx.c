@@ -11,15 +11,18 @@ void GFX_init(struct multiboot_info* mb_info) {
     gfx_mode.bits_per_pixel        = mb_info->framebuffer_bpp;
     gfx_mode.pitch                 = mb_info->framebuffer_pitch;
 
-    gfx_mode.linear_red_mask_size         = mb_info->framebuffer_red_mask_size;
-    gfx_mode.linear_red_field_position    = mb_info->framebuffer_red_field_position;
+    gfx_mode.linear_red_mask_size      = mb_info->framebuffer_red_mask_size;
+    gfx_mode.linear_red_field_position = mb_info->framebuffer_red_field_position;
 
-    gfx_mode.linear_green_mask_size       = mb_info->framebuffer_green_mask_size;
-    gfx_mode.linear_green_mask_size       = mb_info->framebuffer_green_field_position;
+    gfx_mode.linear_green_mask_size = mb_info->framebuffer_green_mask_size;
+    gfx_mode.linear_green_mask_size = mb_info->framebuffer_green_field_position;
 
-    gfx_mode.linear_blue_mask_size        = mb_info->framebuffer_blue_mask_size;
-    gfx_mode.linear_blue_field_position   = mb_info->framebuffer_blue_field_position;
+    gfx_mode.linear_blue_mask_size      = mb_info->framebuffer_blue_mask_size;
+    gfx_mode.linear_blue_field_position = mb_info->framebuffer_blue_field_position;
 
+    gfx_mode.buffer_size = gfx_mode.y_resolution * gfx_mode.x_resolution * (gfx_mode.bits_per_pixel | 7) >> 3;
+    gfx_mode.virtual_second_buffer = 0x5000000;
+    
     for(unsigned char c = ' '; c < '~'; c++) {
         unsigned short offset = (c - 31) * 16 ;
         for(int row = 0; row < CHAR_Y; row++) {
@@ -38,6 +41,16 @@ void GFX_init(struct multiboot_info* mb_info) {
 }
 
 void GFX_draw_pixel(uint16_t X, uint16_t Y, uint32_t color) {
+    if (color == TRANSPARENT) return;
+    uint8_t* framebuffer    = (uint8_t*)gfx_mode.virtual_second_buffer; 
+    uint8_t bytes_per_pixel = (gfx_mode.bits_per_pixel + 1) / 8;
+
+    framebuffer += (Y * gfx_mode.x_resolution + X) * bytes_per_pixel;
+    for (uint8_t temp = 0; temp < bytes_per_pixel; temp++)
+        framebuffer[temp] = (uint8_t)(color >> temp * 8);
+}
+
+void GFX_vdraw_pixel(uint16_t X, uint16_t Y, uint32_t color) {
     if (color == TRANSPARENT) return;
     uint8_t* framebuffer    = (uint8_t*)gfx_mode.physical_base_pointer; 
     uint8_t bytes_per_pixel = (gfx_mode.bits_per_pixel + 1) / 8;
@@ -63,7 +76,7 @@ uint32_t GFX_get_pixel(uint16_t X, uint16_t Y) {
 void GFX_fill_rect_solid(Point top_left, Point bottom_right, uint32_t color) {
    for (uint16_t y = top_left.Y; y < bottom_right.Y; y++)
        for (uint16_t x = top_left.X; x < bottom_right.X; x++)
-           GFX_draw_pixel(x, y, color);
+           GFX_vdraw_pixel(x, y, color);
 }
 
 void GFX_put_char(int x, int y, int character, uint32_t foreground, uint32_t background) {
@@ -125,4 +138,10 @@ uint32_t GFX_convert_color(const uint32_t color) {
                       (convert_b << gfx_mode.linear_blue_field_position);
 
     return converted_color;
+}
+
+void GFX_buffer2buffer() {
+    uint8_t* framebuffer = (uint8_t*)gfx_mode.physical_base_pointer;
+    uint8_t* back_framebuffer = (uint8_t*)gfx_mode.virtual_second_buffer;
+    memcpy32(framebuffer, back_framebuffer, gfx_mode.buffer_size);
 }
