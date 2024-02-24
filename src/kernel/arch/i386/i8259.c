@@ -105,8 +105,8 @@ void i8259_configure(uint8_t offsetPic1, uint8_t offsetPic2, bool autoEoi) {
     i8259_setMask(0xFFFF);
 }
 
-void i8259_sendEndOfInterrupt(int irq) {
-     if (irq >= 12) i386_outb(PIC2_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT);
+void i8259_sendEndOfInterrupt(int irq) { // TODO: irq 12
+     if (irq >= 8) i386_outb(PIC2_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT);
     i386_outb(PIC1_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT);
 }
 

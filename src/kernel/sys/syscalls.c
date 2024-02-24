@@ -256,4 +256,14 @@ void syscall(Registers* regs) {
     else if (regs->eax == SYS_FBUFFER_SWIPE) {
         GFX_buffer2buffer();
     }
+
+    else if (regs->eax == SYS_GET_RESOLUTION_X) {
+        int* resolution = (int*)regs->edx;
+        resolution[0] = gfx_mode.x_resolution;
+    }
+
+    else if (regs->eax == SYS_GET_RESOLUTION_Y) {
+        int* resolution = (int*)regs->edx;
+        resolution[0] = gfx_mode.y_resolution;
+    }
 }

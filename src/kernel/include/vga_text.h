@@ -53,6 +53,10 @@
     //  COLORS
     /////////////////
 
+
+extern uint8_t* _screenBuffer;
+
+
 // Important functions
 void VGA_clrscr();
 void VGA_set_color(uint8_t color);

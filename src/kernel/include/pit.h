@@ -10,4 +10,4 @@
 #define TIMER_FREQUENCY_HZ 100
 
 
-void pit_init();
+void i386_pit_init();

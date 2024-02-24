@@ -66,6 +66,8 @@ void i386_mouse_handler(Registers* regs) {
     }
 }
 
+int a = 0;
+
 void PSMS_show() {
     while (1) place();
 }
@@ -79,15 +81,15 @@ void place() {
 
     if (screen_state.x == mouse_state.x && screen_state.y == mouse_state.y) return;
     if (screen_state.x != -1 && screen_state.y != -1) 
-        for (uint16_t i = screen_state.x; i < screen_state.x + MOUSE_XSIZE; i++)
-            for (uint16_t j = screen_state.y; j < screen_state.y + MOUSE_YSIZE; j++) 
+        for (uint16_t i = screen_state.x; i < min(gfx_mode.x_resolution, screen_state.x + MOUSE_XSIZE); i++)
+            for (uint16_t j = screen_state.y; j < min(gfx_mode.y_resolution, screen_state.y + MOUSE_YSIZE); j++) 
                 GFX_vdraw_pixel(i, j, screen_state.buffer[(i - screen_state.x) * MOUSE_XSIZE + (j - screen_state.y)]);
                 
     screen_state.x = mouse_state.x;
     screen_state.y = mouse_state.y;
     
-    for (uint16_t i = screen_state.x; i < screen_state.x + MOUSE_XSIZE; i++)
-        for (uint16_t j = screen_state.y; j < screen_state.y + MOUSE_YSIZE; j++) {
+    for (uint16_t i = screen_state.x; i < min(gfx_mode.x_resolution, screen_state.x + MOUSE_XSIZE); i++)
+        for (uint16_t j = screen_state.y; j < min(gfx_mode.y_resolution, screen_state.y + MOUSE_YSIZE); j++) {
             screen_state.buffer[(i - screen_state.x) * MOUSE_XSIZE + (j - screen_state.y)] = GFX_get_pixel(i, j);
 
             int32_t color = __cursor_bitmap__[(i - screen_state.x) * MOUSE_XSIZE + (j - screen_state.y)];

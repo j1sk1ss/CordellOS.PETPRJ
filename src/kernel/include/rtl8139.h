@@ -13,18 +13,21 @@
 
 
 // Define some constants
-#define RTL8139_VENDOR_ID 0x10EC
-#define RTL8139_DEVICE_ID 0x8139
+#define RTL8139_VENDOR_ID     0x10EC
+#define RTL8139_DEVICE_ID     0x8139
 
-#define RX_BUF_SIZE 8192
+#define RX_BUFFER_SIZE        8192
+#define RX_BUFFER_SIZE_EX     9708
+#define TX_BUFFER_SIZE        1536
+#define NB_TX_DESCRIPTORS     4
 
-#define CAPR 0x38
-#define RX_READ_POINTER_MASK (~3)
-#define ROK                 (1<<0)
-#define RER                 (1<<1)
-#define TOK     (1<<2)
-#define TER     (1<<3)
-#define TX_TOK  (1<<15)
+#define CAPR                  0x38
+#define RX_READ_POINTER_MASK  (~3)
+#define ROK                   (1<<0)
+#define RER                   (1<<1)
+#define TOK                   (1<<2)
+#define TER                   (1<<3)
+#define TX_TOK                (1<<15)
 
 
 enum RTL8139_registers {
@@ -70,7 +73,7 @@ enum RTL8139_registers {
 typedef struct tx_desc {
     uint32_t phys_addr;
     uint32_t packet_size;
-}tx_desc_t;
+} tx_desc_t;
 
 typedef struct rtl8139_dev {
     uint8_t bar_type;
@@ -78,9 +81,12 @@ typedef struct rtl8139_dev {
     uint32_t mem_base;
     int eeprom_exist;
     uint8_t mac_addr[6];
-    char * rx_buffer;
+
+    uint8_t* rx_buffer;
+    uint8_t tx_buffer[TX_BUFFER_SIZE * NB_TX_DESCRIPTORS];
+
     int tx_cur;
-}rtl8139_dev_t;
+} rtl8139_dev_t;
 
 
 void rtl8139_send_packet(void* data, uint32_t len);

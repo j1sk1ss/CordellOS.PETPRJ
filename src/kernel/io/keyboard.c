@@ -79,6 +79,10 @@ bool extended_scan_code;
 bool key_pressed[128];
 
 
+void i386_init_keyboard() {
+    mem_outl(0x64, 0xAE);
+}
+
 int key_press() {
     if (i386_inb(0x64) & 0x1) return 1;
     return 0;
@@ -145,9 +149,9 @@ char get_character(char character) {
             return input;
         }
 
-        void keyboard_irq(Registers* regs) {
-            // TODO: Implement
-        }
+        // void i386_keyboard_handler(Registers* regs) {
+        //     // TODO: Implement
+        // }
 
 //==================================================================================
 //   _   _    ___     _____ ____    _  _____ ___ ___  _   _   _  _________   ______   ___    _    ____  ____  

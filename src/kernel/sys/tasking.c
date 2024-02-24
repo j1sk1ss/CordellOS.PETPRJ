@@ -1,6 +1,7 @@
 #include "../include/tasking.h"
 
 // TODO: make process that clean another processes
+//		 v_addr allocation?
 
 TaskManager* taskManager;
 bool tasking = false;
@@ -110,6 +111,8 @@ uint32_t v_addr = 0x500000;
 			//=============================
 
 				mallocp(v_addr);
+				memset(v_addr, 0, PAGE_SIZE);
+
 				task->cpuState->esp     = v_addr;
 				task->virtual_address   = task->cpuState->esp;
 				uint32_t* stack_pointer = (uint32_t*)(task->cpuState->esp + PAGE_SIZE);
@@ -250,21 +253,24 @@ uint32_t v_addr = 0x500000;
 		}
 
 		if (new_task == NULL) return;
-		regs->eflag = new_task->cpuState->eflag;
-		regs->cs    = new_task->cpuState->cs;
-		regs->eip   = new_task->cpuState->eip;
-		regs->eax   = new_task->cpuState->eax;
-		regs->ebx   = new_task->cpuState->ebx;
-		regs->ecx   = new_task->cpuState->ecx;
-		regs->edx   = new_task->cpuState->edx;
-		regs->esi   = new_task->cpuState->esi;
-		regs->edi   = new_task->cpuState->edi;
-		regs->ebp   = new_task->cpuState->ebp;
+		if (task->page_directory != new_task->page_directory)
+			asm ("mov %%eax, %%cr3": :"a"(new_task->page_directory));
 
 		regs->esp      = new_task->cpuState->esp;
 		regs->kern_esp = new_task->cpuState->esp;
 
-		asm ("mov %%eax, %%cr3": :"a"(new_task->page_directory));
+		regs->ebp   = new_task->cpuState->ebp;
+		regs->edi   = new_task->cpuState->edi;
+		regs->esi   = new_task->cpuState->esi;
+
+		regs->edx   = new_task->cpuState->edx;
+		regs->ecx   = new_task->cpuState->ecx;
+		regs->ebx   = new_task->cpuState->ebx;
+		regs->eax   = new_task->cpuState->eax;
+		
+		regs->eflag = new_task->cpuState->eflag;
+		regs->cs    = new_task->cpuState->cs;
+		regs->eip   = new_task->cpuState->eip;
 	}
 
 //==================

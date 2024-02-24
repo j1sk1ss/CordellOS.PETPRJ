@@ -8,11 +8,11 @@ uint32_t current_packet_ptr;
 
 // Four TXAD register, you must use a different one to send packet each time(for example, use the first one, second... fourth and back to the first)
 uint8_t TSAD_array[4] = {0x20, 0x24, 0x28, 0x2C};
-uint8_t TSD_array[4] = {0x10, 0x14, 0x18, 0x1C};
+uint8_t TSD_array[4]  = {0x10, 0x14, 0x18, 0x1C};
 
 
 void receive_packet() {
-    uint16_t * t = (uint16_t*)(rtl8139_device.rx_buffer + current_packet_ptr);
+    uint16_t* t = (uint16_t*)(rtl8139_device.rx_buffer + current_packet_ptr);
     uint16_t packet_length = *(t + 1);
 
     // Skip, packet header and packet length, now t points to the packet data
@@ -20,34 +20,35 @@ void receive_packet() {
 
     // Now, ethernet layer starts to handle the packet(be sure to make a copy of the packet, insteading of using the buffer)
     // and probabbly this should be done in a separate thread...
-    void * packet = malloc(packet_length);
+    void* packet = calloc(packet_length, 1);
     memcpy(packet, t, packet_length);
     ethernet_handle_packet(packet, packet_length);
 
     current_packet_ptr = (current_packet_ptr + packet_length + 4 + 3) & RX_READ_POINTER_MASK;
-
-    if(current_packet_ptr > RX_BUF_SIZE)
-        current_packet_ptr -= RX_BUF_SIZE;
+    if(current_packet_ptr > RX_BUFFER_SIZE) current_packet_ptr -= RX_BUFFER_SIZE;
 
     i386_outw(rtl8139_device.io_base + CAPR, current_packet_ptr - 0x10);
 }
 
 void rtl8139_handler(Registers* reg) {
-    uint16_t status = i386_inw(rtl8139_device.io_base + 0x3e);
-    if(status & TOK) kprintf("Packet sent\n");
-    if (status & ROK) receive_packet();
+    uint16_t status = i386_inw(rtl8139_device.io_base + 0x3E);
+    i386_outw(rtl8139_device.io_base + 0x3E, 0x05);
 
-    i386_outw(rtl8139_device.io_base + 0x3E, 0x5);
+    if (status & TOK) kprintf("Packet sent\n");
+    if (status & ROK) {
+        kprintf("Packet recieved\n");
+        receive_packet();
+    }
 }
 
 void read_mac_addr() {
     uint32_t mac_part1 = i386_inl(rtl8139_device.io_base + 0x00);
     uint16_t mac_part2 = i386_inw(rtl8139_device.io_base + 0x04);
+    
     rtl8139_device.mac_addr[0] = mac_part1 >> 0;
     rtl8139_device.mac_addr[1] = mac_part1 >> 8;
     rtl8139_device.mac_addr[2] = mac_part1 >> 16;
     rtl8139_device.mac_addr[3] = mac_part1 >> 24;
-
     rtl8139_device.mac_addr[4] = mac_part2 >> 0;
     rtl8139_device.mac_addr[5] = mac_part2 >> 8;
 
@@ -66,15 +67,15 @@ void get_mac_addr(uint8_t* src_mac_addr) {
 }
 
 void rtl8139_send_packet(void* data, uint32_t len) {
-    // First, copy the data to a physically contiguous chunk of memory
-    void * transfer_data = malloc(len);
-    void * phys_addr     = virtual2physical(transfer_data);
+    void* transfer_data = calloc(len, 1);
+    void* phys_addr     = virtual2physical(transfer_data);
     memcpy(transfer_data, data, len);
 
-    // Second, fill in physical address of data, and length
     i386_outl(rtl8139_device.io_base + TSAD_array[rtl8139_device.tx_cur], (uint32_t)phys_addr);
     i386_outl(rtl8139_device.io_base + TSD_array[rtl8139_device.tx_cur++], len);
     if (rtl8139_device.tx_cur > 3) rtl8139_device.tx_cur = 0;
+
+    free(transfer_data);
 }
 
 /*
@@ -90,18 +91,14 @@ void i386_init_rtl8139() {
                 (rtl8139_device.bar_type == 0) ? "MEM BASED" : "PORT BASED", 
                 (rtl8139_device.bar_type != 0) ? rtl8139_device.io_base : rtl8139_device.mem_base
     );
-
-    // Set current TSAD
+    
     rtl8139_device.tx_cur = 0;
-
-    // Enable PCI Bus Mastering
     uint32_t pci_command_reg = pci_read(pci_rtl8139_device, PCI_COMMAND);
     if (!(pci_command_reg & (1 << 2))) {
         pci_command_reg |= (1 << 2);
         pci_write(pci_rtl8139_device, PCI_COMMAND, pci_command_reg);
     }
 
-    // Send 0x00 to the CONFIG_1 register (0x52) to set the LWAKE + LWPTN to active high. this should essentially *power on* the device.
     kprintf("\nBASE PORT: %i", rtl8139_device.io_base);
     kprintf("\nMEM BASE:  %i", rtl8139_device.mem_base);
 
@@ -109,15 +106,17 @@ void i386_init_rtl8139() {
     i386_outb(rtl8139_device.io_base + 0x37, 0x10);
     while((i386_inb(rtl8139_device.io_base + 0x37) & 0x10) != 0) continue;
 
-    // Allocate receive buffer
-    rtl8139_device.rx_buffer = malloc(8192 + 16 + 1500);
-    memset(rtl8139_device.rx_buffer, 0x0, 8192 + 16 + 1500);
+
+    // TODO: return to static allocation
+    rtl8139_device.rx_buffer = calloc(RX_BUFFER_SIZE_EX, 1);
     i386_outl(rtl8139_device.io_base + 0x30, (uint32_t)virtual2physical(rtl8139_device.rx_buffer));
+
     i386_outw(rtl8139_device.io_base + 0x3C, 0x0005);
-    i386_outl(rtl8139_device.io_base + 0x44, 0xf | (1 << 7));
     i386_outb(rtl8139_device.io_base + 0x37, 0x0C);
+    i386_outl(rtl8139_device.io_base + 0x44, 0xF);
 
     uint32_t irq_num = pci_read(pci_rtl8139_device, PCI_INTERRUPT_LINE);
+    kprintf("\nRTL8139 IRQ REGISTERED [%i]", irq_num);
     i386_irq_registerHandler(irq_num, rtl8139_handler);
     read_mac_addr();
 }

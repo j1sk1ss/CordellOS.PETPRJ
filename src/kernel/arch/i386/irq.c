@@ -14,8 +14,10 @@ void i386_irq_handler(Registers* regs) {
     int irq = regs->interrupt - PIC_REMAP_OFFSET;
     uint8_t pic_isr = i8259_readIRQInServiceRegisters();
     uint8_t pic_irr = i8259_readIRQRequestRegisters();
-
+    
     if (_handler[irq] != NULL) _handler[irq](regs);
+    else kprintf("No handler for: %i\n", irq);
+
     _PICDriver->SendEndOfInterrupt(irq);
 }
 
@@ -39,11 +41,12 @@ void i386_irq_initialize() {
     i386_enableInterrupts();
 
     _PICDriver->Unmask(0); // PIT
-    _PICDriver->Unmask(1);
-    _PICDriver->Unmask(2); // Mouse
-    _PICDriver->Unmask(12);
+    // _PICDriver->Unmask(1); // Keyboard
+    _PICDriver->Unmask(2);  // Mouse - 1
+    _PICDriver->Unmask(12); // Mouse - 2
 }
 
 void i386_irq_registerHandler(int irq, IRQHandler handler) {
     _handler[irq] = handler;
+    _PICDriver->Unmask(irq);
 }

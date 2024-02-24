@@ -3,10 +3,10 @@
 
 
 #include <memory.h>
+#include <netutils.h>
 
 #include "ethernet.h"
 #include "rtl8139.h"
-#include "netutils.h"
 #include "stdio.h"
 
 

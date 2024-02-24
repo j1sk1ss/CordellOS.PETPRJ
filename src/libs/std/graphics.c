@@ -70,7 +70,7 @@ int get_resolution_x() {
         "movl %0, %%edx\n"
         "int $0x80\n"
         :
-        : "r"(result)
+        : "r"(&result)
         : "eax", "ebx", "ecx"
     );
 
@@ -89,7 +89,7 @@ int get_resolution_y() {
         "movl %0, %%edx\n"
         "int $0x80\n"
         :
-        : "r"(result)
+        : "r"(&result)
         : "eax", "ebx", "ecx"
     );
 

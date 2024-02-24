@@ -72,6 +72,6 @@ pci_dev_t pci_scan_function(uint16_t vendor_id, uint16_t device_id, uint32_t bus
 pci_dev_t pci_scan_device(uint16_t vendor_id, uint16_t device_id, uint32_t bus, uint32_t device, int device_type);
 pci_dev_t pci_scan_bus(uint16_t vendor_id, uint16_t device_id, uint32_t bus, int device_type);
 pci_dev_t pci_get_device(uint16_t vendor_id, uint16_t device_id, int device_type);
-void pci_init();
+void i386_pci_init();
 
 #endif

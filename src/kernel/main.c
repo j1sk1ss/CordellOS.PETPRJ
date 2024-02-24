@@ -24,6 +24,12 @@
 #include "multiboot.h"
 
 
+#define CONFIG_PATH     "boot\\boot.txt"
+#define CONFIG_KSHELL   0
+#define CONFIG_MOUSE    1
+#define CONFIG_NETWORK  2
+
+
 extern uint32_t kernel_base;
 extern uint32_t kernel_end;
 
@@ -44,14 +50,14 @@ extern uint32_t kernel_end;
 //          4.1) Tasking with paging                              [V]   7) ELF support                                               | |
 //          4.2) ELF exec with tasking and paging                 [V]   8) BMP support                                               | |
 //      5) VBE / VESA                                             [V]   9) FAT32/16/12 support                                       | |
-//          5.0) VBE kernel                                       [V]
-//              5.0.1) Kshell scrolling                           [ ]
+//          5.0) VBE kernel                                       [V]   10) Boot config                                              | |
+//              5.0.1) Kshell scrolling                           [ ]   11) Multidisk support                                        | |
 //          5.1) Double buffering                                 [ ]
 //      6) Keyboard to int                                        [V]
 //      7) Reboot outportb(0x64, 0xFE);                           [V]
 //      8) Mouse support                                          [V]
 //          8.0) Std lib for graphics                             [V]
-//              8.0.0) Objects                                    [V]
+//              8.0.0) Objects                                    [V] 
 //              8.0.1) Click event                                [V]
 //          8.1) Loading BMP without malloc for fdata             [V]
 //          8.1) Syscalls to std libs                             [V]
@@ -63,13 +69,18 @@ extern uint32_t kernel_end;
 //              8.2.1) VBE text editor                            [?]
 //      9) Malloc optimization                                    [ ]
 //      10) Bugs                                                  [?]
-//          10.0) Tasking page fault (In case when we use more    [V]
+//          10.0) Tasking page fault (In case when we use more    [?]
 //                then one task)                                  | |
 //          10.1) Mouse page fault                                [?]
 //          10.2) Tasking with page allocator                     [V]
-//      11) Ethernet                                              [ ]
-//          11.0) ethernet                                        [ ]
-//          11.1) IP Udp, Arp                                     [ ]
+//      11) Ethernet                                              [?]
+//          11.0) ethernet                                        [?]
+//              11.0.0) Send packets                              [V]
+//              11.0.1) Receive packets                           [V]
+//              11.0.2) DHCP                                      [V]
+//              11.0.3) Sending data                              [V]
+//                  11.0.3.0) Sending normal data (ndummy)        [ ]
+//          11.1) IP Udp, Arp                                     [?]
 //      12) DOOM?                                                 [ ]
 //======================================================================================================================================
 
@@ -86,12 +97,14 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
 
         if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-            kprintf("[kernel.c 89] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
+            kprintf("[kernel.c 97] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
             goto end;
         }
 
         if (mb_info->vbe_mode != TEXT_MODE) GFX_init(mb_info);
-        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 8 ]   = \n\n");
+        else _screenBuffer = mb_info->framebuffer_addr;
+
+        kprintf("\n\t = CORDELL KERNEL = \n\t =   [ ver. 9 ]   = \n\n");
         kprintf("\n\t =  GENERAL INFO  = \n");
         kprintf("MB FLAGS:        [0x%u]\n", mb_info->flags);
         kprintf("MEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
@@ -104,7 +117,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         kprintf("VBE Y:           [%u]\n", mb_info->framebuffer_height);
         kprintf("VBE X:           [%u]\n", mb_info->framebuffer_width);
         kprintf("VBE BPP:         [%u]\n", mb_info->framebuffer_bpp);
-
+        
     //===================
     // Phys & Virt memory manager initialization
     // - Phys blocks
@@ -162,7 +175,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         deinitialize_memory_region(0x1000, 0x11000);
         deinitialize_memory_region(0x30000, max_blocks / BLOCKS_PER_BYTE);
         if (initialize_virtual_memory_manager(0x100000) == false) {
-            kprintf("[kernel.c 165] Virtual memory can`t be init.\n");
+            kprintf("[kernel.c 175] Virtual memory can`t be init.\n");
             goto end;
         }
 
@@ -197,11 +210,11 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
 
         HAL_initialize();
-        pci_init();
-        pit_init();
+        i386_pci_init();
+        i386_pit_init();
         i386_syscalls_init();
         i386_task_init();
-
+        
     //===================
 
     kprintf("Kernel base: %u\nKernel end: %u\n\n", &kernel_base, &kernel_end);
@@ -226,6 +239,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - FS Clusters 
     //===================
 
+        ATA_initialize();
         FAT_initialize();
 
     //===================
@@ -236,18 +250,42 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // Kernel shell part
     //===================
 
-        if (FAT_content_exists("boot\\boot.txt") == 1) {
-            struct FATContent* boot_config = FAT_get_content("boot\\boot.txt");
+        if (FAT_content_exists(CONFIG_PATH) == 1) {
+            struct FATContent* boot_config = FAT_get_content(CONFIG_PATH);
             char* config = FAT_read_content(boot_config);
             FAT_unload_content_system(boot_config);
             
-            if (config[2] == '1') {
+            if (config[CONFIG_NETWORK] == '1') {
+                kprintf("Press ENTER for continue network setup\n");
+                while (wait_char() != ENTER_BUTTON) continue;
+
+                clrscr();
                 i386_init_rtl8139();
                 arp_init();
+
+                uint8_t mac_addr[6];
+                get_mac_addr(mac_addr);
+
+                uint8_t ip_addr[6];
+                ip_addr[0] = 255;
+                ip_addr[1] = 255;
+                ip_addr[2] = 255;
+                ip_addr[3] = 255;
+
+                dhcp_discover();
+                while (get_host_addr(mac_addr) == 0);
+                kprintf("DHCP ANSWER: %i.%i.%i.%i",
+                    mac_addr[0],
+                    mac_addr[1],
+                    mac_addr[2],
+                    mac_addr[3]
+                );
+
+                udp_send_packet(ip_addr, 123, 321, NULL, 1);
             }
 
-            if (config[1] == '1') START_PROCESS("kmouse", PSMS_show);
-            if (config[0] == '1') START_PROCESS("kshell", kshell);
+            if (config[CONFIG_MOUSE] == '1')  START_PROCESS("kmouse", PSMS_show);
+            if (config[CONFIG_KSHELL] == '1') START_PROCESS("kshell", kshell);
 
             kfree(config);
         } else START_PROCESS("kshell", kshell);

@@ -77,6 +77,19 @@ void VESA_cputc(char c, uint32_t fcolor, uint32_t bcolor) {
     }
 }
 
+void VESA_memset(uint8_t* dest, uint32_t rgb, uint32_t count) {
+    if (count % 3 != 0) count = count + 3 - (count % 3);
+    
+    uint8_t r = rgb & 0x00ff0000;
+    uint8_t g = rgb & 0x0000ff00;
+    uint8_t b = rgb & 0x000000ff;
+    for (int i = 0; i < count; i++) {
+        *dest++ = r;
+        *dest++ = g;
+        *dest++ = b;
+    }
+}
+
 void VESA_backspace() {
     if(cursor_x > 0) {
         cursor_x -= CHAR_X;

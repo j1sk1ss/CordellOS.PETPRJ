@@ -38,10 +38,9 @@ uint32_t pci_read(pci_dev_t dev, uint32_t field) {
  * */
 void pci_write(pci_dev_t dev, uint32_t field, uint32_t value) {
 	dev.field_num = (field & 0xFC) >> 2;
-	dev.enable = 1;
-	// Tell where we want to write
+	dev.enable    = 1;
+	
 	i386_outl(PCI_CONFIG_ADDRESS, dev.bits);
-	// Value to write
 	i386_outl(PCI_CONFIG_DATA, value);
 }
 
@@ -85,10 +84,9 @@ pci_dev_t pci_scan_function(uint16_t vendor_id, uint16_t device_id, uint32_t bus
 	dev.function_num = function;
 
 	// If it's a PCI Bridge device, get the bus it's connected to and keep searching
-	if(get_device_type(dev) == PCI_TYPE_BRIDGE) {
+	if(get_device_type(dev) == PCI_TYPE_BRIDGE) 
 		pci_scan_bus(vendor_id, device_id, get_secondary_bus(dev), device_type);
-	}
-
+		
 	// If type matches, we've found the device, just return it
 	if(device_type == -1 || device_type == get_device_type(dev)) {
 		uint32_t devid  = pci_read(dev, PCI_DEVICE_ID);
@@ -158,7 +156,7 @@ pci_dev_t pci_get_device(uint16_t vendor_id, uint16_t device_id, int device_type
 /*
  * PCI Init, filling size for each field in config space
  * */
-void pci_init() {
+void i386_pci_init() {
 	pci_size_map[PCI_VENDOR_ID]         = 2;
 	pci_size_map[PCI_DEVICE_ID]         = 2;
 	pci_size_map[PCI_COMMAND]	        = 2;

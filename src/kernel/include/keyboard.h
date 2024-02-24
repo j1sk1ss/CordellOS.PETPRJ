@@ -13,7 +13,7 @@
 #include "x86.h"
 #include "vga_text.h"
 #include "vesa_text.h"
-#include "isr.h"
+// #include "irq.h"
 
 
 #define KBD_DATA_PORT           0x60
@@ -41,6 +41,7 @@
 #define RSHIFT                  0x36
 
 
+// void i386_keyboard_handler(Registers* regs);
 int key_press();
 char get_character(char character);
 
@@ -48,7 +49,7 @@ char* keyboard_read(int mode, int color);
 char keyboard_navigation();
 void keyboard_wait(char symbol);
 
-void __attribute__((cdecl)) i386_init_keyboard();
+void i386_init_keyboard();
 
 
 #endif

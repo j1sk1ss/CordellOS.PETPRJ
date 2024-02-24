@@ -29,18 +29,26 @@ void i386_isr_initialize() {
 }
 
 void __attribute__((cdecl)) i386_isr_handler(Registers* regs) {
-    if (_isrHandlers[regs->interrupt] != NULL) _isrHandlers[regs->interrupt](regs);
-    else if (regs->interrupt > 32) kprintf("Unhandled interrupt! Interrupt: %d\n", regs->interrupt);
-    else {
-        kprintf("Unhandled exception %d %s\n", regs->interrupt, _exceptions[regs->interrupt]);
-        kprintf("  eax=%x  ebx=%x  ecx=%x  edx=%x  esi=%x  edi=%x\n",
-               regs->eax, regs->ebx, regs->ecx, regs->edx, regs->esi, regs->edi);
-        kprintf("  esp=%x  ebp=%x  eip=%x  eflags=%x  cs=%x  ds=%x  ss=%x\n",
-               regs->esp, regs->ebp, regs->eip, regs->eflag, regs->cs, regs->ds, regs->ss);
-        kprintf("  interrupt=%x  errorcode=%x\n", regs->interrupt, regs->error);
+    if (regs->interrupt < 256) {
+        if (_isrHandlers[regs->interrupt] != NULL) {
+            _isrHandlers[regs->interrupt](regs);
+            return;
+        }
+
+        if (regs->interrupt < SIZE(_exceptions) && _exceptions[regs->interrupt] != NULL) 
+            kprintf("Unhandled exception %d %s\n", regs->interrupt, _exceptions[regs->interrupt]);
+        else  kprintf("Unhandled interrupt! Interrupt: %d\n", regs->interrupt);
+        
+        kprintf("  eax=%08x ebx=%08x ecx=%08x edx=%08x esi=%08x edi=%08x\n",
+                regs->eax, regs->ebx, regs->ecx, regs->edx, regs->esi, regs->edi);
+        kprintf("  esp=%08x ebp=%08x eip=%08x eflags=%08x cs=%08x ds=%08x ss=%08x\n",
+                regs->esp, regs->ebp, regs->eip, regs->eflag, regs->cs, regs->ds, regs->ss);
+        kprintf("  interrupt=%08x errorcode=%08x\n", regs->interrupt, regs->error);
+
         kernel_panic("\nKERNEL PANIC\n");
     }
 }
+
 
 void i386_isr_registerHandler(int interrupt, ISRHandler handler) {
     _isrHandlers[interrupt] = handler;

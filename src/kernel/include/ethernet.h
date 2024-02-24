@@ -2,14 +2,14 @@
 #define ETHERNET_H
 
 
-#include "rtl8139.h"
-#include "netutils.h"
-#include "ip.h"
-#include "arp.h"
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <netutils.h>
+
+#include "rtl8139.h"
+#include "ip.h"
+#include "arp.h"
 
 
 #define ETHERNET_TYPE_ARP 0x0806

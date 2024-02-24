@@ -1,14 +1,15 @@
 #ifndef IP_H
 #define IP_H
 
-#include "stdio.h"
-#include "ethernet.h"
-#include "netutils.h"
-#include "dhcp.h"
-#include "udp.h"
 
 #include <stdlib.h>
 #include <memory.h>
+#include <netutils.h>
+
+#include "stdio.h"
+#include "ethernet.h"
+#include "dhcp.h"
+#include "udp.h"
 
 
 #define IP_IPV4 4

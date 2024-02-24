@@ -63,12 +63,12 @@ void shell_start_screen() {
                 kprintf("\r\n> Utilizza la [%s] per vista versione",                             COMMAND_VERSION);
                 kprintf("\r\n> Utilizza la [%s] per vista disk-data informazione",               COMMAND_DISK_DATA);
                 kprintf("\r\n> Utilizza la [%s] per vista mem-data informazione",                COMMAND_MEM_DATA);
-                kprintf("\r\n> Utilizza la [%s] per vista page-data informazione\n",             COMMAND_PAGE_DATA);
+                kprintf("\r\n> Utilizza la [%s] <option> per vista page-data informazione\n",    COMMAND_PAGE_DATA);
                 kprintf("\r\n> Usa [%s] <nome> per entranto dir",                                COMMAND_IN_DIR);
                 kprintf("\r\n> Usa [%s] per uscire di dir",                                      COMMAND_OUT_DIR);
                 kprintf("\r\n> Usa [%s] per guardare tutto cosa in dir\n",                       COMMAND_LIST_DIR);
                 kprintf("\r\n> Usa [%s] per guardare tutto data in file",                        COMMAND_FILE_VIEW);
-                kprintf("\r\n> Usa [%s] per guardare bmp",                                       COMMAND_BMP_SHOW);
+                if (is_vesa) kprintf("\r\n> Usa [%s] per guardare bmp",                          COMMAND_BMP_SHOW);
                 kprintf("\r\n> Usa [%s] per run file\n",                                         COMMAND_FILE_RUN);
                 kprintf("\r\n> Utilizzare [%s] per riavviare il sistema operativo",              COMMAND_REBOOT);
                 kprintf("\r\n> Utilizzare [%s] per uscire dal kernel\n",                         COMMAND_EXIT);
@@ -191,6 +191,8 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_BMP_SHOW) == 0) {
+                if (!is_vesa) return;
+
                 char* file_path = FATLIB_change_path(current_path, command_line[1]);
                 if (FAT_content_exists(file_path) == 0) {
                     kprintf("\nLa file non esiste.");

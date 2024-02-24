@@ -8,7 +8,26 @@
 
 #include "x86.h"
 #include "stdio.h"
+#include "irq.h"
+#include "pci.h"
+#include "virt_manager.h"
 
+
+// ATA PCI info
+#define ATA_VENDOR_ID               0x8086
+#define ATA_DEVICE_ID               0x7010
+#define MARK_END                    0x8000
+
+// Control reg
+#define CONTROL_STOP_INTERRUPT      0x2
+#define CONTROL_SOFTWARE_RESET      0x4
+#define CONTROL_HIGH_ORDER_BYTE     0x80
+#define CONTROL_ZERO                0x00
+
+// Command reg
+#define COMMAND_IDENTIFY            0xEC
+#define COMMAND_DMA_READ            0xC8
+#define ATA_CMD_READ_PIO            0x20
 
 #define BOOT_SECTOR                 0
 #define SECTOR_SIZE                 512
@@ -23,6 +42,12 @@
 #define DRIVE_REGISTER              0x1F6
 #define STATUS_REGISTER             0x1F7
 
+// Status reg
+#define ATA_STATUS_ERR              0x0
+#define ATA_STATUS_DRQ              0x8
+#define ATA_STATUS_SRV              0x10
+#define ATA_STATUS_DF               0x20
+#define ATA_STATUS_RDY              0x40
 #define ATA_SR_BSY                  0x8    // Busy
 
 #define ATA_CMD_READ_PIO            0x20
@@ -31,6 +56,70 @@
 #define ATAPI_CMD_READ              0xA8
 #define ATAPI_CMD_EJECT             0x1B
 
+// Bus Master Reg Command
+#define BMR_COMMAND_DMA_START 0x1
+#define BMR_COMMAND_DMA_STOP 0x0
+#define BMR_COMMAND_READ 0x8
+#define BMR_STATUS_INT 0x4
+#define BMR_STATUS_ERR 0x2
+
+
+typedef struct prdt {
+	uint32_t buffer_phys;
+	uint16_t transfer_size;
+	uint16_t mark_end;
+}__attribute__((packed)) prdt_t;
+
+typedef struct ata_dev {
+	uint16_t data;
+	uint16_t error;
+	uint16_t sector_count;
+
+	union {
+		uint16_t sector_num;
+		uint16_t lba_lo ;
+	};
+	union {
+		uint16_t cylinder_low;
+		uint16_t lba_mid ;
+	};
+	union {
+		uint16_t cylinder_high;
+		uint16_t lba_high;
+	};
+	union {
+		uint16_t drive;
+		uint16_t head;
+	};
+	union {
+		uint16_t command;
+		uint16_t status;
+	};
+	union {
+		uint16_t control;
+		uint16_t alt_status;
+	};
+
+	int slave;
+	uint32_t bar4;
+	uint32_t BMR_COMMAND;
+	uint32_t BMR_prdt;
+	uint32_t BMR_STATUS;
+
+
+	prdt_t* prdt;
+	uint8_t* prdt_phys;
+
+	uint8_t mem_buffer[PAGE_SIZE];
+	uint8_t mem_buffer_phys[PAGE_SIZE];
+
+	char mountpoint[32];
+}__attribute__((packed)) ata_dev_t;
+
+
+void ATA_initialize();
+void ATA_handler(Registers* reg);
+void ATA_device_switch(int device);
 
 bool ATA_is_sector_empty(const uint8_t* sector_data);
 bool ATA_is_current_sector_empty(uint32_t LBA);

@@ -34,6 +34,30 @@ void i386_outb(uint16_t port, uint8_t data) {
     asm("outb %1, %0" : : "dN" (port), "a" (data));
 }
 
+uint8_t mem_inb(uint32_t addr) {
+    return *((uint8_t*)(addr));
+}
+
+uint16_t mem_inw (uint32_t addr) {
+    return *((uint16_t*)(addr));
+}
+
+uint32_t mem_inl(uint32_t addr) {
+    return *((uint32_t*)(addr));
+}
+
+void mem_outb(uint32_t addr, uint8_t value) {
+    (*((uint8_t*)(addr))) = (value);
+}
+
+void mem_outw(uint32_t addr, uint16_t value) {
+    (*((uint16_t*)(addr))) = (value);
+}
+
+void mem_outl(uint32_t addr, uint32_t value) {
+    (*((uint32_t*)(addr))) = (value);
+}
+
 void i386_io_wait() {
     i386_outb(UNUSED_PORT, 0);
 }

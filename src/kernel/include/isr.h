@@ -10,6 +10,8 @@
 #include "x86.h"
 #include "stdio.h"
 
+#include "../util/arrays.h"
+
 typedef struct {
     uint32_t ds;                                            // data segment pushed by us
     uint32_t edi, esi, ebp, kern_esp, ebx, edx, ecx, eax;   // pusha

@@ -5,8 +5,8 @@
 #include <memory.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <netutils.h>
 
-#include "netutils.h"
 #include "ip.h"
 
 

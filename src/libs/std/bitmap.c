@@ -38,12 +38,12 @@ bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
 
 void BMP_display(bitmap_t* bmp) {
     if (bmp == NULL) {
-        printf("Invalid bitmap\n");
+        printf("\nInvalid bitmap\n");
         return;
     }
 
     if (bmp->width > get_resolution_x() || bmp->height > get_resolution_y()) {
-        printf("Invalid resolution of bitmap W: [%i] H: [%i]\n", bmp->width, bmp->height);
+        printf("\nInvalid resolution of bitmap %ix%i > %ix%i\n", bmp->width, bmp->height, get_resolution_x(), get_resolution_y());
         return;
     }
     
@@ -63,11 +63,18 @@ void BMP_display(bitmap_t* bmp) {
             for (int x = 0; x < LOAD_PART; x++) {
                 uint32_t color_index = x * bytes_per_pixel;
 
-                uint8_t blue  = bytes[color_index];
-                uint8_t green = bytes[color_index + 1];
-                uint8_t red   = bytes[color_index + 2];
+                uint32_t blue  = bytes[color_index] & 0xff;
+                uint32_t green = bytes[color_index + 1] & 0xff;
+                uint32_t red   = bytes[color_index + 2] & 0xff;
+                uint32_t alpha = bytes[color_index + 3] & 0xff;
 
-                if (x + line_part < bmp->width) vput_pixel(x + bmp->x + line_part, (bmp->height - 1 - y) + bmp->y, (red << 16) | (green << 8) | blue);
+                if (x + line_part < bmp->width) 
+                    vput_pixel(
+                        x + bmp->x + line_part, 
+                        (bmp->height - 1 - y) + bmp->y, 
+                        ((alpha << 24) | (red << 16) | (green << 8) | (blue))
+                    );
+
                 else break;
             }
 
