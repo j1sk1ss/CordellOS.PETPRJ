@@ -26,8 +26,7 @@ typedef struct ethernet_frame {
 } __attribute__((packed)) ethernet_frame_t;
 
 
-int ethernet_send_packet(uint8_t* dst_mac_addr, uint8_t* data, int len, uint16_t protocol);
-void ethernet_handle_packet(ethernet_frame_t* packet, int len);
-void ethernet_init();
+int ETH_send_packet(uint8_t* dst_mac_addr, uint8_t* data, int len, uint16_t protocol);
+void ETH_handle_packet(ethernet_frame_t* packet, int len);
 
 #endif

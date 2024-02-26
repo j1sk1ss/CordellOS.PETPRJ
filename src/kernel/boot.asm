@@ -29,7 +29,7 @@ CHECKSUM equ -(MAGIC + MBFLAGS)
 		dd 0x00000000
 
 		frame_buffer_start:
-			dd 0
+			dd 0 ; 0 - VBE \ 1 - VGA text
 			dd 640, 480, 32
 		frame_buffer_end:
 

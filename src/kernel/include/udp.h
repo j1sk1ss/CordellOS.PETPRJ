@@ -10,6 +10,14 @@
 #include "ip.h"
 
 
+#define PACKET_BUFFER_SIZE  100
+
+
+struct UDPpacket {
+    void* data;
+    int32_t data_size;
+};
+
 typedef struct udp_packet {
     uint16_t src_port;
     uint16_t dst_port;
@@ -19,8 +27,11 @@ typedef struct udp_packet {
 } __attribute__((packed)) udp_packet_t;
 
 
-uint16_t udp_calculate_checksum(udp_packet_t* packet);
-void udp_send_packet(uint8_t* dst_ip, uint16_t src_port, uint16_t dst_port, void* data, int len);
-void udp_handle_packet(udp_packet_t* packet);
+void UDP_init();
+void* UDP_pop_packet();
+
+uint16_t UDP_calculate_checksum(udp_packet_t* packet);
+void UDP_send_packet(uint8_t* dst_ip, uint16_t src_port, uint16_t dst_port, void* data, int len);
+void UDP_handle_packet(udp_packet_t* packet);
 
 #endif

@@ -1,6 +1,8 @@
 #include "../include/virt_manager.h"
 
+
 page_directory* current_page_directory;
+
 
 pt_entry* get_pt_entry(page_table* pt, virtual_address address) {
     if (pt) return &pt->entries[PT_INDEX(address)];

@@ -23,7 +23,7 @@ void kshell() {
 }
 
 void shell_start_screen() {
-    kprintf("Cordell KShell [ver. 0.3e | 21.02.2024] \n\r");
+    kprintf("Cordell KShell [ver. 0.3g | 26.02.2024] \n\r");
     kprintf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n\r");
 }
 
@@ -83,14 +83,15 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_CLEAR)     == 0) kclrscr();
                 
             else if (strstr(command_line[0], COMMAND_DISK_DATA) == 0) {
-                kprintf("\r\nDisk-data kernel utility ver 0.2b\n");
+                kprintf("\r\nDISK-DATA KERNEL UTILITY VER 0.2c\n");
+                kprintf("DEV:                  [%s]\n", current_vfs->device->mountpoint);
+                kprintf("FS TYPE:              [%s]\n\n", current_vfs->name);
                 kprintf("FAT TYPE:             [%i]\n", fat_type);
                 kprintf("TOTAL CLUSTERS x32:   [%i]\n", total_clusters);
                 kprintf("TOTAL SECTORS x32:    [%i]\n", total_sectors);
                 kprintf("BYTES PER SECTOR x32: [%i]\n", bytes_per_sector);
                 kprintf("SECTORS PER CLUSTER:  [%i]\n", sectors_per_cluster);
                 kprintf("FAT TABLE SIZE:       [%i]\n", fat_size);
-                kprintf("\n");
             }
 
             else if (strstr(command_line[0], COMMAND_TIME) == 0) {
@@ -108,21 +109,21 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0) {
                 str_uppercase(command_line[1]);
                 char* dir_path = FATLIB_change_path(current_path, command_line[1]);
-                if (FAT_content_exists(current_path) == 0) {
+                if (cexists(current_path) == 0) {
                     free(dir_path);
                     kprintf("\nLa directory non esiste.");
                     return;
                 }
 
-                struct FATContent* content = FAT_get_content(dir_path);
+                struct UFATContent* content = get_content(dir_path);
                 if (content->file != NULL) {
-                    FAT_unload_content_system(content);
+                    FATLIB_unload_content_system(content);
                     free(dir_path);
                     kprintf("\nQuesta non e' una directory.");
                     return;
                 }
 
-                FAT_unload_content_system(content);
+                FATLIB_unload_content_system(content);
                 free(current_path);
                 current_path = dir_path;
             }
@@ -139,33 +140,28 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {
-                struct FATContent* content = FAT_get_content(current_path);
-                if (content->directory != NULL) {
-                    struct FATDirectory* directory   = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(content->directory->directory_meta), NULL, FALSE);
-                    struct FATDirectory* current_dir = directory->subDirectory;
-                    struct FATFile* current_file     = directory->files;
+                struct UFATDirectory* directory   = opendir(current_path);
+                struct UFATDirectory* current_dir = directory->subDirectory;
+                struct UFATFile* current_file     = directory->files;
 
-                    kprintf("\n");
-                    while (current_dir != NULL) {
-                        kprintf("\t%s", current_dir->name);
-                        current_dir = current_dir->next;
-                    }
+                kprintf("\n");
+                while (current_dir != NULL) {
+                    kprintf("\t%s", current_dir->name);
+                    current_dir = current_dir->next;
+                }
 
-                    kprintf("\n");
-                    while (current_file != NULL) {
-                        kprintf("\t%s.%s", current_file->name, current_file->extension);
-                        current_file = current_file->next;
-                    }
-                    
-                    FAT_unload_directories_system(directory);
+                kprintf("\n");
+                while (current_file != NULL) {
+                    kprintf("\t%s.%s", current_file->name, current_file->extension);
+                    current_file = current_file->next;
                 }
                 
-                FAT_unload_content_system(content);
+                FATLIB_unload_directories_system(directory);
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_VIEW) == 0) {
                 char* file_path = FATLIB_change_path(current_path, command_line[1]);
-                if (FAT_content_exists(file_path) == 0) {
+                if (cexists(file_path) == 0) {
                     kprintf("\nLa file non esiste.");
                     free(file_path);
                     return;
@@ -173,20 +169,20 @@ void shell_start_screen() {
                 
                 kprintf("\n");
 
-                struct FATContent* content = FAT_get_content(file_path);
+                struct UFATContent* content = get_content(file_path);
                 int data_size = 0;
                 while (data_size < content->file->file_meta.file_size) {
                     int copy_size = min(content->file->file_meta.file_size - data_size, 128);
-                    char* data    = (char*)malloc(copy_size);
-                    FAT_read_content2buffer(content, data, data_size, copy_size);
+                    char* data    = (char*)calloc(copy_size, 1);
 
-                    kprintf("%s");
+                    fread_off(content, data_size, data, copy_size);
+                    kprintf("%s", data);
 
                     free(data);
                     data_size += copy_size;
                 }
                 
-                FAT_unload_content_system(content);
+                FATLIB_unload_content_system(content);
                 free(file_path);
             }
 
@@ -194,7 +190,7 @@ void shell_start_screen() {
                 if (!is_vesa) return;
 
                 char* file_path = FATLIB_change_path(current_path, command_line[1]);
-                if (FAT_content_exists(file_path) == 0) {
+                if (cexists(file_path) == 0) {
                     kprintf("\nLa file non esiste.");
                     free(file_path);
                     return;
@@ -209,18 +205,64 @@ void shell_start_screen() {
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {
                 char* exec_path = FATLIB_change_path(current_path, command_line[1]);
-                if (FAT_content_exists(exec_path) == 0) {
+                if (cexists(exec_path) == 0) {
                     kprintf("\nLa file non esiste.");
                     free(exec_path);
                     return;
                 }
 
-                kprintf("\nCODE: [%i]\n", FAT_ELF_execute_content(exec_path, command_line[2], command_line[3]));
+                kprintf("\nCODE: [%i]\n", fexec(exec_path, command_line[2], command_line[3]));
                 free(exec_path);
             }
 
         //====================
         //  FILE SYSTEM COMMANDS
+        //====================
+        //  NETWORKING COMMANDS
+        //====================
+
+            else if (strstr(command_line[0], COMMAND_IPCONFIG) == 0) {
+                uint8_t ip[4];
+                int allocated = DHCP_get_host_addr(ip);
+
+                uint8_t mac[6];
+                get_mac_addr(mac);
+
+                kprintf("\r\nIPCONF KERNEL UTILITY VER 0.1a\n");
+                kprintf("\nCURRENT [%s] IP: %i.%i.%i.%i", allocated == 0 ? "STATIC" : "DYNAMIC",
+                                                          ip[0], ip[1], ip[2], ip[3]);
+                kprintf("\nCURRENT MAC: %x.%x.%x.%x.%x.%x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+            }
+
+            else if (strstr(command_line[0], COMMAND_SEND_PACKET) == 0) {
+                uint8_t ip[4];
+                DHCP_get_host_addr(ip);
+
+                uint8_t dst_ip[4] = { atoi(command_line[1]), atoi(command_line[2]), atoi(command_line[3]), atoi(command_line[4]) };
+                uint16_t dst_port = atoi(command_line[5]);
+                uint16_t src_port = atoi(command_line[6]);
+
+                kprintf("\nTRANSFERING [%s] FROM [%i.%i.%i.%i:%i] TO [%i.%i.%i.%i:%i]",
+                                                command_line[7], ip[0], ip[1], ip[2], ip[3], src_port,
+                                                dst_ip[0], dst_ip[1], dst_ip[2], dst_ip[3], dst_port);
+                UDP_send_packet(dst_ip, src_port, dst_port, command_line[7], strlen(command_line[7]));
+            }
+
+            else if (strstr(command_line[0], COMMAND_POP_PACKET) == 0) {
+                void* data = UDP_pop_packet();
+                if (data != NULL) {
+                    kprintf("\n");
+                    kprintf("RECEIVED UDP PACKET STR:       [%s]\n", data);
+                    kprintf("RECEIVED UDP PACKET UINT:      [%u]\n", data);
+                    kprintf("RECEIVED UDP PACKET INT:       [%i]\n", data);
+                    kprintf("RECEIVED UDP PACKET HEX:       [%x]\n", data);
+                    kprintf("RECEIVED UDP PACKET POINTER:   [%p]\n", data);
+                    free(data);
+                }
+            }
+
+        //====================
+        //  NETWORKING COMMANDS
         //====================
 
             else kprintf("\r\nComando [%s] sconosciuto.", command_line[0]);

@@ -101,25 +101,25 @@ void syscall(Registers* regs) {
 
     else if (regs->eax == SYS_READ_FILE) {
         char* rfile_path           = (char*)regs->ebx;
-        struct FATContent* content = FAT_get_content(rfile_path);
-        regs->eax                  = (uint32_t)FAT_read_content(content);
-        FAT_unload_content_system(content);
+        struct FATContent* content = current_vfs->getobj(rfile_path);
+        regs->eax                  = (uint32_t)current_vfs->read(content);
+        FATLIB_unload_content_system(content);
     } 
     
     else if (regs->eax == SYS_WRITE_FILE) {
         char* wfile_path = (char*)regs->ebx;
         char* data       = (char*)regs->ecx;
-        FAT_edit_content(wfile_path, data);
+        current_vfs->write(wfile_path, data);
     } 
     
     else if (regs->eax == SYS_OPENDIR) {
         char* path = (char*)regs->ebx;
-        regs->eax  = FAT_directory_list(GET_CLUSTER_FROM_ENTRY(FAT_get_content(path)->directory->directory_meta), NULL, FALSE);
+        regs->eax  = current_vfs->dir(GET_CLUSTER_FROM_ENTRY(current_vfs->getobj(path)->directory->directory_meta), NULL, FALSE);
     } 
     
     else if (regs->eax == SYS_GET_CONTENT) {
         char* content_path = (char*)regs->ebx;
-        regs->eax = FAT_get_content(content_path);
+        regs->eax = current_vfs->getobj(content_path);
     } 
     
     else if (regs->eax == SYS_EXECUTE_FILE) {
@@ -127,13 +127,13 @@ void syscall(Registers* regs) {
         char** argv     = (char**)regs->edx;
         int args        = (int)regs->ecx;
         int result      = (int)regs->eax;
-        result = FAT_ELF_execute_content(exec_path, args, argv);
+        result = current_vfs->objexec(exec_path, args, argv);
     } 
     
     else if (regs->eax == SYS_CEXISTS) {
         int* result = (int*)regs->ecx;
         char* path  = (char *)regs->ebx;
-        result[0]   = FAT_content_exists(path);
+        result[0]   = current_vfs->objexist(path);
     } 
     
     else if (regs->eax == SYS_FCREATE) {
@@ -143,26 +143,26 @@ void syscall(Registers* regs) {
         char* fname = strtok(mkfile_name, ".");
         char* fexec = strtok(NULL, "."); 
 
-        struct FATContent* mkfile_content = FAT_create_content(fname, FALSE, fexec);
+        struct FATContent* mkfile_content = current_vfs->crobj(fname, FALSE, fexec);
 
-        FAT_put_content(mkfile_path, mkfile_content);
-        FAT_unload_files_system(mkfile_content);
+        current_vfs->putobj(mkfile_path, mkfile_content);
+        FATLIB_unload_files_system(mkfile_content);
     } 
     
     else if (regs->eax == SYS_DIRCREATE) {
         char* mkdir_path = (char*)regs->ebx;
         char* mkdir_name = (char*)regs->ecx;
 
-        struct FATContent* mkdir_content = FAT_create_content(mkdir_name, TRUE, "");
+        struct FATContent* mkdir_content = current_vfs->crobj(mkdir_name, TRUE, "");
 
-        FAT_put_content(mkdir_path, mkdir_content);
-        FAT_unload_files_system(mkdir_content);
+        current_vfs->putobj(mkdir_path, mkdir_content);
+        FATLIB_unload_files_system(mkdir_content);
     } 
     
     else if (regs->eax == SYS_CDELETE) {
         char* delete_path = (char*)regs->ebx;
         char* delete_name = (char*)regs->ecx;
-        FAT_delete_content(delete_path, delete_name);
+        current_vfs->delobj(delete_path, delete_name);
     } 
     
     else if (regs->eax == SYS_GET_SCRCHAR) {
@@ -213,7 +213,7 @@ void syscall(Registers* regs) {
     else if (regs->eax == SYS_CHANGE_META) {
         char* meta_path = (char*)regs->ebx;
         directory_entry_t* meta = (char*)regs->ecx;
-        FAT_change_meta(meta_path, meta);
+        current_vfs->objmetachg(meta_path, meta);
     } 
     
     else if (regs->eax == SYS_START_PROCESS) {
@@ -250,7 +250,8 @@ void syscall(Registers* regs) {
         int offset                       = (int)regs->ecx;
         uint8_t* offset_buffer           = (uint8_t*)regs->edx;
         int offset_len                   = (int)regs->esi;
-        FAT_read_content2buffer(read_off_file, offset_buffer, offset, offset_len);
+        
+        current_vfs->readoff(read_off_file, offset_buffer, offset, offset_len);
     }
 
     else if (regs->eax == SYS_FBUFFER_SWIPE) {
@@ -265,5 +266,35 @@ void syscall(Registers* regs) {
     else if (regs->eax == SYS_GET_RESOLUTION_Y) {
         int* resolution = (int*)regs->edx;
         resolution[0] = gfx_mode.y_resolution;
+    }
+
+    else if (regs->eax == SYS_SET_IP) {
+        uint8_t* ip = (uint8_t*)regs->ebx;
+        IP_set(ip);
+    }
+
+    else if (regs->eax == SYS_GET_IP) {
+        uint8_t* buffer = (uint8_t*)regs->ebx;
+        IP_get(buffer);
+    }
+
+    else if (regs->eax == SYS_GET_MAC) {
+        uint8_t* buffer = (uint8_t*)regs->ebx;
+        get_mac_addr(buffer);
+    }
+
+    else if (regs->eax == SYS_SEND_UDP_PACKET) {
+        uint8_t* dst_ip   = (uint8_t*)regs->ebx;
+        uint16_t src_port = (uint16_t)regs->ecx;
+        uint16_t dst_port = (uint16_t)regs->edx;
+        void* data        = (void*)regs->esi;
+        int len           = (int)regs->edi;
+
+        UDP_send_packet(dst_ip, src_port, dst_port, data, len);
+    }
+
+    else if (regs->eax == SYS_GET_UDP_PACKETS) {
+        void* data = (void*)regs->ebx;
+        data = UDP_pop_packet();
     }
 }

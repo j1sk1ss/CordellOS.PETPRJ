@@ -3,23 +3,19 @@
 #include "../include/dhcp.h"
 
 
-uint8_t ip_addr[4] = {0, 0, 0, 0};
+uint8_t ip_addr[4] = { 0, 0, 0, 0 };
 int is_ip_allocated = 0;
 
 
-/*
- * Getter for IP address obtained from dhcp server
- * */
-int get_host_addr(uint8_t* addr) {
+// Get IP of This machine 
+int DHCP_get_host_addr(uint8_t* addr) {
     memcpy(addr, ip_addr, 4);
     if (is_ip_allocated == 0) return 0;
     else return 1;
 }
 
-/*
- * Broadcast a dhcp discover
- * */
-void dhcp_discover() {
+// Find DHCP server in LNET
+void DHCP_discover() {
     uint8_t request_ip[4];
     uint8_t dst_ip[4];
 
@@ -27,42 +23,45 @@ void dhcp_discover() {
     memset(dst_ip, 0xFF, 4);    // 255.255.255.255:67
 
     dhcp_packet_t* packet = calloc(sizeof(dhcp_packet_t), 1);
-    make_dhcp_packet(packet, DHCPDISCOVER, request_ip);
-    udp_send_packet(dst_ip, 68, 67, packet, sizeof(dhcp_packet_t));
+    DHCP_make_packet(packet, DHCPDISCOVER, request_ip);
+    UDP_send_packet(dst_ip, 68, 67, packet, sizeof(dhcp_packet_t));
+    free(packet);
 }
 
-/*
- * Broadcast a dhcp request
- * */
-void dhcp_request(uint8_t* request_ip) {
+// Send DHCP request request for IP
+void DHCP_request(uint8_t* request_ip) {
     uint8_t dst_ip[4];
     memset(dst_ip, 0xFF, 4);
 
     dhcp_packet_t* packet = calloc(sizeof(dhcp_packet_t), 1);
-    make_dhcp_packet(packet, DHCPREQUEST, request_ip);
-    udp_send_packet(dst_ip, 68, 67, packet, sizeof(dhcp_packet_t));
+    DHCP_make_packet(packet, DHCPREQUEST, request_ip);
+    UDP_send_packet(dst_ip, 68, 67, packet, sizeof(dhcp_packet_t));
+    free(packet);
 }
 
-/*
- * Handle DHCP offer packet
- * */
-void dhcp_handle_packet(dhcp_packet_t* packet) {
+void DHCP_handle_packet(dhcp_packet_t* packet) {
     uint8_t* options = packet->options + 4;
     if (packet->op == DHCP_REPLY) {
-        uint8_t* type = get_dhcp_options(packet, 53);
-        if (*type == 2) dhcp_request(&packet->your_ip);
+        uint8_t* type    = DHCP_options(packet, 53);
+        uint8_t* pointer = type;
+
+        if (*type == 2) DHCP_request(&packet->your_ip);
         else if (*type == 5) {
             memcpy(ip_addr, &packet->your_ip, 4);
             is_ip_allocated = 1;
+
+            uint8_t mac[6];
+            get_mac_addr(mac);
+            ARP_lookup_add(mac, ip_addr);
         }
+
+        free(pointer);
     }
 }
 
-/*
- * Search for the value of a type in options
- * */
-void* get_dhcp_options(dhcp_packet_t* packet, uint8_t type) {
-    uint8_t* options = packet->options + 4;
+// Handle packet and work with him
+void* DHCP_options(dhcp_packet_t* packet, uint8_t type) {
+    uint8_t* options  = packet->options + 4;
     uint8_t curr_type = *options;
     while(curr_type != 0xFF) {
         uint8_t len = *(options + 1);
@@ -76,7 +75,7 @@ void* get_dhcp_options(dhcp_packet_t* packet, uint8_t type) {
     }
 }
 
-void make_dhcp_packet(dhcp_packet_t* packet, uint8_t msg_type, uint8_t* request_ip) {
+void DHCP_make_packet(dhcp_packet_t* packet, uint8_t msg_type, uint8_t* request_ip) {
     packet->op                = DHCP_REQUEST;
     packet->hardware_type     = HARDWARE_TYPE_ETHERNET;
     packet->hardware_addr_len = 6;

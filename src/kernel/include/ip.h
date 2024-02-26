@@ -41,9 +41,12 @@ typedef struct ip_packet {
 } __attribute__((packed)) ip_packet_t;
 
 
-void get_ip_str(char * ip_str, uint8_t * ip);
-uint16_t ip_calculate_checksum(ip_packet_t * packet);
-void ip_send_packet(uint8_t * dst_ip, void * data, int len);
-void ip_handle_packet(ip_packet_t * packet);
+void IP_get_ip_str(uint8_t* ip);
+uint16_t IP_calculate_checksum(ip_packet_t* packet);
+void IP_send_packet(uint8_t* dst_ip, void* data, int len);
+void IP_handle_packet(ip_packet_t* packet);
+
+void IP_set(uint8_t* ip);
+void IP_get(uint8_t* buffer);
 
 #endif

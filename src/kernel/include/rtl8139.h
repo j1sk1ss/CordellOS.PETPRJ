@@ -12,6 +12,8 @@
 #include <stdlib.h>
 
 
+#define NETWORK_DEBUG         0
+
 // Define some constants
 #define RTL8139_VENDOR_ID     0x10EC
 #define RTL8139_DEVICE_ID     0x8139
@@ -82,7 +84,7 @@ typedef struct rtl8139_dev {
     int eeprom_exist;
     uint8_t mac_addr[6];
 
-    uint8_t* rx_buffer;
+    uint8_t rx_buffer[RX_BUFFER_SIZE_EX];
     uint8_t tx_buffer[TX_BUFFER_SIZE * NB_TX_DESCRIPTORS];
 
     int tx_cur;
@@ -93,7 +95,6 @@ void rtl8139_send_packet(void* data, uint32_t len);
 void rtl8139_handler(Registers* reg);
 
 void i386_init_rtl8139();
-void read_mac_addr();
 void receive_packet();
 void get_mac_addr(uint8_t* src_mac_addr);
 

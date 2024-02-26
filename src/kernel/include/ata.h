@@ -11,6 +11,7 @@
 #include "irq.h"
 #include "pci.h"
 #include "virt_manager.h"
+#include "vfs.h"
 
 
 // ATA PCI info
@@ -79,22 +80,27 @@ typedef struct ata_dev {
 		uint16_t sector_num;
 		uint16_t lba_lo ;
 	};
+
 	union {
 		uint16_t cylinder_low;
 		uint16_t lba_mid ;
 	};
+
 	union {
 		uint16_t cylinder_high;
 		uint16_t lba_high;
 	};
+
 	union {
 		uint16_t drive;
 		uint16_t head;
 	};
+
 	union {
 		uint16_t command;
 		uint16_t status;
 	};
+
 	union {
 		uint16_t control;
 		uint16_t alt_status;

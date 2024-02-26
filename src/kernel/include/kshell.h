@@ -8,12 +8,14 @@
 #include <stdlib.h>
 #include <bitmap.h>
 
-#include "fat.h"
+#include "vfs.h"
 #include "stdio.h"
 #include "keyboard.h"
 #include "date_time.h"
 #include "vga_text.h"
 #include "vesa_text.h"
+#include "udp.h"
+#include "rtl8139.h"
 
 
 //   ____  _   _ _____ _     _     
@@ -44,6 +46,10 @@
         #define COMMAND_IN_DIR                          "cd"
         #define COMMAND_OUT_DIR                         ".."
         #define COMMAND_LIST_DIR                        "dir"
+
+        #define COMMAND_IPCONFIG                        "ipconf"
+        #define COMMAND_SEND_PACKET                     "spacket"
+        #define COMMAND_POP_PACKET                      "ppacket"
 
         #define COMMAND_BMP_SHOW                        "guardare"
         #define COMMAND_FILE_VIEW                       "vista"

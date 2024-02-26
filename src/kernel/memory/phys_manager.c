@@ -16,8 +16,8 @@ void unset_block(const uint32_t bit) {
 
 int32_t find_first_free_blocks(const uint32_t num_blocks) {
     if (num_blocks == 0) return -1;
-    for (uint32_t i = 0; i < max_blocks / 32;  i++) {
-        if (memory_map[i] != 0xFFFFFFFF) {
+    for (uint32_t i = 0; i < max_blocks / 32;  i++) 
+        if (memory_map[i] != 0xFFFFFFFF) 
             for (int32_t j = 0; j < 32; j++) {
                 int32_t bit = 1 << j;
                 if (!(memory_map[i] & bit)) {
@@ -33,8 +33,6 @@ int32_t find_first_free_blocks(const uint32_t num_blocks) {
                     }
                 }
             }
-        }
-    }
     
     return -1;
 }

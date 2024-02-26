@@ -2,15 +2,19 @@
 #define SYSCALLS_H
 
 
+#include <fatlib.h>
+
 #include "stdio.h"
 #include "vga_text.h"
 #include "keyboard.h"
 #include "date_time.h"
-#include "fat.h"
+#include "vfs.h"
 #include "time.h"
 #include "tasking.h"
 #include "allocator.h"
 #include "isr.h"
+#include "ip.h"
+#include "rtl8139.h"
 
 
 // Screen managment through kprint 
@@ -58,8 +62,18 @@
 #define SYS_GET_PIXEL        29
 #define SYS_GET_RESOLUTION_X 31
 #define SYS_GET_RESOLUTION_Y 32
-#define SYS_VPUT_PIXEL       37 //
+#define SYS_VPUT_PIXEL       37
 #define SYS_FBUFFER_SWIPE    36
+
+// Networking
+#define SYS_SEND_UDP_PACKET  38 // uint8_t* dst_ip, uint16_t src_port, uint16_t dst_port, void* data, int len
+#define SYS_GET_UDP_PACKETS  39 //
+#define SYS_SET_IP           41 // All in WIP
+#define SYS_GET_IP           42 // 
+#define SYS_GET_MAC          43 //
+
+// Disk manager
+#define SYS_SWITCH_DISK      40 // int index
 
 
 void i386_syscalls_init();

@@ -50,11 +50,14 @@ typedef struct dhcp_packet {
 } __attribute__ ((packed)) dhcp_packet_t;
 
 
-int get_host_addr(uint8_t* addr);
-void dhcp_discover();
-void dhcp_request(uint8_t* request_ip);
-void dhcp_handle_packet(dhcp_packet_t* packet);
-void* get_dhcp_options(dhcp_packet_t* packet, uint8_t type);
-void make_dhcp_packet(dhcp_packet_t* packet, uint8_t msg_type, uint8_t* request_ip);
+extern int is_ip_allocated;
+
+
+int DHCP_get_host_addr(uint8_t* addr);
+void DHCP_discover();
+void DHCP_request(uint8_t* request_ip);
+void DHCP_handle_packet(dhcp_packet_t* packet);
+void* DHCP_options(dhcp_packet_t* packet, uint8_t type);
+void DHCP_make_packet(dhcp_packet_t* packet, uint8_t msg_type, uint8_t* request_ip);
 
 #endif

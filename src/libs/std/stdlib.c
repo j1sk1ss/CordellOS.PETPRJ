@@ -22,8 +22,6 @@ void tstart(char* name, uint32_t address) {
 void tkill() {
     __asm__ volatile(
         "movl $27, %%eax\n"
-        "movl $1, %%ebx\n"
-        "movl $1, %%edx\n"
         "int %0\n"
         :
         : "i"(SYSCALL_INTERRUPT)
@@ -37,7 +35,6 @@ void tkill() {
 void sleep(int milliseconds) {
     __asm__ volatile(
         "movl $3, %%eax\n"
-        "movl $1, %%ebx\n"
         "movl %0, %%edx\n"
         "int %1\n"
         :
@@ -59,9 +56,7 @@ void sleep(int milliseconds) {
 void get_datetime(short* data) {
     __asm__ volatile(
         "movl $6, %%eax\n"
-        "movl $1, %%ebx\n"
         "movl %0, %%ecx\n"
-        "movl $1, %%edx\n"
         "int %1\n"
         :
         : "r"(data), "i"(SYSCALL_INTERRUPT)

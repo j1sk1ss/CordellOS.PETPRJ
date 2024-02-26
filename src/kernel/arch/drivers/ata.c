@@ -30,6 +30,7 @@ ata_dev_t secondary_slave  = {.slave = 1};
         ATA_device_detect(&secondary_slave,  0);
 
         current_ata_device = &primary_master;
+        VFS_initialize(&primary_master, FAT_FS);
     }
 
     void ATA_handler(Registers* reg) {
@@ -107,7 +108,8 @@ ata_dev_t secondary_slave  = {.slave = 1};
         dev->prdt      = calloc(sizeof(prdt_t), 1);
         dev->prdt_phys = virtual2physical(dev->prdt);
 
-        dev->prdt[0].buffer_phys   = (uint32_t)dev->mem_buffer;
+        uint8_t* mem_buffer = dev->mem_buffer;
+        dev->prdt[0].buffer_phys   = (uint32_t)mem_buffer;
         dev->prdt[0].transfer_size = SECTOR_SIZE;
         dev->prdt[0].mark_end      = MARK_END;
 
@@ -125,7 +127,7 @@ ata_dev_t secondary_slave  = {.slave = 1};
         dev->alt_status   = alt_status;
 
         dev->bar4 = pci_read(ata_device, PCI_BAR4);
-        if(dev->bar4 & 0x1) dev->bar4 = dev->bar4 & 0xfffffffc;
+        if(dev->bar4 & 0x1) dev->bar4 = dev->bar4 & 0xFFFFFFFC;
 
         dev->BMR_COMMAND = dev->bar4;
         dev->BMR_STATUS  = dev->bar4 + 2;
@@ -145,25 +147,10 @@ ata_dev_t secondary_slave  = {.slave = 1};
 //====================
 
     void ATA_device_switch(int device) {
-        switch (device) {
-            case 1:
-                current_ata_device = &primary_master;
-            break;
-
-            case 2:
-                current_ata_device = &primary_slave;
-            break;
-
-            case 3:
-                current_ata_device = &secondary_master;
-            break;
-
-            case 4:
-                current_ata_device = &secondary_slave;
-            break;
-
-            // ...
-        }
+        if (device == 1) current_ata_device = &primary_master;
+        if (device == 2) current_ata_device = &primary_slave;
+        if (device == 3) current_ata_device = &secondary_master;
+        if (device == 4) current_ata_device = &secondary_slave;
     }
 
 //====================
