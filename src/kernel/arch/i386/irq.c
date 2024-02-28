@@ -6,6 +6,7 @@
 
 #define PIC_REMAP_OFFSET 0x20
 
+
 IRQHandler _handler[16] = { NULL };
 static const PICDriver* _PICDriver = NULL; 
 
@@ -16,7 +17,7 @@ void i386_irq_handler(Registers* regs) {
     uint8_t pic_irr = i8259_readIRQRequestRegisters();
     
     if (_handler[irq] != NULL) _handler[irq](regs);
-    else kprintf("No handler for: %i\n", irq);
+    else kprintf("[%s %i] No handler for: %i\n", __FILE__, __LINE__, irq);
 
     _PICDriver->SendEndOfInterrupt(irq);
 }

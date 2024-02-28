@@ -357,3 +357,41 @@ int fexec(char* path, int args, char** argv) {
 
     return result;
 }
+
+//====================================================================
+// Function restart machine
+void machine_restart() {
+    __asm__ volatile(
+        "movl $44, %%eax\n"
+        "int %0\n"
+        :
+        : "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
+}
+
+void switch_disk(int index) {
+
+}
+
+//====================================================================
+// Function that get FS info
+//
+// buffer[0] - mountpoint
+// buffer[1] - name
+// buffer[2] - fat type
+// buffer[3] - total clusters
+// buffer[4] - total sectors
+// buffer[5] - bytes per_sector
+// buffer[6] - sectors per cluster
+// buffer[7] - fat size
+void get_fs_info(uint32_t* buffer) {
+     __asm__ volatile(
+        "movl $45, %%eax\n"
+        "movl %0, %%ebx\n"
+        "int $0x80\n"
+        :
+        : "r"(buffer)
+        : "eax", "ebx", "ecx", "edx"
+    );
+}

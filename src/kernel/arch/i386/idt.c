@@ -19,7 +19,6 @@ typedef struct {
 
 
 IDTEntry _idt[256];
-
 IDTDescriptor _IDTDescriptor = { sizeof(_idt) - 1, _idt };
 
 

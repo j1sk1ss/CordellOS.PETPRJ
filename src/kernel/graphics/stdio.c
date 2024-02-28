@@ -48,7 +48,7 @@ void kset_color(int color) {
     }
 }
 
-const char _HexChars[] = "0123456789abcdef";
+const char _HexChars[] = "0123456789ABCDEF";
 
 void kfprintf_unsigned(uint8_t file, unsigned long long number, int radix, int color) {
     char buffer[32];

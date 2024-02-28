@@ -7,15 +7,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <bitmap.h>
-
-#include "vfs.h"
-#include "stdio.h"
-#include "keyboard.h"
-#include "date_time.h"
-#include "vga_text.h"
-#include "vesa_text.h"
-#include "udp.h"
-#include "rtl8139.h"
+#include <stdio.h>
+#include <networking.h>
 
 
 //   ____  _   _ _____ _     _     
@@ -27,9 +20,7 @@
 /////////////////
 //  CONSTANTS
 
-    #define CORDELL_ATTENTION   "\nNon hai i permessi. Usa cordell."
-    #define GUEST_ATTENTION     "\nTu in modalita' ospite. Azione respinta."
-    #define MAX_ATTEMPT_COUNT   4
+    #define COMMAND_BUFFER                          10
 
     /////////////////
     //  COMMANDS
@@ -48,8 +39,8 @@
         #define COMMAND_LIST_DIR                        "dir"
 
         #define COMMAND_IPCONFIG                        "ipconf"
-        #define COMMAND_SEND_PACKET                     "spacket"
-        #define COMMAND_POP_PACKET                      "ppacket"
+        #define COMMAND_SEND_PACKET                     "udp-spacket"
+        #define COMMAND_POP_PACKET                      "udp-ppacket"
 
         #define COMMAND_BMP_SHOW                        "guardare"
         #define COMMAND_FILE_VIEW                       "vista"

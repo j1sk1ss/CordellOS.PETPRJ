@@ -80,8 +80,8 @@ void DHCP_make_packet(dhcp_packet_t* packet, uint8_t msg_type, uint8_t* request_
     packet->hardware_type     = HARDWARE_TYPE_ETHERNET;
     packet->hardware_addr_len = 6;
     packet->hops              = 0;
-    packet->xid               = hostToNet32(DHCP_TRANSACTION_IDENTIFIER);
-    packet->flags             = hostToNet16(0x8000);
+    packet->xid               = host2net32(DHCP_TRANSACTION_IDENTIFIER);
+    packet->flags             = host2net16(0x8000);
 
     get_mac_addr(packet->client_hardware_addr);
 
@@ -89,7 +89,7 @@ void DHCP_make_packet(dhcp_packet_t* packet, uint8_t msg_type, uint8_t* request_
     memset(dst_ip, 0xff, 4);
 
     uint8_t* options = packet->options;
-    *((uint32_t*)(options)) = hostToNet32(0x63825363); // Magic cookie 
+    *((uint32_t*)(options)) = host2net32(0x63825363); // Magic cookie 
     options += 4;
 
     // First option, message type = DHCP_DISCOVER/DHCP_REQUEST
@@ -115,7 +115,7 @@ void DHCP_make_packet(dhcp_packet_t* packet, uint8_t msg_type, uint8_t* request_
 
         *(options++) = 50;
         *(options++) = 0x04;
-        *((uint32_t*)(options)) = hostToNet32(0x0a00020e);
+        *((uint32_t*)(options)) = host2net32(0x0a00020e);
         memcpy((uint32_t*)(options), request_ip, 4);
         options += 4;
 

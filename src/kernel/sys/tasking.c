@@ -58,7 +58,7 @@ uint32_t v_addr = 0x500000;
 	void i386_task_init() {
 		taskManager = calloc(sizeof(TaskManager), 1);
 		if (taskManager == NULL) {
-			kprintf("Unnable to allocate memory!\n");
+			kprintf("[%s %i] Unnable to allocate memory!\n", __FILE__, __LINE__);
 			kernel_panic("\nTASKING ERROR!");
 		}
 

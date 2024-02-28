@@ -19,6 +19,7 @@ void IP_set(uint8_t* ip) {
 }
 
 void IP_get(uint8_t* buffer) {
+    DHCP_get_host_addr(buffer);
     memcpy(buffer, my_ip, 4);
 }
 
@@ -28,7 +29,7 @@ uint16_t IP_calculate_checksum(ip_packet_t* packet) {
     uint8_t* array2 = (uint8_t*)packet;
     uint32_t sum    = 0;
     for (int i = 0; i < array_size; i++) 
-        sum += flipEndian16(array[i]);
+        sum += flip_endian16(array[i]);
 
     uint32_t carry = sum >> 16;
 
@@ -39,7 +40,7 @@ uint16_t IP_calculate_checksum(ip_packet_t* packet) {
     return ret;
 }
 
-void IP_send_packet(uint8_t* dst_ip, void* data, int len) {
+void IP_send_packet(uint8_t* dst_ip, void* data, int len, uint8_t protocol) {
     int arp_sent = 3;
     ip_packet_t* packet = calloc(sizeof(ip_packet_t) + len, 1);
 
@@ -52,7 +53,7 @@ void IP_send_packet(uint8_t* dst_ip, void* data, int len) {
     packet->fragment_offset_high = 0;
     packet->fragment_offset_low  = 0;
     packet->ttl                  = 64;
-    packet->protocol             = PROTOCOL_UDP;
+    packet->protocol             = protocol;
 
     DHCP_get_host_addr(my_ip);
     memcpy(packet->src_ip, my_ip, 4);
@@ -61,12 +62,12 @@ void IP_send_packet(uint8_t* dst_ip, void* data, int len) {
     void* packet_data = (void*)packet + packet->ihl * 4;
     memcpy(packet_data, data, len);
 
-    *((uint8_t*)(&packet->version_ihl_ptr))   = hostToNetByte(*((uint8_t*)(&packet->version_ihl_ptr)), 4);
-    *((uint8_t*)(packet->flags_fragment_ptr)) = hostToNetByte(*((uint8_t*)(packet->flags_fragment_ptr)), 3);
+    *((uint8_t*)(&packet->version_ihl_ptr))   = host2net8(*((uint8_t*)(&packet->version_ihl_ptr)), 4);
+    *((uint8_t*)(packet->flags_fragment_ptr)) = host2net8(*((uint8_t*)(packet->flags_fragment_ptr)), 3);
 
-    packet->length          = hostToNet16(sizeof(ip_packet_t) + len);
+    packet->length          = host2net16(sizeof(ip_packet_t) + len);
     packet->header_checksum = 0;
-    packet->header_checksum = hostToNet16(IP_calculate_checksum(packet));
+    packet->header_checksum = host2net16(IP_calculate_checksum(packet));
 
     uint8_t dst_hardware_addr[6];
     int delay = 9999999;
@@ -82,19 +83,19 @@ void IP_send_packet(uint8_t* dst_ip, void* data, int len) {
         } else break;
     }
 
-    ETH_send_packet(dst_hardware_addr, packet, hostToNet16(packet->length), ETHERNET_TYPE_IP);
+    ETH_send_packet(dst_hardware_addr, packet, host2net16(packet->length), ETHERNET_TYPE_IP);
     if (NETWORK_DEBUG) kprintf("\nIP Packet Sent...(checksum: %x)", packet->header_checksum);
     free(packet);
 }
 
 
 void IP_handle_packet(ip_packet_t* packet) {
-    *((uint8_t*)(&packet->version_ihl_ptr))   = netToHostByte(*((uint8_t*)(&packet->version_ihl_ptr)), 4);
-    *((uint8_t*)(packet->flags_fragment_ptr)) = netToHostByte(*((uint8_t*)(packet->flags_fragment_ptr)), 3);
+    *((uint8_t*)(&packet->version_ihl_ptr))   = net2host8(*((uint8_t*)(&packet->version_ihl_ptr)), 4);
+    *((uint8_t*)(packet->flags_fragment_ptr)) = net2host8(*((uint8_t*)(packet->flags_fragment_ptr)), 3);
     
     if (packet->version == IP_IPV4) {
         void* data_ptr = (void*)packet + packet->ihl * 4;
-        int data_len   = netToHost16(packet->length) - sizeof(ip_packet_t);
+        int data_len   = net2host16(packet->length) - sizeof(ip_packet_t);
 
         if (NETWORK_DEBUG) {
             kprintf("\nIP packet src: ");

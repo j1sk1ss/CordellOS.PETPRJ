@@ -16,7 +16,7 @@ void ARP_handle_packet(arp_packet_t* arp_packet, int len) {
     memcpy(dst_hardware_addr, arp_packet->src_hardware_addr, 6);
     memcpy(dst_protocol_addr, arp_packet->src_protocol_addr, 4);
 
-    if (netToHost16(arp_packet->opcode) == ARP_REQUEST) {
+    if (net2host16(arp_packet->opcode) == ARP_REQUEST) {
         uint32_t my_ip = 0x0e02000a;
         if (memcmp(arp_packet->dst_protocol_addr, &my_ip, 4)) {
             
@@ -37,19 +37,19 @@ void ARP_handle_packet(arp_packet_t* arp_packet, int len) {
             memcpy(arp_packet->dst_protocol_addr, dst_protocol_addr, 4);
 
             // Set opcode
-            arp_packet->opcode            = hostToNet16(ARP_REPLY);
+            arp_packet->opcode            = host2net16(ARP_REPLY);
             arp_packet->hardware_addr_len = 6;
             arp_packet->protocol_addr_len = 4;
-            arp_packet->hardware_type     = hostToNet16(HARDWARE_TYPE_ETHERNET);
-            arp_packet->protocol          = hostToNet16(ETHERNET_TYPE_IP);
+            arp_packet->hardware_type     = host2net16(HARDWARE_TYPE_ETHERNET);
+            arp_packet->protocol          = host2net16(ETHERNET_TYPE_IP);
 
             // Now send it with ethernet
             ETH_send_packet(dst_hardware_addr, arp_packet, sizeof(arp_packet_t), ETHERNET_TYPE_ARP);
         }
     }
 
-    else if (netToHost16(arp_packet->opcode) == ARP_REPLY) { /* TODO: ARP reply */ }
-    else kprintf("\nGot unknown ARP, opcode = %d\n", arp_packet->opcode);
+    else if (net2host16(arp_packet->opcode) == ARP_REPLY) { /* TODO: ARP reply */ }
+    else kprintf("\n[%s %i] Got unknown ARP, opcode = %d\n", __FILE__, __LINE__, arp_packet->opcode);
     
     // Now, store the ip-mac address mapping relation
     memcpy(&arp_table[arp_table_curr].ip_addr, dst_protocol_addr, 4);
@@ -76,11 +76,11 @@ void ARP_send_packet(uint8_t* dst_hardware_addr, uint8_t* dst_protocol_addr) {
     memcpy(arp_packet->dst_protocol_addr, dst_protocol_addr, 4);
 
     // Set opcode
-    arp_packet->opcode            = hostToNet16(ARP_REQUEST);
+    arp_packet->opcode            = host2net16(ARP_REQUEST);
     arp_packet->hardware_addr_len = 6;
     arp_packet->protocol_addr_len = 4;
-    arp_packet->hardware_type     = hostToNet16(HARDWARE_TYPE_ETHERNET);
-    arp_packet->protocol          = hostToNet16(ETHERNET_TYPE_IP);
+    arp_packet->hardware_type     = host2net16(HARDWARE_TYPE_ETHERNET);
+    arp_packet->protocol          = host2net16(ETHERNET_TYPE_IP);
 
     // Now send it with ethernet
     ETH_send_packet(broadcast_mac_address, (uint8_t*)arp_packet, sizeof(arp_packet_t), ETHERNET_TYPE_ARP);

@@ -1,5 +1,4 @@
 #include "../include/keyboard.h"
-
 // Shift keyboard converter from https://github.com/cstack/osdev/blob/master/drivers/keyboard.c#L8
 
 //   _  _________   __  ____   ___    _    ____  ____  
@@ -79,103 +78,52 @@ bool extended_scan_code;
 bool key_pressed[128];
 
 
-void i386_init_keyboard() {
-    mem_outl(0x64, 0xAE);
-}
+char* key_read(int mode, int color) {
+    // char* input = malloc(1);
+    // input[0] = '\0';
+    
+    // while (1) {
+    //     uint8_t status = i386_inb(0x64);
+    //     if (status & 0x1) {
+    //         if (status & 0x20) continue;
 
-int key_press() {
-    if (i386_inb(0x64) & 0x1) return 1;
-    return 0;
-}
+    //         char character = i386_inb(0x60);
+    //         if (character < 0 || character >= 128) continue;
 
-char get_character(char character) {
-    return alphabet[character];
-}
-
-//==================================================================================
-//   ____  _   _ _____ _     _       _  _________   ______   ___    _    ____  ____  
-//  / ___|| | | | ____| |   | |     | |/ / ____\ \ / / __ ) / _ \  / \  |  _ \|  _ \ 
-//  \___ \| |_| |  _| | |   | |     | ' /|  _|  \ V /|  _ \| | | |/ _ \ | |_) | | | |
-//   ___) |  _  | |___| |___| |___  | . \| |___  | | | |_) | |_| / ___ \|  _ <| |_| |
-//  |____/|_| |_|_____|_____|_____| |_|\_\_____| |_| |____/ \___/_/   \_\_| \_\____/ 
-
-        char* keyboard_read(int mode, int color) {
-            char* input = malloc(1);
-            input[0] = '\0';
+    //         key_pressed[character] = false;
             
-            while (1) {
-                uint8_t status = i386_inb(0x64);
-                if (status & 0x1) {
-                    if (status & 0x20) continue;
+    //             char currentCharacter  = get_char();
+    //             key_pressed[currentCharacter] = true;
 
-                    char character = i386_inb(0x60);
-                    if (character < 0 || character >= 128) continue;
+    //             if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) currentCharacter = shift_alphabet[character];
+    //             if (currentCharacter == LSHIFT_BUTTON || currentCharacter == RSHIFT_BUTTON) continue;
+    //             if (currentCharacter != ENTER_BUTTON) {
+    //                 if (currentCharacter == BACKSPACE_BUTTON) {
+    //                     if (strlen(input) <= 0) continue;
+    //                     input = backspace_string(input);
 
-                    key_pressed[character] = false;
-                    if (!(character & 0x80)) {
-                        key_pressed[character] = true;
-                        char currentCharacter  = alphabet[character];
+    //                     if (!is_vesa) {
+    //                         VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
+    //                         VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), NULL);
+    //                     } else VESA_backspace();
 
-                        if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) currentCharacter = shift_alphabet[character];
-                        if (currentCharacter == LSHIFT_BUTTON || currentCharacter == RSHIFT_BUTTON) continue;
-                        if (currentCharacter != ENTER_BUTTON) {
-                            if (currentCharacter == BACKSPACE_BUTTON) {
-                                if (strlen(input) <= 0) continue;
-                                input = backspace_string(input);
+    //                     continue;
+    //                 }
 
-                                if (!is_vesa) {
-                                    VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
-                                    VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), NULL);
-                                } else VESA_backspace();
+    //                 if (mode == VISIBLE_KEYBOARD)
+    //                     if (color != -1) kcprintf(color, "%c", currentCharacter);
+    //                     else kprintf("%c", currentCharacter);
 
-                                continue;
-                            }
+    //                 input = add_char_to_string(input, currentCharacter);
+    //             } else break;
+            
 
-                            if (mode == VISIBLE_KEYBOARD)
-                                if (color != -1) kcprintf(color, "%c", currentCharacter);
-                                else kprintf("%c", currentCharacter);
+    //         if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) {
+    //             key_pressed[LSHIFT] = false;
+    //             key_pressed[RSHIFT] = false;
+    //         }
+    //     }
+    // }
 
-                            input = add_char_to_string(input, currentCharacter);
-                        } else break;
-                    }
-
-                    if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) {
-                        key_pressed[LSHIFT] = false;
-                        key_pressed[RSHIFT] = false;
-                    }
-                }
-            }
-
-            return input;
-        }
-
-        // void i386_keyboard_handler(Registers* regs) {
-        //     // TODO: Implement
-        // }
-
-//==================================================================================
-//   _   _    ___     _____ ____    _  _____ ___ ___  _   _   _  _________   ______   ___    _    ____  ____  
-//  | \ | |  / \ \   / /_ _/ ___|  / \|_   _|_ _/ _ \| \ | | | |/ / ____\ \ / / __ ) / _ \  / \  |  _ \|  _ \ 
-//  |  \| | / _ \ \ / / | | |  _  / _ \ | |  | | | | |  \| | | ' /|  _|  \ V /|  _ \| | | |/ _ \ | |_) | | | |
-//  | |\  |/ ___ \ V /  | | |_| |/ ___ \| |  | | |_| | |\  | | . \| |___  | | | |_) | |_| / ___ \|  _ <| |_| |
-//  |_| \_/_/   \_\_/  |___\____/_/   \_\_| |___\___/|_| \_| |_|\_\_____| |_| |____/ \___/_/   \_\_| \_\____/ 
-
-        char keyboard_navigation() {
-            while (1) 
-                if (i386_inb(0x64) & 0x1) {
-                    char character = i386_inb(0x60);
-                    if (!(character & 0x80)) {
-                        return alphabet[character];
-                    }
-                }
-        }
-
-        void keyboard_wait(char symbol) {
-            while (1) {
-                char user_action = keyboard_navigation();
-                if (user_action == symbol)
-                    break;
-            }
-        }
-
-//==================================================================================
+    // return input;
+}

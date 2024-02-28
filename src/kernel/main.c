@@ -4,7 +4,6 @@
 #include "include/hal.h"
 #include "include/fat.h"
 #include "include/elf.h"
-#include "include/kshell.h"
 #include "include/tasking.h"
 #include "include/x86.h"
 #include "include/pit.h"
@@ -28,6 +27,8 @@
 #define CONFIG_KSHELL   0
 #define CONFIG_MOUSE    1
 #define CONFIG_NETWORK  2
+#define CONFIG_ENABLED  '1'
+#define CONFIG_DISABLED '0'
 
 
 extern uint32_t kernel_base;
@@ -83,7 +84,11 @@ extern uint32_t kernel_end;
 //          11.1) IP Udp, Arp                                     [V]
 //          11.2) Receive data on Host server                     [V]
 //          11.3) STD libs for networking                         [V]
-//      12) KShell to ELF program                                 [?]
+//          11.4) TCP                                             [?]
+//          11.5) Host sending to VK/TG etc                       [ ]
+//      12) KShell to ELF program                                 [V]
+//          12.0) KShell save commands to cash                    [V]
+//          12.1) MEM-DATA progs                                  [ ]
 //      13) DOOM?                                                 [ ]
 //======================================================================================================================================
 
@@ -100,7 +105,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
 
         if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-            kprintf("[kernel.c 97] Multiboot error (Magic is wrong [%u]).\n", mb_magic);
+            kprintf("[%s %i] Multiboot error (Magic is wrong [%u]).\n", __FILE__, __LINE__, mb_magic);
             goto end;
         }
 
@@ -120,7 +125,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         kprintf("VBE Y:           [%u]\n", mb_info->framebuffer_height);
         kprintf("VBE X:           [%u]\n", mb_info->framebuffer_width);
         kprintf("VBE BPP:         [%u]\n", mb_info->framebuffer_bpp);
-        
+
     //===================
     // Phys & Virt memory manager initialization
     // - Phys blocks
@@ -178,7 +183,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         deinitialize_memory_region(0x1000, 0x11000);
         deinitialize_memory_region(0x30000, max_blocks / BLOCKS_PER_BYTE);
         if (initialize_virtual_memory_manager(0x100000) == false) {
-            kprintf("[kernel.c 175] Virtual memory can`t be init.\n");
+            kprintf("[%s %i] Virtual memory can`t be init.\n",__FILE__ , __LINE__);
             goto end;
         }
 
@@ -262,7 +267,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
             // Network initialization
             //===================
 
-                if (config[CONFIG_NETWORK] == '1') {
+                if (config[CONFIG_NETWORK] == CONFIG_ENABLED) {
                     i386_init_rtl8139();
                     ARP_init();
                     UDP_init();
@@ -273,11 +278,11 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
             // Network initialization
             //===================
 
-            if (config[CONFIG_MOUSE] == '1')  START_PROCESS("kmouse", PSMS_show);
-            if (config[CONFIG_KSHELL] == '1') START_PROCESS("kshell", kshell);
+            if (config[CONFIG_MOUSE] == CONFIG_ENABLED)  START_PROCESS("kmouse", PSMS_show);
+            if (config[CONFIG_KSHELL] == CONFIG_ENABLED) START_PROCESS("kshell", FAT_ELF_execute_content("boot\\shell\\shell.elf", NULL, NULL));
 
             kfree(config);
-        } else START_PROCESS("kshell", kshell);
+        } else START_PROCESS("kshell", FAT_ELF_execute_content("boot\\shell\\shell.elf", NULL, NULL));
 
         TASK_start_tasking();
     

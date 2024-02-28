@@ -86,11 +86,10 @@ void cursor_set(int x, int y) {
 void cursor_get(int* result) {
     __asm__ volatile(
         "movl $21, %%eax\n"
-        "movl $1, %%ebx\n"
         "movl %0, %%ecx\n"
         "int %1\n"
         :
-        : "r"(&result), "i"(SYSCALL_INTERRUPT)
+        : "r"(result), "i"(SYSCALL_INTERRUPT)
         : "eax", "ebx", "ecx", "edx"
     );
 }
@@ -102,9 +101,7 @@ char get_char() {
     char key;
     __asm__ volatile(
         "movl $5, %%eax\n"
-        "movl $1, %%ebx\n"
         "movl %0, %%ecx\n"
-        "movl $1, %%edx\n"
         "int %1\n"
         :
         : "r"(&key), "i"(SYSCALL_INTERRUPT)
@@ -121,9 +118,7 @@ char wait_char() {
     char key;
     __asm__ volatile(
         "movl $4, %%eax\n"
-        "movl $1, %%ebx\n"
         "movl %0, %%ecx\n"
-        "movl $0, %%edx\n"
         "int %1\n"
         :
         : "r"(&key), "i"(SYSCALL_INTERRUPT)
@@ -149,6 +144,29 @@ char* input_read(int mode, uint8_t color) {
         "movl %%eax, %0\n"
         : "=r"(buffer)
         : "r"((int)color), "r"(mode), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
+
+    return buffer;
+}
+
+//====================================================================
+//  This function reads keyboard input from user until he press stop character -
+//  that returns string of input with stop character of last position
+//  EAX - interrupt / buffer
+//  EDX - color
+//  EBX - mode
+char* input_read_stop(int mode, uint8_t color, char* stop_list) {
+    char* buffer;
+    __asm__ volatile (
+        "movl $46, %%eax\n"
+        "movl %3, %%ecx\n"
+        "movl %2, %%ebx\n"
+        "movl %1, %%edx\n"
+        "int %4\n"
+        "movl %%eax, %0\n"
+        : "=r"(buffer)
+        : "r"((int)color), "r"(mode), "g"(stop_list), "i"(SYSCALL_INTERRUPT)
         : "eax", "ebx", "ecx", "edx"
     );
 

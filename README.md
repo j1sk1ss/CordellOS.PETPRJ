@@ -1,33 +1,61 @@
 # CordellOS.MPRJ
 Simple OS based on .asm / .c double stage boot loader, and .c / .cpp based kernel with GCC .c / .cpp compiler. 
 </br>
-//===================================================================</br>
-// TODO List:</br>
-//===================================================================</br>
-//      &nbsp;1) Multiboot struct                                       [V]</br>
-//      &nbsp;2) Phys and Virt manages                                  [V]</br>
-//      &nbsp;3) ELF check v_addr                                       [V]</br>
-//          &nbsp;&nbsp;&nbsp;3.1) Fix global and static vars                       [V]</br>
-//          &nbsp;&nbsp;&nbsp;3.2) Loading ELF without malloc for fdata             [V]</br>
-//      &nbsp;4) Paging (create error with current malloc) / allocators [V]</br>
-//          &nbsp;&nbsp;&nbsp;4.0) Random Page fault (Null error de Italia)         [V]</br>
-//          &nbsp;&nbsp;&nbsp;4.1) Tasking with paging                              [V]</br>
-//          &nbsp;&nbsp;&nbsp;4.2) ELF exec with tasking and paging                 [V]</br>
-//      &nbsp;5) VBE / VESA                                             [V]</br>
-//          &nbsp;&nbsp;&nbsp;5.0) VBE kernel                                       [V]</br>
-//      &nbsp;6) Keyboard to int                                        [V]</br>
-//      &nbsp;7) Reboot outportb(0x64, 0xFE);                           [V]</br>
-//      &nbsp;8) Mouse support                                          [V]</br>
-//          &nbsp;&nbsp;&nbsp;8.0) Std lib for graphics                             [?]</br>
-//          &nbsp;&nbsp;&nbsp;8.1) Loading BMP without malloc for fdata             [V]</br>
-//          &nbsp;&nbsp;&nbsp;8.1) Syscalls to std libs                             [V]</br>
-//          &nbsp;&nbsp;&nbsp;8.2) VBE userland                                     [ ]</br>
-//      &nbsp;9) Malloc optimization                                    [?]</br>
-//      &nbsp;10) Bags                                                  [?]</br>
-//          &nbsp;&nbsp;&nbsp;10.0) Tasking page fault                              [?]</br>
-//          &nbsp;&nbsp;&nbsp;10.1) Mouse page fault                                [V]</br>
-//          &nbsp;&nbsp;&nbsp;10.2) Tasking with page allocator                     [ ]</br>
-//      &nbsp;11) DOOM?                                                 [ ]</br>
-//===================================================================</br>
+
+| TODO List:                             |Status:  | Features:                                                     |
+|----------------------------------------|---------|---------------------------------------------------------------|
+| [?] - WIP                              |         |                                                               |
+| [&check;] - complete                   |         |                                                               |
+| **1) Multiboot struct**                |[&check;]|   1) Physical memory manager                                  |
+| **2) Phys and Virt manages**           |[&check;]|   2) Virtual memory manager (paging)                          |
+|    2.0) Make page and phys prints...   |[?]      |   3) Multitasking                                             |
+| **3) ELF check v_addr**                |[&check;]|   4) Syscalls                                                 |
+|    3.1) Fix global and static vars     |[&check;]|       4.0) Std libs for user programs                         |
+|    3.2) Loading ELF without malloc...  |[&check;]|       4.1) Cordell-ASM compiler                               |
+| **4) Paging (create error with...**    |[&check;]|   5) Mouse & keyboard support                                 |
+|    4.0) Random Page fault (Null...     |[&check;]|   6) VBE support                                              |
+|    4.1) Tasking with paging            |[&check;]|   7) ELF support                                              |
+|    4.2) ELF exec with tasking...       |[&check;]|   8) BMP support                                              |
+| **5) VBE / VESA**                      |[&check;]|   9) FAT32/16/12 support                                      |
+|    5.0) VBE kernel                     |[&check;]|   10) Boot config                                             |
+|        5.0.1) Kshell scrolling         |[ ]      |   11) Multidisk support                                       |
+|    5.1) Double buffering               |[ ]      |   12) Networking                                              |
+| **6) Keyboard to int**                 |[&check;]|       12.0) DHCP                                              |
+| **7) Reboot outportb(0x64, 0xFE);**    |[&check;]|       12.1) UDP                                               |
+| **8) Mouse support**                   |[&check;]|       12.2) ARP                                               |
+|    8.0) Std lib for graphics           |[&check;]|       12.3) RLT8139 driver                                    |
+|        8.0.0) Objects                  |[ ]      |                                                               |
+|        8.0.1) Click event              |[ ]      |                                                               |
+|    8.1) Loading BMP without malloc...  |[ ]      |                                                               |
+|    8.1) Syscalls to std libs           |[ ]      |                                                               |
+|        8.1.0) Syscalls for content...  |[ ]      |                                                               |
+|        8.1.1) Syscalls for content...  |[ ]      |                                                               |
+|        8.1.2) Syscalls for kmallocp... |[ ]      |                                                               |
+|    8.2) VBE userland                   |[ ]      |                                                               |
+|        8.2.0) VBE file manager         |[?]      |                                                               |
+|        8.2.1) VBE text editor          |[?]      |                                                               |
+| **9) Malloc optimization**             |[ ]      |                                                               |
+| **10) Bugs**                           |[?]      |                                                               |
+|    10.0) Tasking page fault...         |[?]      |                                                               |
+|    10.1) Mouse page fault              |[?]      |                                                               |
+|    10.2) Tasking with page allocator   |[&check;]|                                                               |
+| **11) Ethernet**                       |[?]      |                                                               |
+|    11.0) ethernet                      |[?]      |                                                               |
+|        11.0.0) Send packets            |[&check;]|                                                               |
+|        11.0.1) Receive packets         |[&check;]|                                                               |
+|        11.0.2) DHCP                    |[&check;]|                                                               |
+|        11.0.3) Sending data            |[&check;]|                                                               |
+|            11.0.3.0) Sending normal... |[&check;]|                                                               |
+|    11.1) IP Udp, Arp                   |[&check;]|                                                               |
+|    11.2) Receive data on Host server   |[&check;]|                                                               |
+|    11.3) STD libs for networking       |[&check;]|                                                               |
+|    11.4) TCP                           |[ ]      |                                                               |
+|    11.5) Host sending to VK/TG etc     |[ ]      |                                                               |
+| **12) KShell to ELF program**          |[&check;]|                                                               |
+|    12.0) KShell save commands...       |[&check;]|                                                               |
+|    12.1) MEM-DATA progs                |[ ]      |                                                               |
+| **13) DOOM?**                          |[ ]      |                                                               |
+
+
 
 ![Alt Text](https://github.com/j1sk1ss/CordellOS.MPRJ/blob/main/cover.png)

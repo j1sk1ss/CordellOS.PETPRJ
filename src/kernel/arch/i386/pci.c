@@ -140,7 +140,7 @@ pci_dev_t pci_get_device(uint16_t vendor_id, uint16_t device_id, int device_type
 	pci_dev_t t = pci_scan_bus(vendor_id, device_id, 0, device_type);
 	if (t.bits) return t;
 
-	if (pci_reach_end(dev_zero)) kprintf("PCI GET DEVICE FAIL!\n");
+	if (pci_reach_end(dev_zero)) kprintf("[%s %i] PCI GET DEVICE FAIL!\n", __FILE__, __LINE__);
 	for (int function = 1; function < FUNCTION_PER_DEVICE; function++) {
 		pci_dev_t dev = {0};
 		dev.function_num = function;

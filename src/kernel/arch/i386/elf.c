@@ -5,7 +5,7 @@ struct ELF32_program* ELF_read(const char* path) {
     struct ELF32_program* program = calloc(sizeof(struct ELF32_program), 1);
     struct FATContent* content    = FAT_get_content(path);
     if (content->file == NULL) {
-        kprintf("File not found\n");
+        kprintf("[%s %i] File not found\n", __FILE__, __LINE__);
         FAT_unload_content_system(content);
         return NULL;
     }
@@ -18,14 +18,14 @@ struct ELF32_program* ELF_read(const char* path) {
         FAT_read_content2buffer(content, header, 0, sizeof(Elf32_Ehdr));
         Elf32_Ehdr* ehdr = (Elf32_Ehdr*)header;
         if (ehdr->e_ident[0] != '\x7f' || ehdr->e_ident[1] != 'E') {
-            kprintf("\r\nError: Not ELF.\r\n");
+            kprintf("\n[%s %i] Error: Not ELF.\n", __FILE__, __LINE__);
             free(header);
             FAT_unload_content_system(content);
             return NULL;
         }
 
         if (ehdr->e_type != ET_EXEC && ehdr->e_type != ET_DYN) {
-            kprintf("\r\nError: Program is not an executable or dynamic executable.\r\n");
+            kprintf("\n[%s %i] Error: Program is not an executable or dynamic executable.\n", __FILE__, __LINE__);
             free(header);
             FAT_unload_content_system(content);
             return NULL;

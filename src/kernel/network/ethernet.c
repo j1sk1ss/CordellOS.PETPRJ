@@ -11,7 +11,7 @@ int ETH_send_packet(uint8_t* dst_mac_addr, uint8_t* data, int len, uint16_t prot
     memcpy(frame->dst_mac_addr, dst_mac_addr, 6);
     memcpy(frame_data, data, len);
 
-    frame->type = hostToNet16(protocol);
+    frame->type = host2net16(protocol);
 
     rtl8139_send_packet(frame, sizeof(ethernet_frame_t) + len);
     free(frame);
@@ -22,12 +22,12 @@ int ETH_send_packet(uint8_t* dst_mac_addr, uint8_t* data, int len, uint16_t prot
 void ETH_handle_packet(ethernet_frame_t* packet, int len) {
     void* data   = (void*)packet + sizeof(ethernet_frame_t);
     int data_len = len - sizeof(ethernet_frame_t);
-    if (netToHost16(packet->type) == ETHERNET_TYPE_ARP) {
+    if (net2host16(packet->type) == ETHERNET_TYPE_ARP) {
         if (NETWORK_DEBUG) kprintf("\nReceived ARP packet");
         ARP_handle_packet(data, data_len);
     }
     
-    if (netToHost16(packet->type) == ETHERNET_TYPE_IP) {
+    if (net2host16(packet->type) == ETHERNET_TYPE_IP) {
         if (NETWORK_DEBUG) kprintf("\nReceived IP packet");
         IP_handle_packet(data);
     }

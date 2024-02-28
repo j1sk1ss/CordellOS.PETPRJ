@@ -14,8 +14,8 @@
 
 
 struct UDPpacket {
-    void* data;
-    int32_t data_size;
+    uint8_t* data;
+    int16_t data_size;
 };
 
 typedef struct udp_packet {
@@ -28,7 +28,7 @@ typedef struct udp_packet {
 
 
 void UDP_init();
-void* UDP_pop_packet();
+struct UDPpacket* UDP_pop_packet();
 
 uint16_t UDP_calculate_checksum(udp_packet_t* packet);
 void UDP_send_packet(uint8_t* dst_ip, uint16_t src_port, uint16_t dst_port, void* data, int len);

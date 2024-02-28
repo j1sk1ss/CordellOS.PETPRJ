@@ -2,18 +2,10 @@
 #define _KEYBOARD_H_
 
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <memory.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "stdio.h"
-#include "x86.h"
-#include "vga_text.h"
-#include "vesa_text.h"
-// #include "irq.h"
+#include "stdlib.h"
+#include "stdbool.h"
+#include "string.h"
 
 
 #define KBD_DATA_PORT           0x60
@@ -39,18 +31,6 @@
 
 #define LSHIFT                  0x2A
 #define RSHIFT                  0x36
-
-
-// void i386_keyboard_handler(Registers* regs);
-int key_press();
-char get_character(char character);
-
-char* keyboard_read(int mode, int color);
-char* keyboard_read_stop(int mode, int color, char* stop_list);
-char keyboard_navigation();
-void keyboard_wait(char symbol);
-
-void i386_init_keyboard();
 
 
 #endif

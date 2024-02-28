@@ -24,7 +24,7 @@ void get_ip(uint8_t* buffer) {
         "movl %0, %%ebx\n"
         "int $0x80\n"
         :
-        : "r"(&buffer)
+        : "r"(buffer)
         : "eax", "ebx", "ecx", "edx"
     );
 }
@@ -38,7 +38,7 @@ void get_mac(uint8_t* buffer) {
         "movl %0, %%ebx\n"
         "int $0x80\n"
         :
-        : "r"(&buffer)
+        : "r"(buffer)
         : "eax", "ebx", "ecx", "edx"
     );
 }
@@ -68,16 +68,13 @@ void send_udp_packet(uint8_t* dst_ip, uint16_t src_port, uint16_t dst_port, void
 //====================================================================
 // Function get pixel from framebuffer by coordinates
 // EBX - data pointer
-void* pop_received_udp_packet() {
-    void* pointer;
+void pop_received_udp_packet(uint8_t* buffer) {
     __asm__ volatile(
         "movl $39, %%eax\n"
         "movl %0, %%ebx\n"
         "int $0x80\n"
         :
-        : "r"(&pointer)
+        : "r"(buffer)
         : "eax", "ebx", "ecx", "edx"
     );
-
-    return pointer;
 }
