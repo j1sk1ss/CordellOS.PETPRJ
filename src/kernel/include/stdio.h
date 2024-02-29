@@ -37,7 +37,7 @@ void kprint_buffer(const char* msg, const void* buffer, uint32_t count);
 void kfprintf_unsigned(uint8_t file, unsigned long long number, int radix, int color);
 
 void kfputc(char c, uint8_t file, int color);
-void kcputc(char c, uint8_t color);
+void kcputc(char c, uint32_t color);
 void kfputs(const char* str, uint8_t file, int color);
 void kvfprintf(uint8_t file, const char* fmt, va_list args, int color);
 void kfprintf(uint8_t file, const char* fmt, ...);

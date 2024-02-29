@@ -12,6 +12,9 @@
 #include "../multiboot.h"
 
 
+#define CHAR_BODY	0x0000000F
+#define EMPTY_SPACE	0x000000F0
+
 #define BLACK       0x00000000 
 #define WHITE       0x00FFFFFF 
 #define DARK_GRAY   0x00222222

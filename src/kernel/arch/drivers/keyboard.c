@@ -150,10 +150,8 @@ char get_character(char character) {
         }
 
         char* keyboard_read_stop(int mode, int color, char* stop_list) {
-            char* input = malloc(2);
-
+            char* input = malloc(1);
             input[0] = '\0';
-            input[1] = '\0';
             
             while (1) {
                 uint8_t status = i386_inb(0x64);

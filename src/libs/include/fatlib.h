@@ -62,9 +62,9 @@ struct UFATDirectory {
 
 	char* name;
 
-	struct FATDirectory* next;
-    struct FATFile* files;
-    struct FATDirectory* subDirectory;
+	struct UFATDirectory* next;
+    struct UFATFile* files;
+    struct UFATDirectory* subDirectory;
 };
 
 struct UFATDate {

@@ -22,8 +22,8 @@ void syscall(Registers* regs) {
         } 
         
         else if (regs->eax == SYS_COLOR_PUTC) {
-            char data     = (char)regs->ebx;
-            uint8_t color = (uint8_t)regs->ecx;
+            char data      = (char)regs->ebx;
+            uint32_t color = (uint32_t)regs->ecx;
             kcputc(data, color);
         } 
         
@@ -66,6 +66,14 @@ void syscall(Registers* regs) {
             else VESA_set_cursor(x, y);
         } 
         
+        else if (regs->eax == SYS_SET_CURSOR32) {
+            int x = (int)regs->ebx;
+            int y = (int)regs->ecx;
+            
+            if (!is_vesa) VGA_setcursor(x, y);
+            else VESA_set_cursor32(x, y);
+        } 
+
         else if (regs->eax == SYS_SET_SCRCHAR) {
             int x = (int)regs->ebx;
             int y = (int)regs->ecx;

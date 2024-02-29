@@ -14,6 +14,7 @@ env.Append(
     ],
 
     LINKFLAGS = [
+        '-Wl,-T', env.File('linker.ld').srcnode().path,
         '-Wl,-Map=' + env.File('shell.map').path
     ],
 

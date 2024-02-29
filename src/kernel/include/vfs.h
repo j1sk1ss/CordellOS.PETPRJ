@@ -15,12 +15,12 @@
 typedef char* (*file_read)(struct UFATContent*);
 typedef void (*file_read_offset)(struct UFATContent*, uint8_t*, uint32_t, uint32_t);
 typedef void (*file_write)(const char*, char*);
-typedef struct UFATDirectory* (*open_dir)(const unsigned int, unsigned char, short);
-typedef struct UFATContent* (*get_object)(const char*);
+typedef struct FATDirectory* (*open_dir)(const unsigned int, unsigned char, short);
+typedef struct FATContent* (*get_object)(const char*);
 typedef int (*object_exists)(const char*);
 typedef int (*put_object)(const char*, struct UFATContent*);
 typedef int (*delete_object)(const char*, const char*);
-typedef struct UFATContent* (*create_object)(char*, short, char*);
+typedef struct FATContent* (*create_object)(char*, short, char*);
 typedef int (*object_execute)(char*, int, char*);
 typedef int (*object_meta_change)(const char*, udirectory_entry_t*);
 

@@ -62,12 +62,28 @@ char directly_getchar(int x, int y) {
 }
 
 //====================================================================
-// Function set cursor by coordinates
+// Function set cursor by char coordinates (x * CHAR SIZE)
 // EBX - x
 // ECX - y
 void cursor_set(int x, int y) {
     __asm__ volatile(
         "movl $20, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "int %2\n"
+        :
+        : "r"(x), "r"(y), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx"
+    );
+}
+
+//====================================================================
+// Function set cursor by global coordinates
+// EBX - x
+// ECX - y
+void cursor_set32(uint32_t x, uint32_t y) {
+    __asm__ volatile(
+        "movl $47, %%eax\n"
         "movl %0, %%ebx\n"
         "movl %1, %%ecx\n"
         "int %2\n"
@@ -190,7 +206,7 @@ void clrscr() {
 //====================================================================
 //  Puts a char in screen (used kernel printf commands)
 //  ECX - character
-void fputc(char c, uint8_t file, int color) {
+void fputc(char c, uint32_t file, int color) {
     if (color == 0) {
         __asm__ volatile(
             "movl $1, %%eax\n"
@@ -210,7 +226,7 @@ void fputc(char c, uint8_t file, int color) {
 //  Puts a char in screen with color (used kernel printf commands)
 //  ECX - color
 //  EBX - character
-void cputc(char c, uint8_t color) {
+void cputc(char c, uint32_t color) {
     __asm__ volatile(
         "movl $13, %%eax\n"
         "movl %1, %%ebx\n"
@@ -271,7 +287,7 @@ void fprintf_signed(uint8_t file, long long number, int radix, int color) {
         fprintf_unsigned(file, number, radix, color);
 }
 
-void vfprintf(uint8_t file, const char* fmt, va_list args, int color) {
+void vfprintf(uint32_t file, const char* fmt, va_list args, int color) {
     int state   = PRINTF_STATE_NORMAL;
     int length  = PRINTF_LENGTH_DEFAULT;
     int radix   = 10;
@@ -427,7 +443,7 @@ void printf(const char* fmt, ...) {
     va_end(args);
 }
 
-void cprintf(uint8_t color, const char* fmt, ...) {
+void cprintf(uint32_t color, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vfprintf(color, fmt, args, 1);

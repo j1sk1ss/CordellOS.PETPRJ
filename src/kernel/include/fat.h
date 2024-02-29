@@ -186,7 +186,7 @@ struct FATFile {
 	char* extension;
 	char* name;
 
-    struct File* next;
+    struct FATFile* next;
 };
 
 struct FATDirectory {

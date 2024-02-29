@@ -20,11 +20,11 @@ void kfputc(char c, uint8_t file, int color) {
     }
 }
 
-void kcputc(char c, uint8_t color) {
+void kcputc(char c, uint32_t color) {
     if (!is_vesa) {
         VGA_putc(c);
         VGA_putcolor(VGA_cursor_get_x() - 1, VGA_cursor_get_y(), color);
-    } else VESA_cputc(c, color, BLACK);
+    } else VESA_cputc(c, WHITE, color);
 }
 
 void kfputs(const char* str, uint8_t file, int color) {

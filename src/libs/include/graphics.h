@@ -31,6 +31,16 @@ struct GUIobject {
 
     int bitmap_count;
     struct bitmap** bitmaps;
+
+    int text_count;
+    struct text_object** texts;
+};
+
+struct text_object {
+    uint32_t x, y;
+    char* text;
+    uint32_t char_count;
+    uint32_t bg_color;
 };
 
 
@@ -42,6 +52,11 @@ int get_resolution_y();
 struct GUIobject* create_gui_object(int x, int y, int height, int width, uint32_t background);
 struct GUIobject* object_add_children(struct GUIobject* object, struct GUIobject* children);
 struct GUIobject* object_add_bitmap(struct GUIobject* object, struct bitmap* bmp);
+struct GUIobject* object_add_text(struct GUIobject* object, struct text_object* text);
+
+struct text_object* create_text(int x, int y, char* text, uint32_t background_color);
+void put_text(struct text_object* text);
+void unload_text(struct text_object* text);
 
 void object_move(struct GUIobject* object, int rel_x, int rel_y);
 

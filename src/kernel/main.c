@@ -1,5 +1,7 @@
 #include <stdint.h>
 #include <bitmap.h>
+#include <graphics.h>
+#include <window.h>
 
 #include "include/hal.h"
 #include "include/fat.h"
@@ -58,7 +60,7 @@ extern uint32_t kernel_end;
 //      7) Reboot outportb(0x64, 0xFE);                           [V]       12.1) UDP                                                | |
 //      8) Mouse support                                          [V]       12.2) ARP                                                | |
 //          8.0) Std lib for graphics                             [V]       12.3) RLT8139 driver                                     | |
-//              8.0.0) Objects                                    [V] 
+//              8.0.0) Objects                                    [V]   13) Windows
 //              8.0.1) Click event                                [V]
 //          8.1) Loading BMP without malloc for fdata             [V]
 //          8.1) Syscalls to std libs                             [V]
@@ -69,6 +71,7 @@ extern uint32_t kernel_end;
 //              8.2.0) VBE file manager                           [?]
 //              8.2.1) VBE text editor                            [?]
 //      9) Malloc optimization                                    [ ]
+//          9.0) Free pages when they are unused                  [ ]
 //      10) Bugs                                                  [?]
 //          10.0) Tasking page fault (In case when we use more    [?]
 //                then one task)                                  | |
@@ -200,6 +203,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
                 map_page((void*)fb_start, (void*)fb_start);
 
             deinitialize_memory_region(gfx_mode.physical_base_pointer, framebuffer_pages * BLOCK_SIZE);
+            // gfx_mode.virtual_second_buffer = (uint32_t)kmalloc(gfx_mode.buffer_size);
 
         //===================
         // Map framebuffer to his original phys address

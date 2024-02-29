@@ -1,8 +1,9 @@
 #include "../include/gfx.h"
 
-vbe_mode_info_t gfx_mode;
 
+vbe_mode_info_t gfx_mode;
 uint32_t chars[CHARCOUNT * CHARLEN];
+
 
 void GFX_init(struct multiboot_info* mb_info) {
     gfx_mode.physical_base_pointer = mb_info->framebuffer_addr;
@@ -23,14 +24,14 @@ void GFX_init(struct multiboot_info* mb_info) {
     gfx_mode.buffer_size = gfx_mode.y_resolution * gfx_mode.x_resolution * (gfx_mode.bits_per_pixel | 7) >> 3;
     gfx_mode.virtual_second_buffer = 0x5000000;
     
-    for(unsigned char c = ' '; c < '~'; c++) {
+    for (unsigned char c = ' '; c < '~'; c++) {
         unsigned short offset = (c - 31) * 16 ;
-        for(int row = 0; row < CHAR_Y; row++) {
+        for (int row = 0; row < CHAR_Y; row++) {
             uint8_t mask = 1 << 7;
             uint32_t* abs_row = chars + CHAROFF(c) + (row * 8);
-            for(int i = 0; i < 8; i++) {
-                if(font.Bitmap[offset + row] & mask) abs_row[i] = WHITE;
-                else abs_row[i] = BLACK;
+            for (int i = 0; i < 8; i++) {
+                if(font.Bitmap[offset + row] & mask) abs_row[i] = CHAR_BODY;
+                else abs_row[i] = EMPTY_SPACE;
                 
                 mask = (mask >> 1);
             }
@@ -80,16 +81,20 @@ void GFX_fill_rect_solid(Point top_left, Point bottom_right, uint32_t color) {
 }
 
 void GFX_put_char(int x, int y, int character, uint32_t foreground, uint32_t background) {
-    uint32_t step     = gfx_mode.pitch / 4;
+    uint32_t step = gfx_mode.pitch / 4;
     uint32_t* chardat = chars + CHAROFF(character);
     uint32_t* abs_row = ((unsigned char*)gfx_mode.physical_base_pointer) + (y * gfx_mode.pitch);
     abs_row += x;
 
-    for(int row = 0; row < CHAR_Y * 8; row += 8) {
-        memcpy(abs_row, chardat + row, 32);
+    for (int row = 0; row < CHAR_Y * 8; row += 8) {
+        for (int i = 0; i < 8; i++) {
+            uint32_t pixel_color = (chardat[row + i] == CHAR_BODY) ? foreground : background;
+            abs_row[i] = pixel_color;
+        }
         abs_row += step;
     }
 }
+
 
 int GFX_get_char(int x, int y) {
     uint32_t step = gfx_mode.pitch / 4;

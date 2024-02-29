@@ -3,7 +3,7 @@
 
 char* current_path = "BOOT";
 char* command_buffer[COMMAND_BUFFER] = { NULL };
-int exit = 0;
+int exit = 1;
 int current_command = 0;
 
 
@@ -11,14 +11,15 @@ void main(int args, char* argv[]) {
     clrscr();
     shell_start_screen();
 
-    while (1) {
+    while (exit) {
         printf("\n[KERNEL] $%s> ", current_path);
         
         char stop_chars[3] = { ENTER_BUTTON, UP_ARROW_BUTTON, '\0' };
-        char* input = input_read_stop(VISIBLE_KEYBOARD, FOREGROUND_WHITE, stop_chars);
-        char* command = input;
+        char* input        = input_read_stop(VISIBLE_KEYBOARD, FOREGROUND_WHITE, stop_chars);
+        char* command      = input;
+        int last_char      = max(0, strlen(input) - 2);
 
-        if (input[max(0, strlen(input) - 1)] == UP_ARROW_BUTTON) {
+        if (input[last_char] == UP_ARROW_BUTTON) {
             char* saved_command = command_buffer[max(0, --current_command)];
             if (saved_command != NULL) {
                 command = saved_command;
@@ -27,6 +28,8 @@ void main(int args, char* argv[]) {
 
             if (current_command < 0) current_command = 0;
         }
+
+        input[last_char] = '\0';
 
         if (current_command >= COMMAND_BUFFER) {
             free(command_buffer[0]);
@@ -45,7 +48,7 @@ void main(int args, char* argv[]) {
 }
 
 void shell_start_screen() {
-    printf("Cordell KShell [ver. 0.4a | 28.02.2024]\n");
+    printf("Cordell Shell [ver. 0.4a | 29.02.2024]\n");
     printf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n");
 }
 
@@ -108,15 +111,15 @@ void shell_start_screen() {
                 uint32_t fs_data[8];
                 get_fs_info(fs_data);
 
-                printf("\nDISK-DATA KERNEL UTILITY VER 0.2c\n");
-                printf("DEV:                  [%s]\n", (char*)fs_data[0]);
-                printf("FS TYPE:              [%s]\n", (char*)fs_data[1]);
-                printf("FAT TYPE:             [%i]\n", fs_data[2]);
-                printf("TOTAL CLUSTERS x32:   [%i]\n", fs_data[3]);
-                printf("TOTAL SECTORS x32:    [%i]\n", fs_data[4]);
-                printf("BYTES PER SECTOR x32: [%i]\n", fs_data[5]);
-                printf("SECTORS PER CLUSTER:  [%i]\n", fs_data[6]);
-                printf("FAT TABLE SIZE:       [%i]\n", fs_data[7]);
+                printf("\nUTILITY KERNEL DISCO-DATI VER 0.2c\n");
+                printf("DEV:                             [%s]\n", (char*)fs_data[0]);
+                printf("FS TYPE:                         [%s]\n", (char*)fs_data[1]);
+                printf("FAT TYPE:                        [%i]\n", fs_data[2]);
+                printf("CLUSTER TOTALI x32:              [%i]\n", fs_data[3]);
+                printf("TOTALE SETTORI x32:              [%i]\n", fs_data[4]);
+                printf("BYTE PER SETTORE x32:            [%i]\n", fs_data[5]);
+                printf("SETTORI PER CLUSTER:             [%i]\n", fs_data[6]);
+                printf("DIMENSIONE DELLA TABELLA GRASSO: [%i]\n", fs_data[7]);
             }
 
             else if (strstr(command_line[0], COMMAND_TIME) == 0) {
@@ -252,9 +255,9 @@ void shell_start_screen() {
                 get_ip(ip);
                 get_mac(mac);
 
-                printf("\nIPCONF KERNEL UTILITY VER 0.2a\n");
-                printf("\nCURRENT IP: %i.%i.%i.%i", ip[0], ip[1], ip[2], ip[3]);
-                printf("\nCURRENT MAC: %x.%x.%x.%x.%x.%x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+                printf("\nUTILITA` KERNEL IPCONF VERSIONE 0.2a\n");
+                printf("\nIP ATTUALE: %i.%i.%i.%i", ip[0], ip[1], ip[2], ip[3]);
+                printf("\nMAC ATTUALE: %x.%x.%x.%x.%x.%x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
             }
 
             else if (strstr(command_line[0], COMMAND_SEND_PACKET) == 0) {
@@ -265,7 +268,7 @@ void shell_start_screen() {
                 uint16_t dst_port = atoi(command_line[5]);
                 uint16_t src_port = atoi(command_line[6]);
 
-                printf("\nTRANSFERING [%s] FROM [%i.%i.%i.%i:%i] TO [%i.%i.%i.%i:%i]",
+                printf("\nTRASFERIMENTO [%s] DA [%i.%i.%i.%i:%i] A [%i.%i.%i.%i:%i]",
                                                 command_line[7], ip[0], ip[1], ip[2], ip[3], src_port,
                                                 dst_ip[0], dst_ip[1], dst_ip[2], dst_ip[3], dst_port);
                 send_udp_packet(dst_ip, src_port, dst_port, command_line[7], strlen(command_line[7]));
@@ -276,11 +279,11 @@ void shell_start_screen() {
                 pop_received_udp_packet(buffer);
 
                 printf("\n");
-                printf("RECEIVED UDP PACKET STR:       [%s]\n", (char*)buffer);
-                printf("RECEIVED UDP PACKET UINT:      [%u]\n", buffer);
-                printf("RECEIVED UDP PACKET INT:       [%i]\n", buffer);
-                printf("RECEIVED UDP PACKET HEX:       [%x]\n", buffer);
-                printf("RECEIVED UDP PACKET POINTER:   [%p]\n", buffer);
+                printf("RICEVUTO PACCHETTO UDP STR:       [%s]\n", (char*)buffer);
+                printf("RICEVUTO PACCHETTO UDP UINT:      [%u]\n", buffer);
+                printf("RICEVUTO PACCHETTO UDP INT:       [%i]\n", buffer);
+                printf("RICEVUTO PACCHETTO UDP HEX:       [%x]\n", buffer);
+                printf("RICEVUTO PACCHETTO UDP POINTER:   [%p]\n", buffer);
             }
 
         //====================

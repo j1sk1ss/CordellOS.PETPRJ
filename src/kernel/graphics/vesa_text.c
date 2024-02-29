@@ -103,6 +103,11 @@ void VESA_set_cursor(uint8_t x, uint8_t y) {
     cursor_y = y * CHAR_Y;
 }
 
+void VESA_set_cursor32(uint32_t x, uint32_t y) {
+    cursor_x = x;
+    cursor_y = y;
+}
+
 void VESA_clrscr() {
     Point fpoint, spoint;
     
