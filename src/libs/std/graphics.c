@@ -246,3 +246,27 @@ void unload_text(struct text_object* text)  {
     free(text->text);
     free(text);
 }
+
+uint32_t blend_colors(uint32_t first_color, uint32_t second_color) {
+    uint32_t first_alpha = GET_ALPHA(first_color);
+    uint32_t first_red   = GET_RED(first_color);
+    uint32_t first_green = GET_GREEN(first_color);
+    uint32_t first_blue  = GET_BLUE(first_color);
+
+    uint32_t second_alpha = GET_ALPHA(second_color);
+    uint32_t second_red   = GET_RED(second_color);
+    uint32_t second_green = GET_GREEN(second_color);
+    uint32_t second_blue  = GET_BLUE(second_color);
+
+    uint32_t r = (uint32_t)((first_alpha * 1.0 / 255) * first_red);
+    uint32_t g = (uint32_t)((first_alpha * 1.0 / 255) * first_green);
+    uint32_t b = (uint32_t)((first_alpha * 1.0 / 255) * first_blue);
+
+    r = r + (((255 - first_alpha) * 1.0 / 255) * (second_alpha * 1.0 / 255)) * second_red;
+    g = g + (((255 - first_alpha) * 1.0 / 255) * (second_alpha * 1.0 / 255)) * second_green;
+    b = b + (((255 - first_alpha) * 1.0 / 255) * (second_alpha * 1.0 / 255)) * second_blue;
+
+    uint32_t new_alpha = (uint32_t)(first_alpha + ((255 - first_alpha) * 1.0 / 255) * second_alpha);
+    uint32_t color1_over_color2 = (new_alpha << 24) |  (r << 16) | (g << 8) | (b << 0);
+    return color1_over_color2;
+}

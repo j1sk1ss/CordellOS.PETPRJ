@@ -66,8 +66,6 @@ void i386_mouse_handler(Registers* regs) {
     }
 }
 
-int a = 0;
-
 void PSMS_show() {
     while (1) place();
 }

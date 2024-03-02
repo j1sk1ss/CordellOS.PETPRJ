@@ -48,6 +48,7 @@ void main(int args, char* argv[]) {
 }
 
 void shell_start_screen() {
+    printf("\n");
     printf("Cordell Shell [ver. 0.4a | 29.02.2024]\n");
     printf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n");
 }

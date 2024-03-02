@@ -1,15 +1,18 @@
 #include "../include/hal.h"
 
-#include <include/gdt.h>
-#include <include/idt.h>
-#include <include/isr.h>
-#include <include/irq.h>
-
-#include <include/vga_text.h>
-
 void HAL_initialize() {
     i386_gdt_initialize();
+    kprintf("GDT initialized\n");
+
     i386_idt_initialize();
+    kprintf("IDT initialized\n");
+
     i386_isr_initialize();
+    kprintf("ISR initialized\n");
+
     i386_irq_initialize();
+    kprintf("IRQ initialized\n");
+
+    TSS_init(5, 0x10, 0);
+    kprintf("TSS initialized\n");
 }

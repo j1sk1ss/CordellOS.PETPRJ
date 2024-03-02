@@ -1,7 +1,4 @@
 #include <stdint.h>
-#include <bitmap.h>
-#include <graphics.h>
-#include <window.h>
 
 #include "include/hal.h"
 #include "include/fat.h"
@@ -21,6 +18,7 @@
 #include "include/arp.h"
 #include "include/dhcp.h"
 #include "include/udp.h"
+#include "include/tss.h"
 
 #include "multiboot.h"
 
@@ -44,7 +42,7 @@ extern uint32_t kernel_end;
 //======================================================================================================================================
 //      1) Multiboot struct                                       [V]   1) Physical memory manager                                   | |
 //      2) Phys and Virt manages                                  [V]   2) Virtual memory manager (paging)                           | |
-//          2.0) Make page and phys prints for debug              [?]   3) Multitasking                                              | |
+//          2.0) Make page and phys prints for debug              [V]   3) Multitasking                                              | |
 //      3) ELF check v_addr                                       [V]   4) Syscalls                                                  | |
 //          3.1) Fix global and static vars                       [V]       4.0) Std libs for userl programs                         | |
 //          3.2) Loading ELF without malloc for fdata             [V]       4.1) Cordell-ASM compiler                                | |
@@ -92,7 +90,8 @@ extern uint32_t kernel_end;
 //      12) KShell to ELF program                                 [V]
 //          12.0) KShell save commands to cash                    [V]
 //          12.1) MEM-DATA progs                                  [ ]
-//      13) DOOM?                                                 [ ]
+//      13) User mode switch                                      [?]
+//      14) DOOM?                                                 [ ]
 //======================================================================================================================================
 
 
@@ -117,9 +116,9 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
 
         kprintf("\n\t = CORDELL KERNEL = \n\t =  [ ver.  10 ]  = \n\n");
         kprintf("\n\t =  GENERAL INFO  = \n");
-        kprintf("MB FLAGS:        [0x%u]\n", mb_info->flags);
+        kprintf("MB FLAGS:        [0x%p]\n", mb_info->flags);
         kprintf("MEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
-        kprintf("BOOT DEVICE:     [0x%u]\n", mb_info->boot_device);
+        kprintf("BOOT DEVICE:     [0x%p]\n", mb_info->boot_device);
         kprintf("CMD LINE:        [%s]\n", mb_info->cmdline);
         kprintf("VBE MODE:        [%u]\n", mb_info->vbe_mode);
 
@@ -261,6 +260,10 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
     // Kernel shell part
     //===================
+
+        uint32_t current_esp;
+        asm ("mov %%esp, %0" : "=r"(current_esp));
+        TSS_set_stack(0x10, current_esp);
 
         if (FAT_content_exists(CONFIG_PATH) == 1) {
             struct FATContent* boot_config = FAT_get_content(CONFIG_PATH);

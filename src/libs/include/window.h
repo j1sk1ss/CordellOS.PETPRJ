@@ -24,3 +24,6 @@ struct window* create_window(char* name, int pid, int x, int y, int height, int 
 void add_window(struct window* window);
 void display_window(struct window* window);
 void unload_window(struct window* window);
+
+struct window* add_text2window(struct window* window, struct text_object* text);
+struct window* add_object2window(struct window* window, struct GUIobject* object);

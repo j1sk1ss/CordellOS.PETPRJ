@@ -25,9 +25,7 @@ void add_window(struct window* window) {
     if (windows == NULL) windows = window;
     else {
         struct window* cur = windows;
-        while (cur->next != NULL) 
-            cur = cur->next;
-
+        while (cur->next != NULL) cur = cur->next;
         cur->next = window;
     }
 }
@@ -49,4 +47,14 @@ void display_window(struct window* window) {
 void unload_window(struct window* window) {
     if (window->objects != NULL) unload_gui_object(window->objects);
     free(window);
+}
+
+struct window* add_text2window(struct window* window, struct text_object* text) {
+    window->objects = object_add_text(window->objects, text);
+    return window;
+}
+
+struct window* add_object2window(struct window* window, struct GUIobject* object) {
+    window->objects = object_add_children(window->objects, object);
+    return window;
 }
