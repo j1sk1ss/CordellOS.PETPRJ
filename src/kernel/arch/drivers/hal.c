@@ -1,4 +1,4 @@
-#include "../include/hal.h"
+#include "../../include/hal.h"
 
 void HAL_initialize() {
     i386_gdt_initialize();

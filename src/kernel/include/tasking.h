@@ -10,6 +10,7 @@
 #include "x86.h"
 #include "stdio.h"
 #include "irq.h"
+#include "virt_manager.h"
 
 
 #define TASKS_MAX             10

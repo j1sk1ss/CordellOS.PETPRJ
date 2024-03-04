@@ -17,7 +17,7 @@ extern uint32_t max_blocks;
 extern uint32_t used_blocks;
 
 
-void initialize_memory_manager(const uint32_t start_address, const uint32_t size);
+void PMM_init(const uint32_t start_address, const uint32_t size);
 void initialize_memory_region(const uint32_t base_address, const uint32_t size);
 void deinitialize_memory_region(const uint32_t base_address, const uint32_t size);
 

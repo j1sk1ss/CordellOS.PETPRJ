@@ -11,6 +11,8 @@ int32_t __cursor_bitmap__[] = {
     TRANSPARENT, WHITE, WHITE, TRANSPARENT, TRANSPARENT,
 };
 
+int show_mouse = 0;
+
 
 void i386_mouse_wait(uint8_t a_type) {
 	uint32_t timeout = 100000;
@@ -64,10 +66,8 @@ void i386_mouse_handler(Registers* regs) {
 
         status = i386_inb(MOUSE_STATUS);
     }
-}
 
-void PSMS_show() {
-    while (1) place();
+    if (show_mouse == 1) place();
 }
 
 void place() {

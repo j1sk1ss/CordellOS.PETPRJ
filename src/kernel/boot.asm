@@ -9,6 +9,11 @@ MBFLAGS  equ  MBALIGN | MEMINFO | VBEMODE
 MAGIC    equ  0x1BADB002
 CHECKSUM equ -(MAGIC + MBFLAGS)
  
+; Some constants for loading higher half kernel
+VM_BASE     equ 0xC0000000
+PDE_INDEX   equ (VM_BASE >> 22)
+PSE_BIT     equ 0x00000010
+PG_BIT      equ 0x80000000
 
 ; ============================
 ;	MB STRUCT HEADER
@@ -42,7 +47,7 @@ CHECKSUM equ -(MAGIC + MBFLAGS)
 section .bss
 align 16
 stack_bottom:
-resb 16384 ; 16 KiB
+	resb 16384 ; 16 KiB
 stack_top:
 
 section .text

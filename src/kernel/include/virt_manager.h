@@ -68,11 +68,13 @@ typedef struct {
 extern page_directory* current_page_directory;
 
 
-bool initialize_virtual_memory_manager(uint32_t kernell_address);
+bool VMM_init(uint32_t kernell_address);
+page_directory* create_page_directory();
 
 pt_entry* get_pt_entry(page_table* pt, virtual_address address);
 pd_entry* get_pd_entry(page_table* pd, virtual_address address);
 pt_entry* get_page(const virtual_address address);
+pt_entry* get_page_in_dir(const virtual_address address, page_directory* dir);
 
 void* allocate_page(pt_entry* page);
 void free_page(pt_entry* page);
@@ -81,7 +83,11 @@ bool set_page_directory(page_directory* pd);
 void flush_tlb_entry(virtual_address address);
 
 bool map_page(void* phys_address, void* virt_address);
+bool map_page2dir(void* phys_address, void* virt_address, page_directory* dir);
 void unmap_page(void* virt_address);
+void unmap_page_in_dir(void* virt_address, page_directory* dir);
 
 physical_address virtual2physical(void* virt_address);
+void copy_page_directory(page_directory* src, page_directory* dest);
+
 void print_page_map(char arg);

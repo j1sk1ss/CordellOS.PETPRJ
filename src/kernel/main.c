@@ -30,9 +30,7 @@
 #define CONFIG_ENABLED  '1'
 #define CONFIG_DISABLED '0'
 
-
-extern uint32_t kernel_base;
-extern uint32_t kernel_end;
+#define MMAP_LOCATION   0x30000
 
 
 //======================================================================================================================================
@@ -57,41 +55,42 @@ extern uint32_t kernel_end;
 //      6) Keyboard to int                                        [V]       12.0) DHCP                                               | |
 //      7) Reboot outportb(0x64, 0xFE);                           [V]       12.1) UDP                                                | |
 //      8) Mouse support                                          [V]       12.2) ARP                                                | |
-//          8.0) Std lib for graphics                             [V]       12.3) RLT8139 driver                                     | |
-//              8.0.0) Objects                                    [V]   13) Windows
-//              8.0.1) Click event                                [V]
-//          8.1) Loading BMP without malloc for fdata             [V]
-//          8.1) Syscalls to std libs                             [V]
-//              8.1.0) Syscalls for content change                [V]
-//              8.1.1) Syscalls for content delete                [V]
-//              8.1.2) Syscalls for kmallocp and freep            [V]
-//          8.2) VBE userland                                     [ ]
-//              8.2.0) VBE file manager                           [?]
-//              8.2.1) VBE text editor                            [?]
-//      9) Malloc optimization                                    [ ]
-//          9.0) Free pages when they are unused                  [ ]
-//      10) Bugs                                                  [?]
-//          10.0) Tasking page fault (In case when we use more    [?]
+//      9) Std lib for graphics                                   [V]       12.3) RLT8139 driver                                     | |
+//          8.0.0) Objects                                        [V]   13) Windows
+//          8.0.1) Click event                                    [V]
+//      10) Mouse to int                                          [ ]
+//      11) Loading BMP without malloc for fdata                  [V]
+//      12) Syscalls to std libs                                  [V]
+//          12.0) Syscalls for content change                     [V]
+//          12.1) Syscalls for content delete                     [V]
+//          12.2) Syscalls for kmallocp and freep                 [V]
+//      13) VBE userland                                          [ ]
+//          13.0) VBE file manager                                [?]
+//          13.1) VBE text editor                                 [?]
+//      14) Malloc optimization                                   [ ]
+//          14.0) Free pages when they are unused                 [ ]
+//      15) Bugs                                                  [?]
+//          15.0) Tasking page fault (In case when we use more    [?]
 //                then one task)                                  | |
-//          10.1) Mouse page fault                                [?]
-//          10.2) Tasking with page allocator                     [V]
-//      11) Ethernet                                              [?]
-//          11.0) ethernet                                        [?]
-//              11.0.0) Send packets                              [V]
-//              11.0.1) Receive packets                           [V]
-//              11.0.2) DHCP                                      [V]
-//              11.0.3) Sending data                              [V]
-//                  11.0.3.0) Sending normal data (ndummy)        [V]
-//          11.1) IP Udp, Arp                                     [V]
-//          11.2) Receive data on Host server                     [V]
-//          11.3) STD libs for networking                         [V]
-//          11.4) TCP                                             [?]
-//          11.5) Host sending to VK/TG etc                       [ ]
-//      12) KShell to ELF program                                 [V]
-//          12.0) KShell save commands to cash                    [V]
-//          12.1) MEM-DATA progs                                  [ ]
-//      13) User mode switch                                      [?]
-//      14) DOOM?                                                 [ ]
+//          15.1) Mouse page fault                                [?]
+//          15.2) Tasking with page allocator                     [V]
+//      16) Ethernet                                              [?]
+//          16.0) ethernet                                        [V]
+//              16.0.0) Send packets                              [V]
+//              16.0.1) Receive packets                           [V]
+//              16.0.2) DHCP                                      [V]
+//              16.0.3) Sending data                              [V]
+//                  16.0.3.0) Sending normal data (ndummy)        [V]
+//          16.1) IP Udp, Arp                                     [V]
+//          16.2) Receive data on Host server                     [V]
+//          16.3) STD libs for networking                         [V]
+//          16.4) TCP                                             [?]
+//          16.5) Host sending to VK/TG etc                       [ ]
+//      17) KShell to ELF program                                 [V]
+//          17.0) KShell save commands to cash                    [V]
+//          17.1) MEM-DATA progs                                  [ ]
+//      18) User mode switch                                      [?]
+//      19) DOOM?                                                 [ ]
 //======================================================================================================================================
 
 
@@ -114,7 +113,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         if (mb_info->vbe_mode != TEXT_MODE) GFX_init(mb_info);
         else _screenBuffer = mb_info->framebuffer_addr;
 
-        kprintf("\n\t = CORDELL KERNEL = \n\t =  [ ver.  10 ]  = \n\n");
+        kprintf("\n\t = CORDELL KERNEL = \n\t =  [ ver.  11 ]  = \n\n");
         kprintf("\n\t =  GENERAL INFO  = \n");
         kprintf("MB FLAGS:        [0x%p]\n", mb_info->flags);
         kprintf("MEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
@@ -123,7 +122,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         kprintf("VBE MODE:        [%u]\n", mb_info->vbe_mode);
 
         kprintf("\n\t =    VBE INFO    = \n");
-        kprintf("VBE FRAMEBUFFER: [%u]\n", mb_info->framebuffer_addr);
+        kprintf("VBE FRAMEBUFFER: [%p]\n", mb_info->framebuffer_addr);
         kprintf("VBE Y:           [%u]\n", mb_info->framebuffer_height);
         kprintf("VBE X:           [%u]\n", mb_info->framebuffer_width);
         kprintf("VBE BPP:         [%u]\n", mb_info->framebuffer_bpp);
@@ -135,7 +134,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
     
         uint32_t total_memory = mb_info->mem_upper + (mb_info->mem_lower << 10);
-        initialize_memory_manager(0x30000, total_memory);
+        PMM_init(MMAP_LOCATION, total_memory);
 
         //===================
         // Memory test
@@ -183,8 +182,8 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         //===================
 
         deinitialize_memory_region(0x1000, 0x11000);
-        deinitialize_memory_region(0x30000, max_blocks / BLOCKS_PER_BYTE);
-        if (initialize_virtual_memory_manager(0x100000) == false) {
+        deinitialize_memory_region(MMAP_LOCATION, max_blocks / BLOCKS_PER_BYTE);
+        if (VMM_init(0x100000) == false) {
             kprintf("[%s %i] Virtual memory can`t be init.\n",__FILE__ , __LINE__);
             goto end;
         }
@@ -209,11 +208,17 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         //===================
 
     //===================
+
+    //===================
+    // Drivers
+    // - Keyboard activation
+    // - Mouse activation
+    //
     // Tasking init
     // Syscalls init
     // RTL init
     // ARP init
-    // HAL initialization
+    // HAL
     // - IRQ initialization
     // - GDT initialization
     // - IDT initialization
@@ -225,17 +230,6 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         i386_pit_init();
         i386_syscalls_init();
         i386_task_init();
-        
-    //===================
-
-    kprintf("Kernel base: %u\nKernel end: %u\n\n", &kernel_base, &kernel_end);
-
-    //===================
-    // Drivers
-    // - Keyboard activation
-    // - Mouse activation
-    //===================
-
         i386_init_keyboard();
         i386_init_mouse();
 
@@ -285,7 +279,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
             // Network initialization
             //===================
 
-            if (config[CONFIG_MOUSE] == CONFIG_ENABLED)  START_PROCESS("kmouse", PSMS_show);
+            if (config[CONFIG_MOUSE] == CONFIG_ENABLED)  show_mouse = 1;
             if (config[CONFIG_KSHELL] == CONFIG_ENABLED) START_PROCESS("kshell", FAT_ELF_execute_content("boot\\shell\\shell.elf", NULL, NULL));
 
             kfree(config);

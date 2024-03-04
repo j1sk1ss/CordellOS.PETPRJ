@@ -25,7 +25,7 @@
 		malloc_phys_address = (uint32_t)allocate_blocks(total_malloc_pages);
 		malloc_list_head    = (malloc_block_t*)malloc_virt_address;
 		if (malloc_phys_address == NULL) {
-			kprintf("Allocated error\n");
+			kprintf("\n[%s %i] Allocated error\n", __FILE__, __LINE__);
 			return;
 		}
 
@@ -53,43 +53,6 @@
 //	- Merge free blocks for merging blocks in page
 //===========================
 
-	uint32_t kmalloc_total_free() {
-		uint32_t total_free = 0;
-		if (malloc_list_head->free = true) total_free += malloc_list_head->size + sizeof(malloc_block_t);
-		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next)
-			if (cur->next != NULL)
-				if (cur->next->free == true) total_free += cur->next->size + sizeof(malloc_block_t);
-		
-		return total_free;
-	}
-
-	uint32_t kmalloc_total_avaliable() {
-		uint32_t total_free = malloc_list_head->size + sizeof(malloc_block_t);
-		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next)
-			if (cur->next != NULL)
-				total_free += cur->next->size + sizeof(malloc_block_t);
-		
-		return total_free;
-	}
-
-	void print_kmalloc_map() {
-		kprintf(
-			"\n|%i(%c)|",
-			malloc_list_head->size + sizeof(malloc_block_t),
-			malloc_list_head->free == true ? 'F' : 'O'
-		);
-
-		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next)
-			if (cur->next != NULL)
-				kprintf(
-					"%i(%c)|",
-					cur->next->size + sizeof(malloc_block_t),
-					cur->next->free == true ? 'F' : 'O'
-				);
-
-		kprintf(" TOTAL: [%iB]\n", kmalloc_total_avaliable());
-	}
-
 	void kmalloc_split(malloc_block_t* node, const uint32_t size) {
 		malloc_block_t* new_node = (malloc_block_t*)((void*)node + size + sizeof(malloc_block_t));
 
@@ -107,7 +70,6 @@
 	void* kmallocp(uint32_t v_addr) {
 		pt_entry page  = 0;
 		uint32_t* temp = allocate_page(&page);
-
 		map_page((void*)temp, (void*)v_addr);
 		SET_ATTRIBUTE(&page, PTE_READ_WRITE);
 	}
@@ -148,9 +110,9 @@
 					while (cur->size + num_pages * PAGE_SIZE < size + sizeof(malloc_block_t))
 						num_pages++;
 
-					uint32_t virt = malloc_virt_address + total_malloc_pages * PAGE_SIZE;
+					uint32_t virt = malloc_virt_address + total_malloc_pages * PAGE_SIZE; // TODO: new pages to new blocks. Don`t mix them to avoid pagedir errors in contswitch
 					for (uint8_t i = 0; i < num_pages; i++) {
-						pt_entry page = 0;
+						pt_entry page  = 0;
 						uint32_t* temp = allocate_page(&page);
 
 						map_page((void*)temp, (void*)virt);
@@ -232,4 +194,47 @@
 
 //===========================
 //	ALLOC FUNCTIONS
+//===========================
+//	INFO
+//===========================
+
+	uint32_t kmalloc_total_free() {
+		uint32_t total_free = 0;
+		if (malloc_list_head->free = true) total_free += malloc_list_head->size + sizeof(malloc_block_t);
+		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next)
+			if (cur->next != NULL)
+				if (cur->next->free == true) total_free += cur->next->size + sizeof(malloc_block_t);
+		
+		return total_free;
+	}
+
+	uint32_t kmalloc_total_avaliable() {
+		uint32_t total_free = malloc_list_head->size + sizeof(malloc_block_t);
+		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next)
+			if (cur->next != NULL)
+				total_free += cur->next->size + sizeof(malloc_block_t);
+		
+		return total_free;
+	}
+
+	void print_kmalloc_map() {
+		kprintf(
+			"\n|%i(%c)|",
+			malloc_list_head->size + sizeof(malloc_block_t),
+			malloc_list_head->free == true ? 'F' : 'O'
+		);
+
+		for (malloc_block_t* cur = malloc_list_head; cur->next; cur = cur->next)
+			if (cur->next != NULL)
+				kprintf(
+					"%i(%c)|",
+					cur->next->size + sizeof(malloc_block_t),
+					cur->next->free == true ? 'F' : 'O'
+				);
+
+		kprintf(" TOTAL: [%iB]\n", kmalloc_total_avaliable());
+	}
+
+//===========================
+//	INFO
 //===========================

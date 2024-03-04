@@ -41,10 +41,7 @@ void i386_irq_initialize() {
 
     i386_enableInterrupts();
 
-    _PICDriver->Unmask(0); // PIT
-    // _PICDriver->Unmask(1); // Keyboard
-    _PICDriver->Unmask(2);  // Mouse - 1
-    _PICDriver->Unmask(12); // Mouse - 2
+    _PICDriver->Unmask(2); // slave interrupt controller allowing for IRQ 8-15
 }
 
 void i386_irq_registerHandler(int irq, IRQHandler handler) {

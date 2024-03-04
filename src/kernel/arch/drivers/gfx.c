@@ -1,4 +1,4 @@
-#include "../include/gfx.h"
+#include "../../include/gfx.h"
 
 
 vbe_mode_info_t gfx_mode;

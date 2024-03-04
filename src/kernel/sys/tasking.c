@@ -5,7 +5,7 @@
 
 TaskManager* taskManager;
 bool tasking = false;
-uint32_t v_addr = 0x500000;
+uint32_t v_addr = 0x0C000000;
 
 
 //==================
@@ -13,7 +13,11 @@ uint32_t v_addr = 0x500000;
 //==================
 
 	void TASK_start_tasking() {
+		if (taskManager->tasksCount <= 0) return;
 		i386_disableInterrupts();
+
+		// Set task page directory
+		set_page_directory(taskManager->tasks[0]->page_directory);
 
 		// Load stack to esp
 		asm ("mov %%eax, %%esp": :"a"(taskManager->tasks[0]->cpuState->esp));
@@ -110,14 +114,21 @@ uint32_t v_addr = 0x500000;
 			// Allocate data for stack
 			//=============================
 
-				mallocp(v_addr);
-				memset(v_addr, 0, PAGE_SIZE);
+				// mallocp(v_addr);
+				// memset(v_addr, 0, PAGE_SIZE);
+				task->page_directory = create_page_directory();
+				copy_page_directory(current_page_directory, task->page_directory);
+
+				pt_entry page  = 0;
+				uint32_t* temp = allocate_page(&page);
+				map_page2dir((void*)temp, (void*)v_addr, task->page_directory);
+				SET_ATTRIBUTE(&page, PTE_READ_WRITE);
 
 				task->cpuState->esp     = v_addr;
 				task->virtual_address   = task->cpuState->esp;
 				uint32_t* stack_pointer = (uint32_t*)(task->cpuState->esp + PAGE_SIZE);
 
-				asm ("mov %%cr3, %%eax":"=a"(task->page_directory));
+				// asm ("mov %%cr3, %%eax":"=a"(task->page_directory));
 
 			//=============================
 			// Allocate data for stack
@@ -169,14 +180,12 @@ uint32_t v_addr = 0x500000;
 
 		//=============================
 		// Fill registers
-		//==============================
-
-		v_addr += PAGE_SIZE;
+		//=============================
 
 		return task;
 	}
 
-	void destroy_task(Task* task) {
+	void destroy_task(Task* task) { // TODO: Free pagedir
 		freep((uint32_t*)task->virtual_address);
 		free(task->cpuState);
 		free(task);
@@ -253,8 +262,8 @@ uint32_t v_addr = 0x500000;
 		}
 
 		if (new_task == NULL) return;
-		if (task->page_directory != new_task->page_directory)
-			asm ("mov %%eax, %%cr3": :"a"(new_task->page_directory));
+		if (task->page_directory != new_task->page_directory) 
+			set_page_directory(new_task->page_directory);
 
 		regs->esp      = new_task->cpuState->esp;
 		regs->kern_esp = new_task->cpuState->esp;

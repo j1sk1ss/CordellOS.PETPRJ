@@ -39,6 +39,9 @@ typedef struct screen_state {
 } screen_state_t;
 
 
+extern int show_mouse;
+
+
 int i386_init_mouse();
 void i386_mouse_handler(Registers* regs);
 uint8_t i386_mouse_read();
@@ -49,7 +52,6 @@ int i386_detect_ps2_mouse();
 
 mouse_state_t i386_mouse_state();
 
-void PSMS_show();
 void place();
 
 

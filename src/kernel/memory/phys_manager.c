@@ -2,9 +2,11 @@
 
 #include "../include/phys_manager.h"
 
+
 uint32_t* memory_map = 0;
 uint32_t max_blocks  = 0;
 uint32_t used_blocks = 0;
+
 
 void set_block(const uint32_t bit) {
     memory_map[bit / 32] |= (1 << (bit % 32));
@@ -37,7 +39,7 @@ int32_t find_first_free_blocks(const uint32_t num_blocks) {
     return -1;
 }
 
-void initialize_memory_manager(const uint32_t start_address, const uint32_t size) {
+void PMM_init(const uint32_t start_address, const uint32_t size) {
     memory_map  = (uint8_t*)start_address;
     max_blocks  = size / BLOCK_SIZE;
     used_blocks = max_blocks;
