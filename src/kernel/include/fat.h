@@ -1,6 +1,7 @@
 #ifndef FAT_H_
 #define FAT_H_
 
+
 #include "ata.h"       // Lib for reading and writing ATA PIO sectors
 #include "elf.h"       // Not important for base implementation. ELF executer
 #include "date_time.h" // Not important for base implementation. Date time getter from CMOS
@@ -8,6 +9,7 @@
 #include <memory.h>
 #include <stdlib.h>  // Allocators (basic malloc required)
 #include <string.h>
+
 
 #define SECTOR_OFFSET		23000
 
@@ -76,7 +78,6 @@
 
 //FAT directory and bootsector structures
 typedef struct fat_extBS_32 {
-
 	unsigned int		table_size_32;
 	unsigned short		extended_flags;
 	unsigned short		fat_version;
@@ -94,7 +95,6 @@ typedef struct fat_extBS_32 {
 } __attribute__((packed)) fat_extBS_32_t;
 
 typedef struct fat_extBS_16 {
-
 	unsigned char		bios_drive_num;
 	unsigned char		reserved1;
 	unsigned char		boot_signature;
@@ -105,7 +105,6 @@ typedef struct fat_extBS_16 {
 } __attribute__((packed)) fat_extBS_16_t;
 
 typedef struct fat_BS {
-
 	unsigned char 		bootjmp[3];
 	unsigned char 		oem_name[8];
 	unsigned short 	    bytes_per_sector;
@@ -128,7 +127,6 @@ typedef struct fat_BS {
 /* from http://wiki.osdev.org/FAT */
 
 typedef struct directory_entry {
-
 	unsigned char file_name[11];
 	unsigned char attributes;
 	unsigned char reserved0;
@@ -147,7 +145,6 @@ typedef struct directory_entry {
 } __attribute__((packed)) directory_entry_t;
 
 typedef struct fsInfo {
-
 	unsigned int  lead_signature;      //should contain 0x41615252
 	unsigned char reserved1[480];
 	
@@ -161,7 +158,6 @@ typedef struct fsInfo {
 } __attribute__((packed)) FSInfo_t;
 
 typedef struct long_entry {
-	
 	unsigned char order;
 	unsigned char first_five[10];      //first 5, 2-byte characters
 	unsigned char attributes;          //MUST BE FILE_LONG_NAME
@@ -176,44 +172,44 @@ typedef struct long_entry {
 
 /* From file_system.h (CordellOS brunch FS_based_on_FAL) */
 
-struct FATFile {
+
+typedef struct FATFile {
 	directory_entry_t file_meta;
 	void* data_pointer;
-
 	int data_size;
 	uint32_t* data;
-
 	char* extension;
 	char* name;
+    File* next;
 
-    struct FATFile* next;
-};
+} File;
 
-struct FATDirectory {
+typedef struct FATDirectory {
 	directory_entry_t directory_meta;
 	void* data_pointer;
-
 	char* name;
+	Directory* next;
+    File* files;
+    Directory* subDirectory;
 
-	struct FATDirectory* next;
-    struct FATFile* files;
-    struct FATDirectory* subDirectory;
-};
+} Directory;
 
-struct FATDate {
+typedef struct FATDate {
 	uint16_t hour;
 	uint16_t minute;
 	uint16_t second;
-
 	uint16_t year;
 	uint16_t mounth;
 	uint16_t day;
-};
 
-struct FATContent {
-	struct FATDirectory* directory;
-	struct FATFile* file;
-};
+} Date;
+
+typedef struct FATContent {
+	Directory* directory;
+	File* file;
+
+} Content;
+
 
 //Global variables
 extern unsigned int fat_size;
@@ -229,6 +225,7 @@ extern unsigned int bytes_per_sector;
 extern unsigned int sectors_per_cluster;
 
 extern unsigned int ext_root_cluster;
+
 
 //===================================
 //   _____  _    ____  _     _____ 
@@ -255,9 +252,10 @@ extern unsigned int ext_root_cluster;
 
 	unsigned int FAT_cluster_allocate();
 	int FAT_cluster_deallocate(const unsigned int cluster);
-
 	uint8_t* FAT_cluster_read(unsigned int clusterNum);
+	uint8_t* FAT_cluster_readoff(unsigned int clusterNum, uint32_t offset, uint32_t size);
 	int FAT_cluster_write(void* contentsToWrite, unsigned int clusterNum);
+	int FAT_cluster_writeoff(void* contentsToWrite, unsigned int clusterNum, uint32_t offset, uint32_t size);
 	int FAT_cluster_clear(unsigned int clusterNum);
 
 //===================================
@@ -271,12 +269,12 @@ extern unsigned int ext_root_cluster;
 //  |_____|_| \_| |_| |_| \_\|_| 
 //===================================
 
-	struct FATDirectory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, short exclusive);
+	Directory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, short exclusive);
 	int FAT_directory_search(const char* filepart, const unsigned int cluster, directory_entry_t* file, unsigned int* entryOffset);
 	int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add);
 	int FAT_directory_remove(const unsigned int cluster, const char* fileName);
 	int FAT_directory_edit(const unsigned int cluster, directory_entry_t* oldMeta, directory_entry_t* newMeta);
-	struct directory_entry* FAT_create_entry(const char* filename, const char* ext, BOOL isDir, uint32_t firstCluster, uint32_t filesize);
+	directory_entry_t* FAT_create_entry(const char* filename, const char* ext, BOOL isDir, uint32_t firstCluster, uint32_t filesize);
 
 //===================================
 
@@ -290,13 +288,14 @@ extern unsigned int ext_root_cluster;
 //===================================
 
 	int FAT_content_exists(const char* filePath);
-	struct FATContent* FAT_get_content(const char* filePath);
-	char* FAT_read_content(struct FATContent* data);
-	void FAT_read_content2buffer(struct FATContent* data, uint8_t* buffer, uint32_t offset, uint32_t size);
-	int FAT_put_content(const char* filePath, struct FATContent* content);
+	Content* FAT_get_content(const char* filePath);
+	char* FAT_read_content(Content* data);
+	void FAT_read_content2buffer(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size);
+	int FAT_put_content(const char* filePath, Content* content);
 	int FAT_delete_content(const char* filePath, const char* name);
-	struct FATContent* FAT_create_content(char* name, BOOL directory, char* extension);
+	Content* FAT_create_content(char* name, BOOL directory, char* extension);
 	void FAT_edit_content(const char* filePath, char* newData);
+	void FAT_buffer2content(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size);
 	int FAT_ELF_execute_content(char* path, int args, char* argv[]);
 	int FAT_change_meta(const char* filePath, directory_entry_t* newMeta);
 
@@ -319,11 +318,11 @@ extern unsigned int ext_root_cluster;
 	BOOL FAT_name_check(char * input);
 	char* FAT_name2fatname(char* input);
 	void FAT_fatname2name(char* input, char* output);
-	struct FATDate* FAT_get_date(short data, int type);
+	Date* FAT_get_date(short data, int type);
 
-	void FAT_unload_directories_system(struct FATDirectory* directory);
-	void FAT_unload_files_system(struct FATFile* file);
-	void FAT_unload_content_system(struct FATContent* content);
+	void FAT_unload_directories_system(Directory* directory);
+	void FAT_unload_files_system(File* file);
+	void FAT_unload_content_system(Content* content);
 
 //===================================
 

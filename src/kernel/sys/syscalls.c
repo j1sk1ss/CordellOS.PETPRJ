@@ -208,7 +208,7 @@ void syscall(Registers* regs) {
 
         else if (regs->eax == SYS_READ_FILE) {
             char* rfile_path           = (char*)regs->ebx;
-            struct FATContent* content = current_vfs->getobj(rfile_path);
+            Content* content = current_vfs->getobj(rfile_path);
             regs->eax                  = (uint32_t)current_vfs->read(content);
             FATLIB_unload_content_system(content);
         } 
@@ -250,7 +250,7 @@ void syscall(Registers* regs) {
             char* fname = strtok(mkfile_name, ".");
             char* fexec = strtok(NULL, "."); 
 
-            struct FATContent* mkfile_content = current_vfs->crobj(fname, FALSE, fexec);
+            Content* mkfile_content = current_vfs->crobj(fname, FALSE, fexec);
 
             current_vfs->putobj(mkfile_path, mkfile_content);
             FATLIB_unload_files_system(mkfile_content);
@@ -260,7 +260,7 @@ void syscall(Registers* regs) {
             char* mkdir_path = (char*)regs->ebx;
             char* mkdir_name = (char*)regs->ecx;
 
-            struct FATContent* mkdir_content = current_vfs->crobj(mkdir_name, TRUE, "");
+            Content* mkdir_content = current_vfs->crobj(mkdir_name, TRUE, "");
 
             current_vfs->putobj(mkdir_path, mkdir_content);
             FATLIB_unload_files_system(mkdir_content);
@@ -279,7 +279,7 @@ void syscall(Registers* regs) {
         } 
 
         else if (regs->eax == SYS_READ_FILE_OFF) {
-            struct FATContent* read_off_file = (struct FATContent*)regs->ebx;
+            Content* read_off_file = (Content*)regs->ebx;
             int offset                       = (int)regs->ecx;
             uint8_t* offset_buffer           = (uint8_t*)regs->edx;
             int offset_len                   = (int)regs->esi;

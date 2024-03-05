@@ -1,6 +1,7 @@
 #ifndef __ATA_H__
 #define __ATA_H__
 
+
 #include <stdint.h>
 #include <memory.h>
 #include <stdlib.h>
@@ -134,7 +135,9 @@ uint8_t* ATA_read_sector(uint32_t lba);
 uint8_t* ATA_read_sectors(uint32_t lba, uint32_t sector_count);
 
 int ATA_write_sector(uint32_t lba, const uint8_t* buffer);
-char* ATA_write_sectors(uint32_t lba, const uint8_t* buffer, uint32_t sector_count);
+int ATA_writeoff_sector(uint32_t lba, const uint8_t* buffer, uint32_t offset, uint32_t size);
+int ATA_write_sectors(uint32_t lba, const uint8_t* buffer, uint32_t sector_count);
+int ATA_writeoff_sectors(uint32_t lba, const uint8_t* buffer, uint32_t sector_count, uint32_t offset, uint32_t size);
 
 void ATA_append_sector(uint32_t lba, char* append_data);
 int ATA_clear_sector(uint32_t LBA);

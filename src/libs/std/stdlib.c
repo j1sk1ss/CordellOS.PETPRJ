@@ -181,7 +181,7 @@ char* fread(const char* path) {
 // ECX - data offset
 // EDX - buffer pointer
 // ESI - buffer len / data len
-void fread_off(struct UFATContent* content, int offset, uint8_t* buffer, int len) {
+void fread_off(UContent* content, int offset, uint8_t* buffer, int len) {
     __asm__ volatile(
         "movl $33, %%eax\n"
         "movl %0, %%ebx\n"
@@ -215,8 +215,8 @@ void fwrite(const char* path, const char* data) {
 //  Returns linked list of dir content by path
 //  EBX - path
 //  ECX - pointer to directory
-struct UFATDirectory* opendir(const char* path) {
-    struct UFATDirectory* directory;
+UDirectory* opendir(const char* path) {
+    UDirectory* directory;
     __asm__ volatile(
         "movl $11, %%eax\n"
         "movl %1, %%ebx\n"
@@ -235,8 +235,8 @@ struct UFATDirectory* opendir(const char* path) {
 //  Returns linked list of dir content by path
 //  EBX - path
 //  ECX - pointer to directory
-struct UFATContent* get_content(const char* path) {
-    struct UFATContent* content;
+UContent* get_content(const char* path) {
+    UContent* content;
     __asm__ volatile(
         "movl $30, %%eax\n"
         "movl %1, %%ebx\n"
@@ -323,7 +323,7 @@ void rmcontent(const char* path, const char* name) {
 // This function change content meta by path
 // EBX - path
 // ECX - new meta
-void chgcontent(const char* path, struct udirectory_entry* meta) {
+void chgcontent(const char* path, udirectory_entry_t* meta) {
     __asm__ volatile(
         "movl $25, %%eax\n"
         "movl %0, %%ebx\n"

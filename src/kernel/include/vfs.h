@@ -12,17 +12,17 @@
 #define EXT2_FS     1
 
 
-typedef char* (*file_read)(struct UFATContent*);
-typedef void (*file_read_offset)(struct UFATContent*, uint8_t*, uint32_t, uint32_t);
+typedef char* (*file_read)(Content*);
+typedef void (*file_read_offset)(Content*, uint8_t*, uint32_t, uint32_t);
 typedef void (*file_write)(const char*, char*);
-typedef struct FATDirectory* (*open_dir)(const unsigned int, unsigned char, short);
-typedef struct FATContent* (*get_object)(const char*);
+typedef Directory* (*open_dir)(const unsigned int, unsigned char, short);
+typedef Content* (*get_object)(const char*);
 typedef int (*object_exists)(const char*);
-typedef int (*put_object)(const char*, struct UFATContent*);
+typedef int (*put_object)(const char*, Content*);
 typedef int (*delete_object)(const char*, const char*);
-typedef struct FATContent* (*create_object)(char*, short, char*);
+typedef Content* (*create_object)(char*, short, char*);
 typedef int (*object_execute)(char*, int, char*);
-typedef int (*object_meta_change)(const char*, udirectory_entry_t*);
+typedef int (*object_meta_change)(const char*, directory_entry_t*);
 
 
 typedef struct vfs_node {

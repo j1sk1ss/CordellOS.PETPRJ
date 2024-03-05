@@ -1,7 +1,7 @@
 #include "../include/fatlib.h"
 
 
-void FATLIB_unload_directories_system(struct UFATDirectory* directory) {
+void FATLIB_unload_directories_system(UDirectory* directory) {
     if (directory == NULL) return;
     if (directory->files != NULL) FATLIB_unload_files_system(directory->files);
     if (directory->subDirectory != NULL) FATLIB_unload_directories_system(directory->subDirectory);
@@ -12,7 +12,7 @@ void FATLIB_unload_directories_system(struct UFATDirectory* directory) {
     free(directory);
 }
 
-void FATLIB_unload_files_system(struct UFATFile* file) {
+void FATLIB_unload_files_system(UFile* file) {
     if (file == NULL) return;
     if (file->next != NULL) FATLIB_unload_files_system(file->next);
     if (file->data_pointer != NULL) free(file->data_pointer);
@@ -23,7 +23,7 @@ void FATLIB_unload_files_system(struct UFATFile* file) {
     free(file);
 }
 
-void FATLIB_unload_content_system(struct UFATContent* content) {
+void FATLIB_unload_content_system(UContent* content) {
     if (content == NULL) return;
     if (content->directory != NULL) FATLIB_unload_directories_system(content->directory);
     if (content->file != NULL) FATLIB_unload_files_system(content->file);
@@ -31,8 +31,8 @@ void FATLIB_unload_content_system(struct UFATContent* content) {
     free(content);
 }
 
-struct UFATDate* FATLIB_get_date(short data, int type) {
-    struct UFATDate* date = malloc(sizeof(struct UFATDate));
+UDate* FATLIB_get_date(short data, int type) {
+    UDate* date = malloc(sizeof(struct UFATDate));
     switch (type) {
         case 1: // date
             date->year   = ((data >> 9) & 0x7F) + 1980;
@@ -253,8 +253,8 @@ int FATLIB_name_check(char * input) {
     return retVal;
 }
 
-struct udirectory_entry* FATLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize) {
-    struct udirectory_entry* data = malloc(sizeof(struct udirectory_entry));
+udirectory_entry_t* FATLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize) {
+    udirectory_entry_t* data = malloc(sizeof(struct udirectory_entry));
 
     data->reserved0 				= 0; 
     data->creation_time_tenths 		= 0;

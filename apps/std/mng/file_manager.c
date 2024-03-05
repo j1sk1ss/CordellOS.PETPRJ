@@ -24,7 +24,7 @@
 
 
 int row_position = 1;
-struct UFATContent* current_directory;
+UContent* current_directory;
 
 int upper_border = 0;
 int down_border = 14;
@@ -149,8 +149,8 @@ void execute_item(char action_type, char** path) {
     //=====================
 
         int rows = 1;
-        struct UFATDirectory* currentDir = opendir(*path);
-        struct UFATDirectory* subdir     = currentDir->subDirectory;
+        UDirectory* currentDir = opendir(*path);
+        UDirectory* subdir     = currentDir->subDirectory;
         while (subdir != NULL) {
             if (rows++ == row_position) {
                 if (action_type == ENTER_BUTTON) 
@@ -196,7 +196,7 @@ void execute_item(char action_type, char** path) {
     //  SELECTED FILE
     //=========================
 
-        struct UFATFile* currentFile = currentDir->files;
+        UFile* currentFile = currentDir->files;
         while (currentFile != NULL) {
 
             char name[25]; 
@@ -425,8 +425,8 @@ void print_directory_data(char* path) {
         rows++;
     }
 
-    struct UFATDirectory* currentDir = opendir(path);
-    struct UFATDirectory* subdirs    = currentDir->subDirectory;
+    UDirectory* currentDir = opendir(path);
+    UDirectory* subdirs    = currentDir->subDirectory;
     while (subdirs != NULL) {
         char name[12];
         name[11] = '\0';
@@ -442,7 +442,7 @@ void print_directory_data(char* path) {
         subdirs = subdirs->next;
     }
 
-    struct UFATFile* currentFile = currentDir->files;
+    UFile* currentFile = currentDir->files;
     while (currentFile != NULL) {
 
         //=========================
@@ -464,9 +464,9 @@ void print_directory_data(char* path) {
             strncpy(file_size, file_size_str, 10);
             strcat(file_size, "B");
 
-            struct UFATDate* creation_date     = FATLIB_get_date(currentFile->file_meta.creation_date, 1);
-            struct UFATDate* modification_date = FATLIB_get_date(currentFile->file_meta.last_modification_date, 1);
-            struct UFATDate* access_date       = FATLIB_get_date(currentFile->file_meta.last_accessed, 1);
+            UDate* creation_date     = FATLIB_get_date(currentFile->file_meta.creation_date, 1);
+            UDate* modification_date = FATLIB_get_date(currentFile->file_meta.last_modification_date, 1);
+            UDate* access_date       = FATLIB_get_date(currentFile->file_meta.last_accessed, 1);
 
             for (size_t i = strlen(file_name); i < 11; i++) file_name[i] = ' ';
             for (size_t i = strlen(file_extension); i < 4; i++) file_extension[i] = ' ';

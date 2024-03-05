@@ -43,7 +43,7 @@ typedef struct udirectory_entry {
 	unsigned int file_size;
 } __attribute__((packed)) udirectory_entry_t;
 
-struct UFATFile {
+typedef struct UFATFile {
 	udirectory_entry_t file_meta;
 	void* data_pointer;
 
@@ -53,21 +53,21 @@ struct UFATFile {
 	char* extension;
 	char* name;
 
-    struct UFATFile* next;
-};
+    UFile* next;
+} UFile;
 
-struct UFATDirectory {
+typedef struct UFATDirectory {
 	udirectory_entry_t directory_meta;
 	void* data_pointer;
 
 	char* name;
 
-	struct UFATDirectory* next;
-    struct UFATFile* files;
-    struct UFATDirectory* subDirectory;
-};
+	UDirectory* next;
+    UFile* files;
+    UDirectory* subDirectory;
+} UDirectory;
 
-struct UFATDate {
+typedef struct UFATDate {
 	uint16_t hour;
 	uint16_t minute;
 	uint16_t second;
@@ -75,25 +75,25 @@ struct UFATDate {
 	uint16_t year;
 	uint16_t mounth;
 	uint16_t day;
-};
+} UDate;
 
-struct UFATContent {
-	struct UFATDirectory* directory;
-	struct UFATFile* file;
-};
+typedef struct UFATContent {
+	UDirectory* directory;
+	UFile* file;
+} UContent;
 
 
-void FATLIB_unload_directories_system(struct UFATDirectory* directory);
-void FATLIB_unload_files_system(struct UFATFile* file);
-void FATLIB_unload_content_system(struct UFATContent* content);
+void FATLIB_unload_directories_system(UDirectory* directory);
+void FATLIB_unload_files_system(UFile* file);
+void FATLIB_unload_content_system(UContent* content);
 
 char* FATLIB_change_path(const char* currentPath, const char* content);
 
-struct UFATDate* FATLIB_get_date(short data, int type);
+UDate* FATLIB_get_date(short data, int type);
 
 void FATLIB_fatname2name(char* input, char* output);
 char* FATLIB_name2fatname(char* input);
 
-struct udirectory_entry* FATLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+udirectory_entry_t* FATLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
 
 #endif

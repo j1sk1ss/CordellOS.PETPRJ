@@ -25,16 +25,16 @@ void freep(void* ptr);
 
 int cexists(const char* path);
 void rmcontent(const char* path, const char* name);
-void chgcontent(const char* path, struct udirectory_entry* meta);
+void chgcontent(const char* path, udirectory_entry_t* meta);
 
 char* fread(const char* path);
-void fread_off(struct UFATContent* content, int offset, uint8_t* buffer, int len);
+void fread_off(UContent* content, int offset, uint8_t* buffer, int len);
 void fwrite(const char* path, const char* data);
 void mkfile(const char* path, const char* name);
 int fexec(char* path, int args, char** argv);
 
-struct UFATDirectory* opendir(const char* path);
-struct UFATContent* get_content(const char* path);
+UDirectory* opendir(const char* path);
+UContent* get_content(const char* path);
 void mkdir(const char* path, const char* name);
 
 void machine_restart();

@@ -3,7 +3,7 @@
 
 bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
     bitmap_t* ret = malloc(sizeof(bitmap_t));
-    struct UFATContent* content = get_content(file_path);
+    UContent* content = get_content(file_path);
     if (content->file == NULL) {
         printf("File not found\n");
         BMP_unload(ret);

@@ -2,6 +2,7 @@
 #include <rand.h>
 #include <fatlib.h>
 #include <string.h>
+#include <stdlib.h>
 
 
 #define V 21
@@ -63,6 +64,11 @@ int main(int args, char* argv[]) {
 	show(map);
 	loop(map);
 
+	if (cexists("boot\\games\\snake\\save.snk") != 1) mkfile("boot\\games\\snake", "snake.snk");
+	char* result = itoa(snake_size - 4);
+	fwrite("boot\\games\\snake\\save.snk", result);
+	free(result);
+	
 	return snake_size - 4;
 }
 

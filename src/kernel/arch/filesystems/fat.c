@@ -321,6 +321,25 @@
 		} else return cluster_data;
 	}
 
+	uint8_t* FAT_cluster_readoff(unsigned int clusterNum, uint32_t offset, uint32_t size) {
+		if (clusterNum < 2 || clusterNum >= total_clusters) {
+			kprintf("Function FAT_cluster_read: Invalid cluster number! [%u]\n", clusterNum);
+			return NULL;
+		}
+
+		unsigned int start_sect = (clusterNum - 2) * (unsigned short)sectors_per_cluster + first_data_sector;
+		unsigned int data_size  = min(size, (sectors_per_cluster * SECTOR_SIZE) - offset);
+		uint8_t* cluster_data   = ATA_read_sectors(start_sect, sectors_per_cluster);
+		uint8_t* offset_data    = calloc(data_size, 1);
+
+		memcpy(offset_data, cluster_data + offset, data_size);
+		free(cluster_data);
+		if (cluster_data == NULL) {
+			kprintf("Function FAT_cluster_read: An error occurred with ATA_read_sector [%u]\n", start_sect);
+			return NULL;
+		} else return offset_data;
+	}
+
 //========================================================================================
 
 //========================================================================================
@@ -337,20 +356,33 @@
 
 	int FAT_cluster_write(void* contentsToWrite, unsigned int clusterNum) {
 		if (clusterNum < 2 || clusterNum >= total_clusters) {
-			kprintf("Function FAT_cluster_write: Invalid cluster number!\n");
+			kprintf("[%s %i] Invalid cluster number!\n", __FILE__, __LINE__);
 			return -1;
 		}
 
 		unsigned int start_sect = (clusterNum - 2) * (unsigned short)sectors_per_cluster + first_data_sector;
 		if (ATA_write_sectors(start_sect, contentsToWrite, sectors_per_cluster) == -1) {
-			kprintf("Function FAT_cluster_write: An error occurred with ATA_write_sector, the area in sector ");
+			kprintf("[%s %i] An error occurred with ATA_write_sector, the area in sector\n", __FILE__, __LINE__);
+			return -1;
+		} else return 0;
+	}
+
+	int FAT_cluster_writeoff(void* contentsToWrite, unsigned int clusterNum, uint32_t offset, uint32_t size) {
+		if (clusterNum < 2 || clusterNum >= total_clusters) {
+			kprintf("[%s %i] Invalid cluster number!\n", __FILE__, __LINE__);
+			return -1;
+		}
+
+		unsigned int start_sect = (clusterNum - 2) * (unsigned short)sectors_per_cluster + first_data_sector;
+		if (ATA_writeoff_sectors(start_sect, contentsToWrite, sectors_per_cluster, offset, size) == -1) {
+			kprintf("[%s %i] Error occurred with ATA_write_sector, the area in sector\n", __FILE__, __LINE__);
 			return -1;
 		} else return 0;
 	}
 
 	int FAT_cluster_clear(unsigned int clusterNum) {
 		if (clusterNum < 2 || clusterNum >= total_clusters) {
-			kprintf("Function FAT_cluster_clear: Invalid cluster number!\n");
+			kprintf("[%s %i] Invalid cluster number!\n", __FILE__, __LINE__);
 			return -1;
 		}
 
@@ -359,7 +391,7 @@
 
 		unsigned int start_sect = (clusterNum - 2) * (unsigned short)sectors_per_cluster + first_data_sector;
 		if (ATA_write_sectors(start_sect, clear, sectors_per_cluster) == -1) {
-			kprintf("Function FAT_cluster_clear: An error occurred with ATA_write_sector, the area in sector ");
+			kprintf("[%s %i] An error occurred with ATA_write_sector, the area in sector\n", __FILE__, __LINE__);
 			return -1;
 		} else return 0;
 	}
@@ -377,8 +409,8 @@
 // receives the cluster to list, and will list all regular entries and directories, plus whatever attributes are passed in
 // returns: -1 is a general error
 
-	struct FATDirectory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, BOOL exclusive) {
-		struct FATDirectory* currentDirectory = malloc(sizeof(struct FATDirectory));
+	Directory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, BOOL exclusive) {
+		Directory* currentDirectory = malloc(sizeof(struct FATDirectory));
 
 		currentDirectory->files        = NULL;
 		currentDirectory->subDirectory = NULL;
@@ -436,7 +468,7 @@
 
 			else {
 				if ((file_metadata->attributes & FILE_DIRECTORY) != FILE_DIRECTORY) {			
-					struct FATFile* file = malloc(sizeof(struct FATFile));
+					File* file = malloc(sizeof(struct FATFile));
 
 					file->file_meta    = *file_metadata;
 					file->name         = malloc(8);
@@ -456,7 +488,7 @@
 
 					if (currentDirectory->files == NULL) currentDirectory->files = file;
 					else {
-						struct FATFile* current = currentDirectory->files;
+						File* current = currentDirectory->files;
 						while (current->next != NULL) current = current->next;
 						current->next = file;
 					}
@@ -464,7 +496,7 @@
 
 				else {
 					if ((file_metadata->attributes & FILE_DIRECTORY) == FILE_DIRECTORY) {
-						struct FATDirectory* upperDir = malloc(sizeof(struct FATDirectory));
+						Directory* upperDir = malloc(sizeof(struct FATDirectory));
 
 						upperDir->directory_meta = *file_metadata;
 						upperDir->name           = malloc(11);
@@ -483,7 +515,7 @@
 						
 						if (currentDirectory->subDirectory == NULL) currentDirectory->subDirectory = upperDir;
 						else {
-							struct FATDirectory* current = currentDirectory->subDirectory;
+							Directory* current = currentDirectory->subDirectory;
 							while (current->next != NULL) current = current->next;
 							current->next = upperDir;
 						}
@@ -854,8 +886,8 @@
 //========================================================================================
 // Returns: -1 is general error, -2 is content not found
 
-	struct FATContent* FAT_get_content(const char* filePath) {
-		struct FATContent* fatContent = malloc(sizeof(struct FATContent));
+	Content* FAT_get_content(const char* filePath) {
+		Content* fatContent = malloc(sizeof(struct FATContent));
 
 		fatContent->directory = NULL;
 		fatContent->file 	  = NULL;
@@ -969,7 +1001,7 @@
 		}
 	}
 
-	char* FAT_read_content(struct FATContent* data) {
+	char* FAT_read_content(Content* data) {
 		int totalSize = sectors_per_cluster * SECTOR_SIZE * data->file->data_size;
 		char* result  = (char*)malloc(totalSize);
 		memset(result, 0, totalSize);
@@ -988,7 +1020,7 @@
 		return result;
 	}
 
-	void FAT_read_content2buffer(struct FATContent* data, uint8_t* buffer, uint32_t offset, uint32_t size) {
+	void FAT_read_content2buffer(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size) {
 		uint32_t data_seek     = offset % (sectors_per_cluster * SECTOR_SIZE);
 		uint32_t cluster_seek  = offset / (sectors_per_cluster * SECTOR_SIZE);
 		uint32_t data_position = 0;
@@ -1040,7 +1072,7 @@
 		///////////////////////
 		// FIND CONTENT
 
-			struct FATContent* fatContent = FAT_get_content(filePath);
+			Content* fatContent = FAT_get_content(filePath);
 			if (fatContent == NULL) {
 				kprintf("Function FAT_edit_content: FAT_get_content encountered an error. Aborting...\n");
 				FAT_unload_content_system(fatContent);
@@ -1171,6 +1203,19 @@
 		return 0;
 	}
 
+	// Write data to content with offset from buffer
+	void FAT_buffer2content(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size) {
+		uint32_t data_seek     = offset % (sectors_per_cluster * SECTOR_SIZE);
+		uint32_t cluster_seek  = offset / (sectors_per_cluster * SECTOR_SIZE);
+		uint32_t data_position = 0;
+
+		for (int i = cluster_seek; i < data->file->data_size && data_position < size; i++) {
+			uint32_t write_size = min(size - data_position, sectors_per_cluster * SECTOR_SIZE);
+			FAT_cluster_writeoff(buffer + data_position, data->file->data[i], offset, write_size);
+			offset = 0;
+		}
+	}
+
 //========================================================================================
 
 // This function finds content in FAT table and change their name
@@ -1263,7 +1308,7 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 // content: contains the full data of content (meta, name, ext, type)
 // returns: -1 is general error, -2 indicates a bad path/file name, -3 indicates file with same name already exists, -4 indicates file size error
 
-	int FAT_put_content(const char* filePath, struct FATContent* content) {
+	int FAT_put_content(const char* filePath, Content* content) {
 
 		//////////////////////
 		// NAME ERROR HANDLING
@@ -1464,7 +1509,7 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		///////////////////////
 		// FIND CONTENT
 
-			struct FATContent* fatContent = FAT_get_content(filePath);
+			Content* fatContent = FAT_get_content(filePath);
 			if (fatContent == NULL) {
 				kprintf("Function FAT_delete_content: FAT_get_content encountered an error. Aborting...\n");
 				return -1;
@@ -1571,8 +1616,8 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 	}
 
 	// date - 1 | time - 2
-	struct FATDate* FAT_get_date(short data, int type) {
-		struct FATDate* date = malloc(sizeof(struct FATDate));
+	Date* FAT_get_date(short data, int type) {
+		Date* date = malloc(sizeof(struct FATDate));
 		switch (type) {
 			case 1: // date
 				date->year   = ((data >> 9) & 0x7F) + 1980;
@@ -1765,8 +1810,8 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		and populates the entry with the info in a correct format for
 		insertion into a disk.
 	*/
-	struct directory_entry* FAT_create_entry(const char* filename, const char* ext, BOOL isDir, uint32_t firstCluster, uint32_t filesize) {
-		struct directory_entry* data = malloc(sizeof(struct directory_entry));
+	directory_entry_t* FAT_create_entry(const char* filename, const char* ext, BOOL isDir, uint32_t firstCluster, uint32_t filesize) {
+		directory_entry_t* data = malloc(sizeof(struct directory_entry));
 
 		data->reserved0 				= 0; 
 		data->creation_time_tenths 		= 0;
@@ -1803,7 +1848,7 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		return data; 
 	}
 
-	void FAT_unload_directories_system(struct FATDirectory* directory) {
+	void FAT_unload_directories_system(Directory* directory) {
 		if (directory == NULL) return;
 		if (directory->files != NULL) FAT_unload_files_system(directory->files);
 		if (directory->subDirectory != NULL) FAT_unload_directories_system(directory->subDirectory);
@@ -1814,7 +1859,7 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		free(directory);
 	}
 
-	void FAT_unload_files_system(struct FATFile* file) {
+	void FAT_unload_files_system(File* file) {
 		if (file == NULL) return;
 		if (file->next != NULL) FAT_unload_files_system(file->next);
 		if (file->data_pointer != NULL) free(file->data_pointer);
@@ -1825,7 +1870,7 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		free(file);
 	}
 
-	void FAT_unload_content_system(struct FATContent* content) {
+	void FAT_unload_content_system(Content* content) {
 		if (content == NULL) return;
 		if (content->directory != NULL) FAT_unload_directories_system(content->directory);
 		if (content->file != NULL) FAT_unload_files_system(content->file);
@@ -1833,8 +1878,8 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		free(content);
 	}
 
-	struct FATContent* FAT_create_content(char* name, BOOL directory, char* extension) {
-		struct FATContent* content = malloc(sizeof(struct FATContent));
+	Content* FAT_create_content(char* name, BOOL directory, char* extension) {
+		Content* content = malloc(sizeof(struct FATContent));
 		if (strlen(name) > 11 || strlen(extension) > 4) {
 			kprintf("Uncorrect name or ext lenght.\n");
 			return NULL;

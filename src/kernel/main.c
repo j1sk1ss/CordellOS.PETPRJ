@@ -32,6 +32,8 @@
 
 #define MMAP_LOCATION   0x30000
 
+#define SHELL_PATH      "boot\\shell\\shell.elf"
+
 
 //======================================================================================================================================
 // TODO List:                                                     | | Features:                                                      | |
@@ -260,7 +262,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         TSS_set_stack(0x10, current_esp);
 
         if (FAT_content_exists(CONFIG_PATH) == 1) {
-            struct FATContent* boot_config = FAT_get_content(CONFIG_PATH);
+            Content* boot_config = FAT_get_content(CONFIG_PATH);
             char* config = FAT_read_content(boot_config);
             FAT_unload_content_system(boot_config);
             
@@ -280,10 +282,10 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
             //===================
 
             if (config[CONFIG_MOUSE] == CONFIG_ENABLED)  show_mouse = 1;
-            if (config[CONFIG_KSHELL] == CONFIG_ENABLED) START_PROCESS("kshell", FAT_ELF_execute_content("boot\\shell\\shell.elf", NULL, NULL));
+            if (config[CONFIG_KSHELL] == CONFIG_ENABLED) START_PROCESS("kshell", FAT_ELF_execute_content(SHELL_PATH, NULL, NULL));
 
             kfree(config);
-        } else START_PROCESS("kshell", FAT_ELF_execute_content("boot\\shell\\shell.elf", NULL, NULL));
+        } else START_PROCESS("kshell", FAT_ELF_execute_content(SHELL_PATH, NULL, NULL));
 
         TASK_start_tasking();
     

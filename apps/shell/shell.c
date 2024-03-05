@@ -145,7 +145,7 @@ void shell_start_screen() {
                     return;
                 }
 
-                struct UFATContent* content = get_content(dir_path);
+                UContent* content = get_content(dir_path);
                 if (content->file != NULL) {
                     FATLIB_unload_content_system(content);
                     free(dir_path);
@@ -170,9 +170,9 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {
-                struct UFATDirectory* directory   = opendir(current_path);
-                struct UFATDirectory* current_dir = directory->subDirectory;
-                struct UFATFile* current_file     = directory->files;
+                UDirectory* directory   = opendir(current_path);
+                UDirectory* current_dir = directory->subDirectory;
+                UFile* current_file     = directory->files;
 
                 printf("\n");
                 while (current_dir != NULL) {
@@ -199,7 +199,7 @@ void shell_start_screen() {
                 
                 printf("\n");
 
-                struct UFATContent* content = get_content(file_path);
+                UContent* content = get_content(file_path);
                 int data_size = 0;
                 while (data_size < content->file->file_meta.file_size) {
                     int copy_size = min(content->file->file_meta.file_size - data_size, 128);

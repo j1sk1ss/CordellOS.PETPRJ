@@ -211,7 +211,7 @@ ata_dev_t secondary_slave  = {.slave = 1};
 //====================
 //  READ SECTOR FROM DISK BY LBA ADRESS
 //====================
-//  WRITE DATA TO SECTOR ON DISK BY LBA ADRESS
+//  WRITE DATA TO SECTOR ON DISK BY LBA ADDRESS
 //====================
 
     int ATA_write_sector(uint32_t lba, const uint8_t* buffer) {
@@ -239,14 +239,55 @@ ata_dev_t secondary_slave  = {.slave = 1};
         return 1;
     }
 
+    int ATA_writeoff_sector(uint32_t lba, const uint8_t* buffer, uint32_t offset, uint32_t size) {
+        if (lba == BOOT_SECTOR) return -1;
+
+        ATA_ata_wait();
+        i386_outb(current_ata_device->drive, 0xE0 | (current_ata_device->slave << 4) | ((lba >> 24) & 0x0F));
+        i386_outb(FEATURES_REGISTER, 0x00);
+        i386_outb(current_ata_device->sector_count, 1);
+        i386_outb(current_ata_device->lba_lo, (uint8_t)lba);
+        i386_outb(current_ata_device->lba_mid, (uint8_t)(lba >> 8));
+        i386_outb(current_ata_device->lba_high, (uint8_t)(lba >> 16));
+        i386_outb(STATUS_REGISTER, ATA_CMD_WRITE_PIO);
+
+        int timeout = 9000000;
+        while ((i386_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
+            if (--timeout < 0) return -1;
+            else continue;
+        
+        for (int i = offset / 2; i < min(size / 2, (SECTOR_SIZE / 2) - offset); i++) {
+            uint16_t data = *((uint16_t*)(buffer + i * 2));
+            i386_outw(DATA_REGISTER, data);
+        }
+
+        return 1;
+    }
+
     // Function to write a sector on the disk.
-    char* ATA_write_sectors(uint32_t lba, const uint8_t* buffer, uint32_t sector_count) {
+    int ATA_write_sectors(uint32_t lba, const uint8_t* buffer, uint32_t sector_count) {
         ATA_ata_wait();
         for(uint32_t i = 0; i < sector_count; i++) {
             if (ATA_write_sector(lba + i, buffer) == -1) 
                 return -1;
             
             buffer += SECTOR_SIZE;
+        }
+
+        return 1;
+    }
+
+    int ATA_writeoff_sectors(uint32_t lba, const uint8_t* buffer, uint32_t sector_count, uint32_t offset, uint32_t size) {
+        ATA_ata_wait();
+        uint32_t data_position = 0;
+        for (uint32_t i = 0; i < sector_count && data_position < size; i++) {
+            uint32_t write_size = min(size - data_position, SECTOR_SIZE);
+            if (ATA_writeoff_sector(lba + i, buffer, offset, write_size) == -1) 
+                return -1;
+            
+            buffer += write_size;
+            data_position += write_size;
+            offset = 0;
         }
 
         return 1;
