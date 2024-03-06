@@ -67,7 +67,6 @@ enum {
 };
 
 typedef struct {
-
 	uint32_t	sh_name;
 	uint32_t	sh_type;
 	uint32_t	sh_flags;
@@ -78,16 +77,13 @@ typedef struct {
 	uint32_t	sh_info;
 	uint32_t	sh_addralign;
 	uint32_t	sh_entsize;
-
 } Elf32_Shdr;
 
-struct ELF32_program {
-
+typedef struct {
     uint32_t* pages;
     uint32_t pages_count;
     void* entry_point;
-
-};
+} ELF32_program;
 
 enum ShT_Types {
 
@@ -109,7 +105,7 @@ enum ShT_Attributes {
 };
 
 
-struct ELF32_program* ELF_read(const char* path);
+ELF32_program* ELF_read(const char* path);
 
 
 #endif

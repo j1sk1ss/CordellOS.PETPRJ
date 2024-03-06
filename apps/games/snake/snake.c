@@ -35,12 +35,6 @@ int dead          = 0;
 
 
 int main(int args, char* argv[]) {
-	if (cexists("boot\\games\\snake\\save.snk") == 1) {
-		char* data = fread("boot\\games\\snake\\save.snk");
-		max_score = atoi(data);
-		free(data);
-	}
-
 	clrscr();
 	printf("\nSNAKE GAME v. 1.0\nPress ENTER to start.\n");
 	while (dead == 0) {
@@ -63,11 +57,6 @@ int main(int args, char* argv[]) {
 	begin(map);
 	show(map);
 	loop(map);
-
-	if (cexists("boot\\games\\snake\\save.snk") != 1) mkfile("boot\\games\\snake", "snake.snk");
-	char* result = itoa(snake_size - 4);
-	fwrite("boot\\games\\snake\\save.snk", result);
-	free(result);
 	
 	return snake_size - 4;
 }

@@ -24,24 +24,23 @@
 
 typedef struct {
     Registers* cpuState;
-
     char* name;
     int state;
     int pid;
-
     uint32_t virtual_address;
-    uint32_t page_directory;
+    page_directory* page_directory;
+
 } Task;
 
 typedef struct {
     Task* tasks[TASKS_MAX];
-
     int tasksCount;
     int currentTask;
+    
 } TaskManager;
 
 
-extern TaskManager* taskManager;
+extern TaskManager taskManager;
 extern bool tasking;
 
 

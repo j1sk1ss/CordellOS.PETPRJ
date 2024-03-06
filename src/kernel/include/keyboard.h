@@ -9,11 +9,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "irq.h"
 #include "stdio.h"
 #include "x86.h"
 #include "vga_text.h"
 #include "vesa_text.h"
-// #include "irq.h"
 
 
 #define KBD_DATA_PORT           0x60
@@ -41,12 +41,11 @@
 #define RSHIFT                  0x36
 
 
-// void i386_keyboard_handler(Registers* regs);
+void i386_keyboard_handler(struct RegsStruct* regs);
 int key_press();
 char get_character(char character);
 
-char* keyboard_read(int mode, int color);
-char* keyboard_read_stop(int mode, int color, char* stop_list);
+void enable_keyboard(uint8_t* buffer, int keyboard_mode, int keyboard_color, uint8_t* stop);
 char keyboard_navigation();
 void keyboard_wait(char symbol);
 

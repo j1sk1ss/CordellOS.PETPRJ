@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <memory.h>
+#include <fatlib.h>
 
 #include "ata.h"
 #include "fat.h"
@@ -21,7 +22,7 @@ typedef int (*object_exists)(const char*);
 typedef int (*put_object)(const char*, Content*);
 typedef int (*delete_object)(const char*, const char*);
 typedef Content* (*create_object)(char*, short, char*);
-typedef int (*object_execute)(char*, int, char*);
+typedef int (*object_execute)(char*, int, char**);
 typedef int (*object_meta_change)(const char*, directory_entry_t*);
 
 

@@ -145,57 +145,10 @@ char wait_char() {
 }
 
 //====================================================================
-//  This function reads keyboard input from user until he press ENTER -
-//  that returns string of input
-//  EAX - interrupt / buffer
-//  EDX - color
-//  EBX - mode
-char* input_read(int mode, uint8_t color) {
-    char* buffer;
-    __asm__ volatile(
-        "movl $19, %%eax\n"
-        "movl %2, %%ebx\n"
-        "movl %1, %%edx\n"
-        "int %3\n"
-        "movl %%eax, %0\n"
-        : "=r"(buffer)
-        : "r"((int)color), "r"(mode), "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
-    );
-
-    return buffer;
-}
-
-//====================================================================
-//  This function reads keyboard input from user until he press stop character -
-//  that returns string of input with stop character of last position
-//  EAX - interrupt / buffer
-//  EDX - color
-//  EBX - mode
-char* input_read_stop(int mode, uint8_t color, char* stop_list) {
-    char* buffer;
-    __asm__ volatile (
-        "movl $46, %%eax\n"
-        "movl %3, %%ecx\n"
-        "movl %2, %%ebx\n"
-        "movl %1, %%edx\n"
-        "int %4\n"
-        "movl %%eax, %0\n"
-        : "=r"(buffer)
-        : "r"((int)color), "r"(mode), "g"(stop_list), "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
-    );
-
-    return buffer;
-}
-
-//====================================================================
 //  Clear entire screen (used kernel printf commands)
 void clrscr() {
     __asm__ volatile (
         "movl $2, %%eax\n"
-        "movl $1, %%ebx\n"
-        "movl $1, %%edx\n"
         "int %0\n"
         :
         : "i"(SYSCALL_INTERRUPT)
@@ -210,9 +163,7 @@ void fputc(char c, uint32_t file, int color) {
     if (color == 0) {
         __asm__ volatile(
             "movl $1, %%eax\n"
-            "movl $1, %%ebx\n"
             "movl %0, %%ecx\n"
-            "movl $1, %%edx\n"
             "int %1\n"
             :
             : "r"((int)c), "i"(SYSCALL_INTERRUPT)
@@ -251,9 +202,7 @@ void fputs(const char* str, uint8_t file, int color) {
 void set_color(int color) {
     __asm__ volatile(
         "movl $14, %%eax\n"
-        "movl $1, %%ebx\n"
         "movl %0, %%ecx\n"
-        "movl $1, %%edx\n"
         "int %1\n"
         :
         : "r"((int)color), "i"(SYSCALL_INTERRUPT)
@@ -283,8 +232,7 @@ void fprintf_signed(uint8_t file, long long number, int radix, int color) {
         fputc('-', file, color);
         fprintf_unsigned(file, -number, radix, color);
     }
-    else 
-        fprintf_unsigned(file, number, radix, color);
+    else fprintf_unsigned(file, number, radix, color);
 }
 
 void vfprintf(uint32_t file, const char* fmt, va_list args, int color) {

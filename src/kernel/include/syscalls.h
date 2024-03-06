@@ -4,6 +4,7 @@
 
 #include <fatlib.h>
 
+#include "isr.h"
 #include "stdio.h"
 #include "vga_text.h"
 #include "keyboard.h"
@@ -12,7 +13,6 @@
 #include "time.h"
 #include "tasking.h"
 #include "allocator.h"
-#include "isr.h"
 #include "ip.h"
 #include "rtl8139.h"
 
@@ -24,7 +24,7 @@
 #define SYS_COLOR_PUTC         13
 #define SYS_SCREEN_COLOR       14
 #define SYS_SET_CURSOR         20
-#define SYS_SET_CURSOR32       47 // LAST
+#define SYS_SET_CURSOR32       47
 #define SYS_GET_CURSOR         21
 #define SYS_GET_SCRCHAR        22
 #define SYS_SET_SCRCHAR        23
@@ -33,6 +33,10 @@
 #define SYS_GET_KEY_KEYBOARD   5
 #define SYS_AREAD_KEYBOARD     19
 #define SYS_AREAD_KEYBOARD_STP 46
+
+// System memory info
+#define SYS_MALLOC_MAP  48
+#define SYS_PAGE_MAP    49 // LAST
 
 // System managment (memory, tasks)
 #define SYS_SLEEP       3 

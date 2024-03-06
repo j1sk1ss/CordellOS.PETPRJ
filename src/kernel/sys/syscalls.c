@@ -94,7 +94,7 @@ void syscall(Registers* regs) {
         //  KEYBOARD SYSCALLS
         //=======================
 
-            else if (regs->eax == SYS_READ_KEYBOARD) {
+            else if (regs->eax == SYS_READ_KEYBOARD) { // TODO: to int keyboard
                 char* wait_buffer = (char*)regs->ecx;
                 wait_buffer[0] = keyboard_navigation();
             } 
@@ -114,14 +114,17 @@ void syscall(Registers* regs) {
             else if (regs->eax == SYS_AREAD_KEYBOARD) {
                 uint8_t keyborad_color = (uint8_t)regs->edx;
                 int keyboard_mode      = (int)regs->ebx;
-                regs->eax = keyboard_read(keyboard_mode, keyborad_color);
+                uint8_t* buffer        = (uint8_t*)regs->ecx;
+                uint8_t stop_list[2]   = { '\n', '\0' };
+                enable_keyboard(buffer, keyboard_mode, keyborad_color, stop_list);
             } 
             
             else if (regs->eax == SYS_AREAD_KEYBOARD_STP) {
                 uint8_t keyborad_color = (uint8_t)regs->edx;
                 int keyboard_mode      = (int)regs->ebx;
                 char* stop_list        = (char*)regs->ecx;
-                regs->eax = keyboard_read_stop(keyboard_mode, keyborad_color, stop_list);
+                uint8_t* buffer        = (uint8_t*)regs->esi;
+                enable_keyboard(buffer, keyboard_mode, keyborad_color, stop_list);
             } 
 
         //=======================
@@ -390,5 +393,19 @@ void syscall(Registers* regs) {
     //=======================
     //  NETWORKING SYSCALLS
     //=======================
+    //  SYS INFO SYSCALLS
+    //=======================
 
+        else if (regs->eax == SYS_MALLOC_MAP) {
+            print_kmalloc_map();
+        }
+
+        else if (regs->eax == SYS_PAGE_MAP) {
+            char arg = (char)regs->ecx;
+            print_page_map(arg);
+        }
+
+    //=======================
+    //  SYS INFO SYSCALLS
+    //=======================
 }

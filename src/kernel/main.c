@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <fatlib.h>
 
 #include "include/hal.h"
 #include "include/fat.h"
@@ -92,8 +93,20 @@
 //          17.0) KShell save commands to cash                    [V]
 //          17.1) MEM-DATA progs                                  [ ]
 //      18) User mode switch                                      [?]
-//      19) DOOM?                                                 [ ]
+//      19) Keyboard in kernel by syscall that cause mt problems  [V]
+//      20) Tasking problems (again)                              [V]
+//          20.0) Page directory cloning                          [?]
+//      21) DOOM?                                                 [ ]
 //======================================================================================================================================
+
+
+void shell() {
+    FAT_ELF_execute_content(SHELL_PATH, NULL, NULL);
+}
+
+void idle() {
+    while(1) { continue; };
+}
 
 
 void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t esp) {
@@ -281,12 +294,13 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
             // Network initialization
             //===================
 
-            if (config[CONFIG_MOUSE] == CONFIG_ENABLED)  show_mouse = 1;
-            if (config[CONFIG_KSHELL] == CONFIG_ENABLED) START_PROCESS("kshell", FAT_ELF_execute_content(SHELL_PATH, NULL, NULL));
+            if (config[CONFIG_MOUSE] == CONFIG_ENABLED) show_mouse = 1;
+            if (config[CONFIG_KSHELL] == CONFIG_ENABLED) START_PROCESS("shell", shell);
 
             kfree(config);
-        } else START_PROCESS("kshell", FAT_ELF_execute_content(SHELL_PATH, NULL, NULL));
+        } else START_PROCESS("shell", shell);
 
+        START_PROCESS("idle", idle);
         TASK_start_tasking();
     
     //===================

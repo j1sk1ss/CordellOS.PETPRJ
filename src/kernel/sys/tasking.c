@@ -3,9 +3,9 @@
 // TODO: make process that clean another processes
 //		 v_addr allocation?
 
-TaskManager* taskManager;
+TaskManager taskManager;
 bool tasking = false;
-uint32_t v_addr = 0x0C000000;
+uint32_t v_addr = 0x00C00000;
 
 
 //==================
@@ -13,14 +13,14 @@ uint32_t v_addr = 0x0C000000;
 //==================
 
 	void TASK_start_tasking() {
-		if (taskManager->tasksCount <= 0) return;
+		if (taskManager.tasksCount <= 0) return;
 		i386_disableInterrupts();
 
 		// Set task page directory
-		set_page_directory(taskManager->tasks[0]->page_directory);
+		set_page_directory(taskManager.tasks[0]->page_directory);
 
 		// Load stack to esp
-		asm ("mov %%eax, %%esp": :"a"(taskManager->tasks[0]->cpuState->esp));
+		asm ("mov %%eax, %%esp": :"a"(taskManager.tasks[0]->cpuState->esp));
 
 		// Set values from stack
 		asm ("pop %gs");
@@ -36,7 +36,7 @@ uint32_t v_addr = 0x0C000000;
 		asm ("pop %eax");
 		
 		// Set multitasking on
-		taskManager->currentTask = 0;
+		taskManager.currentTask = 0;
 		tasking = true;
 
 		i386_enableInterrupts();
@@ -60,17 +60,11 @@ uint32_t v_addr = 0x0C000000;
 //==================
 
 	void i386_task_init() {
-		taskManager = calloc(sizeof(TaskManager), 1);
-		if (taskManager == NULL) {
-			kprintf("[%s %i] Unnable to allocate memory!\n", __FILE__, __LINE__);
-			kernel_panic("\nTASKING ERROR!");
-		}
-
-		taskManager->tasksCount  = 0;
-		taskManager->currentTask = -1;
+		taskManager.tasksCount  = 0;
+		taskManager.currentTask = -1;
 		
 		for (int i = 0; i < TASKS_MAX; i++)
-			taskManager->tasks[i] = NULL;
+			taskManager.tasks[i] = NULL;
 
 		i386_irq_registerHandler(0, TASK_task_switch);
 	}
@@ -91,11 +85,12 @@ uint32_t v_addr = 0x0C000000;
 				task->state = PROCESS_STATE_ALIVE;
 				task->pid   = -1;
 				task->name  = pname;
+                task->page_directory = NULL;
 
-				if (taskManager->tasksCount <= 0) task->pid = 0;
-				for (int pid = 0; pid < taskManager->tasksCount; pid++) {
+				if (taskManager.tasksCount <= 0) task->pid = 0;
+				for (int pid = 0; pid < taskManager.tasksCount; pid++) {
 					for (int id = 0; id < TASKS_MAX; id++) 
-						if (taskManager->tasks[pid]->pid != id) {
+						if (taskManager.tasks[pid]->pid != id) {
 							task->pid = id;
 							break;
 						}
@@ -114,21 +109,17 @@ uint32_t v_addr = 0x0C000000;
 			// Allocate data for stack
 			//=============================
 
-				// mallocp(v_addr);
-				// memset(v_addr, 0, PAGE_SIZE);
 				task->page_directory = create_page_directory();
-				copy_page_directory(current_page_directory, task->page_directory);
-
-				pt_entry page  = 0;
-				uint32_t* temp = allocate_page(&page);
-				map_page2dir((void*)temp, (void*)v_addr, task->page_directory);
-				SET_ATTRIBUTE(&page, PTE_READ_WRITE);
-
-				task->cpuState->esp     = v_addr;
+				copy_page_directory(kernel_page_directory, task->page_directory);
+                set_page_directory(task->page_directory);
+                // task->page_directory = current_page_directory;
+				
+				mallocp(v_addr);
+                memset(v_addr, 0, PAGE_SIZE);
+                
+				task->cpuState->esp     = virtual2physical(v_addr);
 				task->virtual_address   = task->cpuState->esp;
 				uint32_t* stack_pointer = (uint32_t*)(task->cpuState->esp + PAGE_SIZE);
-
-				// asm ("mov %%cr3, %%eax":"=a"(task->page_directory));
 
 			//=============================
 			// Allocate data for stack
@@ -182,6 +173,8 @@ uint32_t v_addr = 0x0C000000;
 		// Fill registers
 		//=============================
 
+		set_page_directory(kernel_page_directory);
+        // v_addr += PAGE_SIZE * 2;
 		return task;
 	}
 
@@ -193,29 +186,29 @@ uint32_t v_addr = 0x0C000000;
 
 	Task* get_task(int pid) {
 		for (int i = 0; i < TASKS_MAX; i++) 
-			if (taskManager->tasks[i]->pid == pid) return taskManager->tasks[i];
+			if (taskManager.tasks[i]->pid == pid) return taskManager.tasks[i];
 
 		return NULL;
 	}
 
 	void __kill() { // TODO: complete multitask disabling when tasks == 0
 		TASK_stop_tasking();
-		_kill(taskManager->tasks[taskManager->currentTask]->pid);
+		_kill(taskManager.tasks[taskManager.currentTask]->pid);
 		TASK_continue_tasking();
 	}
 
 	void _kill(int pid) {
-		if (pid >= 0 && pid < taskManager->tasks) 
-			for (int task = 0; task < taskManager->tasks; task++) 
-				if (taskManager->tasks[task]->pid == pid) {
-					taskManager->tasks[task]->state = PROCESS_STATE_DEAD;
+		if (pid >= 0 && pid < taskManager.tasks) 
+			for (int task = 0; task < taskManager.tasks; task++) 
+				if (taskManager.tasks[task]->pid == pid) {
+					taskManager.tasks[task]->state = PROCESS_STATE_DEAD;
 					break;
 				}
 	}
 
 	int _TASK_add_task(Task* task) {
-		if (taskManager->tasksCount >= 256) return -1;
-		taskManager->tasks[taskManager->tasksCount++] = task;
+		if (taskManager.tasksCount >= 256) return -1;
+		taskManager.tasks[taskManager.tasksCount++] = task;
 		
 		return task->pid;
 	}
@@ -231,55 +224,37 @@ uint32_t v_addr = 0x0C000000;
 	void TASK_task_switch(Registers* regs) {
 		if (tasking == false) return;
 		
-		Task* task = taskManager->tasks[taskManager->currentTask];
+        // Get current task
+		Task* task = taskManager.tasks[taskManager.currentTask];
 		if (task == NULL) return;
+        if (task->cpuState == NULL) return;
 
-		task->cpuState->eflag = regs->eflag;
-		task->cpuState->cs    = regs->cs;
-		task->cpuState->eip   = regs->eip;
-		task->cpuState->eax   = regs->eax;
-		task->cpuState->ebx   = regs->ebx;
-		task->cpuState->ecx   = regs->ecx;
-		task->cpuState->edx   = regs->edx;
-		task->cpuState->esi   = regs->esi;
-		task->cpuState->edi   = regs->edi;
-		task->cpuState->ebp   = regs->ebp;
+		i386_disableInterrupts();
 
-		task->cpuState->esp      = regs->esp;
-		task->cpuState->kern_esp = regs->esp;
+        // Save current state and current page directory
+        memcpy(task->cpuState, regs, sizeof(Registers));
+        if (task->page_directory != current_page_directory)
+            task->page_directory = current_page_directory;
 
-		asm ("mov %%cr3, %%eax":"=a"(task->page_directory));
+        // Select next task
+		if (++taskManager.currentTask >= taskManager.tasksCount)
+				taskManager.currentTask = 0;
 
-		if (++taskManager->currentTask >= taskManager->tasksCount)
-				taskManager->currentTask = 0;
-
-		Task* new_task = taskManager->tasks[taskManager->currentTask];
-		while (new_task->state != PROCESS_STATE_ALIVE) {
-			if (++taskManager->currentTask >= taskManager->tasksCount)
-				taskManager->currentTask = 0;
-
-			new_task = taskManager->tasks[taskManager->currentTask];
+        // If next task finished / broken and something like that, find next
+		Task* new_task = taskManager.tasks[taskManager.currentTask];
+		while (new_task->state != PROCESS_STATE_ALIVE || new_task == NULL) {
+			if (++taskManager.currentTask >= taskManager.tasksCount) taskManager.currentTask = 0;
+			new_task = taskManager.tasks[taskManager.currentTask];
 		}
 
-		if (new_task == NULL) return;
-		if (task->page_directory != new_task->page_directory) 
-			set_page_directory(new_task->page_directory);
+        // Load task CPU state and page directory
+        if (new_task->cpuState == NULL) return;
+        memcpy(regs, new_task->cpuState, sizeof(Registers));
+        if (new_task->page_directory != NULL)
+            if (new_task->page_directory != task->page_directory)
+		        set_page_directory(new_task->page_directory);
 
-		regs->esp      = new_task->cpuState->esp;
-		regs->kern_esp = new_task->cpuState->esp;
-
-		regs->ebp   = new_task->cpuState->ebp;
-		regs->edi   = new_task->cpuState->edi;
-		regs->esi   = new_task->cpuState->esi;
-
-		regs->edx   = new_task->cpuState->edx;
-		regs->ecx   = new_task->cpuState->ecx;
-		regs->ebx   = new_task->cpuState->ebx;
-		regs->eax   = new_task->cpuState->eax;
-		
-		regs->eflag = new_task->cpuState->eflag;
-		regs->cs    = new_task->cpuState->cs;
-		regs->eip   = new_task->cpuState->eip;
+        i386_enableInterrupts();
 	}
 
 //==================

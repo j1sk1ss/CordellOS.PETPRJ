@@ -9,6 +9,7 @@
 	uint32_t malloc_virt_address     = 0x300000;
 	uint32_t malloc_phys_address     = 0;
 	uint32_t total_malloc_pages      = 0;
+	page_directory* malloc_dir		 = 0;
 
 //===========================
 //	GLOBAL VARS
@@ -19,6 +20,7 @@
 //===========================
 
 	void mm_init(const uint32_t bytes) {
+		malloc_dir = current_page_directory;
 		total_malloc_pages = bytes / PAGE_SIZE;
 		if (bytes % PAGE_SIZE > 0) total_malloc_pages++;
 
@@ -68,7 +70,7 @@
 	}
 	
 	void* kmallocp(uint32_t v_addr) {
-		pt_entry page  = 0;
+		pt_entry page = 0;
 		uint32_t* temp = allocate_page(&page);
 		map_page((void*)temp, (void*)v_addr);
 		SET_ATTRIBUTE(&page, PTE_READ_WRITE);
@@ -112,7 +114,7 @@
 
 					uint32_t virt = malloc_virt_address + total_malloc_pages * PAGE_SIZE; // TODO: new pages to new blocks. Don`t mix them to avoid pagedir errors in contswitch
 					for (uint8_t i = 0; i < num_pages; i++) {
-						pt_entry page  = 0;
+						pt_entry page = 0;
 						uint32_t* temp = allocate_page(&page);
 
 						map_page((void*)temp, (void*)virt);

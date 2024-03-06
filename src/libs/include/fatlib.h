@@ -1,7 +1,6 @@
 #ifndef FATLIB_H_
 #define FATLIB_H_
 
-#include "stdlib.h"
 #include "stdio.h"
 #include "stdlib.h"
 
@@ -26,12 +25,11 @@
 #define TOO_MANY_DOTS           0x10
 
 
-typedef struct udirectory_entry {
-	unsigned char file_name[11];
-	unsigned char attributes;
-	unsigned char reserved0;
-	unsigned char creation_time_tenths;
-
+typedef struct directory_entry {
+	uint8_t file_name[11];
+	uint8_t attributes;
+	uint8_t reserved0;
+	uint8_t creation_time_tenths;
 	unsigned short creation_time;
 	unsigned short creation_date;
 	unsigned short last_accessed;
@@ -39,61 +37,73 @@ typedef struct udirectory_entry {
 	unsigned short last_modification_time;
 	unsigned short last_modification_date;
 	unsigned short low_bits;
-	
 	unsigned int file_size;
-} __attribute__((packed)) udirectory_entry_t;
 
-typedef struct UFATFile {
-	udirectory_entry_t file_meta;
+} __attribute__((packed)) directory_entry_t;
+
+typedef struct FATFile {
+	directory_entry_t file_meta;
 	void* data_pointer;
-
 	int data_size;
 	uint32_t* data;
-
 	char* extension;
 	char* name;
+    struct FATFile* next;
 
-    UFile* next;
-} UFile;
+} File;
 
-typedef struct UFATDirectory {
-	udirectory_entry_t directory_meta;
+typedef struct FATDirectory {
+	directory_entry_t directory_meta;
 	void* data_pointer;
-
 	char* name;
+	struct FATDirectory* next;
+    struct FATFile* files;
+    struct FATDirectory* subDirectory;
 
-	UDirectory* next;
-    UFile* files;
-    UDirectory* subDirectory;
-} UDirectory;
+} Directory;
 
-typedef struct UFATDate {
+typedef struct FATDate {
 	uint16_t hour;
 	uint16_t minute;
 	uint16_t second;
-
 	uint16_t year;
 	uint16_t mounth;
 	uint16_t day;
-} UDate;
 
-typedef struct UFATContent {
-	UDirectory* directory;
-	UFile* file;
-} UContent;
+} Date;
+
+typedef struct FATContent {
+	Directory* directory;
+	File* file;
+
+} Content;
 
 
-void FATLIB_unload_directories_system(UDirectory* directory);
-void FATLIB_unload_files_system(UFile* file);
-void FATLIB_unload_content_system(UContent* content);
+void FATLIB_unload_directories_system(Directory* directory);
+void FATLIB_unload_files_system(File* file);
+void FATLIB_unload_content_system(Content* content);
 
 char* FATLIB_change_path(const char* currentPath, const char* content);
 
-UDate* FATLIB_get_date(short data, int type);
+Date* FATLIB_get_date(short data, int type);
 
 void FATLIB_fatname2name(char* input, char* output);
 char* FATLIB_name2fatname(char* input);
 
-udirectory_entry_t* FATLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+directory_entry_t* FATLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+
+int cexists(const char* path);
+void rmcontent(const char* path, const char* name);
+void chgcontent(const char* path, directory_entry_t* meta);
+
+char* fread(const char* path);
+void fread_off(Content* content, int offset, uint8_t* buffer, int len);
+void fwrite(const char* path, const char* data);
+void mkfile(const char* path, const char* name);
+int fexec(char* path, int args, char** argv);
+
+Directory* opendir(const char* path);
+Content* get_content(const char* path);
+void mkdir(const char* path, const char* name);
 
 #endif

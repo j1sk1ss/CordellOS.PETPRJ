@@ -72,6 +72,11 @@ unsigned char shift_alphabet[128] = {
   0, 0, 0, 0, 0, 0, 0,
 };
 
+uint8_t* char_buffer = NULL;
+uint8_t* stop_buffer = NULL;
+int mode  = HIDDEN_KEYBOARD;
+int color = WHITE;
+int pos   = 0;
 
 bool lshift_pressed;
 bool rshift_pressed;
@@ -80,7 +85,37 @@ bool key_pressed[128];
 
 
 void i386_init_keyboard() {
-    mem_outl(0x64, 0xAE);
+    i386_outb(0x64, 0xFF);
+    uint8_t status = i386_inb(0x64);
+    status = i386_inb(0x64);
+
+    if (status & (1 << 0)) kprintf("Output buffer full.\n");
+    else kprintf("Output buffer empty.\n");
+    if (status & (1 << 1)) kprintf("Input buffer full.\n");
+    else kprintf("Input buffer empty.\n");
+    if (status & (1 << 2)) kprintf("System flag set.\n");
+    else kprintf("System flag unset.\n");
+    if (status & (1 << 3)) kprintf("Command/Data -> PS/2 device.\n");
+    else kprintf("Command/Data -> PS/2 controller.\n");
+    if (status & (1 << 6)) kprintf("Timeout error.\n");
+    else kprintf("No timeout error.\n");
+    if (status & (1 << 7)) kprintf("Parity error.\n");
+    else kprintf("No parity error.\n");
+    
+    i386_outb(0x64, 0xAA);
+    uint8_t result = i386_inb(0x60);
+    if (result == 0x55) kprintf("PS/2 controller test passed.\n");
+    else if (result == 0xFC) kprintf("PS/2 controller test failed.\n");
+    else {
+        kprintf("PS/2 controller responded to test with unknown code %x\n", result);
+        kprintf("Trying to continue.\n");
+    }
+
+    i386_outb(0x64, 0x20);
+    result = i386_inb(0x60);
+    kprintf("PS/2 config byte: %x\n", result);
+
+    i386_irq_registerHandler(1, i386_keyboard_handler);
 }
 
 int key_press() {
@@ -93,121 +128,68 @@ char get_character(char character) {
 }
 
 //==================================================================================
-//   ____  _   _ _____ _     _       _  _________   ______   ___    _    ____  ____  
-//  / ___|| | | | ____| |   | |     | |/ / ____\ \ / / __ ) / _ \  / \  |  _ \|  _ \ 
-//  \___ \| |_| |  _| | |   | |     | ' /|  _|  \ V /|  _ \| | | |/ _ \ | |_) | | | |
-//   ___) |  _  | |___| |___| |___  | . \| |___  | | | |_) | |_| / ___ \|  _ <| |_| |
-//  |____/|_| |_|_____|_____|_____| |_|\_\_____| |_| |____/ \___/_/   \_\_| \_\____/ 
+//   _  _________   ______   ___    _    ____  ____  
+//  | |/ / ____\ \ / / __ ) / _ \  / \  |  _ \|  _ \ 
+//  | ' /|  _|  \ V /|  _ \| | | |/ _ \ | |_) | | | |
+//  | . \| |___  | | | |_) | |_| / ___ \|  _ <| |_| |
+//  |_|\_\_____| |_| |____/ \___/_/   \_\_| \_\____/ 
 
-        char* keyboard_read(int mode, int color) {
-            char* input = malloc(1);
-            input[0] = '\0';
-            
-            while (1) {
-                uint8_t status = i386_inb(0x64);
-                if (status & 0x1) {
-                    if (status & 0x20) continue;
-
-                    char character = i386_inb(0x60);
-                    if (character < 0 || character >= 128) continue;
-
-                    key_pressed[character] = false;
-                    if (!(character & 0x80)) {
-                        key_pressed[character] = true;
-                        char currentCharacter  = alphabet[character];
-
-                        if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) currentCharacter = shift_alphabet[character];
-                        if (currentCharacter == LSHIFT_BUTTON || currentCharacter == RSHIFT_BUTTON) continue;
-                        if (currentCharacter != ENTER_BUTTON) {
-                            if (currentCharacter == BACKSPACE_BUTTON) {
-                                if (strlen(input) <= 0) continue;
-                                input = backspace_string(input);
-
-                                if (!is_vesa) {
-                                    VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
-                                    VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), NULL);
-                                } else VESA_backspace();
-
-                                continue;
-                            }
-
-                            if (mode == VISIBLE_KEYBOARD)
-                                if (color != -1) kcprintf(color, "%c", currentCharacter);
-                                else kprintf("%c", currentCharacter);
-
-                            input = add_char_to_string(input, currentCharacter);
-                        } else break;
-                    }
-
-                    if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) {
-                        key_pressed[LSHIFT] = false;
-                        key_pressed[RSHIFT] = false;
-                    }
-                }
-            }
-
-            return input;
+        void enable_keyboard(uint8_t* buffer, int keyboard_mode, int keyboard_color, uint8_t* stop) {
+            mode  = keyboard_mode;
+            color = keyboard_color;
+            char_buffer = buffer;
+            stop_buffer = stop;
+            pos = 0;
         }
 
-        char* keyboard_read_stop(int mode, int color, char* stop_list) {
-            char* input = malloc(1);
-            input[0] = '\0';
-            
-            while (1) {
-                uint8_t status = i386_inb(0x64);
-                if (status & 0x1) {
-                    if (status & 0x20) continue;
+        void i386_keyboard_handler(Registers* regs) {
+            char character = i386_inb(0x60);
+            if (character < 0 || character >= 128) return;
+            if (char_buffer == NULL || stop_buffer == NULL) return;
 
-                    char character = i386_inb(0x60);
-                    if (character < 0 || character >= 128) continue;
+            char* input = char_buffer;
+            input[pos] = '\0';
 
-                    key_pressed[character] = false;
-                    if (!(character & 0x80)) {
-                        key_pressed[character] = true;
-                        char currentCharacter = alphabet[character];
-                        int chr_pos = -1;
-                        while (stop_list[++chr_pos] != '\0') 
-                            if (stop_list[chr_pos] == currentCharacter) {
-                                input[max(0, strlen(input))] = stop_list[chr_pos];
-                                return input;
-                            }
-
-                        if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) currentCharacter = shift_alphabet[character];
-                        if (currentCharacter == LSHIFT_BUTTON || currentCharacter == RSHIFT_BUTTON) continue;
-                        if (currentCharacter != ENTER_BUTTON) {
-                            if (currentCharacter == BACKSPACE_BUTTON) {
-                                if (strlen(input) <= 0) continue;
-                                input = backspace_string(input);
-
-                                if (!is_vesa) {
-                                    VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
-                                    VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), NULL);
-                                } else VESA_backspace();
-
-                                continue;
-                            }
-
-                            if (mode == VISIBLE_KEYBOARD)
-                                if (color != -1) kcprintf(color, "%c", currentCharacter);
-                                else kprintf("%c", currentCharacter);
-
-                            input = add_char_to_string(input, currentCharacter);
-                        } else break;
+            key_pressed[character] = false;
+            if (!(character & 0x80)) {
+                key_pressed[character] = true;
+                char currentCharacter = alphabet[character];
+                int chr_pos = -1;
+                while (stop_buffer[++chr_pos] != '\0') 
+                    if (stop_buffer[chr_pos] == currentCharacter) {
+                        input[max(0, strlen(input))] = stop_buffer[chr_pos];
+                        stop_buffer[0] = '\250';
+                        char_buffer = NULL;
+                        stop_buffer = NULL;
+                        return;
                     }
 
-                    if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) {
-                        key_pressed[LSHIFT] = false;
-                        key_pressed[RSHIFT] = false;
-                    }
+                if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) currentCharacter = shift_alphabet[character];
+                if (currentCharacter == LSHIFT_BUTTON || currentCharacter == RSHIFT_BUTTON) return;
+                if (currentCharacter == BACKSPACE_BUTTON) {
+                    if (strlen(input) <= 0) return;
+                    input[pos--] = '\0';
+
+                    if (!is_vesa) {
+                        VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
+                        VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), NULL);
+                    } else VESA_backspace();
+
+                    return;
                 }
+
+                if (mode == VISIBLE_KEYBOARD)
+                    if (color != -1) kcprintf(color, "%c", currentCharacter);
+                    else kprintf("%c", currentCharacter);
+
+                input[pos++] = currentCharacter;
             }
 
-            return input;
+            if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) {
+                key_pressed[LSHIFT] = false;
+                key_pressed[RSHIFT] = false;
+            }
         }
-
-        // void i386_keyboard_handler(Registers* regs) {
-        //     // TODO: Implement
-        // }
 
 //==================================================================================
 //   _   _    ___     _____ ____    _  _____ ___ ___  _   _   _  _________   ______   ___    _    ____  ____  

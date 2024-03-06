@@ -3,9 +3,9 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "isr.h"
 #include "x86.h"
 #include "phys_manager.h"
-#include "isr.h"
 
 
 #define PAGES_PER_TABLE      1024
@@ -66,6 +66,7 @@ typedef struct {
 } page_directory;
 
 extern page_directory* current_page_directory;
+extern page_directory* kernel_page_directory;
 
 
 bool VMM_init(uint32_t kernell_address);
@@ -91,3 +92,4 @@ physical_address virtual2physical(void* virt_address);
 void copy_page_directory(page_directory* src, page_directory* dest);
 
 void print_page_map(char arg);
+void page_fault(Registers* regs);

@@ -24,7 +24,7 @@
 
 
 int row_position = 1;
-UContent* current_directory;
+Content* current_directory;
 
 int upper_border = 0;
 int down_border = 14;
@@ -149,8 +149,8 @@ void execute_item(char action_type, char** path) {
     //=====================
 
         int rows = 1;
-        UDirectory* currentDir = opendir(*path);
-        UDirectory* subdir     = currentDir->subDirectory;
+        Directory* currentDir = opendir(*path);
+        Directory* subdir     = currentDir->subDirectory;
         while (subdir != NULL) {
             if (rows++ == row_position) {
                 if (action_type == ENTER_BUTTON) 
@@ -175,7 +175,7 @@ void execute_item(char action_type, char** path) {
                     cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW DIR NAME: ");
                     char* new_dir_name = input_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
-                    udirectory_entry_t* new_meta = FATLIB_create_entry(new_dir_name, NULL, 1, NULL, NULL);
+                    directory_entry_t* new_meta = FATLIB_create_entry(new_dir_name, NULL, 1, NULL, NULL);
                     *path = (FATLIB_change_path(*path, subdir->directory_meta.file_name));
                     chgcontent(*path, new_meta);
                     *path = (FATLIB_change_path(*path, NULL));
@@ -196,7 +196,7 @@ void execute_item(char action_type, char** path) {
     //  SELECTED FILE
     //=========================
 
-        UFile* currentFile = currentDir->files;
+        File* currentFile = currentDir->files;
         while (currentFile != NULL) {
 
             char name[25]; 
@@ -260,7 +260,7 @@ void execute_item(char action_type, char** path) {
                                         cprintf(BACKGROUND_BLACK + FOREGROUND_WHITE, "\nNEW FILE EXT: ");
                                         char* new_file_ext = input_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE);
 
-                                        udirectory_entry_t* new_meta = FATLIB_create_entry(new_file_name, new_file_ext, 0, NULL, NULL);
+                                        directory_entry_t* new_meta = FATLIB_create_entry(new_file_name, new_file_ext, 0, NULL, NULL);
 
                                         *path = (FATLIB_change_path(*path, name));
                                         chgcontent(*path, new_meta);
@@ -425,8 +425,8 @@ void print_directory_data(char* path) {
         rows++;
     }
 
-    UDirectory* currentDir = opendir(path);
-    UDirectory* subdirs    = currentDir->subDirectory;
+    Directory* currentDir = opendir(path);
+    Directory* subdirs    = currentDir->subDirectory;
     while (subdirs != NULL) {
         char name[12];
         name[11] = '\0';
@@ -442,7 +442,7 @@ void print_directory_data(char* path) {
         subdirs = subdirs->next;
     }
 
-    UFile* currentFile = currentDir->files;
+    File* currentFile = currentDir->files;
     while (currentFile != NULL) {
 
         //=========================
@@ -464,9 +464,9 @@ void print_directory_data(char* path) {
             strncpy(file_size, file_size_str, 10);
             strcat(file_size, "B");
 
-            UDate* creation_date     = FATLIB_get_date(currentFile->file_meta.creation_date, 1);
-            UDate* modification_date = FATLIB_get_date(currentFile->file_meta.last_modification_date, 1);
-            UDate* access_date       = FATLIB_get_date(currentFile->file_meta.last_accessed, 1);
+            Date* creation_date     = FATLIB_get_date(currentFile->file_meta.creation_date, 1);
+            Date* modification_date = FATLIB_get_date(currentFile->file_meta.last_modification_date, 1);
+            Date* access_date       = FATLIB_get_date(currentFile->file_meta.last_accessed, 1);
 
             for (size_t i = strlen(file_name); i < 11; i++) file_name[i] = ' ';
             for (size_t i = strlen(file_extension); i < 4; i++) file_extension[i] = ' ';

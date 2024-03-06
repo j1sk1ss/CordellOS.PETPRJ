@@ -2,13 +2,15 @@
 #define _KSHELL_H_
 
 
+#include <stdlib.h>
 #include <stddef.h>
 #include <fatlib.h>
 #include <string.h>
-#include <stdlib.h>
 #include <bitmap.h>
 #include <stdio.h>
 #include <networking.h>
+#include <keyboard.h>
+#include <sysinfo.h>
 
 
 //   ____  _   _ _____ _     _     
@@ -20,7 +22,8 @@
 /////////////////
 //  CONSTANTS
 
-    #define COMMAND_BUFFER                          10
+    #define COMMAND_BUFFER  10
+    #define COMMAND_LENGHT  128
 
     /////////////////
     //  COMMANDS

@@ -94,8 +94,6 @@
 
 char get_char();
 char wait_char();
-char* input_read(int mode, uint8_t color);
-char* input_read_stop(int mode, uint8_t color, char* stop_list);
 
 void directly_putclr(int x, int y, uint8_t color);
 void directly_putc(int x, int y, char character);

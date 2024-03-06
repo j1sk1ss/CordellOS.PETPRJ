@@ -12,35 +12,28 @@ void main(int args, char* argv[]) {
     shell_start_screen();
 
     while (exit) {
-        printf("\n[KERNEL] $%s> ", current_path);
+        printf("\n$%s> ", current_path);
         
         char stop_chars[3] = { ENTER_BUTTON, UP_ARROW_BUTTON, '\0' };
-        char* input        = input_read_stop(VISIBLE_KEYBOARD, FOREGROUND_WHITE, stop_chars);
-        char* command      = input;
-        int last_char      = max(0, strlen(input) - 2);
+        char input[COMMAND_LENGHT] = { '\0' };
+        keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE, stop_chars, input);
 
-        if (input[last_char] == UP_ARROW_BUTTON) {
-            char* saved_command = command_buffer[max(0, --current_command)];
-            if (saved_command != NULL) {
-                command = saved_command;
-                printf("%s", saved_command);
-            }
-
-            if (current_command < 0) current_command = 0;
+        char* keyboard_input = calloc(strlen(input), 1);
+        strncpy(keyboard_input, input, strlen(input));
+        char* command = keyboard_input;
+        
+        int last_char = max(0, strlen(keyboard_input) - 2);
+        if (keyboard_input[last_char] == UP_ARROW_BUTTON) {
+            // restore command
         }
 
-        input[last_char] = '\0';
-
+        keyboard_input[last_char] = '\0';
         if (current_command >= COMMAND_BUFFER) {
-            free(command_buffer[0]);
-            for (int i = 1; i < COMMAND_BUFFER; i++) 
-                command_buffer[i - 1] = command_buffer[i];
-            
-            current_command = COMMAND_BUFFER - 1;
+            // move buffer
         }
         
-        command_buffer[current_command++] = input;
         execute_command(command);
+        free(keyboard_input);
     }
 
     free(current_path);
@@ -49,7 +42,7 @@ void main(int args, char* argv[]) {
 
 void shell_start_screen() {
     printf("\n");
-    printf("Cordell Shell [ver. 0.4b | 04.03.2024]\n");
+    printf("Cordell Shell [ver. 0.4c | 05.03.2024]\n");
     printf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n");
 }
 
@@ -58,10 +51,9 @@ void shell_start_screen() {
 //====================
 
     void execute_command(char* command) {
-
         if (command == NULL) return;
         if (strlen(command) <= 0) return;
-
+  
         //====================
         //  SPLIT COMMAND LINE TO ARGS
         //====================
@@ -72,7 +64,7 @@ void shell_start_screen() {
             char* splitted = strtok(command, " ");
             while(splitted) {
                 command_line[tokenCount++] = splitted;
-                splitted                   = strtok(NULL, " ");
+                splitted = strtok(NULL, " ");
             }
 
         //====================
@@ -104,8 +96,8 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_REBOOT)    == 0) machine_restart();
             else if (strstr(command_line[0], COMMAND_VERSION)   == 0) shell_start_screen();
             else if (strstr(command_line[0], COMMAND_ECHO)      == 0) printf("\n%s", command_line[1]);
-            // else if (strstr(command_line[0], COMMAND_MEM_DATA)  == 0) print_kmalloc_map();
-            // else if (strstr(command_line[0], COMMAND_PAGE_DATA) == 0) print_page_map(command_line[1][0]);
+            else if (strstr(command_line[0], COMMAND_MEM_DATA)  == 0) print_malloc_map();
+            else if (strstr(command_line[0], COMMAND_PAGE_DATA) == 0) print_page_map(command_line[1][0]);
             else if (strstr(command_line[0], COMMAND_CLEAR)     == 0) clrscr();
                 
             else if (strstr(command_line[0], COMMAND_DISK_DATA) == 0) {
@@ -145,7 +137,7 @@ void shell_start_screen() {
                     return;
                 }
 
-                UContent* content = get_content(dir_path);
+                Content* content = get_content(dir_path);
                 if (content->file != NULL) {
                     FATLIB_unload_content_system(content);
                     free(dir_path);
@@ -170,9 +162,9 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {
-                UDirectory* directory   = opendir(current_path);
-                UDirectory* current_dir = directory->subDirectory;
-                UFile* current_file     = directory->files;
+                Directory* directory   = opendir(current_path);
+                Directory* current_dir = directory->subDirectory;
+                File* current_file     = directory->files;
 
                 printf("\n");
                 while (current_dir != NULL) {
@@ -199,11 +191,11 @@ void shell_start_screen() {
                 
                 printf("\n");
 
-                UContent* content = get_content(file_path);
+                Content* content = get_content(file_path);
                 int data_size = 0;
                 while (data_size < content->file->file_meta.file_size) {
                     int copy_size = min(content->file->file_meta.file_size - data_size, 128);
-                    char* data    = (char*)calloc(copy_size, 1);
+                    char* data = (char*)calloc(copy_size, 1);
 
                     fread_off(content, data_size, data, copy_size);
                     printf("%s", data);
@@ -224,7 +216,7 @@ void shell_start_screen() {
                     return;
                 }
                 
-                struct bitmap* bitmap = BMP_create(file_path, atoi(command_line[2]), atoi(command_line[3]));
+                bitmap_t* bitmap = BMP_create(file_path, atoi(command_line[2]), atoi(command_line[3]));
                 
                 BMP_display(bitmap);
                 BMP_unload(bitmap);

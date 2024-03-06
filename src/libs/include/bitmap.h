@@ -44,7 +44,7 @@ typedef struct bitmap {
     unsigned int width;
     unsigned int height;
 
-    UContent* file;
+    Content* file;
     uint32_t header_offset;
 
     unsigned int total_size;

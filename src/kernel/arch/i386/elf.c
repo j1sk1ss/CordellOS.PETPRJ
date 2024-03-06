@@ -1,9 +1,9 @@
 #include "../../include/elf.h"
 
 
-struct ELF32_program* ELF_read(const char* path) {
-    struct ELF32_program* program = calloc(sizeof(struct ELF32_program), 1);
-    Content* content    = FAT_get_content(path);
+ELF32_program* ELF_read(const char* path) {
+    ELF32_program* program = calloc(sizeof(ELF32_program), 1);
+    Content* content = FAT_get_content(path);
     if (content->file == NULL) {
         kprintf("[%s %i] File not found\n", __FILE__, __LINE__);
         FAT_unload_content_system(content);
@@ -57,8 +57,8 @@ struct ELF32_program* ELF_read(const char* path) {
         for (uint32_t i = 0; i < header_num; i++) {
             if (phdr[i].p_type != PT_LOAD) continue;
 
-            uint32_t program_pages    = phdr[i].p_memsz / PAGE_SIZE;
-            uint32_t virtual_address  = phdr[i].p_vaddr;
+            uint32_t program_pages   = phdr[i].p_memsz / PAGE_SIZE;
+            uint32_t virtual_address = phdr[i].p_vaddr;
             program->pages[i] = phdr[i].p_vaddr;
 
             if (phdr[i].p_memsz % PAGE_SIZE > 0) program_pages++;

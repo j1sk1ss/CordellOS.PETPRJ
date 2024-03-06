@@ -9,6 +9,7 @@
 #include <memory.h>
 #include <stdlib.h>  // Allocators (basic malloc required)
 #include <string.h>
+#include <fatlib.h>
 
 
 #define SECTOR_OFFSET		23000
@@ -126,24 +127,6 @@ typedef struct fat_BS {
 
 /* from http://wiki.osdev.org/FAT */
 
-typedef struct directory_entry {
-	unsigned char file_name[11];
-	unsigned char attributes;
-	unsigned char reserved0;
-	unsigned char creation_time_tenths;
-
-	unsigned short creation_time;
-	unsigned short creation_date;
-	unsigned short last_accessed;
-	unsigned short high_bits;
-	unsigned short last_modification_time;
-	unsigned short last_modification_date;
-	unsigned short low_bits;
-
-	unsigned int file_size;
-
-} __attribute__((packed)) directory_entry_t;
-
 typedef struct fsInfo {
 	unsigned int  lead_signature;      //should contain 0x41615252
 	unsigned char reserved1[480];
@@ -171,44 +154,6 @@ typedef struct long_entry {
 } __attribute__((packed)) long_entry_t;
 
 /* From file_system.h (CordellOS brunch FS_based_on_FAL) */
-
-
-typedef struct FATFile {
-	directory_entry_t file_meta;
-	void* data_pointer;
-	int data_size;
-	uint32_t* data;
-	char* extension;
-	char* name;
-    File* next;
-
-} File;
-
-typedef struct FATDirectory {
-	directory_entry_t directory_meta;
-	void* data_pointer;
-	char* name;
-	Directory* next;
-    File* files;
-    Directory* subDirectory;
-
-} Directory;
-
-typedef struct FATDate {
-	uint16_t hour;
-	uint16_t minute;
-	uint16_t second;
-	uint16_t year;
-	uint16_t mounth;
-	uint16_t day;
-
-} Date;
-
-typedef struct FATContent {
-	Directory* directory;
-	File* file;
-
-} Content;
 
 
 //Global variables

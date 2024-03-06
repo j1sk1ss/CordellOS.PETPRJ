@@ -2,6 +2,7 @@
 
 
 page_directory* current_page_directory;
+page_directory* kernel_page_directory;
 
 
 pt_entry* get_pt_entry(page_table* pt, virtual_address address) {
@@ -33,12 +34,12 @@ pt_entry* get_page_in_dir(const virtual_address address, page_directory* dir) {
 
 void* allocate_page(pt_entry* page) {
     void* block = allocate_blocks(1);
-    if (block != 0) {
+    if (block) {
         SET_FRAME(page, (physical_address)block);
         SET_ATTRIBUTE(page, PTE_PRESENT);
     } else {
         kprintf("Page allocation error!\n");
-        return NULL; // Вернуть NULL при ошибке выделения памяти
+        return NULL;
     }
 
     return block;
@@ -52,7 +53,10 @@ void free_page(pt_entry* page) {
 }
 
 bool set_page_directory(page_directory* pd) {
-    if (!pd) return false;
+    if (!pd) {
+        kprintf("[%s %i] Can`t set page directory!\n");
+        return false;
+    }
 
     current_page_directory = pd;
     asm ("movl %%eax, %%cr3" : : "a"(current_page_directory) );
@@ -124,26 +128,6 @@ void unmap_page_in_dir(void* virt_address, page_directory* dir) {
     CLEAR_ATTRIBUTE(page, PTE_PRESENT);
 }
 
-void page_fault(Registers* regs) {
-	uint32_t faulting_address;
-	asm ("mov %%cr2, %0" : "=r" (faulting_address));
-
-	int present	 = !(regs->error & 0x1);	// When set, the page fault was caused by a page-protection violation. When not set, it was caused by a non-present page.
-	int rw		 = regs->error & 0x2;		// When set, the page fault was caused by a write access. When not set, it was caused by a read access.
-	int us		 = regs->error & 0x4;		// When set, the page fault was caused while CPL = 3. This does not necessarily mean that the page fault was a privilege violation.
-	int reserved = regs->error & 0x8;		// When set, one or more page directory entries contain reserved bits which are set to 1. This only applies when the PSE or PAE flags in CR4 are set to 1.
-	int id		 = regs->error & 0x10;		// When set, the page fault was caused by an instruction fetch. This only applies when the No-Execute bit is supported and enabled.
-
-	kprintf("Page fault! ( ");
-	if (present) kprintf("present ");
-	if (rw) kprintf("read-only ");
-	if (us) kprintf("user-mode ");
-	if (reserved) kprintf("reserved ");
-	kprintf(") at 0x%u\n", faulting_address);
-
-	kernel_panic("Page fault");
-}
-
 bool VMM_init(uint32_t memory_start) {
     page_directory* dir = (page_directory*)allocate_blocks(3);
     memset(dir, 0, sizeof(page_directory));
@@ -189,6 +173,7 @@ bool VMM_init(uint32_t memory_start) {
     SET_FRAME(second_entry, (physical_address)table3G); 
 
     if (set_page_directory(dir) == false) return false;
+    kernel_page_directory = dir;
 
     asm ("movl %CR0, %EAX; orl $0x80000001, %EAX; movl %EAX, %CR0");
     i386_isr_registerHandler(14, page_fault);
@@ -203,7 +188,7 @@ page_directory* create_page_directory() {
     }
 
     memset(dir, 0, sizeof(page_directory));
-    for (int i = 0; i < TABLES_PER_DIRECTORY; i++)
+    for (uint32_t i = 0; i < TABLES_PER_DIRECTORY; i++)
         dir->entries[i] = 0x02;
 
     return dir;
@@ -228,23 +213,44 @@ void copy_page_directory(page_directory* src, page_directory* dest) {
     if (!src || !dest) 
         return;
 
-    memcpy(dest, src, sizeof(page_directory));
-    for (int i = 0; i < TABLES_PER_DIRECTORY; i++) {
-        pd_entry* src_entry = &src->entries[i];
+    for (uint32_t i = 0; i < TABLES_PER_DIRECTORY; i++) {
+        if (src->entries[i] & PDE_PRESENT) {
+            page_table *new_table = (page_table *)allocate_blocks(1);
 
-        if ((*src_entry & PDE_PRESENT) == PDE_PRESENT) {
-            page_table* dest_table = (page_table*)allocate_blocks(1);
-            if (!dest_table) 
-                return;
+            if (!new_table) {
+                free_blocks(dest, 3);
+                return NULL;
+            }
 
-            memcpy(dest_table, PAGE_PHYS_ADDRESS(src_entry), sizeof(page_table));
-
-            pd_entry* dest_entry = &dest->entries[i];
-            SET_ATTRIBUTE(dest_entry, PDE_PRESENT);
-            SET_ATTRIBUTE(dest_entry, PDE_READ_WRITE);
-            SET_FRAME(dest_entry, (physical_address)dest_table);
+            memcpy(new_table, (page_table *)PAGE_PHYS_ADDRESS(&src->entries[i]), sizeof(page_table));
+            dest->entries[i] = (pd_entry)((uint32_t)new_table | PDE_PRESENT | PDE_READ_WRITE);
         }
     }
+}
+
+void page_fault(Registers* regs) {
+	uint32_t faulting_address;
+	asm ("mov %%cr2, %0" : "=r" (faulting_address));
+
+	int present	 = !(regs->error & 0x1);	// When set, the page fault was caused by a page-protection violation. When not set, it was caused by a non-present page.
+	int rw		 = regs->error & 0x2;		// When set, the page fault was caused by a write access. When not set, it was caused by a read access.
+	int us		 = regs->error & 0x4;		// When set, the page fault was caused while CPL = 3. This does not necessarily mean that the page fault was a privilege violation.
+	int reserved = regs->error & 0x8;		// When set, one or more page directory entries contain reserved bits which are set to 1. This only applies when the PSE or PAE flags in CR4 are set to 1.
+	int id		 = regs->error & 0x10;		// When set, the page fault was caused by an instruction fetch. This only applies when the No-Execute bit is supported and enabled.
+
+	kprintf("\nWHOOOPS..\nPAGE FAULT! (\t");
+	if (present) kprintf("NOT PRESENT\t");
+    else kprintf("PAGE PROTECTION\t");
+
+	if (rw) kprintf("READONLY\t");
+    else kprintf("WRITEONLY\t");
+
+	if (us)       kprintf("USERMODE\t");
+	if (reserved) kprintf("RESERVED\t");
+    if (id)       kprintf("INST FETCH\t");
+	kprintf(") AT 0x%p\n", faulting_address);
+
+	kernel_panic("PAGE FAULT");
 }
 
 void print_page_map(char arg) {

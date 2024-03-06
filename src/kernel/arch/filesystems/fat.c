@@ -410,8 +410,9 @@
 // returns: -1 is a general error
 
 	Directory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, BOOL exclusive) {
-		Directory* currentDirectory = malloc(sizeof(struct FATDirectory));
+		Directory* currentDirectory = calloc(sizeof(struct FATDirectory), 1);
 
+		currentDirectory->name         = NULL;
 		currentDirectory->files        = NULL;
 		currentDirectory->subDirectory = NULL;
 		currentDirectory->next         = NULL;
@@ -1040,7 +1041,7 @@
 	}
 
 	int FAT_ELF_execute_content(char* path, int args, char* argv[]) {
-		struct ELF32_program* program = ELF_read(path);
+		ELF32_program* program = ELF_read(path);
 
 		int (*programEntry)(int, char* argv[]) = (int (*)(int, char* argv[]))(program->entry_point);
 		if (programEntry == NULL) return 0;
