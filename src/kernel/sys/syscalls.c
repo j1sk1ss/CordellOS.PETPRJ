@@ -86,6 +86,7 @@ void syscall(Registers* regs) {
         else if (regs->eax == SYS_SET_SCRCOLOR) {
             int x = (int)regs->ebx;
             int y = (int)regs->ecx;
+            
             uint8_t new_color = (uint8_t)regs->edx;
             VGA_putcolor(x, y, new_color);
         } 
@@ -94,9 +95,10 @@ void syscall(Registers* regs) {
         //  KEYBOARD SYSCALLS
         //=======================
 
-            else if (regs->eax == SYS_READ_KEYBOARD) { // TODO: to int keyboard
-                char* wait_buffer = (char*)regs->ecx;
-                wait_buffer[0] = keyboard_navigation();
+            else if (regs->eax == SYS_READ_KEYBOARD) {
+                char* wait_buffer    = (char*)regs->ecx;
+                uint8_t stop_list[2] = { '\0' };
+                enable_keyboard(wait_buffer, HIDDEN_KEYBOARD, -1, stop_list);
             } 
             
             else if (regs->eax == SYS_GET_KEY_KEYBOARD) {
@@ -210,9 +212,9 @@ void syscall(Registers* regs) {
     //=======================
 
         else if (regs->eax == SYS_READ_FILE) {
-            char* rfile_path           = (char*)regs->ebx;
+            char* rfile_path = (char*)regs->ebx;
             Content* content = current_vfs->getobj(rfile_path);
-            regs->eax                  = (uint32_t)current_vfs->read(content);
+            regs->eax        = (uint32_t)current_vfs->read(content);
             FATLIB_unload_content_system(content);
         } 
         
@@ -283,9 +285,9 @@ void syscall(Registers* regs) {
 
         else if (regs->eax == SYS_READ_FILE_OFF) {
             Content* read_off_file = (Content*)regs->ebx;
-            int offset                       = (int)regs->ecx;
-            uint8_t* offset_buffer           = (uint8_t*)regs->edx;
-            int offset_len                   = (int)regs->esi;
+            int offset             = (int)regs->ecx;
+            uint8_t* offset_buffer = (uint8_t*)regs->edx;
+            int offset_len         = (int)regs->esi;
             
             current_vfs->readoff(read_off_file, offset_buffer, offset, offset_len);
         }

@@ -226,7 +226,7 @@ void put_text(struct text_object* text) {
     if (text->x > get_resolution_x() || text->y > get_resolution_y() ||
         text->x < 0 || text->y < 0) {
         printf("\nWrong resolution");
-        return NULL;
+        return;
     }
 
     int cursor[2];
@@ -239,7 +239,7 @@ void put_text(struct text_object* text) {
     cprintf(text->bg_color, text->text);
 
     cursor_set(prev_x, prev_y);
-    return NULL;
+    return;
 }
 
 void unload_text(struct text_object* text)  {

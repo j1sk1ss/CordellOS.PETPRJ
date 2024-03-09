@@ -56,8 +56,8 @@ typedef struct vfs_node {
 } vfs_node_t;
 
 
-extern struct vfs_node* vfs_list;
-extern struct vfs_node* current_vfs;
+extern vfs_node_t* vfs_list;
+extern vfs_node_t* current_vfs;
 
 
 void VFS_initialize(struct ata_dev* dev, uint32_t fs_type);

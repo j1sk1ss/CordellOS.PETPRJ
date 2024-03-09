@@ -111,40 +111,6 @@ void cursor_get(int* result) {
 }
 
 //====================================================================
-// Function take a value from keyboard
-// ECX - pointer to character
-char get_char() {
-    char key;
-    __asm__ volatile(
-        "movl $5, %%eax\n"
-        "movl %0, %%ecx\n"
-        "int %1\n"
-        :
-        : "r"(&key), "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
-    );
-
-    return key;
-}
-
-//====================================================================
-//  This function waits an any button pressing from user
-//  ECX - pointer to character
-char wait_char() {
-    char key;
-    __asm__ volatile(
-        "movl $4, %%eax\n"
-        "movl %0, %%ecx\n"
-        "int %1\n"
-        :
-        : "r"(&key), "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
-    );
-
-    return key;
-}
-
-//====================================================================
 //  Clear entire screen (used kernel printf commands)
 void clrscr() {
     __asm__ volatile (

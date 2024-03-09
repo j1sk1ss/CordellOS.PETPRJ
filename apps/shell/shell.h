@@ -42,10 +42,11 @@
         #define COMMAND_LIST_DIR                        "dir"
 
         #define COMMAND_IPCONFIG                        "ipconf"
-        #define COMMAND_SEND_PACKET                     "udp-spacc"
-        #define COMMAND_POP_PACKET                      "udp-ppacc"
+        #define COMMAND_SEND_UDP_PACKET                 "udp-spacc"
+        #define COMMAND_POP_UDP_PACKET                  "udp-ppacc"
 
-        #define COMMAND_BMP_SHOW                        "guardare"
+        #define COMMAND_BMP_SHOW                        "guarda"
+        #define COMMAND_CINFO                           "cinfo"
         #define COMMAND_FILE_VIEW                       "vista"
         #define COMMAND_FILE_RUN                        "fuga"
 
@@ -58,7 +59,8 @@
 //  CONSTANTS
 /////////////////
 
-void kshell();
-
+void main(int argc, char* argv[]);
+void shell_start_screen();
+void execute_command(char* command);
 
 #endif

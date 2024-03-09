@@ -144,22 +144,23 @@ Help(VARS.GenerateHelpText(HOST_ENVIRONMENT))
 Export('HOST_ENVIRONMENT')
 Export('TARGET_ENVIRONMENT')
 
-variantDir = 'build/CordellOS/boot'
+bootDir = 'build/CordellOS/boot'
+homeDir = 'build/CordellOS/home'
 
 # Static libs
-SConscript('src/libs/SConscript', variant_dir=variantDir + '/libs', duplicate=0)
+SConscript('src/libs/SConscript', variant_dir=bootDir + '/libs', duplicate=0)
 
 # User land
 # SConscript('src/userl/SConscript', variant_dir=variantDir + '/userl', duplicate=0)
 
 # Apps
-SConscript('apps/shell/SConscript', variant_dir=variantDir + '/shell', duplicate=0)
-SConscript('apps/games/snake/SConscript', variant_dir=variantDir + '/apps/games/snake', duplicate=0)
-SConscript('apps/std/calc/SConscript', variant_dir=variantDir + '/apps/std/calc', duplicate=0)
-SConscript('apps/std/asm/SConscript', variant_dir=variantDir + '/apps/std/asm', duplicate=0)
+SConscript('apps/shell/SConscript', variant_dir=homeDir + '/shell', duplicate=0)
+SConscript('apps/games/snake/SConscript', variant_dir=homeDir + '/apps/games/snake', duplicate=0)
+SConscript('apps/std/calc/SConscript', variant_dir=homeDir + '/apps/std/calc', duplicate=0)
+SConscript('apps/std/asm/SConscript', variant_dir=homeDir + '/apps/std/asm', duplicate=0)
 
 # Kernel
-SConscript('src/kernel/SConscript', variant_dir=variantDir + '/kernel', duplicate=0)
+SConscript('src/kernel/SConscript', variant_dir=bootDir + '/kernel', duplicate=0)
 
 Import('kernel')
 Default(kernel)

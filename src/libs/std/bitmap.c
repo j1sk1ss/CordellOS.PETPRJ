@@ -14,7 +14,7 @@ bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
     uint8_t* header = calloc(sizeof(bmp_fileheader_t), 1);
     fread_off(content, 0, header, sizeof(bmp_fileheader_t));
 
-    bmp_fileheader_t* h = header;
+    bmp_fileheader_t* h = (bmp_fileheader_t*)header;
     uint32_t offset     = h->bfOffBits;
 
     free(header);
@@ -22,7 +22,7 @@ bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
     uint8_t* info = calloc(sizeof(bmp_infoheader_t), 1);
     fread_off(content, sizeof(bmp_fileheader_t), info, sizeof(bmp_infoheader_t));
 
-    bmp_infoheader_t* inf = info;
+    bmp_infoheader_t* inf = (bmp_infoheader_t*)info;
     ret->width         = inf->biWidth;
     ret->height        = inf->biHeight;
     ret->header_offset = offset;

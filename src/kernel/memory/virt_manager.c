@@ -194,6 +194,34 @@ page_directory* create_page_directory() {
     return dir;
 }
 
+void free_page_directory(page_directory* pd) {
+    if (pd == NULL) {
+        kprintf("[%s %i] Error: Attempting to free a NULL page directory.\n", __FILE__, __LINE__);
+        return;
+    }
+
+    for (int pd_index = 0; pd_index < TABLES_PER_DIRECTORY; pd_index++) {
+        pd_entry* pd_entry = &pd->entries[pd_index];
+
+        if ((*pd_entry & PDE_PRESENT) == PDE_PRESENT) {
+            page_table* pt = (page_table*)PAGE_PHYS_ADDRESS(pd_entry);
+
+            for (int pt_index = 0; pt_index < PAGES_PER_TABLE; pt_index++) {
+                pt_entry* page = &pt->entries[pt_index];
+
+                if (*page & PTE_PRESENT) {
+                    void* phys_address = (void*)PAGE_PHYS_ADDRESS(page);
+                    free_blocks(phys_address, 1);
+                }
+            }
+
+            free_blocks(pt, 1);
+        }
+    }
+
+    free_blocks(pd, 3);
+}
+
 physical_address virtual2physical(void* virt_address) {
     page_directory* pd = current_page_directory;
     pd_entry* pd_entry = &pd->entries[PD_INDEX((uint32_t)virt_address)];

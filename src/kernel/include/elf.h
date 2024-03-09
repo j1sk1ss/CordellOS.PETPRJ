@@ -19,7 +19,6 @@
 
 
 typedef struct {
-
     unsigned char e_ident[EI_NIDENT];
     uint16_t	  e_type;
     uint16_t	  e_machine;
@@ -47,7 +46,6 @@ enum {
 };
 
 typedef struct {
-
     uint32_t	p_type;
     uint32_t	p_offset;
     uint32_t	p_vaddr;
@@ -77,6 +75,7 @@ typedef struct {
 	uint32_t	sh_info;
 	uint32_t	sh_addralign;
 	uint32_t	sh_entsize;
+
 } Elf32_Shdr;
 
 typedef struct {
@@ -86,7 +85,6 @@ typedef struct {
 } ELF32_program;
 
 enum ShT_Types {
-
 	SHT_NULL	 = 0,   // Null section
 	SHT_PROGBITS = 1,   // Program information
 	SHT_SYMTAB	 = 2,   // Symbol table
@@ -98,7 +96,6 @@ enum ShT_Types {
 };
  
 enum ShT_Attributes {
-
 	SHF_WRITE	= 0x01, // Writable section
 	SHF_ALLOC	= 0x02  // Exists in memory
 

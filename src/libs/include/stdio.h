@@ -53,23 +53,6 @@
 
 //  COLORS
 //=======================================
-//  KEYS
-
-    #define F4_BUTTON               '\254'
-    #define F3_BUTTON               '\255'
-    #define F2_BUTTON               '\7'
-    #define F1_BUTTON               '\6'
-
-    #define UP_ARROW_BUTTON         '\4'
-    #define DOWN_ARROW_BUTTON       '\3'
-    #define LEFT_ARROW_BUTTON       '\1'
-    #define RIGHT_ARROW_BUTTON      '\2'
-
-    #define ENTER_BUTTON            '\n'
-    #define BACKSPACE_BUTTON        '\b'
-
-//  KEYS
-//=======================================
 //  MODS
 
     #define HIDDEN_KEYBOARD         0
@@ -91,9 +74,6 @@
 #define PRINTF_LENGTH_LONG          3
 #define PRINTF_LENGTH_LONG_LONG     4
 
-
-char get_char();
-char wait_char();
 
 void directly_putclr(int x, int y, uint8_t color);
 void directly_putc(int x, int y, char character);

@@ -1,12 +1,12 @@
 #include "../../include/vfs.h"
 
 
-struct vfs_node* vfs_list = NULL;
-struct vfs_node* current_vfs = NULL;
+vfs_node_t* vfs_list = NULL;
+vfs_node_t* current_vfs = NULL;
 
 
-void VFS_initialize(struct ata_dev* dev, uint32_t fs_type) {
-    vfs_list = malloc(sizeof(struct vfs_node));
+void VFS_initialize(ata_dev_t* dev, uint32_t fs_type) {
+    vfs_list = malloc(sizeof(vfs_node_t));
     vfs_list->fs_type = fs_type;
     vfs_list->device  = dev;
 
@@ -29,8 +29,8 @@ void VFS_initialize(struct ata_dev* dev, uint32_t fs_type) {
     current_vfs = vfs_list;
 }
 
-void VFS_add_node(struct ata_dev* dev, uint32_t fs_type) {
-    struct vfs_node* new_node = malloc(sizeof(struct vfs_node));
+void VFS_add_node(ata_dev_t* dev, uint32_t fs_type) {
+    vfs_node_t* new_node = malloc(sizeof(vfs_node_t));
     new_node->fs_type = fs_type;
     new_node->device  = dev;
 
@@ -50,7 +50,7 @@ void VFS_add_node(struct ata_dev* dev, uint32_t fs_type) {
         strncpy(new_node->name, "FATFS", 5);
     }
 
-    struct vfs_node* cur = vfs_list;
+    vfs_node_t* cur = vfs_list;
     while (cur->next != NULL) cur = cur->next;
     cur->next = new_node;
 }

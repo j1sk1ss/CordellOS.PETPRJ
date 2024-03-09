@@ -3,6 +3,7 @@
 #include <fatlib.h>
 #include <string.h>
 #include <stdlib.h>
+#include <keyboard.h>
 
 
 #define V 21

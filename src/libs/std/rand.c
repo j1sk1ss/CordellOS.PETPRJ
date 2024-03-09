@@ -9,7 +9,7 @@ int rand_r(int seed) {
 
 int srand_r(int fseed) {
 	short date_time[7];
-    get_datetime(&date_time);
+    get_datetime(date_time);
 
 	int seed = date_time[0] * date_time[2] * 11015245 + 12345;
 	return ((fseed * seed) & 2147483647);

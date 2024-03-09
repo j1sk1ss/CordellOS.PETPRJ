@@ -1,39 +1,27 @@
 #include "shell.h"
 
 
-char* current_path = "BOOT";
+char* current_path = "HOME";
 char* command_buffer[COMMAND_BUFFER] = { NULL };
 int exit = 1;
 int current_command = 0;
 
 
-void main(int args, char* argv[]) {
+void main(int argc, char* argv[]) {
     clrscr();
     shell_start_screen();
 
     while (exit) {
         printf("\n$%s> ", current_path);
         
-        char stop_chars[3] = { ENTER_BUTTON, UP_ARROW_BUTTON, '\0' };
+        char stop_chars[3] = { ENTER_BUTTON, '\0' };
         char input[COMMAND_LENGHT] = { '\0' };
         keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE, stop_chars, input);
-
-        char* keyboard_input = calloc(strlen(input), 1);
-        strncpy(keyboard_input, input, strlen(input));
-        char* command = keyboard_input;
         
-        int last_char = max(0, strlen(keyboard_input) - 2);
-        if (keyboard_input[last_char] == UP_ARROW_BUTTON) {
-            // restore command
-        }
-
-        keyboard_input[last_char] = '\0';
-        if (current_command >= COMMAND_BUFFER) {
-            // move buffer
-        }
+        int last_char = max(0, strlen(input) - 1);
+        input[last_char] = '\0';
         
-        execute_command(command);
-        free(keyboard_input);
+        execute_command(input);
     }
 
     free(current_path);
@@ -42,7 +30,7 @@ void main(int args, char* argv[]) {
 
 void shell_start_screen() {
     printf("\n");
-    printf("Cordell Shell [ver. 0.4c | 05.03.2024]\n");
+    printf("Cordell Shell [ver. 0.5a | 09.03.2024]\n");
     printf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n");
 }
 
@@ -59,10 +47,12 @@ void shell_start_screen() {
         //====================
 
             char* command_line[100];
-            int tokenCount = 0;
+            for (int i = 0; i < 100; i++) 
+                command_line[i] = NULL;
 
+            int tokenCount = 0;
             char* splitted = strtok(command, " ");
-            while(splitted) {
+            while (splitted) {
                 command_line[tokenCount++] = splitted;
                 splitted = strtok(NULL, " ");
             }
@@ -78,12 +68,15 @@ void shell_start_screen() {
                 printf("\n> Utilizzare [%s] per la pulizia dello schermo",                    COMMAND_CLEAR);
                 printf("\n> Usa [%s] per l'eco",                                              COMMAND_ECHO);
                 printf("\n> Usa [%s] per vista questo giorno\n",                              COMMAND_TIME);
+                printf("\n> Usa [%s] per ottenere informazioni sulla configurazione di rete", COMMAND_IPCONFIG);
+                printf("\n> Usa [%s] per iniziare a inviare pacchetti UDP",                   COMMAND_SEND_UDP_PACKET);
+                printf("\n> Usa [%s] per ottenere l'ultimo pacchetto UDP ricevuto\n",         COMMAND_POP_UDP_PACKET);
+                printf("\n> Usa [%s] per ottenere informazioni sul contenuto di fs",          COMMAND_CINFO);
                 printf("\n> Utilizza la [%s] per vista versione",                             COMMAND_VERSION);
                 printf("\n> Utilizza la [%s] per vista disk-data informazione",               COMMAND_DISK_DATA);
                 printf("\n> Utilizza la [%s] per vista mem-data informazione",                COMMAND_MEM_DATA);
                 printf("\n> Utilizza la [%s] <option> per vista page-data informazione\n",    COMMAND_PAGE_DATA);
                 printf("\n> Usa [%s] <nome> per entranto dir",                                COMMAND_IN_DIR);
-                printf("\n> Usa [%s] per uscire di dir",                                      COMMAND_OUT_DIR);
                 printf("\n> Usa [%s] per guardare tutto cosa in dir\n",                       COMMAND_LIST_DIR);
                 printf("\n> Usa [%s] per guardare tutto data in file",                        COMMAND_FILE_VIEW);
                 printf("\n> Usa [%s] per guardare bmp",                                       COMMAND_BMP_SHOW);
@@ -118,7 +111,7 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_TIME) == 0) {
                 short time[6];
                 get_datetime(time);
-                printf("\nGiorno: %i/%i/%i\tTempo: %i:%i:%i", time[3], time[4], time[5], 
+                printf("\nGIORNO: %i/%i/%i\tTEMPO: %i:%i:%i", time[3], time[4], time[5], 
                                                                 time[2], time[1], time[0]);
             }
 
@@ -130,35 +123,37 @@ void shell_start_screen() {
 
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0) {
                 str_uppercase(command_line[1]);
-                char* dir_path = FATLIB_change_path(current_path, command_line[1]);
-                if (cexists(current_path) == 0) {
-                    free(dir_path);
-                    printf("\nLa directory non esiste.");
-                    return;
+                if (strstr(command_line[1], COMMAND_OUT_DIR) == 0) {
+                    char* up_path = FATLIB_change_path(current_path, NULL);
+                    if (up_path == NULL) {
+                        up_path = malloc(5);
+                        strcpy(up_path, "HOME");
+                    }
+
+                    free(current_path);
+                    current_path = up_path;         
                 }
 
-                Content* content = get_content(dir_path);
-                if (content->file != NULL) {
+                else {
+                    char* dir_path = FATLIB_change_path(current_path, command_line[1]);
+                    if (cexists(current_path) == 0) {
+                        free(dir_path);
+                        printf("\nLA DIRECTORY NON ESISTE");
+                        return;
+                    }
+
+                    Content* content = get_content(dir_path);
+                    if (content->file != NULL) {
+                        FATLIB_unload_content_system(content);
+                        free(dir_path);
+                        printf("\nQUESTA NON E` UNA DIRECTORY");
+                        return;
+                    }
+
                     FATLIB_unload_content_system(content);
-                    free(dir_path);
-                    printf("\nQuesta non e' una directory.");
-                    return;
+                    free(current_path);
+                    current_path = dir_path;
                 }
-
-                FATLIB_unload_content_system(content);
-                free(current_path);
-                current_path = dir_path;
-            }
-            
-            else if (strstr(command_line[0], COMMAND_OUT_DIR) == 0) {
-                char* up_path = FATLIB_change_path(current_path, NULL);
-                if (up_path == NULL) {
-                    up_path = malloc(5);
-                    strcpy(up_path, "BOOT");
-                }
-
-                free(current_path);
-                current_path = up_path;
             }
 
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {
@@ -184,7 +179,7 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_FILE_VIEW) == 0) {
                 char* file_path = FATLIB_change_path(current_path, command_line[1]);
                 if (cexists(file_path) == 0) {
-                    printf("\nLa file non esiste.");
+                    printf("\nLA FILE NON ESISTE");
                     free(file_path);
                     return;
                 }
@@ -211,7 +206,7 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_BMP_SHOW) == 0) {
                 char* file_path = FATLIB_change_path(current_path, command_line[1]);
                 if (cexists(file_path) == 0) {
-                    printf("\nLa file non esiste.");
+                    printf("\nLA FILE NON ESISTE");
                     free(file_path);
                     return;
                 }
@@ -226,13 +221,60 @@ void shell_start_screen() {
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {
                 char* exec_path = FATLIB_change_path(current_path, command_line[1]);
                 if (cexists(exec_path) == 0) {
-                    printf("\nLa file non esiste.");
+                    printf("\nLA FILE NON ESISTE");
                     free(exec_path);
                     return;
                 }
 
-                printf("\nCODE: [%i]\n", fexec(exec_path, command_line[2], command_line[3]));
+                int exe_argc = atoi(command_line[2]);
+                char* exe_argv[exe_argc];
+                for (int i = 0; i < exe_argc; i++)
+                    exe_argv[i] = command_line[i + 3];
+
+                printf("\nCODE: [%i]\n", fexec(exec_path, exe_argc, exe_argv));
                 free(exec_path);
+            }
+
+            else if (strstr(command_line[0], COMMAND_CINFO) == 0) {
+                char* info_file = FATLIB_change_path(current_path, command_line[1]);
+                if (cexists(info_file) == 0) {
+                    printf("\nLA CONTENT NON ESISTE");
+                    free(info_file);
+                    return;
+                }
+
+                printf("\n");
+                Content* content = get_content(info_file);
+                if (content->directory != NULL) {
+                    Directory* directory = content->directory;
+                    Date* creation_date  = FATLIB_get_date(directory->directory_meta.creation_date, 1);
+                    Date* accesed_date   = FATLIB_get_date(directory->directory_meta.last_modification_date, 1);
+
+                    printf("DIRECTORY\n");
+                    printf("NAME:          [%s]\n", directory->name);
+                    printf("SIZE:          [%iB]\n", directory->directory_meta.file_size);
+                    printf("CREATION DATE: [%i / %i / %i]\n", creation_date->day, creation_date->mounth, creation_date->year);
+                    printf("ACCESED DATE:  [%i / %i / %i]\n", accesed_date->day, accesed_date->mounth, accesed_date->year);
+
+                    free(creation_date);
+                    free(accesed_date);
+                }
+                else {
+                    File* file = content->file;
+                    Date* creation_date  = FATLIB_get_date(file->file_meta.creation_date, 1);
+                    Date* accesed_date   = FATLIB_get_date(file->file_meta.last_modification_date, 1);
+
+                    printf("FILE\n");
+                    printf("NAME:          [%s.%s]\n", file->name, file->extension);
+                    printf("SIZE:          [%iB]\n", file->file_meta.file_size);
+                    printf("CREATION DATE: [%i / %i / %i]\n", creation_date->day, creation_date->mounth, creation_date->year);
+                    printf("ACCESED DATE:  [%i / %i / %i]\n", accesed_date->day, accesed_date->mounth, accesed_date->year);
+
+                    free(creation_date);
+                    free(accesed_date);
+                }
+
+                FATLIB_unload_content_system(content);
             }
 
         //====================
@@ -253,7 +295,7 @@ void shell_start_screen() {
                 printf("\nMAC ATTUALE: %x.%x.%x.%x.%x.%x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
             }
 
-            else if (strstr(command_line[0], COMMAND_SEND_PACKET) == 0) {
+            else if (strstr(command_line[0], COMMAND_SEND_UDP_PACKET) == 0) {
                 uint8_t ip[4] = { 0x00, 0x00, 0x00, 0x00 };
                 get_ip(ip);
 
@@ -267,7 +309,7 @@ void shell_start_screen() {
                 send_udp_packet(dst_ip, src_port, dst_port, command_line[7], strlen(command_line[7]));
             }
 
-            else if (strstr(command_line[0], COMMAND_POP_PACKET) == 0) {
+            else if (strstr(command_line[0], COMMAND_POP_UDP_PACKET) == 0) {
                 uint8_t buffer[512];
                 pop_received_udp_packet(buffer);
 
@@ -283,7 +325,7 @@ void shell_start_screen() {
         //  NETWORKING COMMANDS
         //====================
 
-            else printf("\nComando [%s] sconosciuto.", command_line[0]);
+            else printf("\nCOMANDO [%s ...] SCONOSCUITO", command_line[0]);
 
         printf("\n");
     }

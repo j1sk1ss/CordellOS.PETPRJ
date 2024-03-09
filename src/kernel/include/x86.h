@@ -1,4 +1,6 @@
-#pragma once
+#ifndef X86_H_
+#define X86_H_
+
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -28,7 +30,12 @@ void __attribute__((cdecl)) fmemcpy(char* dst, char* src, uint32_t n);
 uint8_t __attribute__((cdecl)) i386_enableInterrupts();
 uint8_t __attribute__((cdecl)) i386_disableInterrupts();
 
+void __attribute__((cdecl)) i386_switch2user();
+
 char __attribute__((cdecl)) i386_inputWait();
 
 void i386_io_wait();
 void i386_reboot();
+
+
+#endif

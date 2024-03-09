@@ -36,6 +36,7 @@ void keyboard_read(int mode, uint8_t color, char* stop_list, char* buffer);
 
 void input_read(int mode, uint8_t color, char* buffer);
 void input_read_stop(int mode, uint8_t color, char* stop_list, char* buffer);
-
+char get_char();
+char wait_char();
 
 #endif

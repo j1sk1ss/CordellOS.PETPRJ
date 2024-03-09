@@ -410,7 +410,7 @@
 // returns: -1 is a general error
 
 	Directory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, BOOL exclusive) {
-		Directory* currentDirectory = calloc(sizeof(struct FATDirectory), 1);
+		Directory* currentDirectory = calloc(sizeof(Directory), 1);
 
 		currentDirectory->name         = NULL;
 		currentDirectory->files        = NULL;
@@ -469,7 +469,7 @@
 
 			else {
 				if ((file_metadata->attributes & FILE_DIRECTORY) != FILE_DIRECTORY) {			
-					File* file = malloc(sizeof(struct FATFile));
+					File* file = malloc(sizeof(File));
 
 					file->file_meta    = *file_metadata;
 					file->name         = malloc(8);
@@ -497,7 +497,7 @@
 
 				else {
 					if ((file_metadata->attributes & FILE_DIRECTORY) == FILE_DIRECTORY) {
-						Directory* upperDir = malloc(sizeof(struct FATDirectory));
+						Directory* upperDir = malloc(sizeof(Directory));
 
 						upperDir->directory_meta = *file_metadata;
 						upperDir->name           = malloc(11);
@@ -888,7 +888,7 @@
 // Returns: -1 is general error, -2 is content not found
 
 	Content* FAT_get_content(const char* filePath) {
-		Content* fatContent = malloc(sizeof(struct FATContent));
+		Content* fatContent = malloc(sizeof(Content));
 
 		fatContent->directory = NULL;
 		fatContent->file 	  = NULL;
@@ -927,7 +927,7 @@
 			}
 		
 		if ((content_meta.attributes & FILE_DIRECTORY) != FILE_DIRECTORY) {
-			fatContent->file 		       = malloc(sizeof(struct FATFile));
+			fatContent->file 		       = malloc(sizeof(File));
 			fatContent->file->name         = malloc(8);
 			fatContent->file->extension    = malloc(4);
 			fatContent->file->next         = NULL;
@@ -981,7 +981,7 @@
 			return fatContent;
 		}
 		else {
-			fatContent->directory = malloc(sizeof(struct FATDirectory)); 
+			fatContent->directory = malloc(sizeof(Directory)); 
 			
 			fatContent->directory->directory_meta 	= content_meta;
 			fatContent->directory->name             = malloc(11);
@@ -1040,13 +1040,13 @@
 		}
 	}
 
-	int FAT_ELF_execute_content(char* path, int args, char* argv[]) {
+	int FAT_ELF_execute_content(char* path, int argc, char* argv[]) {
 		ELF32_program* program = ELF_read(path);
 
 		int (*programEntry)(int, char* argv[]) = (int (*)(int, char* argv[]))(program->entry_point);
 		if (programEntry == NULL) return 0;
 		
-		int result_code = programEntry(args, argv);
+		int result_code = programEntry(argc, argv);
 
 		for (uint32_t i = 0; i < program->pages_count; i++) 
 			freep(program->pages[i]);
@@ -1618,7 +1618,7 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 
 	// date - 1 | time - 2
 	Date* FAT_get_date(short data, int type) {
-		Date* date = malloc(sizeof(struct FATDate));
+		Date* date = malloc(sizeof(Date));
 		switch (type) {
 			case 1: // date
 				date->year   = ((data >> 9) & 0x7F) + 1980;
@@ -1812,7 +1812,7 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		insertion into a disk.
 	*/
 	directory_entry_t* FAT_create_entry(const char* filename, const char* ext, BOOL isDir, uint32_t firstCluster, uint32_t filesize) {
-		directory_entry_t* data = malloc(sizeof(struct directory_entry));
+		directory_entry_t* data = malloc(sizeof(directory_entry_t));
 
 		data->reserved0 				= 0; 
 		data->creation_time_tenths 		= 0;
@@ -1880,20 +1880,20 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 	}
 
 	Content* FAT_create_content(char* name, BOOL directory, char* extension) {
-		Content* content = malloc(sizeof(struct FATContent));
+		Content* content = malloc(sizeof(Content));
 		if (strlen(name) > 11 || strlen(extension) > 4) {
 			kprintf("Uncorrect name or ext lenght.\n");
 			return NULL;
 		}
 		
 		if (directory == TRUE) {
-			content->directory = malloc(sizeof(struct FATDirectory));
+			content->directory = malloc(sizeof(Directory));
 			strncpy(content->directory->name, name, 11);
 			content->directory->directory_meta = *FAT_create_entry(name, NULL, TRUE, NULL, NULL);
 		}
 
 		else {
-			content->file = malloc(sizeof(struct FATFile));
+			content->file = malloc(sizeof(File));
 			strncpy(content->file->name, name, 11);
 			strncpy(content->file->extension, extension, 4);
 			content->file->file_meta = *FAT_create_entry(name, extension, FALSE, NULL, 1);

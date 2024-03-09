@@ -22,7 +22,7 @@ int32_t find_first_free_blocks(const uint32_t num_blocks) {
         if (memory_map[i] != 0xFFFFFFFF) 
             for (int32_t j = 0; j < 32; j++) {
                 int32_t bit = 1 << j;
-                if (!(memory_map[i] & bit)) {
+                if (!(memory_map[i] & bit)) 
                     for (uint32_t count = 0, free_blocks = 0; count < num_blocks; count++) {
                         if ((j + count > 31) && (i + 1 < max_blocks / 32)) {
                             if (!(memory_map[i + 1] & (1 << ((j + count) - 32)))) free_blocks++;
@@ -33,7 +33,6 @@ int32_t find_first_free_blocks(const uint32_t num_blocks) {
 
                         if (free_blocks == num_blocks) return i * 32 + j;
                     }
-                }
             }
     
     return -1;
@@ -76,16 +75,12 @@ uint32_t* allocate_blocks(const uint32_t num_blocks) {
         set_block(starting_block + i);
 
     used_blocks += num_blocks;
-
     uint32_t address = starting_block * BLOCK_SIZE + (uint32_t)memory_map;
     return (uint32_t*)address;
 }
 
 void free_blocks(const uint32_t *address, const uint32_t num_blocks) {
     int32_t starting_block = (uint32_t)address / BLOCK_SIZE;
-
-    for (uint32_t i = 0; i < num_blocks; i++) 
-        unset_block(starting_block + i);
-
+    for (uint32_t i = 0; i < num_blocks; i++) unset_block(starting_block + i);
     used_blocks -= num_blocks;
 }

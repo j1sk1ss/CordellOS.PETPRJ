@@ -1,7 +1,6 @@
 #include "../include/tasking.h"
 
 // TODO: make process that clean another processes
-//		 v_addr allocation?
 
 TaskManager taskManager;
 bool tasking = false;
@@ -75,6 +74,7 @@ uint32_t v_addr = 0x00C00000;
 		// Allocate memory for new task
 		//=============================
 
+			// Allocate memory for new task body
 			Task* task     = (Task*)calloc(sizeof(Task), 1);
 			task->cpuState = (Registers*)calloc(sizeof(Registers), 1);
 
@@ -82,6 +82,7 @@ uint32_t v_addr = 0x00C00000;
 			// Find new pid
 			//=============================
 
+				// Find free PID
 				task->state = PROCESS_STATE_ALIVE;
 				task->pid   = -1;
 				task->name  = pname;
@@ -109,14 +110,17 @@ uint32_t v_addr = 0x00C00000;
 			// Allocate data for stack
 			//=============================
 
+				// Create empty pd and fill it by tables from kernel pd
 				task->page_directory = create_page_directory();
 				copy_page_directory(kernel_page_directory, task->page_directory);
                 set_page_directory(task->page_directory);
                 // task->page_directory = current_page_directory;
 				
+				// Allocate page in pd, link it to c_addr
 				mallocp(v_addr);
                 memset(v_addr, 0, PAGE_SIZE);
                 
+				// Set stack pointer to allocated region
 				task->cpuState->esp     = virtual2physical(v_addr);
 				task->virtual_address   = task->cpuState->esp;
 				uint32_t* stack_pointer = (uint32_t*)(task->cpuState->esp + PAGE_SIZE);
@@ -178,8 +182,10 @@ uint32_t v_addr = 0x00C00000;
 		return task;
 	}
 
-	void destroy_task(Task* task) { // TODO: Free pagedir
-		freep((uint32_t*)task->virtual_address);
+	void destroy_task(Task* task) {
+		page_directory* task_pagedir = (page_directory*)virtual2physical(task->page_directory);
+		set_page_directory(kernel_page_directory);
+		free_page_directory(task_pagedir);
 		free(task->cpuState);
 		free(task);
 	}

@@ -1,5 +1,7 @@
-global switch2user
-switch2user:
+; from https://github.com/szhou42/osdev/blob/master
+
+global i386_switch2user
+i386_switch2user:
     mov ax, 0x23
     mov ds, ax
     mov es, ax

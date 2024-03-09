@@ -91,8 +91,8 @@ void ARP_lookup_add(uint8_t* ret_hardware_addr, uint8_t* ip_addr) {
     memcpy(&arp_table[arp_table_curr].ip_addr, ip_addr, 4);
     memcpy(&arp_table[arp_table_curr].mac_addr, ret_hardware_addr, 6);
     
-    if(arp_table_size < ARP_TABLE_SIZE) arp_table_size++;
-    if(arp_table_curr >= ARP_TABLE_SIZE) arp_table_curr = 0;
+    if (arp_table_size < ARP_TABLE_SIZE) arp_table_size++;
+    if (arp_table_curr >= ARP_TABLE_SIZE) arp_table_curr = 0;
 }
 
 int arp_lookup(uint8_t* ret_hardware_addr, uint8_t* ip_addr) {

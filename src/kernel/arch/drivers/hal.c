@@ -2,17 +2,17 @@
 
 void HAL_initialize() {
     i386_gdt_initialize();
-    kprintf("GDT initialized\n");
+    kprintf("GDT INIZIALIZZATO\n");
 
     i386_idt_initialize();
-    kprintf("IDT initialized\n");
+    kprintf("IDT INIZIALIZZATO\n");
 
     i386_isr_initialize();
-    kprintf("ISR initialized\n");
+    kprintf("ISR INIZIALIZZATO\n");
 
     i386_irq_initialize();
-    kprintf("IRQ initialized\n");
+    kprintf("IRQ INIZIALIZZATO\n");
 
     TSS_init(5, 0x10, 0);
-    kprintf("TSS initialized\n");
+    kprintf("TSS INIZIALIZZATO\n");
 }

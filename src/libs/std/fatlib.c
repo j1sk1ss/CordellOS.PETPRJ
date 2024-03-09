@@ -31,6 +31,8 @@ void FATLIB_unload_content_system(Content* content) {
     free(content);
 }
 
+// 1 - date
+// 2 - time
 Date* FATLIB_get_date(short data, int type) {
     Date* date = malloc(sizeof(Date));
     switch (type) {
@@ -51,8 +53,7 @@ Date* FATLIB_get_date(short data, int type) {
         break;
     }
 
-    free(date);
-    return NULL;
+    return date;
 }
 
 // Return NULL if can`t make updir command
@@ -187,13 +188,13 @@ char* FATLIB_name2fatname(char* input) {
 
 unsigned short FATLIB_current_time() {
     short data[7];
-    get_datetime(&data);
+    get_datetime(data);
     return (data[2] << 11) | (data[1] << 5) | (data[0] / 2);
 }
 
 unsigned short FATLIB_current_date() {
     short data[7];
-    get_datetime(&data);
+    get_datetime(data);
 
     uint16_t reversed_data = 0;
 
@@ -206,7 +207,7 @@ unsigned short FATLIB_current_date() {
 
 unsigned char FATLIB_current_time_temths() {
     short data[7];
-    get_datetime(&data);
+    get_datetime(data);
     return (data[2] << 11) | (data[1] << 5) | (data[0] / 2);
 }
 
@@ -476,7 +477,7 @@ void chgcontent(const char* path, directory_entry_t* meta) {
 //  EBX - path
 //  ECX - args (count)
 //  EDX - argv (array of args)
-int fexec(char* path, int args, char** argv) {
+int fexec(char* path, int argc, char** argv) {
     int result = 0;
     __asm__ volatile(
         "movl $12, %%eax\n"
@@ -486,7 +487,7 @@ int fexec(char* path, int args, char** argv) {
         "int $0x80\n"
         "movl %%eax, %0\n"
         : "=r"(result)
-        : "m"((uint32_t)path), "r"(args), "m"(argv)
+        : "m"((uint32_t)path), "r"(argc), "m"(argv)
         : "eax", "ebx", "ecx", "edx"
     );
 

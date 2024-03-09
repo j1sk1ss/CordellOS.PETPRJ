@@ -33,7 +33,7 @@
 
 #define MMAP_LOCATION   0x30000
 
-#define SHELL_PATH      "boot\\shell\\shell.elf"
+#define SHELL_PATH      "home\\shell\\shell.elf"
 
 
 //======================================================================================================================================
@@ -101,6 +101,7 @@
 
 
 void shell() {
+    // i386_switch2user();
     FAT_ELF_execute_content(SHELL_PATH, NULL, NULL);
 }
 
@@ -121,26 +122,27 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
 
         if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-            kprintf("[%s %i] Multiboot error (Magic is wrong [%u]).\n", __FILE__, __LINE__, mb_magic);
+            kprintf("[%s %i] MB HEADER ERROR (MAGIC IS WRING [%u]).\n", __FILE__, __LINE__, mb_magic);
             goto end;
         }
 
         if (mb_info->vbe_mode != TEXT_MODE) GFX_init(mb_info);
         else _screenBuffer = mb_info->framebuffer_addr;
 
-        kprintf("\n\t = CORDELL KERNEL = \n\t =  [ ver.  11 ]  = \n\n");
-        kprintf("\n\t =  GENERAL INFO  = \n");
-        kprintf("MB FLAGS:        [0x%p]\n", mb_info->flags);
-        kprintf("MEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
-        kprintf("BOOT DEVICE:     [0x%p]\n", mb_info->boot_device);
-        kprintf("CMD LINE:        [%s]\n", mb_info->cmdline);
-        kprintf("VBE MODE:        [%u]\n", mb_info->vbe_mode);
+        kprintf("\n\t\t =    CORDELL  KERNEL    =");
+        kprintf("\n\t\t =     [ ver.   12 ]     = \n\n");
+        kprintf("\n\t\t = INFORMAZIONI GENERALI = \n\n");
+        kprintf("\tMB FLAGS:        [0x%p]\n", mb_info->flags);
+        kprintf("\tMEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
+        kprintf("\tBOOT DEVICE:     [0x%p]\n", mb_info->boot_device);
+        kprintf("\tCMD LINE:        [%s]\n", mb_info->cmdline);
+        kprintf("\tVBE MODE:        [%u]\n", mb_info->vbe_mode);
 
-        kprintf("\n\t =    VBE INFO    = \n");
-        kprintf("VBE FRAMEBUFFER: [%p]\n", mb_info->framebuffer_addr);
-        kprintf("VBE Y:           [%u]\n", mb_info->framebuffer_height);
-        kprintf("VBE X:           [%u]\n", mb_info->framebuffer_width);
-        kprintf("VBE BPP:         [%u]\n", mb_info->framebuffer_bpp);
+        kprintf("\n\t\t =       VBE  INFO       = \n\n");
+        kprintf("\tVBE FRAMEBUFFER: [0x%p]\n", mb_info->framebuffer_addr);
+        kprintf("\tVBE Y:           [%u]\n", mb_info->framebuffer_height);
+        kprintf("\tVBE X:           [%u]\n", mb_info->framebuffer_width);
+        kprintf("\tVBE BPP:         [%u]\n", mb_info->framebuffer_bpp);
 
     //===================
     // Phys & Virt memory manager initialization
@@ -158,11 +160,12 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         //===================
 
             if (mb_info->flags & (1 << 1)) {
-                kprintf("\n\t =  MEMORY  INFO  = \n");
+                kprintf("\n\t\t =     MEMORY   INFO     = \n\n");
+                kprintf("\t\t  | REG | LEN | ADDR | TYPE |\n");
                 multiboot_memory_map_t* mmap_entry = (multiboot_memory_map_t*)mb_info->mmap_addr;
                 while ((uint32_t)mmap_entry < mb_info->mmap_addr + mb_info->mmap_length) {
                     if (mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
-                        kprintf("REGION |  LEN: [%u]  |  ADDR: [%u]  |  TYPE: [%u] \t", mmap_entry->len, mmap_entry->addr, mmap_entry->type);
+                        kprintf("\tREGION |  LEN: [%u]  |  ADDR: [%p]  |  TYPE: [%u] \t", mmap_entry->len, mmap_entry->addr, mmap_entry->type);
                         const uint32_t pattern = 0xC08DE77;
 
                         uint32_t* ptr = (uint32_t*)mmap_entry->addr;
@@ -175,14 +178,14 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
                         ptr = (uint32_t*)mmap_entry->addr;
                         while (ptr < end) {
                             if (*ptr != pattern) {
-                                kprintf("memory test failed at address %u\n", ptr);
+                                kprintf("MEM TEST FAILED AT [%p]\n", ptr);
                                 return;
                             }
 
                             ++ptr;
                         }
 
-                        kprintf("memory test passed!\n");
+                        kprintf("MEM TEST PASSED!\n");
                         initialize_memory_region(mmap_entry->addr, mmap_entry->len);
                     }
 
@@ -199,7 +202,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         deinitialize_memory_region(0x1000, 0x11000);
         deinitialize_memory_region(MMAP_LOCATION, max_blocks / BLOCKS_PER_BYTE);
         if (VMM_init(0x100000) == false) {
-            kprintf("[%s %i] Virtual memory can`t be init.\n",__FILE__ , __LINE__);
+            kprintf("[%s %i] VMM INIT ERROR!\n",__FILE__ , __LINE__);
             goto end;
         }
 
@@ -250,7 +253,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
 
     //===================
 
-    kprintf("Keyboard & mouse initialized [%i]\n\n", i386_detect_ps2_mouse());
+    kprintf("TASTIERA & MOUSE INIZIALIZZATI [%i]\n\n", i386_detect_ps2_mouse());
 
     //===================
     // FAT and FS initialization
@@ -264,7 +267,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
 
     //===================
     
-    kprintf("FAT driver initialized\nTC:[%u]\tSPC:[%u]\tBPS:[%u]\n\n", total_clusters, sectors_per_cluster, bytes_per_sector);
+    kprintf("DRIVER FAT INIZIALIZZATO\nTC:[%u]\tSPC:[%u]\tBPS:[%u]\n\n", total_clusters, sectors_per_cluster, bytes_per_sector);
 
     //===================
     // Kernel shell part

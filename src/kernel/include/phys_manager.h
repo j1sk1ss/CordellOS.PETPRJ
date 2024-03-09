@@ -1,4 +1,6 @@
-#pragma once
+#ifndef PMM_H_
+#define PMM_H_
+
 
 #include <memory.h>
 #include <stdint.h>
@@ -28,3 +30,6 @@ int32_t find_first_free_blocks(const uint32_t num_blocks);
 
 uint32_t *allocate_blocks(const uint32_t num_blocks);
 void free_blocks(const uint32_t *address, const uint32_t num_blocks);
+
+
+#endif

@@ -21,6 +21,8 @@ void TSS_init(uint32_t idx, uint32_t kss, uint32_t kesp) {
     tss_flush();
 }
 
+// kss - kernel stack segment
+// kesp - kernel stack pointer
 void TSS_set_stack(uint32_t kss, uint32_t kesp) {
     kernel_tss.ss0  = kss;
     kernel_tss.esp0 = kesp;

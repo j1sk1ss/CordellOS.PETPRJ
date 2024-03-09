@@ -1,4 +1,6 @@
-#pragma once
+#ifndef VMM_H_
+#define VMM_H_
+
 
 #include <stdbool.h>
 #include <string.h>
@@ -65,12 +67,14 @@ typedef struct {
     pd_entry entries[TABLES_PER_DIRECTORY];
 } page_directory;
 
+
 extern page_directory* current_page_directory;
 extern page_directory* kernel_page_directory;
 
 
 bool VMM_init(uint32_t kernell_address);
 page_directory* create_page_directory();
+void free_page_directory(page_directory* pd);
 
 pt_entry* get_pt_entry(page_table* pt, virtual_address address);
 pd_entry* get_pd_entry(page_table* pd, virtual_address address);
@@ -93,3 +97,6 @@ void copy_page_directory(page_directory* src, page_directory* dest);
 
 void print_page_map(char arg);
 void page_fault(Registers* regs);
+
+
+#endif
