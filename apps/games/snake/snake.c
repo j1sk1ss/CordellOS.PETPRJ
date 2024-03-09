@@ -18,7 +18,6 @@
 typedef struct {
 	int x, y;
 	int movX, movY;
-
 	char imagen;
 } snake;
 

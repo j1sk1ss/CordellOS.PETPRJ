@@ -5,7 +5,7 @@ arp_table_entry_t arp_table[ARP_TABLE_SIZE];
 int arp_table_size;
 int arp_table_curr;
 
-uint8_t broadcast_mac_address[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+uint8_t broadcast_mac_address[6] = { 0xFF };
 
 
 void ARP_handle_packet(arp_packet_t* arp_packet, int len) {

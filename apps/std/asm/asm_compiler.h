@@ -61,7 +61,7 @@
 //
 ////////////////////////////////////////
 
-struct intermediate_lang{
+struct intermediate_lang {
 	int instruction_position;
 	int opcode;
 	int parameters[5];
@@ -71,14 +71,14 @@ struct intermediate_lang{
 };
 
 
-struct symbol_table{
+struct symbol_table {
 	char variable_name[VARIABLE_LENGTH];
 	int address;
 	int size;
 };
 
 
-struct blocks_table{
+struct blocks_table {
 	char name[LABEL_LENGTH];
 	int instr_no;  // instruction number after start
 };

@@ -1,7 +1,10 @@
-#pragma once
+#ifndef PIC_H_
+#define PIC_H_
+
 
 #include <stdint.h>
 #include <stdbool.h>
+
 
 typedef struct {
     const char* Name;
@@ -16,3 +19,5 @@ typedef struct {
     void (*Mask)(int irq);                                                    // Mask IRQ by mask
     void (*Unmask)(int irq);                                                  // Unmask IRQ
 } PICDriver;
+
+#endif

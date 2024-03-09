@@ -238,8 +238,7 @@ void syscall(Registers* regs) {
             char* exec_path = (char*)regs->ebx;
             char** argv     = (char**)regs->edx;
             int args        = (int)regs->ecx;
-            int result      = (int)regs->eax;
-            result = current_vfs->objexec(exec_path, args, argv);
+            regs->eax = current_vfs->objexec(exec_path, args, argv);
         } 
         
         else if (regs->eax == SYS_CEXISTS) {

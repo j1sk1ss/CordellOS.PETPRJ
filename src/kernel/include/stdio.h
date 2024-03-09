@@ -1,4 +1,6 @@
-#pragma once
+#ifndef KSTDIO_H_
+#define KSTDIO_H_
+
 
 #include <stdint.h>
 #include <stdarg.h>
@@ -51,3 +53,5 @@ void kprint_buffer(const char* msg, const void* buffer, uint32_t count);
 
 void kset_color(int color);
 void kprint_hex_table(const char* data, size_t length);
+
+#endif

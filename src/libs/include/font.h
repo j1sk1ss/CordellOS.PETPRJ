@@ -1,3 +1,6 @@
+#ifndef FONT_H_
+#define FONT_H_
+
 // (c) 2009, 2010 Lutz Sammer, License: AGPLv3
 // Taked from: https://github.com/knusbaum/kernel/blob/master/vesa.c#L71
 
@@ -277,3 +280,5 @@ extern const struct bitmap_font font;
 #define XXXXXX_X 0xFD
 #define XXXXXXX_ 0xFE
 #define XXXXXXXX 0xFF
+
+#endif

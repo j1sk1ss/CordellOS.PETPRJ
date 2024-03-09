@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ALLOCATOR_H_
+#define ALLOCATOR_H_
+
 
 #include <stdint.h>
 #include <stddef.h>
@@ -42,3 +44,5 @@ void* kmallocp(uint32_t v_addr);
 void merge_free_blocks();
 void kfree(void *ptr);
 void kfreep(void* v_addr);
+
+#endif

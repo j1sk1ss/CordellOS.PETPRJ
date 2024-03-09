@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HAL_H_
+#define HAL_H_
 
 
 #include "isr.h"
@@ -10,3 +11,5 @@
 
 
 void  HAL_initialize();
+
+#endif

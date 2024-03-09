@@ -2,6 +2,7 @@
 #include <fatlib.h>
 
 #include "include/hal.h"
+#include "include/vfs.h"
 #include "include/fat.h"
 #include "include/elf.h"
 #include "include/tasking.h"
@@ -61,7 +62,7 @@
 //      9) Std lib for graphics                                   [V]       12.3) RLT8139 driver                                     | |
 //          8.0.0) Objects                                        [V]   13) Windows
 //          8.0.1) Click event                                    [V]
-//      10) Mouse to int                                          [ ]
+//      10) Mouse to int                                          [V]
 //      11) Loading BMP without malloc for fdata                  [V]
 //      12) Syscalls to std libs                                  [V]
 //          12.0) Syscalls for content change                     [V]
@@ -91,18 +92,18 @@
 //          16.5) Host sending to VK/TG etc                       [ ]
 //      17) KShell to ELF program                                 [V]
 //          17.0) KShell save commands to cash                    [V]
-//          17.1) MEM-DATA progs                                  [ ]
+//          17.1) MEM-DATA progs                                  [V]
 //      18) User mode switch                                      [?]
 //      19) Keyboard in kernel by syscall that cause mt problems  [V]
 //      20) Tasking problems (again)                              [V]
 //          20.0) Page directory cloning                          [?]
-//      21) DOOM?                                                 [ ]
+//      21) DOOM?                                                 [?]
 //======================================================================================================================================
 
 
 void shell() {
     // i386_switch2user();
-    FAT_ELF_execute_content(SHELL_PATH, NULL, NULL);
+    current_vfs->objexec(SHELL_PATH, NULL, NULL);
 }
 
 void idle() {
@@ -122,7 +123,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
 
         if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
-            kprintf("[%s %i] MB HEADER ERROR (MAGIC IS WRING [%u]).\n", __FILE__, __LINE__, mb_magic);
+            kprintf("[%s %i] MB HEADER ERROR (MAGIC IS WRONG [%u]).\n", __FILE__, __LINE__, mb_magic);
             goto end;
         }
 
@@ -161,7 +162,6 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
 
             if (mb_info->flags & (1 << 1)) {
                 kprintf("\n\t\t =     MEMORY   INFO     = \n\n");
-                kprintf("\t\t  | REG | LEN | ADDR | TYPE |\n");
                 multiboot_memory_map_t* mmap_entry = (multiboot_memory_map_t*)mb_info->mmap_addr;
                 while ((uint32_t)mmap_entry < mb_info->mmap_addr + mb_info->mmap_length) {
                     if (mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
@@ -202,7 +202,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         deinitialize_memory_region(0x1000, 0x11000);
         deinitialize_memory_region(MMAP_LOCATION, max_blocks / BLOCKS_PER_BYTE);
         if (VMM_init(0x100000) == false) {
-            kprintf("[%s %i] VMM INIT ERROR!\n",__FILE__ , __LINE__);
+            kprintf("[%s %i] VMM INIT ERROR!\n",__FILE__ ,__LINE__);
             goto end;
         }
 
@@ -224,8 +224,6 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         //===================
         // Map framebuffer to his original phys address
         //===================
-
-    //===================
 
     //===================
     // Drivers
@@ -277,9 +275,9 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         asm ("mov %%esp, %0" : "=r"(current_esp));
         TSS_set_stack(0x10, current_esp);
 
-        if (FAT_content_exists(CONFIG_PATH) == 1) {
-            Content* boot_config = FAT_get_content(CONFIG_PATH);
-            char* config = FAT_read_content(boot_config);
+        if (current_vfs->objexist(CONFIG_PATH) == 1) {
+            Content* boot_config = current_vfs->getobj(CONFIG_PATH);
+            char* config = current_vfs->read(boot_config);
             FAT_unload_content_system(boot_config);
             
             //===================

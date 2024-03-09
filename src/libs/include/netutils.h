@@ -1,3 +1,7 @@
+#ifndef NETUTILS_H_
+#define NETUTILS_H_
+
+
 #include <stdint.h>
 
 
@@ -16,3 +20,5 @@ uint32_t net2host32(uint32_t netlong);
 uint16_t net_checksum(const uint8_t* data, const uint8_t* end);
 unsigned int net_checksum_acc(const uint8_t* data, const uint8_t* end, unsigned int sum);
 uint16_t net_checksum_final(unsigned int sum);
+
+#endif

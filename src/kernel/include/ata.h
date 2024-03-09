@@ -1,5 +1,5 @@
-#ifndef __ATA_H__
-#define __ATA_H__
+#ifndef ATA_H_
+#define ATA_H_
 
 
 #include <stdint.h>

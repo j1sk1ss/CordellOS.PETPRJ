@@ -1,4 +1,6 @@
-#pragma once
+#ifndef MATH_H_
+#define MATH_H_
+
 
 #define min(a,b)    ((a) < (b) ? (a) : (b))
 #define max(a,b)    ((a) > (b) ? (a) : (b))
@@ -9,6 +11,7 @@
 #define DOUBLE_PI   6.283185307179586
 #define SIN_CURVE_A 0.0415896
 #define SIN_CURVE_B 0.00129810625032
+
 
 //function to find the absolute value of an integer.
 //#define abs(x) (if(x<0) -x; x)
@@ -24,3 +27,5 @@ double cos(double x);
 
 //sin calculation function.
 double sin(double x);
+
+#endif

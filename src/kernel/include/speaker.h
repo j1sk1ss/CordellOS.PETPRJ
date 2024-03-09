@@ -1,4 +1,6 @@
-#pragma once
+#ifndef SPEAKER_H_
+#define SPEAKER_H_
+
 
 #include "pic.h"
 #include "x86.h"
@@ -129,3 +131,5 @@ void thirty2nd_rest(void);
 
 void dotted_eigth_note(const note_freq_t note);
 void eigth_triplet(const note_freq_t note1, const note_freq_t note2, const note_freq_t note3);
+
+#endif

@@ -1,5 +1,6 @@
 #include "../include/vga_text.h"
 
+
 const unsigned int SCREEN_WIDTH  = 80;
 const unsigned int SCREEN_HEIGHT = 25;
 const uint8_t DEFAULT_COLOR      = 0x7;

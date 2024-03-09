@@ -1,4 +1,6 @@
-#pragma once
+#ifndef MEMORY_H_
+#define MEMORY_H_
+
 
 #include <stdint.h>
 #include <stddef.h>
@@ -23,3 +25,5 @@ void* memmove(void *dest, const void *src, size_t len);
 void* memmove32(void* dest, const void* src, size_t len);
 
 void* seg_offset_to_linear(void* address);
+
+#endif

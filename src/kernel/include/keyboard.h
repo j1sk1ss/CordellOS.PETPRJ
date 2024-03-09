@@ -1,5 +1,5 @@
-#ifndef _KEYBOARD_H_
-#define _KEYBOARD_H_
+#ifndef KEYBOARD_H_
+#define KEYBOARD_H_
 
 
 #include <stddef.h>

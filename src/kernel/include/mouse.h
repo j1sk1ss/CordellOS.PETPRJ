@@ -1,5 +1,5 @@
-#ifndef _MOUSE_H_
-#define _MOUSE_H_
+#ifndef MOUSE_H_
+#define MOUSE_H_
 
 
 #include "x86.h"

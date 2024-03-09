@@ -100,6 +100,24 @@ int strcmp(const char* firstStr, const char* secondStr) {
     return (unsigned char)(*firstStr) - (unsigned char)(*secondStr);
 }
 
+int strcasecmp(const char *s1, const char *s2) {
+    unsigned char us1;
+    unsigned char us2;
+    size_t index;
+
+    us1 = tolower(*s1);
+    us2 = tolower(*s2);
+
+    index = 0;
+    while (us1 != '\0' && us1 == us2) {
+        index++;
+        us1 = tolower(s1[index]);
+        us2 = tolower(s2[index]);
+    }
+
+    return us1 - us2;
+}
+
 int strncmp(const char* str1, const char* str2, size_t n) {
     for (size_t i = 0; i < n; ++i) 
         if (str1[i] != str2[i] || str1[i] == '\0' || str2[i] == '\0') 
@@ -551,6 +569,11 @@ char* strdup(const char* src) {
 
 int str_islower(int c) {
     return c >= 'a' && c <= 'z';
+}
+
+int tolower(int c) {
+	if (!str_islower(c)) return c | 32;
+	return c;
 }
 
 int str_toupper(int c) {

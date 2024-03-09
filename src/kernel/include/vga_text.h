@@ -1,4 +1,6 @@
-#pragma once
+#ifndef VGA_H_
+#define VGA_H_
+
 
 #include "x86.h"
 #include "stdio.h"
@@ -75,3 +77,5 @@ void VGA_scrollback(int lines);
 int VGA_cursor_get_x();
 int VGA_cursor_get_y();
 void VGA_cursor_place_to_line();
+
+#endif

@@ -1,5 +1,5 @@
-#ifndef ARP_H
-#define ARP_H
+#ifndef ARP_H_
+#define ARP_H_
 
 
 #include <memory.h>

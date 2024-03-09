@@ -1,5 +1,4 @@
 #include "../include/rand.h"
-#include "../include/stdlib.h"
 
 
 int rand_r(int seed) {

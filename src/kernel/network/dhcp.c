@@ -3,7 +3,7 @@
 #include "../include/dhcp.h"
 
 
-uint8_t ip_addr[4] = { 0, 0, 0, 0 };
+uint8_t ip_addr[4] = { 0x00 };
 int is_ip_allocated = 0;
 
 

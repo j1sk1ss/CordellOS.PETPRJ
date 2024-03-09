@@ -38,7 +38,7 @@ void* allocate_page(pt_entry* page) {
         SET_FRAME(page, (physical_address)block);
         SET_ATTRIBUTE(page, PTE_PRESENT);
     } else {
-        kprintf("Page allocation error!\n");
+        kprintf("[%s %i] Page allocation error!\n", __FILE__, __LINE__);
         return NULL;
     }
 
@@ -54,7 +54,7 @@ void free_page(pt_entry* page) {
 
 bool set_page_directory(page_directory* pd) {
     if (!pd) {
-        kprintf("[%s %i] Can`t set page directory!\n");
+        kprintf("[%s %i] Can`t set page directory!\n", __FILE__, __LINE__);
         return false;
     }
 
@@ -183,7 +183,7 @@ bool VMM_init(uint32_t memory_start) {
 page_directory* create_page_directory() {
     page_directory* dir = (page_directory*)allocate_blocks(3);
     if (dir == NULL) {
-        kprintf("Failed to allocate memory for page directory\n");
+        kprintf("[%s %i] Failed to allocate memory for page directory\n",  __FILE__, __LINE__);
         return NULL;
     }
 
@@ -267,16 +267,27 @@ void page_fault(Registers* regs) {
 	int id		 = regs->error & 0x10;		// When set, the page fault was caused by an instruction fetch. This only applies when the No-Execute bit is supported and enabled.
 
 	kprintf("\nWHOOOPS..\nPAGE FAULT! (\t");
-	if (present) kprintf("NOT PRESENT\t");
-    else kprintf("PAGE PROTECTION\t");
 
-	if (rw) kprintf("READONLY\t");
-    else kprintf("WRITEONLY\t");
+    //=======
+    // PARAMS
+    //=======
 
-	if (us)       kprintf("USERMODE\t");
-	if (reserved) kprintf("RESERVED\t");
-    if (id)       kprintf("INST FETCH\t");
+        if (present) kprintf("NOT PRESENT\t");
+        else kprintf("PAGE PROTECTION\t");
+        
+        if (rw) kprintf("READONLY\t");
+        else kprintf("WRITEONLY\t");
+
+        if (us)       kprintf("USERMODE\t");
+        if (reserved) kprintf("RESERVED\t");
+        if (id)       kprintf("INST FETCH\t");
+
+    //=======
+    // PARAMS
+    //=======
+
 	kprintf(") AT 0x%p\n", faulting_address);
+    kprintf("CHECK YOUR CODE BUDDY!\n");
 
 	kernel_panic("PAGE FAULT");
 }
@@ -300,7 +311,7 @@ void print_page_map(char arg) {
                 if (*page & PTE_PRESENT) occupied++;
                 else free++;
                 
-                if (arg != 'c') kprintf("addr: %u [%c]\n", PAGE_PHYS_ADDRESS(page), (*page & PTE_PRESENT) ? 'O' : 'F');
+                if (arg != 'c') kprintf("ADDR: %p [%c]\n", PAGE_PHYS_ADDRESS(page), (*page & PTE_PRESENT) ? 'O' : 'F');
             }
         }
     }

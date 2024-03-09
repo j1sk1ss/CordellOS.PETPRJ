@@ -1,4 +1,6 @@
-#pragma once
+#ifndef STRING_H_
+#define STRING_H_
+
 
 #include "stdio.h"
 #include "stdlib.h"
@@ -22,6 +24,7 @@ char* strcpy(char* dst, const char* src);
 unsigned strlen(const char* str);
 int strcmp(const char* firstStr, const char* secondStr);
 int strncmp(const char* str1, const char* str2, size_t n);
+int strcasecmp(const char *s1, const char *s2);
 char* strcat(char* dest, const char* src);
 
 char* strtok(char* s, const char* delim);
@@ -48,3 +51,6 @@ char* strdup(const char *src);
 
 void str_uppercase(char* str);
 int str_toupper(int c);
+int tolower(int c);
+
+#endif

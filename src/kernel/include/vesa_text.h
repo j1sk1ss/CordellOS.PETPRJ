@@ -1,4 +1,6 @@
-#pragma once
+#ifndef VESA_H_
+#define VESA_H_
+
 
 #include "gfx.h"
 #include "keyboard.h"
@@ -19,3 +21,5 @@ void VESA_set_cursor32(uint32_t x, uint32_t y);
 
 int VESA_get_cursor_x();
 int VESA_get_cursor_y();
+
+#endif

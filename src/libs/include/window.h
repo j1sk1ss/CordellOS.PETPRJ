@@ -1,3 +1,7 @@
+#ifndef WINDOW_H_
+#define WINDOW_H_
+
+
 #include <stdint.h>
 
 #include "stdlib.h"
@@ -27,3 +31,5 @@ void unload_window(struct window* window);
 
 struct window* add_text2window(struct window* window, struct text_object* text);
 struct window* add_object2window(struct window* window, struct GUIobject* object);
+
+#endif

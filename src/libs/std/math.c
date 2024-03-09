@@ -1,16 +1,13 @@
 #include "../include/math.h"
 
-int abs(int x) {
-	if(x < 0)
-		return -x;
 
+int abs(int x) {
+	if (x < 0) return -x;
 	return x;
 }
 
 int sgn(int x) {  //function to find the sign of an integer.
-	if(x < 0)
-		return -1;
-
+	if (x < 0) return -1;
 	return 1;
 }
 
@@ -41,8 +38,8 @@ float sqrt(float number) {  //function to find the square root of a rational num
         while (ans * ans <= number) 
             ans += increment;
 
-        ans         = ans - increment;
-        increment   = increment / 10;
+        ans       = ans - increment;
+        increment = increment / 10;
     }
 
     return ans;

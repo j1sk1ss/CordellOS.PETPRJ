@@ -1,5 +1,5 @@
-#ifndef DHCP_H
-#define DHCP_H
+#ifndef DHCP_H_
+#define DHCP_H_
 
 
 #include <memory.h>

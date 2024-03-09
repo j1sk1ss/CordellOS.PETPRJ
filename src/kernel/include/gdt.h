@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GDT_H_
+#define GDT_H_
 
 
 #include <stdint.h>
@@ -10,3 +11,5 @@
 
 void __attribute__((cdecl)) i386_gdt_initialize();
 void GDT_set_entry(int index, int base, int limit, uint8_t access, uint8_t flags);
+
+#endif

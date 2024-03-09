@@ -1,5 +1,5 @@
-#ifndef __DATETIME_H__
-#define __DATETIME_H__
+#ifndef DATETIME_H_
+#define DATETIME_H_
 
 #include "x86.h"
 

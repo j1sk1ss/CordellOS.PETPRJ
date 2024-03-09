@@ -1,5 +1,5 @@
-#ifndef _TCP_H_
-#define _TCP_H_
+#ifndef TCP_H_
+#define TCP_H_
 
 #include "ip.h"
 

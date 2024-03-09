@@ -1,6 +1,9 @@
-#pragma once
+#ifndef PIT_H_
+#define PIT_H_
+
 
 #include "x86.h"
+
 
 // Programmable Interval Timer (PIT) registers
 #define PIT_DATA_PORT0 0x40
@@ -11,3 +14,5 @@
 
 
 void i386_pit_init();
+
+#endif

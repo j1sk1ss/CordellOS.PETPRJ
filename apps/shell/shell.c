@@ -2,7 +2,6 @@
 
 
 char* current_path = "HOME";
-char* command_buffer[COMMAND_BUFFER] = { NULL };
 int exit = 1;
 int current_command = 0;
 
@@ -226,12 +225,14 @@ void shell_start_screen() {
                     return;
                 }
 
-                int exe_argc = atoi(command_line[2]);
-                char* exe_argv[exe_argc];
-                for (int i = 0; i < exe_argc; i++)
-                    exe_argv[i] = command_line[i + 3];
+                int pos = 2;
+                char* exe_argv[COMMAND_BUFFER];
+                while (command_line[pos] != NULL && pos < COMMAND_BUFFER) {
+                    exe_argv[pos - 2] = command_line[pos];
+                    pos++;
+                }
 
-                printf("\nCODE: [%i]\n", fexec(exec_path, exe_argc, exe_argv));
+                printf("\nCODE: [%i]\n", fexec(exec_path, pos - 2, exe_argv));
                 free(exec_path);
             }
 
@@ -284,15 +285,15 @@ void shell_start_screen() {
         //====================
 
             else if (strstr(command_line[0], COMMAND_IPCONFIG) == 0) {
-                uint8_t ip[4]  = { 0x00, 0x00, 0x00, 0x00 };
-                uint8_t mac[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+                uint8_t ip[4]  = { 0x00 };
+                uint8_t mac[6] = { 0xFF };
 
                 get_ip(ip);
                 get_mac(mac);
 
-                printf("\nUTILITA` KERNEL IPCONF VERSIONE 0.2a\n");
-                printf("\nIP ATTUALE: %i.%i.%i.%i", ip[0], ip[1], ip[2], ip[3]);
-                printf("\nMAC ATTUALE: %x.%x.%x.%x.%x.%x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+                printf("\nUTILITA` KERNEL IPCONF VERSIONE 0.2b\n");
+                printf("\nIP ATTUALE:  [%i.%i.%i.%i]", ip[0], ip[1], ip[2], ip[3]);
+                printf("\nMAC ATTUALE: [%x.%x.%x.%x.%x.%x]", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
             }
 
             else if (strstr(command_line[0], COMMAND_SEND_UDP_PACKET) == 0) {

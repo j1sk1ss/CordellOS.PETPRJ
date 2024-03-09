@@ -1,4 +1,6 @@
-#pragma once
+#ifndef STDIO_H_
+#define STDIO_H_
+
 
 #include <stdint.h>
 #include <stdarg.h>
@@ -87,7 +89,7 @@ void putc(char c);
 void puts(const char* str);
 void printf(const char* fmt, ...);
 void cprintf(uint32_t color, const char* fmt, ...);
-void print_buffer(const char* msg, const void* buffer, uint32_t count);
+void print_buffer(const void* buffer, uint32_t count);
 
 void fprintf_unsigned(uint8_t file, unsigned long long number, int radix, int color);
 
@@ -96,13 +98,19 @@ void cputc(char c, uint32_t color);
 void fputs(const char* str, uint8_t file, int color);
 void vfprintf(uint32_t file, const char* fmt, va_list args, int color);
 void fprintf(uint8_t file, const char* fmt, ...);
-void fprint_buffer(uint8_t file, const char* msg, const void* buffer, uint32_t count);
+void fprint_buffer(const void* buffer, uint32_t count);
+
+int vsprintf_signed(char* buffer, long long number, int radix, int position);
+int vsprintf_unsigned(char* buffer, unsigned long long number, int radix, int position);
+void vsprintf(char* buffer, int len, const char* fmt, va_list args);
+void sprintf(char* buffer, int len, const char* fmt, ...);
 
 void putc(char c);
 void puts(const char* str);
 void printf(const char* fmt, ...);
 void cprintf(uint32_t color, const char* fmt, ...);
-void print_buffer(const char* msg, const void* buffer, uint32_t count);
 
 void set_color(int color);
 void print_hex_table(const char* data, size_t length);
+
+#endif
