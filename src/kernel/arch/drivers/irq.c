@@ -1,7 +1,4 @@
 #include "../../include/irq.h"
-#include "../../util/arrays.h"
-
-#include <stddef.h>
 
 
 #define PIC_REMAP_OFFSET 0x20
@@ -17,7 +14,7 @@ void i386_irq_handler(Registers* regs) {
     uint8_t pic_irr = i8259_readIRQRequestRegisters();
     
     if (_handler[irq] != NULL) _handler[irq](regs);
-    else kprintf("[%s %i] No handler for: %i\n", __FILE__, __LINE__, irq);
+    else kprintf("[%s %i] NO HANDLER FOR: %i\n", __FILE__, __LINE__, irq);
 
     _PICDriver->SendEndOfInterrupt(irq);
 }
@@ -29,11 +26,11 @@ void i386_irq_initialize() {
         if (drivers[i]->Probe()) _PICDriver = drivers[i];
 
     if (_PICDriver == NULL) {
-        kprintf("Cordell Warning: NO PIC!\n");
+        kprintf("[%s %i] WARN: NO PIC!\n", __FILE__, __LINE__);
         return;
     }
     
-    kprintf("PIC %s finded!\n", _PICDriver->Name);
+    kprintf("PIC %s FOUND!\n", _PICDriver->Name);
     _PICDriver->Initialize(PIC_REMAP_OFFSET, PIC_REMAP_OFFSET + 12, false);
 
     for (int i = 0; i < 16; i++)

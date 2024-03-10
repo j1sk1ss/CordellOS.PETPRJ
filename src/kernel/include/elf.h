@@ -7,9 +7,10 @@
 #include <memory.h>
 #include <math.h>
 #include <stdlib.h>
+#include <fslib.h>
 
 #include "elf.h"
-#include "fat.h"
+#include "vfs.h"
 #include "stdio.h"
 #include "virt_manager.h"
 #include "phys_manager.h"

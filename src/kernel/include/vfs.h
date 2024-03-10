@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <memory.h>
-#include <fatlib.h>
+#include <fslib.h>
 
 #include "ata.h"
 #include "fat.h"
@@ -16,6 +16,7 @@
 typedef char* (*file_read)(Content*);
 typedef void (*file_read_offset)(Content*, uint8_t*, uint32_t, uint32_t);
 typedef void (*file_write)(const char*, char*);
+typedef void (*file_write_offset)(Content*, uint8_t*, uint32_t, uint32_t);
 typedef Directory* (*open_dir)(const unsigned int, unsigned char, short);
 typedef Content* (*get_object)(const char*);
 typedef int (*object_exists)(const char*);
@@ -24,7 +25,9 @@ typedef int (*delete_object)(const char*, const char*);
 typedef Content* (*create_object)(char*, short, char*);
 typedef int (*object_execute)(char*, int, char**);
 typedef int (*object_meta_change)(const char*, directory_entry_t*);
-
+typedef void (*object_unload)(Content*);
+typedef void (*file_unload)(File*);
+typedef void (*directory_unload)(Directory*);
 
 typedef struct vfs_node {
     char name[256];
@@ -38,6 +41,7 @@ typedef struct vfs_node {
         file_read           read;
         file_read_offset    readoff;
         file_write          write;
+        file_write_offset   writeoff;
         open_dir            dir;
         get_object          getobj;
         object_exists       objexist;
@@ -46,6 +50,10 @@ typedef struct vfs_node {
         create_object       crobj;
         object_execute      objexec;
         object_meta_change  objmetachg;
+
+        object_unload    cunload;
+        file_unload      funload;
+        directory_unload dunload;
 
     //===========
     // Functions

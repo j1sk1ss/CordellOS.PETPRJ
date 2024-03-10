@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <fatlib.h>
+#include <fslib.h>
 
 #include "include/hal.h"
 #include "include/vfs.h"
@@ -141,9 +141,9 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
 
         kprintf("\n\t\t =       VBE  INFO       = \n\n");
         kprintf("\tVBE FRAMEBUFFER: [0x%p]\n", mb_info->framebuffer_addr);
-        kprintf("\tVBE Y:           [%u]\n", mb_info->framebuffer_height);
-        kprintf("\tVBE X:           [%u]\n", mb_info->framebuffer_width);
-        kprintf("\tVBE BPP:         [%u]\n", mb_info->framebuffer_bpp);
+        kprintf("\tVBE Y:           [%upx]\n", mb_info->framebuffer_height);
+        kprintf("\tVBE X:           [%upx]\n", mb_info->framebuffer_width);
+        kprintf("\tVBE BPP:         [%uB]\n", mb_info->framebuffer_bpp);
 
     //===================
     // Phys & Virt memory manager initialization
@@ -165,7 +165,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
                 multiboot_memory_map_t* mmap_entry = (multiboot_memory_map_t*)mb_info->mmap_addr;
                 while ((uint32_t)mmap_entry < mb_info->mmap_addr + mb_info->mmap_length) {
                     if (mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
-                        kprintf("\tREGION |  LEN: [%u]  |  ADDR: [%p]  |  TYPE: [%u] \t", mmap_entry->len, mmap_entry->addr, mmap_entry->type);
+                        kprintf("\tREGION |  LEN: [%u]  |  ADDR: [0x%p]  |  TYPE: [%u] \t", mmap_entry->len, mmap_entry->addr, mmap_entry->type);
                         const uint32_t pattern = 0xC08DE77;
 
                         uint32_t* ptr = (uint32_t*)mmap_entry->addr;
@@ -178,7 +178,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
                         ptr = (uint32_t*)mmap_entry->addr;
                         while (ptr < end) {
                             if (*ptr != pattern) {
-                                kprintf("MEM TEST FAILED AT [%p]\n", ptr);
+                                kprintf("MEM TEST FAILED AT [0x%p]\n", ptr);
                                 return;
                             }
 
@@ -265,7 +265,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
 
     //===================
     
-    kprintf("DRIVER FAT INIZIALIZZATO\nTC:[%u]\tSPC:[%u]\tBPS:[%u]\n\n", total_clusters, sectors_per_cluster, bytes_per_sector);
+    kprintf("DRIVER FAT INIZIALIZZATO\nTC:[%uC]\tSPC:[%uS]\tBPS:[%uB]\n\n", total_clusters, sectors_per_cluster, bytes_per_sector);
 
     //===================
     // Kernel shell part
@@ -278,7 +278,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         if (current_vfs->objexist(CONFIG_PATH) == 1) {
             Content* boot_config = current_vfs->getobj(CONFIG_PATH);
             char* config = current_vfs->read(boot_config);
-            FAT_unload_content_system(boot_config);
+            FSLIB_unload_content_system(boot_config);
             
             //===================
             // Network initialization

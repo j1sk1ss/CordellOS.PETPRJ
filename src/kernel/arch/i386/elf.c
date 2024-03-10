@@ -6,7 +6,7 @@ ELF32_program* ELF_read(const char* path) {
     Content* content = FAT_get_content(path);
     if (content->file == NULL) {
         kprintf("[%s %i] File not found\n", __FILE__, __LINE__);
-        FAT_unload_content_system(content);
+        FSLIB_unload_content_system(content);
         return NULL;
     }
 
@@ -15,19 +15,19 @@ ELF32_program* ELF_read(const char* path) {
     //==========================
 
         void* header = calloc(sizeof(Elf32_Ehdr), 1);
-        FAT_read_content2buffer(content, header, 0, sizeof(Elf32_Ehdr));
+        current_vfs->readoff(content, header, 0, sizeof(Elf32_Ehdr));
         Elf32_Ehdr* ehdr = (Elf32_Ehdr*)header;
         if (ehdr->e_ident[0] != '\x7f' || ehdr->e_ident[1] != 'E') {
             kprintf("\n[%s %i] Error: Not ELF.\n", __FILE__, __LINE__);
             free(header);
-            FAT_unload_content_system(content);
+            FSLIB_unload_content_system(content);
             return NULL;
         }
 
         if (ehdr->e_type != ET_EXEC && ehdr->e_type != ET_DYN) {
             kprintf("\n[%s %i] Error: Program is not an executable or dynamic executable.\n", __FILE__, __LINE__);
             free(header);
-            FAT_unload_content_system(content);
+            FSLIB_unload_content_system(content);
             return NULL;
         }
 
@@ -38,7 +38,7 @@ ELF32_program* ELF_read(const char* path) {
     //==========================
 
         void* program_header = calloc(sizeof(Elf32_Phdr), ehdr->e_phnum);
-        FAT_read_content2buffer(content, program_header, ehdr->e_phoff, sizeof(Elf32_Phdr) * ehdr->e_phnum);
+        current_vfs->readoff(content, program_header, ehdr->e_phoff, sizeof(Elf32_Phdr) * ehdr->e_phnum);
         Elf32_Phdr* phdr = (Elf32_Phdr*)program_header;
 
         program->entry_point = ehdr->e_entry;
@@ -68,7 +68,7 @@ ELF32_program* ELF_read(const char* path) {
             }
 
             memset(phdr[i].p_vaddr, 0, phdr[i].p_memsz);
-            FAT_read_content2buffer(content, phdr[i].p_vaddr, phdr[i].p_offset, phdr[i].p_memsz);
+            current_vfs->readoff(content, phdr[i].p_vaddr, phdr[i].p_offset, phdr[i].p_memsz);
         }
 
     //==========================
@@ -76,6 +76,6 @@ ELF32_program* ELF_read(const char* path) {
     //==========================
 
     free(program_header);
-    FAT_unload_content_system(content);
+    FSLIB_unload_content_system(content);
     return program;
 }

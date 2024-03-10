@@ -215,7 +215,7 @@ void syscall(Registers* regs) {
             char* rfile_path = (char*)regs->ebx;
             Content* content = current_vfs->getobj(rfile_path);
             regs->eax        = (uint32_t)current_vfs->read(content);
-            FATLIB_unload_content_system(content);
+            current_vfs->cunload(content);
         } 
         
         else if (regs->eax == SYS_WRITE_FILE) {
@@ -257,7 +257,7 @@ void syscall(Registers* regs) {
             Content* mkfile_content = current_vfs->crobj(fname, FALSE, fexec);
 
             current_vfs->putobj(mkfile_path, mkfile_content);
-            FATLIB_unload_files_system(mkfile_content);
+            current_vfs->funload(mkfile_content);
         } 
         
         else if (regs->eax == SYS_DIRCREATE) {
@@ -267,7 +267,7 @@ void syscall(Registers* regs) {
             Content* mkdir_content = current_vfs->crobj(mkdir_name, TRUE, "");
 
             current_vfs->putobj(mkdir_path, mkdir_content);
-            FATLIB_unload_files_system(mkdir_content);
+            current_vfs->funload(mkdir_content);
         } 
         
         else if (regs->eax == SYS_CDELETE) {

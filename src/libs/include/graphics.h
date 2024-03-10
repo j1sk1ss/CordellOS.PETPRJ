@@ -25,7 +25,7 @@
 #define TRANSPARENT 0x10000000
 
 
-struct GUIobject {
+typedef struct GUIobject {
     int x, y;
     int prev_x, prev_y;
     int height, width;
@@ -40,14 +40,14 @@ struct GUIobject {
 
     int text_count;
     struct text_object** texts;
-};
+} GUIobject_t;
 
-struct text_object {
+typedef struct text_object {
     uint32_t x, y;
     char* text;
     uint32_t char_count;
     uint32_t bg_color;
-};
+} text_object_t;
 
 
 void swipe_buffers();
@@ -55,19 +55,19 @@ void swipe_buffers();
 int get_resolution_x();
 int get_resolution_y();
 
-struct GUIobject* create_gui_object(int x, int y, int height, int width, uint32_t background);
-struct GUIobject* object_add_children(struct GUIobject* object, struct GUIobject* children);
-struct GUIobject* object_add_bitmap(struct GUIobject* object, struct bitmap* bmp);
-struct GUIobject* object_add_text(struct GUIobject* object, struct text_object* text);
+GUIobject_t* create_gui_object(int x, int y, int height, int width, uint32_t background);
+GUIobject_t* object_add_children(GUIobject_t* object, GUIobject_t* children);
+GUIobject_t* object_add_bitmap(GUIobject_t* object, struct bitmap* bmp);
+GUIobject_t* object_add_text(GUIobject_t* object, text_object_t* text);
 
-struct text_object* create_text(int x, int y, char* text, uint32_t background_color);
-void put_text(struct text_object* text);
-void unload_text(struct text_object* text);
+text_object_t* create_text(int x, int y, char* text, uint32_t background_color);
+void put_text(text_object_t* text);
+void unload_text(text_object_t* text);
 
-void object_move(struct GUIobject* object, int rel_x, int rel_y);
+void object_move(GUIobject_t* object, int rel_x, int rel_y);
 
-void display_gui_object(struct GUIobject* object);
-void unload_gui_object(struct GUIobject* object);
+void display_gui_object(GUIobject_t* object);
+void unload_gui_object(GUIobject_t* object);
 
 void put_pixel(int x, int y, int color);
 void vput_pixel(int x, int y, int color);

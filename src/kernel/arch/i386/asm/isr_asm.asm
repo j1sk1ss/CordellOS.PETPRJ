@@ -22,7 +22,7 @@ global i386_ISR%1:
 
 %endmacro
 
-%include "arch/i386/isrs_gen.inc"
+%include "arch/drivers/isrs_gen.inc"
 
 isr_common:
     pusha

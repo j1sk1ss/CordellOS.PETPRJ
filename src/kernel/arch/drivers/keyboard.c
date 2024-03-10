@@ -57,19 +57,42 @@ unsigned char alphabet[128] = {
 };
 
 unsigned char shift_alphabet[128] = {
-  0, 0, '!', '@', '#', '$', '%', '^',
-  '&', '*', '(', ')', '_', '+', 0, 0,
-  'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
-  'O', 'P', '{', '}', '\n', 0, 'A', 'S',
-  'D', 'F', 'G', 'H', 'J', 'K', 'L', ':',
-  '"', '~', '\252', '|', 'Z', 'X', 'C', 'V',
-  'B', 'N', 'M', '<', '>', '?', '\253', 0, 0,
-  ' ', 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0,
+    0,  27, '!', '@', '#', '$', '%', '^', '&', '*',	                    /* 9 */
+    '(', ')', '_', '+', '\b',	                                        /* Backspace */
+    '\t',			                                                    /* Tab */
+    'Q', 'W', 'E', 'R',	                                                /* 19 */
+    'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',	                    /* Enter key */
+    0,			                                                        /* 29   - Control */
+    'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':',	                /* 39 */
+    '"', '~', '\252',		                                            /* Left shift */
+    '|', 'Z', 'X', 'C', 'V', 'B', 'N',			                        /* 49 */
+    'M', '<', '>', '?',  '\253',				                        /* Right shift */
+    '*',
+    0,	                                                                /* Alt */
+    ' ',	                                                            /* Space bar */
+    '\5',	                                                            /* Caps lock */
+    '\6',	                                                            /* 59 - F1 key ... > */
+    '\7',   '\255',   '\254',   0,   0,   0,   0,   0,                       
+    0,	                                                                /* < ... F10 */
+    0,	                                                                /* 69 - Num lock*/
+    0,	                                                                /* Scroll Lock */
+    0,	                                                                /* Home key */
+    '\4',	                                                            /* Up Arrow */
+    0,	                                                                /* Page Up */
+    '-',                        
+    '\1',	                                                            /* Left Arrow */
+    0,                      
+    '\2',	                                                            /* Right Arrow */
+    '+',                        
+    0,	                                                                /* 79 - End key*/
+    '\3',	                                                            /* Down Arrow */
+    0,	                                                                /* Page Down */
+    0,	                                                                /* Insert Key */
+    '\251',	                                                            /* Delete Key */
+    0,   0,   0,                        
+    0,	                                                                /* F11 Key */
+    0,	                                                                /* F12 Key */
+    0,	                                                                /* All other keys are undefined */
 };
 
 uint8_t* char_buffer = NULL;
@@ -135,11 +158,11 @@ char get_character(char character) {
 //  |_|\_\_____| |_| |____/ \___/_/   \_\_| \_\____/ 
 
         void enable_keyboard(uint8_t* buffer, int keyboard_mode, int keyboard_color, uint8_t* stop) {
+            char_buffer = buffer;
+            stop_buffer = stop;            
             mode  = keyboard_mode;
             color = keyboard_color;
-            char_buffer = buffer;
-            stop_buffer = stop;
-            pos = 0;
+            pos   = 0;
         }
 
         void i386_keyboard_handler(Registers* regs) {
@@ -159,8 +182,13 @@ char get_character(char character) {
                     if (stop_buffer[chr_pos] == currentCharacter) {
                         input[max(0, strlen(input))] = stop_buffer[chr_pos];
                         stop_buffer[0] = '\250';
+
                         char_buffer = NULL;
                         stop_buffer = NULL;
+                        mode  = HIDDEN_KEYBOARD;
+                        color = -1;
+                        pos   = 0;
+
                         return;
                     }
 
@@ -188,31 +216,6 @@ char get_character(char character) {
             if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) {
                 key_pressed[LSHIFT] = false;
                 key_pressed[RSHIFT] = false;
-            }
-        }
-
-//==================================================================================
-//   _   _    ___     _____ ____    _  _____ ___ ___  _   _   _  _________   ______   ___    _    ____  ____  
-//  | \ | |  / \ \   / /_ _/ ___|  / \|_   _|_ _/ _ \| \ | | | |/ / ____\ \ / / __ ) / _ \  / \  |  _ \|  _ \ 
-//  |  \| | / _ \ \ / / | | |  _  / _ \ | |  | | | | |  \| | | ' /|  _|  \ V /|  _ \| | | |/ _ \ | |_) | | | |
-//  | |\  |/ ___ \ V /  | | |_| |/ ___ \| |  | | |_| | |\  | | . \| |___  | | | |_) | |_| / ___ \|  _ <| |_| |
-//  |_| \_/_/   \_\_/  |___\____/_/   \_\_| |___\___/|_| \_| |_|\_\_____| |_| |____/ \___/_/   \_\_| \_\____/ 
-
-        char keyboard_navigation() {
-            while (1) 
-                if (i386_inb(0x64) & 0x1) {
-                    char character = i386_inb(0x60);
-                    if (!(character & 0x80)) {
-                        return alphabet[character];
-                    }
-                }
-        }
-
-        void keyboard_wait(char symbol) {
-            while (1) {
-                char user_action = keyboard_navigation();
-                if (user_action == symbol)
-                    break;
             }
         }
 

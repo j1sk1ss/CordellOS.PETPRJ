@@ -177,7 +177,7 @@ void set_color(int color) {
 }
 
 void fprintf_unsigned(uint8_t file, unsigned long long number, int radix, int color) {
-    char hexChars[17] = "0123456789abcdef";
+    char hexChars[17] = "0123456789ABCDEF";
     char buffer[32];
     int pos = 0;
 

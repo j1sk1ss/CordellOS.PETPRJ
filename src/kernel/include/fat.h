@@ -9,7 +9,8 @@
 #include <memory.h>
 #include <stdlib.h>  // Allocators (basic malloc required)
 #include <string.h>
-#include <fatlib.h>
+#include <fslib.h>
+#include <ctype.h>
 
 
 #define SECTOR_OFFSET		23000
@@ -219,7 +220,6 @@ extern unsigned int ext_root_cluster;
 	int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add);
 	int FAT_directory_remove(const unsigned int cluster, const char* fileName);
 	int FAT_directory_edit(const unsigned int cluster, directory_entry_t* oldMeta, directory_entry_t* newMeta);
-	directory_entry_t* FAT_create_entry(const char* filename, const char* ext, BOOL isDir, uint32_t firstCluster, uint32_t filesize);
 
 //===================================
 
@@ -238,36 +238,10 @@ extern unsigned int ext_root_cluster;
 	void FAT_read_content2buffer(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size);
 	int FAT_put_content(const char* filePath, Content* content);
 	int FAT_delete_content(const char* filePath, const char* name);
-	Content* FAT_create_content(char* name, BOOL directory, char* extension);
 	void FAT_edit_content(const char* filePath, char* newData);
-	void FAT_buffer2content(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size);
+	void FAT_write_buffer2content(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size);
 	int FAT_ELF_execute_content(char* path, int argc, char* argv[]);
 	int FAT_change_meta(const char* filePath, directory_entry_t* newMeta);
-
-//===================================
-
-
-//===================================
-//    ___ _____ _   _ _____ ____  
-//   / _ \_   _| | | | ____|  _ \ 
-//  | | | || | | |_| |  _| | |_) |
-//  | |_| || | |  _  | |___|  _ < 
-//   \___/ |_| |_| |_|_____|_| \_\
-//=================================== 
-
-	unsigned short FAT_current_time();
-	unsigned char FAT_current_time_temths();
-	unsigned short FAT_current_date();
-	unsigned char FAT_check_sum(unsigned char *pFcbName);
-
-	BOOL FAT_name_check(char * input);
-	char* FAT_name2fatname(char* input);
-	void FAT_fatname2name(char* input, char* output);
-	Date* FAT_get_date(short data, int type);
-
-	void FAT_unload_directories_system(Directory* directory);
-	void FAT_unload_files_system(File* file);
-	void FAT_unload_content_system(Content* content);
 
 //===================================
 

@@ -1,8 +1,9 @@
-#ifndef FATLIB_H_
-#define FATLIB_H_
+#ifndef FSLIB_H_
+#define FSLIB_H_
 
 #include "stdio.h"
 #include "stdlib.h"
+#include "ctype.h"
 
 
 #define FILE_READ_ONLY      0x01
@@ -79,18 +80,25 @@ typedef struct FATContent {
 } Content;
 
 
-void FATLIB_unload_directories_system(Directory* directory);
-void FATLIB_unload_files_system(File* file);
-void FATLIB_unload_content_system(Content* content);
+void FSLIB_unload_directories_system(Directory* directory);
+void FSLIB_unload_files_system(File* file);
+void FSLIB_unload_content_system(Content* content);
 
-char* FATLIB_change_path(const char* currentPath, const char* content);
+char* FSLIB_change_path(const char* currentPath, const char* content);
 
-Date* FATLIB_get_date(short data, int type);
+Date* FSLIB_get_date(short data, int type);
 
-void FATLIB_fatname2name(char* input, char* output);
-char* FATLIB_name2fatname(char* input);
+void FSLIB_fatname2name(char* input, char* output);
+char* FSLIB_name2fatname(char* input);
+int FSLIB_name_check(char* input);
+unsigned char FSLIB_check_sum(unsigned char *pFcbName);
 
-directory_entry_t* FATLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+directory_entry_t* FSLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+Content* FSLIB_create_content(char* name, short directory, char* extension);
+
+unsigned short FSLIB_current_time();
+unsigned short FSLIB_current_date();
+unsigned char FSLIB_current_time_temths();
 
 int cexists(const char* path);
 void rmcontent(const char* path, const char* name);

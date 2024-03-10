@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <rand.h>
-#include <fatlib.h>
+#include <fslib.h>
 #include <string.h>
 #include <stdlib.h>
 #include <keyboard.h>

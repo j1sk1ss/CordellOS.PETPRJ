@@ -5,6 +5,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "math.h"
+#include "ctype.h"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -13,9 +14,6 @@
 
 #define DOUBLE_STR_BUFFER_SIZE 64
 
-
-int isdigit(int c);
-int isspace(int c);
 
 const char* strchr(const char* str, char chr);
 char* strrchr(const char *s, int c);
@@ -33,12 +31,12 @@ void fit_string(char* str, size_t size, char character);
 char place_char_in_text(char* text, char character, int x_position, int y_position);
 
 void reverse(char* str, int len);
-char* double_to_string(double value);
+char* ftoa(double value);
 double atof(const char *str);
 
 char* backspace_string(char* str);
-char* add_char_to_string(char* str, char character);
-void add_string_to_string(char** str, char* string);
+char* add_char2string(char* str, char character);
+void add_string2string(char** str, char* string);
 
 wchar_t* utf16_to_codepoint(wchar_t*  strin, int* codePointg);
 char* codepoint_to_utf8(int codePoint, char* stringOutput);
@@ -49,8 +47,6 @@ char* itoa(int n);
 char* strncpy(char *dst, const char *src, int n);
 char* strdup(const char *src);
 
-void str_uppercase(char* str);
-int str_toupper(int c);
-int tolower(int c);
+void str2uppercase(char* str);
 
 #endif

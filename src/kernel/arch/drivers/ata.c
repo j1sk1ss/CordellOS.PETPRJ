@@ -279,15 +279,19 @@ ata_dev_t secondary_slave  = {.slave = 1};
 
     int ATA_writeoff_sectors(uint32_t lba, const uint8_t* buffer, uint32_t sector_count, uint32_t offset, uint32_t size) {
         ATA_ata_wait();
+
+        uint32_t sectors_seek  = offset / SECTOR_SIZE;
+        uint32_t sector_seek   = offset % SECTOR_SIZE;
         uint32_t data_position = 0;
-        for (uint32_t i = 0; i < sector_count && data_position < size; i++) {
-            uint32_t write_size = min(size - data_position, SECTOR_SIZE);
-            if (ATA_writeoff_sector(lba + i, buffer, offset, write_size) == -1) 
+
+        for (uint32_t i = sectors_seek; i < sector_count && data_position < size; i++) {
+            uint32_t write_size = min(size - data_position, SECTOR_SIZE - sector_seek);
+            if (ATA_writeoff_sector(lba + i, buffer, sector_seek, write_size) == -1) 
                 return -1;
             
             buffer += write_size;
             data_position += write_size;
-            offset = 0;
+            sector_seek = 0;
         }
 
         return 1;
@@ -338,9 +342,8 @@ ata_dev_t secondary_slave  = {.slave = 1};
     // Function to check if a sector is empty (contains all zeros).
     bool ATA_is_sector_empty(const uint8_t* sector_data) {
         for (int i = 0; i < SECTOR_SIZE; i++) 
-            if (sector_data[i] != 0x00) 
-                return false;
-            
+            if (sector_data[i] != 0x00) return false;
+
         return true;
     }
 

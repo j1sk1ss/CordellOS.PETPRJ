@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <fatlib.h>
+#include <fslib.h>
 #include <stdlib.h>
 
 #define STACK_SIZE              100

@@ -8,7 +8,7 @@
 #include "graphics.h"
 
 
-struct window {
+typedef struct window {
     char* name;
 
     int x, y;
@@ -21,15 +21,15 @@ struct window {
     int pid;
 
     struct window* next;
-};
+} window_t;
 
 
-struct window* create_window(char* name, int pid, int x, int y, int height, int width, uint32_t bg_color, struct GUIobject* objects);
-void add_window(struct window* window);
-void display_window(struct window* window);
-void unload_window(struct window* window);
+window_t* create_window(char* name, int pid, int x, int y, int height, int width, uint32_t bg_color, GUIobject_t* objects);
+void add_window(window_t* window);
+void display_window(window_t* window);
+void unload_window(window_t* window);
 
-struct window* add_text2window(struct window* window, struct text_object* text);
-struct window* add_object2window(struct window* window, struct GUIobject* object);
+window_t* add_text2window(window_t* window, text_object_t* text);
+window_t* add_object2window(window_t* window, GUIobject_t* object);
 
 #endif

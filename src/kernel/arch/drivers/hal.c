@@ -1,5 +1,6 @@
 #include "../../include/hal.h"
 
+
 void HAL_initialize() {
     i386_gdt_initialize();
     kprintf("GDT INIZIALIZZATO\n");

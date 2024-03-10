@@ -7,7 +7,7 @@ bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
     if (content->file == NULL) {
         printf("File not found\n");
         BMP_unload(ret);
-        FATLIB_unload_content_system(content);
+        FSLIB_unload_content_system(content);
         return NULL;
     }
 
@@ -89,6 +89,6 @@ void BMP_display(bitmap_t* bmp) {
 }
 
 void BMP_unload(bitmap_t* bitmap) {
-    if (bitmap->file != NULL) FATLIB_unload_content_system(bitmap->file);
+    if (bitmap->file != NULL) FSLIB_unload_content_system(bitmap->file);
     if (bitmap != NULL) free(bitmap);
 }

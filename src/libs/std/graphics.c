@@ -111,7 +111,7 @@ void swipe_buffers() {
     );
 }
 
-void display_gui_object(struct GUIobject* object) {
+void display_gui_object(GUIobject_t* object) {
     if (object == NULL) return;
     for (int y = object->height - 1; y >= 0; y--)
         for (int x = 0; x < object->width; x++)
@@ -127,8 +127,8 @@ void display_gui_object(struct GUIobject* object) {
         put_text(object->texts[i]);
 }
 
-struct GUIobject* create_gui_object(int x, int y, int height, int width, uint32_t background) {
-    struct GUIobject* newObject = (struct GUIobject*)malloc(sizeof(struct GUIobject));
+GUIobject_t* create_gui_object(int x, int y, int height, int width, uint32_t background) {
+    GUIobject_t* newObject = (GUIobject_t*)malloc(sizeof(GUIobject_t));
     if (newObject != NULL) {
         newObject->x      = x;
         newObject->y      = y;
@@ -150,7 +150,7 @@ struct GUIobject* create_gui_object(int x, int y, int height, int width, uint32_
     return newObject;
 }
 
-void object_move(struct GUIobject* object, int rel_x, int rel_y) {
+void object_move(GUIobject_t* object, int rel_x, int rel_y) {
     if (object == NULL) return;
     for (int i = 0; i < object->children_count; i++)
         object_move(object->childrens[i], rel_x, rel_y);
@@ -169,34 +169,34 @@ void object_move(struct GUIobject* object, int rel_x, int rel_y) {
     object->y += rel_y;
 }
 
-struct GUIobject* object_add_children(struct GUIobject* object, struct GUIobject* children) {
+GUIobject_t* object_add_children(GUIobject_t* object, GUIobject_t* children) {
     if (object != NULL && children != NULL) {
-        object->childrens = (struct GUIobject**)realloc(object->childrens, (object->children_count + 1) * sizeof(struct GUIobject*));
+        object->childrens = (GUIobject_t**)realloc(object->childrens, (object->children_count + 1) * sizeof(GUIobject_t*));
         if (object->childrens != NULL) object->childrens[object->children_count++] = children;
     }
 
     return object;
 }
 
-struct GUIobject* object_add_bitmap(struct GUIobject* object, struct bitmap* bmp) {
+GUIobject_t* object_add_bitmap(GUIobject_t* object, bitmap_t* bmp) {
     if (object != NULL && bmp != NULL) {
-        object->bitmaps = (struct bitmap**)realloc(object->bitmaps, (object->bitmap_count + 1) * sizeof(struct bitmap*));
+        object->bitmaps = (bitmap_t**)realloc(object->bitmaps, (object->bitmap_count + 1) * sizeof(bitmap_t*));
         if (object->bitmaps != NULL) object->bitmaps[object->bitmap_count++] = bmp;
     }
 
     return object;
 }
 
-struct GUIobject* object_add_text(struct GUIobject* object, struct text_object* text) {
+GUIobject_t* object_add_text(GUIobject_t* object, text_object_t* text) {
     if (object != NULL && text != NULL) {
-        object->texts = (struct text_object**)realloc(object->texts, (object->text_count + 1) * sizeof(struct text_object*));
+        object->texts = (text_object_t**)realloc(object->texts, (object->text_count + 1) * sizeof(text_object_t*));
         if (object->texts != NULL) object->texts[object->text_count++] = text;
     }
 
     return object;
 }
 
-void unload_gui_object(struct GUIobject* object) {
+void unload_gui_object(GUIobject_t* object) {
     if (object == NULL) return;
 
     for (int i = 0; i < object->children_count; i++) unload_gui_object(object->childrens[i]);
@@ -209,20 +209,20 @@ void unload_gui_object(struct GUIobject* object) {
     free(object);
 }
 
-struct text_object* create_text(int x, int y, char* text, uint32_t background_color) {
-    struct text_object* object = malloc(sizeof(struct text_object));
+text_object_t* create_text(int x, int y, char* text, uint32_t background_color) {
+    text_object_t* object = malloc(sizeof(text_object_t));
 
     object->x = x;
     object->y = y;
     object->char_count = strlen(text);
-    object->text = malloc(object->char_count + 1);
-    object->bg_color = background_color;
+    object->text       = malloc(object->char_count + 1);
+    object->bg_color   = background_color;
     strncpy(object->text, text, object->char_count);
 
     return object;
 }
 
-void put_text(struct text_object* text) {
+void put_text(text_object_t* text) {
     if (text->x > get_resolution_x() || text->y > get_resolution_y() ||
         text->x < 0 || text->y < 0) {
         printf("\nWrong resolution");
@@ -242,7 +242,7 @@ void put_text(struct text_object* text) {
     return;
 }
 
-void unload_text(struct text_object* text)  {
+void unload_text(text_object_t* text)  {
     free(text->text);
     free(text);
 }

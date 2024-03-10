@@ -123,7 +123,7 @@ void open_file_manager(char* path) {
 
 void execute_item(char action_type) {
     if (row_position == 0 && action_type != BACKSPACE_BUTTON) {
-        current_path = FATLIB_change_path(current_path, NULL);
+        current_path = FSLIB_change_path(current_path, NULL);
         if (strlen(current_path) <= 1) {
             free(current_path);
             current_path = malloc(4);
@@ -143,7 +143,7 @@ void execute_item(char action_type) {
         while (subdir != NULL) {
             if (rows++ == row_position) {
                 if (action_type == ENTER_BUTTON) 
-                    current_path = FATLIB_change_path(current_path, subdir->name);
+                    current_path = FSLIB_change_path(current_path, subdir->name);
 
                 else if (action_type == BACKSPACE_BUTTON) {
                     printf("\nDELETE? (Y/N): ");
@@ -166,10 +166,10 @@ void execute_item(char action_type) {
                     char new_dir_name[40] = { '\n' };
                     input_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE, new_dir_name);
 
-                    directory_entry_t* new_meta = FATLIB_create_entry(new_dir_name, NULL, 1, NULL, NULL);
-                    current_path = (FATLIB_change_path(current_path, subdir->directory_meta.file_name));
+                    directory_entry_t* new_meta = FSLIB_create_entry(new_dir_name, NULL, 1, NULL, NULL);
+                    current_path = (FSLIB_change_path(current_path, subdir->directory_meta.file_name));
                     chgcontent(current_path, new_meta);
-                    current_path = (FATLIB_change_path(current_path, NULL));
+                    current_path = (FSLIB_change_path(current_path, NULL));
 
                     free(new_dir_name);
                     free(new_meta);
@@ -191,7 +191,7 @@ void execute_item(char action_type) {
         while (currentFile != NULL) {
 
             char name[25]; 
-            FATLIB_fatname2name(currentFile->file_meta.file_name, name);
+            FSLIB_fatname2name(currentFile->file_meta.file_name, name);
 
             if (rows++ == row_position) {
                 row_position = 1;
@@ -225,19 +225,19 @@ void execute_item(char action_type) {
                             else if (user_action == ENTER_BUTTON) {
                                 switch (row_position) {
                                     case EDIT_POS:
-                                        current_path = (FATLIB_change_path(current_path, name));
+                                        current_path = (FSLIB_change_path(current_path, name));
                                         text_editor_init(current_path, BACKGROUND_BLACK + FOREGROUND_WHITE);
-                                        current_path = (FATLIB_change_path(current_path, NULL));
+                                        current_path = (FSLIB_change_path(current_path, NULL));
 
                                     break;
 
                                     case VIEW_POS:
                                         clrscr();
 
-                                        current_path = (FATLIB_change_path(current_path, name));
+                                        current_path = (FSLIB_change_path(current_path, name));
                                         char* data = fread(current_path);
                                         printf("%sFILE: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, data, LINE);
-                                        current_path = (FATLIB_change_path(current_path, NULL));
+                                        current_path = (FSLIB_change_path(current_path, NULL));
 
                                         set_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
                                         free(data);
@@ -253,11 +253,11 @@ void execute_item(char action_type) {
                                         char new_file_ext[40] = { '\n' };
                                         input_read(VISIBLE_KEYBOARD, BACKGROUND_BLACK + FOREGROUND_WHITE, new_file_ext);
 
-                                        directory_entry_t* new_meta = FATLIB_create_entry(new_file_name, new_file_ext, 0, NULL, NULL);
+                                        directory_entry_t* new_meta = FSLIB_create_entry(new_file_name, new_file_ext, 0, NULL, NULL);
 
-                                        current_path = (FATLIB_change_path(current_path, name));
+                                        current_path = (FSLIB_change_path(current_path, name));
                                         chgcontent(current_path, new_meta);
-                                        current_path = (FATLIB_change_path(current_path, NULL));
+                                        current_path = (FSLIB_change_path(current_path, NULL));
                                         
                                         free(new_file_name);
                                         free(new_file_ext);
@@ -302,10 +302,10 @@ void execute_item(char action_type) {
                         if (strstr(currentFile->extension, "TXT") == 0) {
                             clrscr();
 
-                            current_path = (FATLIB_change_path(current_path, name));
+                            current_path = (FSLIB_change_path(current_path, name));
                             char* data = fread(current_path);
                             printf("%sFile: [%s]   [F3 - EXIT]\n%s\n\n\n%s\n\n%s", LINE, currentFile->name, LINE, data, LINE);
-                            current_path = (FATLIB_change_path(current_path, NULL));
+                            current_path = (FSLIB_change_path(current_path, NULL));
                 
                             free(data);
 
@@ -319,9 +319,9 @@ void execute_item(char action_type) {
                         if (strstr(currentFile->extension, "ELF") == 0) {
                             clrscr();
                             
-                            current_path = (FATLIB_change_path(current_path, name));
+                            current_path = (FSLIB_change_path(current_path, name));
                             printf("\nEXIT CODE: [%i]", fexec(current_path, NULL, NULL));
-                            current_path = (FATLIB_change_path(current_path, NULL));
+                            current_path = (FSLIB_change_path(current_path, NULL));
 
                             printf("\n\nPress [F3] to exit");
                             keyboard_wait(F3_BUTTON);
@@ -331,10 +331,10 @@ void execute_item(char action_type) {
 
                         else if (strstr(currentFile->extension, "ASM") == 0) {
                             clrscr();
-                            current_path = (FATLIB_change_path(current_path, name));
+                            current_path = (FSLIB_change_path(current_path, name));
                             char* data = fread(current_path);
                             asm_execute(data);
-                            current_path = (FATLIB_change_path(current_path, NULL));
+                            current_path = (FSLIB_change_path(current_path, NULL));
 
                             set_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
 
@@ -349,9 +349,9 @@ void execute_item(char action_type) {
                             clrscr();
                             set_color(BACKGROUND_BLACK + FOREGROUND_WHITE);
                             
-                            current_path = (FATLIB_change_path(current_path, name));
+                            current_path = (FSLIB_change_path(current_path, name));
                             char* sector_data = fread(current_path);
-                            current_path = (FATLIB_change_path(current_path, NULL));
+                            current_path = (FSLIB_change_path(current_path, NULL));
 
                             char* command_for_split = (char*)malloc(strlen(sector_data));
                             strcpy(command_for_split, sector_data);
@@ -402,7 +402,7 @@ void execute_item(char action_type) {
             currentFile = currentFile->next;
         }
 
-        FATLIB_unload_files_system(currentFile);
+        FSLIB_unload_files_system(currentFile);
 
     //=========================
     //  SELECTED DIRECTORY
@@ -459,9 +459,9 @@ void print_directory_data() {
             strncpy(file_size, file_size_str, 10);
             strcat(file_size, "B");
 
-            Date* creation_date     = FATLIB_get_date(currentFile->file_meta.creation_date, 1);
-            Date* modification_date = FATLIB_get_date(currentFile->file_meta.last_modification_date, 1);
-            Date* access_date       = FATLIB_get_date(currentFile->file_meta.last_accessed, 1);
+            Date* creation_date     = FSLIB_get_date(currentFile->file_meta.creation_date, 1);
+            Date* modification_date = FSLIB_get_date(currentFile->file_meta.last_modification_date, 1);
+            Date* access_date       = FSLIB_get_date(currentFile->file_meta.last_accessed, 1);
 
             for (size_t i = strlen(file_name); i < 11; i++) file_name[i] = ' ';
             for (size_t i = strlen(file_extension); i < 4; i++) file_extension[i] = ' ';
@@ -492,7 +492,7 @@ void print_directory_data() {
         free(adate);
     }
 
-    FATLIB_unload_directories_system(currentDir);
+    FSLIB_unload_directories_system(currentDir);
 
     for (int i = 0; i < 15 - (rows - upper_border); i++) printf(EMPTY);
     printf("%s[F1 - MKDIR] [F2 - MKFILE] [F3 - EXIT] [F4 - EDIT] [ENTER - EXEC] [BSPACE - RM]\n", LINE);

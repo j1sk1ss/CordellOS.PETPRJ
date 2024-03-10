@@ -175,7 +175,7 @@ bool VMM_init(uint32_t memory_start) {
     if (set_page_directory(dir) == false) return false;
     kernel_page_directory = dir;
 
-    asm ("movl %CR0, %EAX; orl $0x80000001, %EAX; movl %EAX, %CR0");
+    asm ("movl %cr0, %eax; orl $0x80000001, %eax; movl %eax, %cr0");
     i386_isr_registerHandler(14, page_fault);
     return true;
 }
@@ -238,9 +238,7 @@ physical_address virtual2physical(void* virt_address) {
 }
 
 void copy_page_directory(page_directory* src, page_directory* dest) {
-    if (!src || !dest) 
-        return;
-
+    if (!src || !dest) return;
     for (uint32_t i = 0; i < TABLES_PER_DIRECTORY; i++) {
         if (src->entries[i] & PDE_PRESENT) {
             page_table *new_table = (page_table *)allocate_blocks(1);

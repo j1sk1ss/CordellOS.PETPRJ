@@ -1,11 +1,11 @@
 #include "../include/window.h"
 
 
-struct window* windows = NULL;
+window_t* windows = NULL;
 
 
-struct window* create_window(char* name, int pid, int x, int y, int height, int width, uint32_t bg_color, struct GUIobject* objects) {
-    struct window* window = malloc(sizeof(struct window));
+window_t* create_window(char* name, int pid, int x, int y, int height, int width, uint32_t bg_color, GUIobject_t* objects) {
+    window_t* window = malloc(sizeof(window_t));
 
     window->name    = name;
     window->next    = NULL;
@@ -21,19 +21,19 @@ struct window* create_window(char* name, int pid, int x, int y, int height, int 
     return window;
 }
 
-void add_window(struct window* window) {
+void add_window(window_t* window) {
     if (windows == NULL) windows = window;
     else {
-        struct window* cur = windows;
+        window_t* cur = windows;
         while (cur->next != NULL) cur = cur->next;
         cur->next = window;
     }
 }
 
-void display_window(struct window* window) {
-    struct GUIobject* window_image   = create_gui_object(window->x, window->y, window->height, window->width, window->background_color);
-    struct GUIobject* title_image    = create_gui_object(window->x, window->y, 25, window->width, BLUE);
-    struct text_object* window_title = create_text(window->x + 10, window->y + 5, window->name, BLUE);
+void display_window(window_t* window) {
+    GUIobject_t* window_image   = create_gui_object(window->x, window->y, window->height, window->width, window->background_color);
+    GUIobject_t* title_image    = create_gui_object(window->x, window->y, 25, window->width, BLUE);
+    text_object_t* window_title = create_text(window->x + 10, window->y + 5, window->name, BLUE);
 
     window_image = object_add_children(window_image, title_image);
     window_image = object_add_text(window_image, window_title);
@@ -44,17 +44,17 @@ void display_window(struct window* window) {
     unload_gui_object(window_image);
 }
 
-void unload_window(struct window* window) {
+void unload_window(window_t* window) {
     if (window->objects != NULL) unload_gui_object(window->objects);
     free(window);
 }
 
-struct window* add_text2window(struct window* window, struct text_object* text) {
+window_t* add_text2window(window_t* window, text_object_t* text) {
     window->objects = object_add_text(window->objects, text);
     return window;
 }
 
-struct window* add_object2window(struct window* window, struct GUIobject* object) {
+window_t* add_object2window(window_t* window, GUIobject_t* object) {
     window->objects = object_add_children(window->objects, object);
     return window;
 }

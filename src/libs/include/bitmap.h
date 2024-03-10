@@ -3,7 +3,7 @@
 
 #include "graphics.h"
 #include "stdio.h"
-#include "fatlib.h"
+#include "fslib.h"
 #include "stdlib.h"
 
 

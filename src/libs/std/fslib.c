@@ -1,20 +1,20 @@
-#include "../include/fatlib.h"
+#include "../include/fslib.h"
 
 
-void FATLIB_unload_directories_system(Directory* directory) {
+void FSLIB_unload_directories_system(Directory* directory) {
     if (directory == NULL) return;
-    if (directory->files != NULL) FATLIB_unload_files_system(directory->files);
-    if (directory->subDirectory != NULL) FATLIB_unload_directories_system(directory->subDirectory);
-    if (directory->next != NULL) FATLIB_unload_directories_system(directory->next);
+    if (directory->files != NULL) FSLIB_unload_files_system(directory->files);
+    if (directory->subDirectory != NULL) FSLIB_unload_directories_system(directory->subDirectory);
+    if (directory->next != NULL) FSLIB_unload_directories_system(directory->next);
     if (directory->data_pointer != NULL) free(directory->data_pointer);
 
     free(directory->name);
     free(directory);
 }
 
-void FATLIB_unload_files_system(File* file) {
+void FSLIB_unload_files_system(File* file) {
     if (file == NULL) return;
-    if (file->next != NULL) FATLIB_unload_files_system(file->next);
+    if (file->next != NULL) FSLIB_unload_files_system(file->next);
     if (file->data_pointer != NULL) free(file->data_pointer);
     if (file->data != NULL) free(file->data);
 
@@ -23,17 +23,17 @@ void FATLIB_unload_files_system(File* file) {
     free(file);
 }
 
-void FATLIB_unload_content_system(Content* content) {
+void FSLIB_unload_content_system(Content* content) {
     if (content == NULL) return;
-    if (content->directory != NULL) FATLIB_unload_directories_system(content->directory);
-    if (content->file != NULL) FATLIB_unload_files_system(content->file);
+    if (content->directory != NULL) FSLIB_unload_directories_system(content->directory);
+    if (content->file != NULL) FSLIB_unload_files_system(content->file);
     
     free(content);
 }
 
 // 1 - date
 // 2 - time
-Date* FATLIB_get_date(short data, int type) {
+Date* FSLIB_get_date(short data, int type) {
     Date* date = malloc(sizeof(Date));
     switch (type) {
         case 1: // date
@@ -57,7 +57,7 @@ Date* FATLIB_get_date(short data, int type) {
 }
 
 // Return NULL if can`t make updir command
-char* FATLIB_change_path(const char* currentPath, const char* content) {
+char* FSLIB_change_path(const char* currentPath, const char* content) {
     if (content == NULL || content[0] == '\0') {
         const char* lastSeparator = strrchr(currentPath, '\\');
         if (lastSeparator == NULL) return NULL;
@@ -92,7 +92,7 @@ char* FATLIB_change_path(const char* currentPath, const char* content) {
     }
 }
 
-void FATLIB_fatname2name(char* input, char* output) {
+void FSLIB_fatname2name(char* input, char* output) {
     if (input[0] == '.') {
         if (input[1] == '.') {
             strcpy (output, "..");
@@ -139,8 +139,8 @@ void FATLIB_fatname2name(char* input, char* output) {
     return;
 }
 
-char* FATLIB_name2fatname(char* input) {
-    str_uppercase(input);
+char* FSLIB_name2fatname(char* input) {
+    str2uppercase(input);
 
     int haveExt = 0;
     char searchName[13] = { '\0' };
@@ -186,13 +186,13 @@ char* FATLIB_name2fatname(char* input) {
     return input;
 }
 
-unsigned short FATLIB_current_time() {
+unsigned short FSLIB_current_time() {
     short data[7];
     get_datetime(data);
     return (data[2] << 11) | (data[1] << 5) | (data[0] / 2);
 }
 
-unsigned short FATLIB_current_date() {
+unsigned short FSLIB_current_date() {
     short data[7];
     get_datetime(data);
 
@@ -205,13 +205,13 @@ unsigned short FATLIB_current_date() {
     return reversed_data;
 }
 
-unsigned char FATLIB_current_time_temths() {
+unsigned char FSLIB_current_time_temths() {
     short data[7];
     get_datetime(data);
     return (data[2] << 11) | (data[1] << 5) | (data[0] / 2);
 }
 
-int FATLIB_name_check(char * input) {
+int FSLIB_name_check(char* input) {
     short retVal = 0;
     unsigned short iterator;
     for (iterator = 0; iterator < 11; iterator++) {
@@ -254,7 +254,17 @@ int FATLIB_name_check(char * input) {
     return retVal;
 }
 
-directory_entry_t* FATLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize) {
+unsigned char FSLIB_check_sum(unsigned char *pFcbName) {
+    short FcbNameLen;
+    unsigned char Sum;
+    Sum = 0;
+    for (FcbNameLen = 11; FcbNameLen != 0; FcbNameLen--) 
+        Sum = ((Sum & 1) ? 0x80 : 0) + (Sum >> 1) + *pFcbName++;
+
+    return (Sum);
+}
+
+directory_entry_t* FSLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize) {
     directory_entry_t* data = malloc(sizeof(directory_entry_t));
 
     data->reserved0 				= 0; 
@@ -281,15 +291,37 @@ directory_entry_t* FATLIB_create_entry(const char* filename, const char* ext, in
         data->attributes 	= FILE_ARCHIVE;
     }
 
-    data->creation_date 		 = FATLIB_current_date();
-    data->creation_time 		 = FATLIB_current_time();
-    data->creation_time_tenths 	 = FATLIB_current_time_temths();
+    data->creation_date 	   = FSLIB_current_date();
+    data->creation_time 	   = FSLIB_current_time();
+    data->creation_time_tenths = FSLIB_current_time_temths();
 
-    if (FATLIB_name_check(file_name) != 0)
-        FATLIB_name2fatname(file_name);
+    if (FSLIB_name_check(file_name) != 0)
+        FSLIB_name2fatname(file_name);
 
     strncpy(data->file_name, file_name, min(11, strlen(file_name)));
     return data; 
+}
+
+Content* FSLIB_create_content(char* name, short directory, char* extension) {
+    Content* content = malloc(sizeof(Content));
+    if (strlen(name) > 11 || strlen(extension) > 4) {
+        printf("Uncorrect name or ext lenght.\n");
+        return NULL;
+    }
+    
+    if (directory == 1) {
+        content->directory = malloc(sizeof(Directory));
+        strncpy(content->directory->name, name, 11);
+        content->directory->directory_meta = *FSLIB_create_entry(name, NULL, 1, NULL, NULL);
+    }
+    else {
+        content->file = malloc(sizeof(File));
+        strncpy(content->file->name, name, 11);
+        strncpy(content->file->extension, extension, 4);
+        content->file->file_meta = *FSLIB_create_entry(name, extension, 0, NULL, 1);
+    }
+
+    return content;
 }
 
 //====================================================================

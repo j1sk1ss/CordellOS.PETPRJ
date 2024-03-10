@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 #include <stddef.h>
-#include <fatlib.h>
+#include <fslib.h>
 #include <string.h>
 #include <bitmap.h>
 #include <stdio.h>

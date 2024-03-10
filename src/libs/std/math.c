@@ -27,8 +27,7 @@ float sqrt(float number) {  //function to find the square root of a rational num
             ans=start;
             start = mid + 1;
         }
-        else 
-            end = mid - 1;
+        else end = mid - 1;
     }
 
     float increment = 0.1;
@@ -38,7 +37,7 @@ float sqrt(float number) {  //function to find the square root of a rational num
         while (ans * ans <= number) 
             ans += increment;
 
-        ans       = ans - increment;
+        ans = ans - increment;
         increment = increment / 10;
     }
 

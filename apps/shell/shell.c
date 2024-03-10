@@ -121,9 +121,9 @@ void shell_start_screen() {
         //====================
 
             else if (strstr(command_line[0], COMMAND_IN_DIR) == 0) {
-                str_uppercase(command_line[1]);
+                str2uppercase(command_line[1]);
                 if (strstr(command_line[1], COMMAND_OUT_DIR) == 0) {
-                    char* up_path = FATLIB_change_path(current_path, NULL);
+                    char* up_path = FSLIB_change_path(current_path, NULL);
                     if (up_path == NULL) {
                         up_path = malloc(5);
                         strcpy(up_path, "HOME");
@@ -134,7 +134,7 @@ void shell_start_screen() {
                 }
 
                 else {
-                    char* dir_path = FATLIB_change_path(current_path, command_line[1]);
+                    char* dir_path = FSLIB_change_path(current_path, command_line[1]);
                     if (cexists(current_path) == 0) {
                         free(dir_path);
                         printf("\nLA DIRECTORY NON ESISTE");
@@ -143,13 +143,13 @@ void shell_start_screen() {
 
                     Content* content = get_content(dir_path);
                     if (content->file != NULL) {
-                        FATLIB_unload_content_system(content);
+                        FSLIB_unload_content_system(content);
                         free(dir_path);
                         printf("\nQUESTA NON E` UNA DIRECTORY");
                         return;
                     }
 
-                    FATLIB_unload_content_system(content);
+                    FSLIB_unload_content_system(content);
                     free(current_path);
                     current_path = dir_path;
                 }
@@ -172,11 +172,11 @@ void shell_start_screen() {
                     current_file = current_file->next;
                 }
                 
-                FATLIB_unload_directories_system(directory);
+                FSLIB_unload_directories_system(directory);
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_VIEW) == 0) {
-                char* file_path = FATLIB_change_path(current_path, command_line[1]);
+                char* file_path = FSLIB_change_path(current_path, command_line[1]);
                 if (cexists(file_path) == 0) {
                     printf("\nLA FILE NON ESISTE");
                     free(file_path);
@@ -198,12 +198,12 @@ void shell_start_screen() {
                     data_size += copy_size;
                 }
                 
-                FATLIB_unload_content_system(content);
+                FSLIB_unload_content_system(content);
                 free(file_path);
             }
 
             else if (strstr(command_line[0], COMMAND_BMP_SHOW) == 0) {
-                char* file_path = FATLIB_change_path(current_path, command_line[1]);
+                char* file_path = FSLIB_change_path(current_path, command_line[1]);
                 if (cexists(file_path) == 0) {
                     printf("\nLA FILE NON ESISTE");
                     free(file_path);
@@ -218,7 +218,7 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {
-                char* exec_path = FATLIB_change_path(current_path, command_line[1]);
+                char* exec_path = FSLIB_change_path(current_path, command_line[1]);
                 if (cexists(exec_path) == 0) {
                     printf("\nLA FILE NON ESISTE");
                     free(exec_path);
@@ -237,7 +237,7 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_CINFO) == 0) {
-                char* info_file = FATLIB_change_path(current_path, command_line[1]);
+                char* info_file = FSLIB_change_path(current_path, command_line[1]);
                 if (cexists(info_file) == 0) {
                     printf("\nLA CONTENT NON ESISTE");
                     free(info_file);
@@ -248,8 +248,8 @@ void shell_start_screen() {
                 Content* content = get_content(info_file);
                 if (content->directory != NULL) {
                     Directory* directory = content->directory;
-                    Date* creation_date  = FATLIB_get_date(directory->directory_meta.creation_date, 1);
-                    Date* accesed_date   = FATLIB_get_date(directory->directory_meta.last_modification_date, 1);
+                    Date* creation_date  = FSLIB_get_date(directory->directory_meta.creation_date, 1);
+                    Date* accesed_date   = FSLIB_get_date(directory->directory_meta.last_modification_date, 1);
 
                     printf("DIRECTORY\n");
                     printf("NAME:          [%s]\n", directory->name);
@@ -262,8 +262,8 @@ void shell_start_screen() {
                 }
                 else {
                     File* file = content->file;
-                    Date* creation_date  = FATLIB_get_date(file->file_meta.creation_date, 1);
-                    Date* accesed_date   = FATLIB_get_date(file->file_meta.last_modification_date, 1);
+                    Date* creation_date  = FSLIB_get_date(file->file_meta.creation_date, 1);
+                    Date* accesed_date   = FSLIB_get_date(file->file_meta.last_modification_date, 1);
 
                     printf("FILE\n");
                     printf("NAME:          [%s.%s]\n", file->name, file->extension);
@@ -275,7 +275,7 @@ void shell_start_screen() {
                     free(accesed_date);
                 }
 
-                FATLIB_unload_content_system(content);
+                FSLIB_unload_content_system(content);
             }
 
         //====================

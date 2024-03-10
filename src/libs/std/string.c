@@ -5,15 +5,7 @@
 //  \___ \ | | | |_) || ||  \| | |  _ 
 //   ___) || | |  _ < | || |\  | |_| |
 //  |____/ |_| |_| \_\___|_| \_|\____|
-                                   
 
-int isdigit(int c) {
-    return (c >= '0' && c <= '9');
-}
-
-int isspace(int c) {
-    return ((c == '\n') || (c == '\t') || (c == ' '));
-}
 
 const char* strchr(const char* str, char chr) {
     if (str == NULL)
@@ -186,7 +178,7 @@ double atof(const char *str) {
     return result;
 }
 
-char* double_to_string(double value) {
+char* ftoa(double value) {
     static char buffer[DOUBLE_STR_BUFFER_SIZE];
 
     int int_part            = (int)value;
@@ -374,7 +366,7 @@ cont:
 	}
 }
 
-char* add_char_to_string(char* str, char character) {
+char* add_char2string(char* str, char character) {
     int len = strlen(str);
     char* buffer = malloc(len + 2);
     if (buffer == NULL || str == NULL) return str;
@@ -428,7 +420,7 @@ char place_char_in_text(char* text, char character, int x_position, int y_positi
     return replaced_character;
 }
 
-void add_string_to_string(char** str, char* string) {
+void add_string2string(char** str, char* string) {
     if (str == NULL || string == NULL) 
         return;
 
@@ -567,25 +559,11 @@ char* strdup(const char* src) {
 	return new;
 }
 
-int str_islower(int c) {
-    return c >= 'a' && c <= 'z';
-}
-
-int tolower(int c) {
-	if (!str_islower(c)) return c | 32;
-	return c;
-}
-
-int str_toupper(int c) {
-    if (str_islower(c)) return c - 'a' + 'A';
-    else return c;
-}
-
-void str_uppercase(char* str) {
+void str2uppercase(char* str) {
     if (str == NULL) 
         return;
 
     for (int i = 0; str[i] != '\0'; i++) {
-        str[i] = str_toupper((unsigned char)str[i]);
+        str[i] = toupper((unsigned char)str[i]);
     }
 }
