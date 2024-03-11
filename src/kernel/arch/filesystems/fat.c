@@ -556,8 +556,8 @@
 		char searchName[13] = { '\0' };
 		strcpy(searchName, filepart);
 
-		if (FSLIB_name_check(searchName) != 0)
-			FSLIB_name2fatname(searchName);
+		if (FAT_name_check(searchName) != 0)
+			FAT_name2fatname(searchName);
 
 		char* cluster_data = FAT_cluster_read(cluster);
 		if (cluster_data == NULL) {
@@ -618,7 +618,7 @@
 // struct should only have a file name, attributes, and size. the rest will be filled in automatically
 
 	int FAT_directory_add(const unsigned int cluster, directory_entry_t* file_to_add) {
-		if (FSLIB_name_check(file_to_add->file_name) != 0) {
+		if (FAT_name_check(file_to_add->file_name) != 0) {
 			kprintf("Function FAT_directory_add: file name supplied is invalid!");
 			return -1;
 		}
@@ -667,9 +667,9 @@
 						return -1;
 					}
 				
-				file_to_add->creation_date 			= FSLIB_current_date();
-				file_to_add->creation_time 			= FSLIB_current_time();
-				file_to_add->creation_time_tenths 	= FSLIB_current_time_temths();
+				file_to_add->creation_date 			= FAT_current_date();
+				file_to_add->creation_time 			= FAT_current_time();
+				file_to_add->creation_time_tenths 	= FAT_current_time_temths();
 				file_to_add->last_accessed 			= file_to_add->creation_date;
 				file_to_add->last_modification_date = file_to_add->creation_date;
 				file_to_add->last_modification_time = file_to_add->creation_time;
@@ -714,7 +714,7 @@
 // This function edit names of directory entries in cluster
 
 	int FAT_directory_edit(const unsigned int cluster, directory_entry_t* oldMeta, directory_entry_t* newMeta) {
-		if (FSLIB_name_check(oldMeta->file_name) != 0) {
+		if (FAT_name_check(oldMeta->file_name) != 0) {
 			kprintf("Function FAT_directory_edit: Invalid file name!");
 			return -1;
 		}
@@ -731,9 +731,9 @@
 			if (strstr(file_metadata->file_name, oldMeta->file_name) == 0) {
 
 				// Correct new_meta data
-				oldMeta->last_accessed 		 	= FSLIB_current_date();
-				oldMeta->last_modification_date = FSLIB_current_date();
-				oldMeta->last_modification_time = FSLIB_current_time_temths();
+				oldMeta->last_accessed 		 	= FAT_current_date();
+				oldMeta->last_modification_date = FAT_current_date();
+				oldMeta->last_modification_time = FAT_current_time_temths();
 
 				memset(oldMeta->file_name, ' ', 11);
 				strncpy(oldMeta->file_name, newMeta->file_name, 11);
@@ -783,7 +783,7 @@
 // This function mark data in FAT table as free and deallocates all clusters
 
 	int FAT_directory_remove(const unsigned int cluster, const char* fileName) {
-		if (FSLIB_name_check(fileName) != 0) {
+		if (FAT_name_check(fileName) != 0) {
 			kprintf("Function FAT_directory_remove: Invalid file name!");
 			return -1;
 		}
@@ -1021,6 +1021,11 @@
 		return result;
 	}
 
+	// Function for reading part of file
+	// data - content for reading
+	// buffer - buffer data storage
+	// offset - file seek
+	// size - size of read data
 	void FAT_read_content2buffer(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size) {
 		uint32_t data_seek     = offset % (sectors_per_cluster * SECTOR_SIZE);
 		uint32_t cluster_seek  = offset / (sectors_per_cluster * SECTOR_SIZE);
@@ -1069,38 +1074,22 @@
 //========================================================================================
 // This function edit content in FAT content object
                                                                  
-	void FAT_edit_content(const char* filePath, char* newData) {
-		///////////////////////
-		// FIND CONTENT
+	void FAT_write_content(Content* content, char* content_data) {
 
-			Content* fatContent = FAT_get_content(filePath);
-			if (fatContent == NULL) {
-				kprintf("Function FAT_edit_content: FAT_get_content encountered an error. Aborting...\n");
-				FSLIB_unload_content_system(fatContent);
-				return -1;
-			}
-
-		// FIND CONTENT
-		///////////////////////
-
-		//////////////////////
+		//=====================
 		// CONTENT META SAVING
 
 			directory_entry_t content_meta;
-			if (fatContent->directory != NULL)
-				content_meta = fatContent->directory->directory_meta;
-			else if (fatContent->file != NULL)
-				content_meta = fatContent->file->file_meta;
+			if (content->directory != NULL) content_meta = content->directory->directory_meta;
+			else if (content->file != NULL) content_meta = content->file->file_meta;
 
 		// CONTENT META SAVING
-		//////////////////////
-
-		//////////////////////
+		//=====================
 		// EDIT DATA
 			
-			unsigned int cluster 		 = GET_CLUSTER_FROM_ENTRY(content_meta);
-			unsigned int dataLeftToWrite = strlen(newData);
-			unsigned int allData		 = dataLeftToWrite;
+			unsigned int cluster = GET_CLUSTER_FROM_ENTRY(content_meta);
+			unsigned int dataLeftToWrite = strlen(content_data);
+			unsigned int allData = dataLeftToWrite;
 
 			while (cluster <= END_CLUSTER_32) {
 				unsigned int dataWrite = 0;
@@ -1108,19 +1097,19 @@
 				if (dataLeftToWrite >= bytes_per_sector * sectors_per_cluster) dataWrite = bytes_per_sector * sectors_per_cluster + 1;
 				else dataWrite = dataLeftToWrite;
 
-				char* sector_data = (char*)malloc(dataWrite + 1);
+				char* sector_data = (char*)calloc(dataWrite + 1, 1);
 				memset(sector_data, 0, dataWrite + 1);
-				strncpy(sector_data, newData, dataWrite);
+				strncpy(sector_data, content_data, dataWrite);
 
-				newData += dataWrite;
+				content_data += dataWrite;
 
 				if (FAT_cluster_bad(cluster, fat_type) == TRUE) {
-					kprintf("Function FAT_edit_content: the cluster chain is corrupted with a bad cluster. Aborting...\n");
+					kprintf("Function FAT_write_content: the cluster chain is corrupted with a bad cluster. Aborting...\n");
 					return -1;
 				}
 
 				else if (cluster == -1 ) {
-					kprintf("Function FAT_edit_content: an error occurred in FAT_read. Aborting...\n");
+					kprintf("Function FAT_write_content: an error occurred in FAT_read. Aborting...\n");
 					return -1;
 				}
 
@@ -1128,12 +1117,12 @@
 					if (FAT_cluster_end(cluster, fat_type) == TRUE) {
 						unsigned int newCluster = FAT_cluster_allocate();
 						if (FAT_cluster_bad(newCluster, fat_type) == TRUE) {
-							kprintf("Function FAT_edit_content: allocation of new cluster failed. Aborting...\n");
+							kprintf("Function FAT_write_content: allocation of new cluster failed. Aborting...\n");
 							return -1;
 						}
 
 						if (FAT_write(cluster, newCluster) != 0) {
-							kprintf("Function FAT_edit_content: extension of the cluster chain with new cluster failed. Aborting...\n");
+							kprintf("Function FAT_write_content: extension of the cluster chain with new cluster failed. Aborting...\n");
 							return -1;
 						}
 					}
@@ -1145,7 +1134,7 @@
 						cluster = FAT_read(cluster);
 						
 						if (FAT_cluster_bad(cluster, fat_type) == TRUE) {
-							kprintf("Function FAT_edit_content: allocation of new cluster failed. Aborting...\n");
+							kprintf("Function FAT_write_content: allocation of new cluster failed. Aborting...\n");
 							return -1;
 						}
 
@@ -1165,7 +1154,7 @@
 				if (strstr(previous_data, sector_data) != 0) {
 					FAT_cluster_clear(cluster);
 					if (FAT_cluster_write(sector_data, cluster) != 0) {
-						kprintf("Function FAT_edit_content: FAT_cluster_write encountered an error. Aborting...\n");
+						kprintf("Function FAT_write_content: FAT_cluster_write encountered an error. Aborting...\n");
 						free(previous_data);
 						return -1;
 					}
@@ -1180,26 +1169,15 @@
 				}
 				
 				if (dataLeftToWrite < 0) {
-					kprintf("Function FAT_edit_content: An undefined value has been detected. Aborting...\n");
+					kprintf("Function FAT_write_content: An undefined value has been detected. Aborting...\n");
 					return -1;
 				}
 			}
 
-			directory_entry_t* new_content = malloc(sizeof(directory_entry_t));
-			memcpy(new_content, &content_meta, sizeof(directory_entry_t));
-
-			new_content->last_accessed 		 	= FSLIB_current_date();
-			new_content->last_modification_date = new_content->last_accessed;
-			new_content->last_modification_time = FSLIB_current_time();
-			new_content->file_size = allData;
-
-			FAT_change_meta(filePath, new_content);
-
-			free(new_content);
 			return 0;
 		
 		// EDIT DATA
-		//////////////////////
+		//=====================
 
 		return 0;
 	}
@@ -1208,7 +1186,7 @@
 	// data - content where data will be placed
 	// buffer - data that will be saved in content
 	// offset - content seek
-	// size - buffer size
+	// size - write size
 	void FAT_write_buffer2content(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size) {
 		uint32_t data_seek     = offset % (sectors_per_cluster * SECTOR_SIZE);
 		uint32_t cluster_seek  = offset / (sectors_per_cluster * SECTOR_SIZE);
@@ -1249,11 +1227,11 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		directory_entry_t file_info; //holds found directory info
 		if (strlen(filePath) == 0) { // Create main dir if it not created (root dir)
 			if (fat_type == 32) {
-				active_cluster 			= ext_root_cluster;
-				file_info.attributes 	= FILE_DIRECTORY | FILE_VOLUME_ID;
-				file_info.file_size 	= 0;
-				file_info.high_bits 	= GET_ENTRY_HIGH_BITS(active_cluster);
-				file_info.low_bits 		= GET_ENTRY_LOW_BITS(active_cluster);
+				active_cluster 		 = ext_root_cluster;
+				file_info.attributes = FILE_DIRECTORY | FILE_VOLUME_ID;
+				file_info.file_size  = 0;
+				file_info.high_bits  = GET_ENTRY_HIGH_BITS(active_cluster);
+				file_info.low_bits 	 = GET_ENTRY_LOW_BITS(active_cluster);
 			}
 			else {
 				kprintf("Function FAT_change_meta: FAT16 and FAT12 are not supported!\n");
@@ -1319,12 +1297,12 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		// NAME ERROR HANDLING
 
 			if (content->directory != NULL)
-				if (FSLIB_name_check(content->directory->directory_meta.file_name) != 0) {
+				if (FAT_name_check(content->directory->directory_meta.file_name) != 0) {
 					kprintf("\nFunction FAT_put_content: Invalid directory name!\n");
 					return -2;
 				}
 			else if (content->file != NULL)
-				if (FSLIB_name_check(content->file->file_meta.file_name) != 0) {
+				if (FAT_name_check(content->file->file_meta.file_name) != 0) {
 					kprintf("\nFunction FAT_put_content: Invalid file name!\n");
 					return -2;
 				}
@@ -1409,7 +1387,7 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		// specified file name is not already in use
 		
 			char output[13];
-			FSLIB_fatname2name((char*)content_meta.file_name, output);
+			FAT_fatname2name((char*)content_meta.file_name, output);
 			int retVal = FAT_directory_search(output, active_cluster, NULL, NULL);
 			if (retVal == -1) {
 				kprintf("Function putFile: directorySearch encountered an error. Aborting...\n");
@@ -1434,7 +1412,7 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 			// A.i.: now filling file_info with the information of the file directory entry
 
 				char output[13];
-				FSLIB_fatname2name((char*)content_meta.file_name, output);
+				FAT_fatname2name((char*)content_meta.file_name, output);
 				int retVal = FAT_directory_search(output, active_cluster, &file_info, NULL);
 				if (retVal == -2) {
 					kprintf("Function FAT_put_content: FAT_directory_add did not properly write the new file's entry to disk. Aborting...\n");
@@ -1523,8 +1501,8 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 			char contentName[13] = { '\0' };
 			strcpy(contentName, name);
 
-			if (FSLIB_name_check(contentName) != 0) 
-				FSLIB_name2fatname(contentName);
+			if (FAT_name_check(contentName) != 0) 
+				FAT_name2fatname(contentName);
 
 		// FIND CONTENT
 		///////////////////////
@@ -1581,6 +1559,190 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		free(fatContent);
 
 		return 0; // directory or file successfully deleted
+	}
+
+//========================================================================================
+
+//========================================================================================
+//    ___ _____ _   _ _____ ____  
+//   / _ \_   _| | | | ____|  _ \ 
+//  | | | || | | |_| |  _| | |_) |
+//  | |_| || | |  _  | |___|  _ < 
+//   \___/ |_| |_| |_|_____|_| \_\
+//
+//========================================================================================
+// Other functions that used here
+
+	void FAT_fatname2name(char* input, char* output) {
+		if (input[0] == '.') {
+			if (input[1] == '.') {
+				strcpy (output, "..");
+				return;
+			}
+
+			strcpy (output, ".");
+			return;
+		}
+
+		unsigned short counter = 0;
+		for ( counter = 0; counter < 8; counter++) {
+			if (input[counter] == 0x20) {
+				output[counter] = '.';
+				break;
+			}
+
+			output[counter] = input[counter];
+		}
+
+		if (counter == 8) 
+			output[counter] = '.';
+
+		unsigned short counter2 = 8;
+		for (counter2 = 8; counter2 < 11; counter2++) {
+			++counter;
+			if (input[counter2] == 0x20 || input[counter2] == 0x20) {
+				if (counter2 == 8)
+					counter -= 2;
+
+				break;
+			}
+			
+			output[counter] = input[counter2];		
+		}
+
+		++counter;
+		while (counter < 12) {
+			output[counter] = ' ';
+			++counter;
+		}
+
+		output[12] = '\0';
+		return;
+	}
+
+	char* FAT_name2fatname(char* input) {
+		str2uppercase(input);
+
+		int haveExt = 0;
+		char searchName[13] = { '\0' };
+		unsigned short dotPos = 0;
+
+		unsigned int counter = 0;
+		while (counter <= 8) {
+			if (input[counter] == '.' || input[counter] == '\0') {
+				if (input[counter] == '.') haveExt = 1;
+
+				dotPos = counter;
+				counter++;
+
+				break;
+			}
+			else {
+				searchName[counter] = input[counter];
+				counter++;
+			}
+		}
+
+		if (counter > 9) {
+			counter = 8;
+			dotPos = 8;
+		}
+		
+		unsigned short extCount = 8;
+		while (extCount < 11) {
+			if (input[counter] != '\0' && haveExt == 1) searchName[extCount] = input[counter];
+			else searchName[extCount] = ' ';
+
+			counter++;
+			extCount++;
+		}
+
+		counter = dotPos;
+		while (counter < 8) {
+			searchName[counter] = ' ';
+			counter++;
+		}
+
+		strcpy(input, searchName);
+		return input;
+	}
+
+	unsigned short FAT_current_time() {
+		short data[7];
+		get_datetime(data);
+		return (data[2] << 11) | (data[1] << 5) | (data[0] / 2);
+	}
+
+	unsigned short FAT_current_date() {
+		short data[7];
+		get_datetime(data);
+
+		uint16_t reversed_data = 0;
+
+		reversed_data |= data[3] & 0x1F;
+		reversed_data |= (data[4] & 0xF) << 5;
+		reversed_data |= ((data[5] - 1980) & 0x7F) << 9;
+
+		return reversed_data;
+	}
+
+	unsigned char FAT_current_time_temths() {
+		short data[7];
+		get_datetime(data);
+		return (data[2] << 11) | (data[1] << 5) | (data[0] / 2);
+	}
+
+	int FAT_name_check(char* input) {
+		short retVal = 0;
+		unsigned short iterator;
+		for (iterator = 0; iterator < 11; iterator++) {
+			if (input[iterator] < 0x20 && input[iterator] != 0x05) {
+				retVal = retVal | BAD_CHARACTER;
+			}
+			
+			switch (input[iterator]) {
+				case 0x2E: {
+					if ((retVal & NOT_CONVERTED_YET) == NOT_CONVERTED_YET) //a previous dot has already triggered this case
+						retVal |= TOO_MANY_DOTS;
+
+					retVal ^= NOT_CONVERTED_YET; //remove NOT_CONVERTED_YET flag if already set
+
+					break;
+				}
+
+				case 0x22:
+				case 0x2A:
+				case 0x2B:
+				case 0x2C:
+				case 0x2F:
+				case 0x3A:
+				case 0x3B:
+				case 0x3C:
+				case 0x3D:
+				case 0x3E:
+				case 0x3F:
+				case 0x5B:
+				case 0x5C:
+				case 0x5D:
+				case 0x7C:
+					retVal = retVal | BAD_CHARACTER;
+			}
+
+			if (input[iterator] >= 'a' && input[iterator] <= 'z') 
+				retVal = retVal | LOWERCASE_ISSUE;
+		}
+
+		return retVal;
+	}
+
+	unsigned char FAT_check_sum(unsigned char *pFcbName) {
+		short FcbNameLen;
+		unsigned char Sum;
+		Sum = 0;
+		for (FcbNameLen = 11; FcbNameLen != 0; FcbNameLen--) 
+			Sum = ((Sum & 1) ? 0x80 : 0) + (Sum >> 1) + *pFcbName++;
+
+		return (Sum);
 	}
 
 //========================================================================================

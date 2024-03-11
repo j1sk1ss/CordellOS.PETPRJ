@@ -36,7 +36,7 @@
 
 // System memory info
 #define SYS_MALLOC_MAP  48
-#define SYS_PAGE_MAP    49 // LAST
+#define SYS_PAGE_MAP    49
 
 // System managment (memory, tasks)
 #define SYS_SLEEP       3 
@@ -46,19 +46,20 @@
 #define SYS_FREE        8
 #define SYS_PAGE_FREE   34
 
-// FS managment (FAT32)
-#define SYS_READ_FILE     9
-#define SYS_READ_FILE_OFF 33
-#define SYS_WRITE_FILE    10
-#define SYS_OPENDIR       11
-#define SYS_GET_CONTENT   30
-#define SYS_EXECUTE_FILE  12
-#define SYS_CEXISTS       15
-#define SYS_FCREATE       16
-#define SYS_DIRCREATE     17
-#define SYS_CDELETE       18
-#define SYS_CHANGE_META   25
-#define SYS_GET_FS_INFO   45
+// FS managment
+#define SYS_READ_FILE      9
+#define SYS_READ_FILE_OFF  33
+#define SYS_WRITE_FILE     10
+#define SYS_WRITE_FILE_OFF 50 // LAST
+#define SYS_OPENDIR        11
+#define SYS_GET_CONTENT    30
+#define SYS_EXECUTE_FILE   12
+#define SYS_CEXISTS        15
+#define SYS_FCREATE        16
+#define SYS_DIRCREATE      17
+#define SYS_CDELETE        18
+#define SYS_CHANGE_META    25
+#define SYS_GET_FS_INFO    45
 
 // Multitasking 
 #define SYS_START_PROCESS 26

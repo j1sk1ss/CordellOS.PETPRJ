@@ -139,12 +139,15 @@ GUIobject_t* create_gui_object(int x, int y, int height, int width, uint32_t bac
         newObject->width  = width;
 
         newObject->background_color = background;
-        newObject->children_count   = 0;
-        newObject->childrens        = NULL;
-        newObject->bitmap_count     = 0;
-        newObject->bitmaps          = NULL;
-        newObject->text_count       = 0;
-        newObject->texts            = NULL;
+
+        newObject->children_count = 0;
+        newObject->childrens      = NULL;
+
+        newObject->bitmap_count = 0;
+        newObject->bitmaps      = NULL;
+
+        newObject->text_count = 0;
+        newObject->texts      = NULL;
     }
 
     return newObject;

@@ -191,7 +191,7 @@ void execute_item(char action_type) {
         while (currentFile != NULL) {
 
             char name[25]; 
-            FSLIB_fatname2name(currentFile->file_meta.file_name, name);
+            FAT_fatname2name(currentFile->file_meta.file_name, name);
 
             if (rows++ == row_position) {
                 row_position = 1;

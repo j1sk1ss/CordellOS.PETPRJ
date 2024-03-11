@@ -214,14 +214,16 @@ void syscall(Registers* regs) {
         else if (regs->eax == SYS_READ_FILE) {
             char* rfile_path = (char*)regs->ebx;
             Content* content = current_vfs->getobj(rfile_path);
-            regs->eax        = (uint32_t)current_vfs->read(content);
-            current_vfs->cunload(content);
+            regs->eax = (uint32_t)current_vfs->read(content);
+            FSLIB_unload_content_system(content);
         } 
         
         else if (regs->eax == SYS_WRITE_FILE) {
             char* wfile_path = (char*)regs->ebx;
-            char* data       = (char*)regs->ecx;
-            current_vfs->write(wfile_path, data);
+            Content* content = current_vfs->getobj(wfile_path);
+            char* data = (char*)regs->ecx;
+            current_vfs->write(content, data);
+            FSLIB_unload_content_system(content);
         } 
         
         else if (regs->eax == SYS_OPENDIR) {
@@ -254,20 +256,20 @@ void syscall(Registers* regs) {
             char* fname = strtok(mkfile_name, ".");
             char* fexec = strtok(NULL, "."); 
 
-            Content* mkfile_content = current_vfs->crobj(fname, FALSE, fexec);
+            Content* mkfile_content = FSLIB_create_content(fname, FALSE, fexec);
 
             current_vfs->putobj(mkfile_path, mkfile_content);
-            current_vfs->funload(mkfile_content);
+            FSLIB_unload_files_system(mkfile_content);
         } 
         
         else if (regs->eax == SYS_DIRCREATE) {
             char* mkdir_path = (char*)regs->ebx;
             char* mkdir_name = (char*)regs->ecx;
 
-            Content* mkdir_content = current_vfs->crobj(mkdir_name, TRUE, "");
+            Content* mkdir_content = FSLIB_create_content(mkdir_name, TRUE, "");
 
             current_vfs->putobj(mkdir_path, mkdir_content);
-            current_vfs->funload(mkdir_content);
+            FSLIB_unload_files_system(mkdir_content);
         } 
         
         else if (regs->eax == SYS_CDELETE) {
@@ -283,12 +285,21 @@ void syscall(Registers* regs) {
         } 
 
         else if (regs->eax == SYS_READ_FILE_OFF) {
-            Content* read_off_file = (Content*)regs->ebx;
-            int offset             = (int)regs->ecx;
-            uint8_t* offset_buffer = (uint8_t*)regs->edx;
-            int offset_len         = (int)regs->esi;
+            Content* content = (Content*)regs->ebx;
+            int offset       = (int)regs->ecx;
+            uint8_t* buffer  = (uint8_t*)regs->edx;
+            int offset_len   = (int)regs->esi;
             
-            current_vfs->readoff(read_off_file, offset_buffer, offset, offset_len);
+            current_vfs->readoff(content, buffer, offset, offset_len);
+        }
+
+        else if (regs->eax == SYS_WRITE_FILE_OFF) {
+            Content* content = (Content*)regs->ebx;
+            int offset       = (int)regs->ecx;
+            uint8_t* buffer  = (uint8_t*)regs->edx;
+            int offset_len   = (int)regs->esi;
+            
+            current_vfs->writeoff(content, buffer, offset, offset_len);
         }
 
     //=======================

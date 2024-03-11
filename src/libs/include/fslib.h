@@ -88,17 +88,8 @@ char* FSLIB_change_path(const char* currentPath, const char* content);
 
 Date* FSLIB_get_date(short data, int type);
 
-void FSLIB_fatname2name(char* input, char* output);
-char* FSLIB_name2fatname(char* input);
-int FSLIB_name_check(char* input);
-unsigned char FSLIB_check_sum(unsigned char *pFcbName);
-
 directory_entry_t* FSLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
 Content* FSLIB_create_content(char* name, short directory, char* extension);
-
-unsigned short FSLIB_current_time();
-unsigned short FSLIB_current_date();
-unsigned char FSLIB_current_time_temths();
 
 int cexists(const char* path);
 void rmcontent(const char* path, const char* name);
@@ -107,6 +98,7 @@ void chgcontent(const char* path, directory_entry_t* meta);
 char* fread(const char* path);
 void fread_off(Content* content, int offset, uint8_t* buffer, int len);
 void fwrite(const char* path, const char* data);
+void fwrite_off(Content* content, int offset, uint8_t* buffer, int len);
 void mkfile(const char* path, const char* name);
 int fexec(char* path, int args, char** argv);
 

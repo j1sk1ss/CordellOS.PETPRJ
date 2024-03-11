@@ -28,7 +28,7 @@ void DHCP_discover() {
     free(packet);
 }
 
-// Send DHCP request request for IP
+// Send DHCP request for IP
 void DHCP_request(uint8_t* request_ip) {
     uint8_t dst_ip[4];
     memset(dst_ip, 0xFF, 4);

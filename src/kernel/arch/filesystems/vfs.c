@@ -13,20 +13,15 @@ void VFS_initialize(ata_dev_t* dev, uint32_t fs_type) {
     if (fs_type == FAT_FS) {
         vfs_list->read       = FAT_read_content;
         vfs_list->readoff    = FAT_read_content2buffer;
-        vfs_list->write      = FAT_edit_content;
+        vfs_list->write      = FAT_write_content;
         vfs_list->writeoff   = FAT_write_buffer2content;
         vfs_list->dir        = FAT_directory_list;
         vfs_list->getobj     = FAT_get_content;
         vfs_list->objexist   = FAT_content_exists;
         vfs_list->putobj     = FAT_put_content;
         vfs_list->delobj     = FAT_delete_content;
-        vfs_list->crobj      = FSLIB_create_content;
         vfs_list->objexec    = FAT_ELF_execute_content;
         vfs_list->objmetachg = FAT_change_meta;
-
-        vfs_list->cunload = FSLIB_unload_content_system;
-        vfs_list->dunload = FSLIB_unload_directories_system;
-        vfs_list->funload = FSLIB_unload_files_system;
 
         strncpy(vfs_list->name, "FATFS", 5);
     } 
@@ -42,20 +37,15 @@ void VFS_add_node(ata_dev_t* dev, uint32_t fs_type) {
     if (fs_type == FAT_FS) {
         new_node->read       = FAT_read_content;
         new_node->readoff    = FAT_read_content2buffer;
-        new_node->write      = FAT_edit_content;
+        new_node->write      = FAT_write_content;
         vfs_list->writeoff   = FAT_write_buffer2content;
         new_node->dir        = FAT_directory_list;
         new_node->getobj     = FAT_get_content;
         new_node->objexist   = FAT_content_exists;
         new_node->putobj     = FAT_put_content;
         new_node->delobj     = FAT_delete_content;
-        new_node->crobj      = FSLIB_create_content;
         new_node->objexec    = FAT_ELF_execute_content;
         new_node->objmetachg = FAT_change_meta;
-
-        new_node->cunload = FSLIB_unload_content_system;
-        new_node->dunload = FSLIB_unload_directories_system;
-        new_node->funload = FSLIB_unload_files_system;
 
         strncpy(new_node->name, "FATFS", 5);
     }

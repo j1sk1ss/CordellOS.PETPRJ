@@ -238,10 +238,28 @@ extern unsigned int ext_root_cluster;
 	void FAT_read_content2buffer(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size);
 	int FAT_put_content(const char* filePath, Content* content);
 	int FAT_delete_content(const char* filePath, const char* name);
-	void FAT_edit_content(const char* filePath, char* newData);
+	void FAT_write_content(Content* content, char* content_data);
 	void FAT_write_buffer2content(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size);
 	int FAT_ELF_execute_content(char* path, int argc, char* argv[]);
 	int FAT_change_meta(const char* filePath, directory_entry_t* newMeta);
+
+//===================================
+
+//===================================
+//    ___ _____ _   _ _____ ____  
+//   / _ \_   _| | | | ____|  _ \ 
+//  | | | || | | |_| |  _| | |_) |
+//  | |_| || | |  _  | |___|  _ < 
+//   \___/ |_| |_| |_|_____|_| \_\
+//=================================== 
+
+	unsigned short FAT_current_time();
+	unsigned short FAT_current_date();
+	unsigned char FAT_current_time_temths();
+	void FAT_fatname2name(char* input, char* output);
+	char* FAT_name2fatname(char* input);
+	int FAT_name_check(char* input);
+	unsigned char FAT_check_sum(unsigned char *pFcbName);
 
 //===================================
 

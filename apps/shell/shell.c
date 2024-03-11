@@ -262,8 +262,8 @@ void shell_start_screen() {
                 }
                 else {
                     File* file = content->file;
-                    Date* creation_date  = FSLIB_get_date(file->file_meta.creation_date, 1);
-                    Date* accesed_date   = FSLIB_get_date(file->file_meta.last_modification_date, 1);
+                    Date* creation_date = FSLIB_get_date(file->file_meta.creation_date, 1);
+                    Date* accesed_date  = FSLIB_get_date(file->file_meta.last_modification_date, 1);
 
                     printf("FILE\n");
                     printf("NAME:          [%s.%s]\n", file->name, file->extension);
