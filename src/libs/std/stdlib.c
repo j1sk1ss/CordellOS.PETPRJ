@@ -18,6 +18,22 @@ void tstart(char* name, uint32_t address) {
 }
 
 //====================================================================
+// Function return PID of current task
+int tpid() {
+    int pid;
+    __asm__ volatile(
+        "movl $52, %%eax\n"
+        "int $0x80\n"
+        "movl %%eax, %0\n"
+        : "=r" (pid)
+        : 
+        : "%eax"
+    );
+
+    return pid;
+}
+
+//====================================================================
 // Function kill current task
 void tkill() {
     __asm__ volatile(
@@ -25,7 +41,7 @@ void tkill() {
         "int %0\n"
         :
         : "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
+        : "eax"
     );
 }
 
@@ -39,7 +55,7 @@ void sleep(int milliseconds) {
         "int %1\n"
         :
         : "r"(milliseconds), "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
+        : "eax", "edx"
     );
 }
 
@@ -60,7 +76,7 @@ void get_datetime(short* data) {
         "int %1\n"
         :
         : "r"(data), "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
+        : "eax", "ecx"
     );
 }
 

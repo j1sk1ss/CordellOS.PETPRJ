@@ -165,7 +165,11 @@ void syscall(Registers* regs) {
                 char* process_name = (char*)regs->ebx;
                 uint32_t address   = (uint32_t)regs->ecx;
                 START_PROCESS(process_name, address);
-            } 
+            }
+
+            else if (regs->eax == SES_GET_PID) {
+                regs->eax = taskManager.tasks[taskManager.currentTask]->pid;
+            }
 
         //=======================
         //  SYSTEM TASKING SYSCALLS
@@ -199,6 +203,11 @@ void syscall(Registers* regs) {
                 void* ptr_to_free = (void*)regs->ebx;
                 if (ptr_to_free != NULL)
                     kfreep(ptr_to_free);
+            }
+
+            else if (regs->eax == SYS_KERN_PANIC) {
+                char* message = (char*)regs->ecx;
+                kernel_panic(message);
             }
 
         //=======================

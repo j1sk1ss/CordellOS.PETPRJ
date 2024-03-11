@@ -45,12 +45,14 @@
 #define SYS_PAGE_MALLOC 35
 #define SYS_FREE        8
 #define SYS_PAGE_FREE   34
+#define SYS_KERN_PANIC  51
+#define SES_GET_PID     52 // LAST
 
 // FS managment
 #define SYS_READ_FILE      9
 #define SYS_READ_FILE_OFF  33
 #define SYS_WRITE_FILE     10
-#define SYS_WRITE_FILE_OFF 50 // LAST
+#define SYS_WRITE_FILE_OFF 50
 #define SYS_OPENDIR        11
 #define SYS_GET_CONTENT    30
 #define SYS_EXECUTE_FILE   12

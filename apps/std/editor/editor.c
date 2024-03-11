@@ -37,25 +37,32 @@ void loop() {
             display_text();
         }
         else if (action == F3_BUTTON) {
-            // exit
+            return 0;
         }
         else if (action == F2_BUTTON) {
-            // save
+            fwrite(edit_content, NULL);
+            return 1;
         }
         else if (action == F1_BUTTON) {
-            // save&exit
+            fwrite(edit_content, NULL);
         }
     }
 }
 
+// Save text to editor buffer (prefer static buffer allocation)
 void display_text() {
     clrscr();
 
-    char text2display[SCREEN_SIZE] = { '\0' }; 
-    fread_off(edit_content, 0, text2display, min(SCREEN_SIZE - (3 * CHARS_ON_LINE), edit_file->file_meta.file_size));
+    int current_height = 0;
+    for (int i = current_line; i < SCREEN_HEIGHT + current_line && current_height < SCREEN_HEIGHT; i++) {
+        char text2display[CHARS_ON_LINE] = { '\0' };
+        fread_off(edit_content, i * CHARS_ON_LINE, text2display, min(CHARS_ON_LINE, edit_file->file_meta.file_size));
+        int lines = chars_in_string(text2display, '\n');
 
-    printf("FILE [%s.%s] | SIZE [%i]\n%s\n", edit_file->name, edit_file->extension, edit_file->file_meta.file_size, text2display);
-
+        printf(text2display);
+        current_height += lines;
+    }
+    
     cursor_set(0, SCREEN_HEIGHT);
     printf("F3 - EXIT | F1 - SAVE&EXIT | F2 - SAVE");
     cursor_set(0, 1);

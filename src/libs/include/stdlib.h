@@ -11,6 +11,7 @@
 
 
 void tstart(char* name, uint32_t address);
+int tpid();
 void tkill();
 
 void sleep(int milliseconds);

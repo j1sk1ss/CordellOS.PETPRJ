@@ -567,3 +567,9 @@ void str2uppercase(char* str) {
         str[i] = toupper((unsigned char)str[i]);
     }
 }
+
+int chars_in_string(char* string, char letter) {
+    int count = 0;
+    for (count = 0; string[count]; string[count]==letter ? count++ : *string++);
+    return count;
+}

@@ -48,5 +48,6 @@ char* strncpy(char *dst, const char *src, int n);
 char* strdup(const char *src);
 
 void str2uppercase(char* str);
+int chars_in_string(char* string, char letter);
 
 #endif
