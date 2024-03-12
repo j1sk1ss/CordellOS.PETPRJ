@@ -261,6 +261,9 @@ extern unsigned int ext_root_cluster;
 	int FAT_name_check(char* input);
 	unsigned char FAT_check_sum(unsigned char *pFcbName);
 
+	directory_entry_t* FAT_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+	Content* FAT_create_content(char* name, BOOL directory, char* extension);
+
 //===================================
 
 #endif

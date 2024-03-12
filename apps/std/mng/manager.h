@@ -3,10 +3,15 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <keyboard.h>
+#include <graphics.h>
+#include <font.h>
 
 
 #define ROWS            14
 #define LINE_OFFSEET    4
+
+#define LEFT_OFFSET     20
+#define RIGHT_OFFSET    20
 
 #define LINE        "+-------------+--------+----------+----------+-----------+------+-------------+\n"
 #define HEADER      "| NAME        | TYPE   | CREATED  | MODIF    | ACCESS    | EXT  | SIZE        |\n"
@@ -24,10 +29,8 @@
 #define DELETE_POS      3
 
 
-void main(int argc, char* argv[]);
-void keyboard_wait(char symbol);
-char* convert_date(int day, int month, int year);
-int set_line_color(int line, uint8_t color);
-void open_file_manager(char* path);
-void execute_item(char action_type);
-void print_directory_data();
+int main(int argc, char* argv[]);
+int loop();
+void display_manager();
+
+void file2display(Content* content);

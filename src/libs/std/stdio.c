@@ -9,7 +9,7 @@
 // EBX - x
 // ECX - y
 // EDX - color
-void directly_putclr(int x, int y, uint8_t color) {
+void directly_putclr(int x, int y, uint32_t color) {
     __asm__ volatile(
         "movl $24, %%eax\n"
         "movl %0, %%ebx\n"
@@ -155,7 +155,7 @@ void cputc(char c, uint32_t color) {
     );
 }
 
-void fputs(const char* str, uint8_t file, int color) {
+void fputs(const char* str, uint32_t file, int color) {
     while(*str) {
         fputc(*str, file, color);
         str++;
@@ -176,7 +176,7 @@ void set_color(int color) {
     );
 }
 
-void fprintf_unsigned(uint8_t file, unsigned long long number, int radix, int color) {
+void fprintf_unsigned(uint32_t file, unsigned long long number, int radix, int color) {
     char hexChars[17] = "0123456789ABCDEF";
     char buffer[32];
     int pos = 0;
@@ -193,7 +193,7 @@ void fprintf_unsigned(uint8_t file, unsigned long long number, int radix, int co
         fputc(buffer[pos], file, color);
 }
 
-void fprintf_signed(uint8_t file, long long number, int radix, int color) {
+void fprintf_signed(uint32_t file, long long number, int radix, int color) {
     if (number < 0) {
         fputc('-', file, color);
         fprintf_unsigned(file, -number, radix, color);
@@ -475,7 +475,7 @@ void vsprintf(char* buffer, int len, const char* fmt, va_list args) {
     }
 }
 
-void fprintf(uint8_t file, const char* fmt, ...) {
+void fprintf(uint32_t file, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     vfprintf(file, fmt, args, 0);

@@ -179,7 +179,7 @@ void machine_restart() {
         "int %0\n"
         :
         : "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
+        : "%eax"
     );
 }
 
@@ -205,6 +205,92 @@ void get_fs_info(uint32_t* buffer) {
         "int $0x80\n"
         :
         : "r"(buffer)
-        : "eax", "ebx", "ecx", "edx"
+        : "%eax", "%ebx"
+    );
+}
+
+//====================================================================
+// Function add enviroment variable with value
+// EBX - name
+// ECX - value
+void envar_add(char* name, char* value) {
+     __asm__ volatile(
+        "movl $53, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "int $0x80\n"
+        :
+        : "r"(name), "r"(value)
+        : "%eax", "%ebx", "%ecx"
+    );
+}
+
+//====================================================================
+// Function check enviroment variable
+// EBX - name
+//
+// values:
+// -1 - nexists
+// != -1 - exists
+int envar_exists(char* name) {
+    int value;
+    __asm__ volatile(
+        "movl $57, %%eax\n"
+        "movl %1, %%ebx\n"
+        "int $0x80\n"
+        "movl %%eax, %0\n"
+        : "=r" (value)
+        : "r" (name)
+        : "%eax", "%ebx"
+    );
+    
+    return value;
+}
+
+//====================================================================
+// Function set enviroment variable with value
+// EBX - name
+// ECX - value
+void envar_set(char* name, char* value) {
+     __asm__ volatile(
+        "movl $54, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "int $0x80\n"
+        :
+        : "r"(name), "r"(value)
+        : "%eax", "%ebx", "%ecx"
+    );
+}
+
+//====================================================================
+// Function get enviroment variable
+// EBX - name
+char* envar_get(char* name) {
+    char* value;
+    __asm__ volatile(
+        "movl $55, %%eax\n"
+        "movl %1, %%ebx\n"
+        "int $0x80\n"
+        "movl %%eax, %0\n"
+        : "=r" (value)
+        : "r" (name)
+        : "%eax", "%ebx"
+    );
+    
+    return value;
+}
+
+//====================================================================
+// Function delete enviroment variable
+// EBX - name
+void envar_delete(char* name) {
+     __asm__ volatile(
+        "movl $56, %%eax\n"
+        "movl %0, %%ebx\n"
+        "int $0x80\n"
+        :
+        : "r"(name)
+        : "%eax", "%ebx"
     );
 }

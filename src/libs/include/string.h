@@ -50,4 +50,6 @@ char* strdup(const char *src);
 void str2uppercase(char* str);
 int chars_in_string(char* string, char letter);
 
+void str2len(char* output, const char* input, int len);
+
 #endif

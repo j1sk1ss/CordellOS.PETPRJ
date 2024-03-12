@@ -17,6 +17,6 @@ void panic(char* message) {
         "int $0x80\n"
         : 
         : "r" (message)
-        : "%ecx"
+        : "%eax", "%ecx"
     );
 }

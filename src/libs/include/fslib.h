@@ -88,9 +88,6 @@ char* FSLIB_change_path(const char* currentPath, const char* content);
 
 Date* FSLIB_get_date(short data, int type);
 
-directory_entry_t* FSLIB_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
-Content* FSLIB_create_content(char* name, short directory, char* extension);
-
 int cexists(const char* path);
 void rmcontent(const char* path, const char* name);
 void chgcontent(const char* path, directory_entry_t* meta);

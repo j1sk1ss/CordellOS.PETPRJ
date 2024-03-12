@@ -573,3 +573,18 @@ int chars_in_string(char* string, char letter) {
     for (count = 0; string[count]; string[count]==letter ? count++ : *string++);
     return count;
 }
+
+// Fit or pad string to len
+// output - buffer for new string
+// input - source string
+// len - final string len
+void str2len(char* output, const char* input, int len) {
+    int input_len = strlen(input);
+    strncpy(output, input, min(input_len, len));
+
+    if (len > input_len)
+        for (int i = input_len; i < len; ++i) 
+            output[i] = ' '; 
+
+    output[len] = '\0';
+}

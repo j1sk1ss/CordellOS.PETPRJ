@@ -38,7 +38,7 @@ int main(int args, char* argv[]) {
 	clrscr();
 	printf("\nSNAKE GAME v. 1.0\nPress ENTER to start.\n");
 	while (dead == 0) {
-        char key = wait_char();
+        char key = keyboard_wait();
 		switch (key) {
 			case ENTER_BUTTON:
 				dead = 1;

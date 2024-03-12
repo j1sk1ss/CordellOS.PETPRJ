@@ -13,7 +13,10 @@ int current_line = 0;
 
 int main(int argc, char *argv[]) {
     if (argc != 0) edit_content = get_content(argv[0]);
-    else edit_content = FSLIB_create_content("tfile", 0, "txt");
+    else {
+        mkfile("home", "tfile.txt");
+        edit_content = get_content("tfile.txt");
+    }
     
     edit_file = edit_content->file;
     current_line = 0;

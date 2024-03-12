@@ -7,21 +7,41 @@ int current_command = 0;
 
 
 void main(int argc, char* argv[]) {
-    clrscr();
-    shell_start_screen();
 
-    while (exit) {
-        printf("\n$%s> ", current_path);
-        
-        char stop_chars[3] = { ENTER_BUTTON, '\0' };
-        char input[COMMAND_LENGHT] = { '\0' };
-        keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE, stop_chars, input);
-        
-        int last_char = max(0, strlen(input) - 1);
-        input[last_char] = '\0';
-        
-        execute_command(input);
-    }
+    //====================
+    //  SET INIT ENVARS
+    //====================
+
+        if (envar_exists("clc") == -1) envar_add("clc", "home\\apps\\std\\calc\\calc.elf");
+        if (envar_exists("mng") == -1) envar_add("mng", "home\\apps\\std\\mng\\mng.elf");
+        if (envar_exists("edt") == -1) envar_add("edt", "home\\apps\\std\\editor\\editor.elf");
+        if (envar_exists("asm") == -1) envar_add("asm", "home\\apps\\std\\asm\\asm.elf");
+
+    //====================
+    //  SET INIT ENVARS
+    //====================
+    //  PREPARE SCREEN & INPUT
+    //====================
+
+        clrscr();
+        shell_start_screen();
+
+        while (exit) {
+            printf("\n$%s> ", current_path);
+            
+            char stop_chars[3] = { ENTER_BUTTON, '\0' };
+            char input[COMMAND_LENGHT] = { '\0' };
+            keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE, stop_chars, input);
+            
+            int last_char = max(0, strlen(input) - 1);
+            input[last_char] = '\0';
+            
+            execute_command(input);
+        }
+
+    //====================
+    //  PREPARE SCREEN & INPUT
+    //====================
 
     free(current_path);
     tkill();
@@ -29,7 +49,7 @@ void main(int argc, char* argv[]) {
 
 void shell_start_screen() {
     printf("\n");
-    printf("Cordell Shell [ver. 0.5a | 09.03.2024]\n");
+    printf("Cordell Shell [ver. 0.5b | 12.03.2024]\n");
     printf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n");
 }
 
@@ -218,13 +238,6 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_RUN) == 0) {
-                char* exec_path = FSLIB_change_path(current_path, command_line[1]);
-                if (cexists(exec_path) == 0) {
-                    printf("\nLA FILE NON ESISTE");
-                    free(exec_path);
-                    return;
-                }
-
                 int pos = 2;
                 char* exe_argv[COMMAND_BUFFER];
                 while (command_line[pos] != NULL && pos < COMMAND_BUFFER) {
@@ -232,8 +245,18 @@ void shell_start_screen() {
                     pos++;
                 }
 
-                printf("\nCODE: [%i]\n", fexec(exec_path, pos - 2, exe_argv));
-                free(exec_path);
+                if (envar_exists(command_line[1]) != -1) printf("\nCODE: [%i]\n", fexec(envar_get(command_line[1]), pos - 2, exe_argv));
+                else {
+                    char* exec_path = FSLIB_change_path(current_path, command_line[1]);
+                    if (cexists(exec_path) == 0) {
+                        printf("\nLA FILE [%s] NON ESISTE", exec_path);
+                        free(exec_path);
+                        return;
+                    }
+
+                    printf("\nCODE: [%i]\n", fexec(exec_path, pos - 2, exe_argv));
+                    free(exec_path);
+                }
             }
 
             else if (strstr(command_line[0], COMMAND_CINFO) == 0) {

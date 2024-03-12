@@ -15,6 +15,7 @@
 #include "allocator.h"
 #include "ip.h"
 #include "rtl8139.h"
+#include "vars.h"
 
 
 // Screen managment through kprint 
@@ -38,7 +39,7 @@
 #define SYS_MALLOC_MAP  48
 #define SYS_PAGE_MAP    49
 
-// System managment (memory, tasks)
+// System managment (memory, tasks, vars)
 #define SYS_SLEEP       3 
 #define SYS_TIME        6
 #define SYS_MALLOC      7
@@ -46,7 +47,12 @@
 #define SYS_FREE        8
 #define SYS_PAGE_FREE   34
 #define SYS_KERN_PANIC  51
-#define SES_GET_PID     52 // LAST
+#define SES_GET_PID     52
+#define ADD_VAR         53
+#define SET_VAR         54
+#define GET_VAR         55
+#define DEL_VAR         56
+#define EXST_VAR        57 // LAST
 
 // FS managment
 #define SYS_READ_FILE      9

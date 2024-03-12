@@ -1745,4 +1745,66 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		return (Sum);
 	}
 
+
+	directory_entry_t* FAT_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize) {
+		directory_entry_t* data = malloc(sizeof(directory_entry_t));
+
+		data->reserved0 				= 0; 
+		data->creation_time_tenths 		= 0;
+		data->creation_time 			= 0;
+		data->creation_date 			= 0;
+		data->last_modification_date 	= 0;
+
+		char* file_name = (char*)malloc(25);
+		strcpy(file_name, filename);
+		if (ext) {
+			strcat(file_name, ".");
+			strcat(file_name, ext);
+		}
+		
+		data->low_bits 	= firstCluster;
+		data->high_bits = firstCluster >> 16;  
+
+		if(isDir == 1) {
+			data->file_size 	= 0;
+			data->attributes 	= FILE_DIRECTORY;
+		} else {
+			data->file_size 	= filesize;
+			data->attributes 	= FILE_ARCHIVE;
+		}
+
+		data->creation_date = FAT_current_date();
+		data->creation_time = FAT_current_time();
+		data->creation_time_tenths = FAT_current_time_temths();
+
+		if (FAT_name_check(file_name) != 0)
+			FAT_name2fatname(file_name);
+
+		strncpy(data->file_name, file_name, min(11, strlen(file_name)));
+		return data; 
+	}
+
+	Content* FAT_create_content(char* name, BOOL directory, char* extension) {
+		Content* content = malloc(sizeof(Content));
+		if (strlen(name) > 11 || strlen(extension) > 4) {
+			printf("Uncorrect name or ext lenght.\n");
+			return NULL;
+		}
+		
+		if (directory == TRUE) {
+			content->directory = malloc(sizeof(Directory));
+			strncpy(content->directory->name, name, 11);
+			content->directory->directory_meta = *FAT_create_entry(name, NULL, 1, NULL, NULL);
+		}
+		else {
+			content->file = malloc(sizeof(File));
+			strncpy(content->file->name, name, 11);
+			strncpy(content->file->extension, extension, 4);
+			content->file->file_meta = *FAT_create_entry(name, extension, 0, NULL, 1);
+		}
+
+		return content;
+	}
+
+
 //========================================================================================

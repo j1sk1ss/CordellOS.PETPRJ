@@ -96,9 +96,9 @@ void syscall(Registers* regs) {
         //=======================
 
             else if (regs->eax == SYS_READ_KEYBOARD) {
-                char* wait_buffer    = (char*)regs->ecx;
-                uint8_t stop_list[2] = { '\0' };
-                enable_keyboard(wait_buffer, HIDDEN_KEYBOARD, -1, stop_list);
+                char* buffer    = (char*)regs->ecx;
+                uint8_t stop[2] = { STOP_KEYBOARD, '\0' };
+                enable_keyboard(buffer, HIDDEN_KEYBOARD, -1, stop);
             } 
             
             else if (regs->eax == SYS_GET_KEY_KEYBOARD) {
@@ -213,6 +213,41 @@ void syscall(Registers* regs) {
         //=======================
         //  SYSTEM MEMMANAGER SYSCALLS
         //=======================
+        //  SYSTEM VARS SYSCALLS
+        //=======================
+
+            else if (regs->eax == ADD_VAR) {
+                char* name  = (char*)regs->ebx;
+                char* value = (char*)regs->ecx;
+
+                VARS_add(name, value);
+            }
+
+            else if (regs->eax == EXST_VAR) {
+                char* name = (char*)regs->ebx;
+                regs->eax  = VARS_exist(name);
+            }
+
+            else if (regs->eax == SET_VAR) {
+                char* name  = (char*)regs->ebx;
+                char* value = (char*)regs->ecx;
+
+                VARS_set(name, value);
+            }
+
+            else if (regs->eax == GET_VAR) {
+                char* name = (char*)regs->ebx;
+                regs->eax  = VARS_get(name);
+            }
+
+            else if (regs->eax == DEL_VAR) {
+                char* name = (char*)regs->ebx;
+                VARS_delete(name);
+            }
+
+        //=======================
+        //  SYSTEM VARS SYSCALLS
+        //=======================
 
     //=======================
     //  SYSTEM SYSCALLS
@@ -265,7 +300,7 @@ void syscall(Registers* regs) {
             char* fname = strtok(mkfile_name, ".");
             char* fexec = strtok(NULL, "."); 
 
-            Content* mkfile_content = FSLIB_create_content(fname, FALSE, fexec);
+            Content* mkfile_content = FAT_create_content(fname, FALSE, fexec);
 
             current_vfs->putobj(mkfile_path, mkfile_content);
             FSLIB_unload_files_system(mkfile_content);
@@ -275,7 +310,7 @@ void syscall(Registers* regs) {
             char* mkdir_path = (char*)regs->ebx;
             char* mkdir_name = (char*)regs->ecx;
 
-            Content* mkdir_content = FSLIB_create_content(mkdir_name, TRUE, "");
+            Content* mkdir_content = FAT_create_content(mkdir_name, TRUE, "");
 
             current_vfs->putobj(mkdir_path, mkdir_content);
             FSLIB_unload_files_system(mkdir_content);

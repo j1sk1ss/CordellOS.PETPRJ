@@ -13,6 +13,15 @@ void keyboard_read(int mode, uint8_t color, char* stop_list, char* buffer) {
     while (stop_list[0] != '\250') { continue; }
 }
 
+// Wait keyboard interaction
+char keyboard_wait() {
+    char buffer[1] = { '\0' };
+    wait_char(buffer);
+
+    while (buffer[0] == '\0') { continue; }
+    return buffer[0];
+}
+
 //====================================================================
 //  This function reads keyboard input from user until he press ENTER -
 //  that returns string of input

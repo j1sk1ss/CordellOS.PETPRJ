@@ -77,7 +77,7 @@
 #define PRINTF_LENGTH_LONG_LONG     4
 
 
-void directly_putclr(int x, int y, uint8_t color);
+void directly_putclr(int x, int y, uint32_t color);
 void directly_putc(int x, int y, char character);
 char directly_getchar(int x, int y);
 void cursor_set(int x, int y);
@@ -91,13 +91,13 @@ void printf(const char* fmt, ...);
 void cprintf(uint32_t color, const char* fmt, ...);
 void print_buffer(const void* buffer, uint32_t count);
 
-void fprintf_unsigned(uint8_t file, unsigned long long number, int radix, int color);
+void fprintf_unsigned(uint32_t file, unsigned long long number, int radix, int color);
 
 void fputc(char c, uint32_t file, int color);
 void cputc(char c, uint32_t color);
-void fputs(const char* str, uint8_t file, int color);
+void fputs(const char* str, uint32_t file, int color);
 void vfprintf(uint32_t file, const char* fmt, va_list args, int color);
-void fprintf(uint8_t file, const char* fmt, ...);
+void fprintf(uint32_t file, const char* fmt, ...);
 void fprint_buffer(const void* buffer, uint32_t count);
 
 int vsprintf_signed(char* buffer, long long number, int radix, int position);

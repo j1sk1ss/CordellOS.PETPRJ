@@ -21,6 +21,7 @@
 #include "include/dhcp.h"
 #include "include/udp.h"
 #include "include/tss.h"
+#include "include/vars.h"
 
 #include "multiboot.h"
 
@@ -131,7 +132,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         else _screenBuffer = mb_info->framebuffer_addr;
 
         kprintf("\n\t\t =    CORDELL  KERNEL    =");
-        kprintf("\n\t\t =     [ ver.   12 ]     = \n\n");
+        kprintf("\n\t\t =     [ ver.   13 ]     = \n\n");
         kprintf("\n\t\t = INFORMAZIONI GENERALI = \n\n");
         kprintf("\tMB FLAGS:        [0x%p]\n", mb_info->flags);
         kprintf("\tMEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
@@ -270,6 +271,8 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
     // Kernel shell part
     //===================
+
+        VARS_init(); // Init env vars manager
 
         uint32_t current_esp;
         asm ("mov %%esp, %0" : "=r"(current_esp));

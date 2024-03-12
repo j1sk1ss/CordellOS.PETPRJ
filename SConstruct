@@ -159,6 +159,7 @@ SConscript('apps/games/snake/SConscript', variant_dir=homeDir + '/apps/games/sna
 # SConscript('apps/games/doom/SConscript', variant_dir=homeDir + '/apps/games/doom', duplicate=0)
 SConscript('apps/std/calc/SConscript', variant_dir=homeDir + '/apps/std/calc', duplicate=0)
 SConscript('apps/std/editor/SConscript', variant_dir=homeDir + '/apps/std/editor', duplicate=0)
+SConscript('apps/std/mng/SConscript', variant_dir=homeDir + '/apps/std/mng', duplicate=0)
 SConscript('apps/std/asm/SConscript', variant_dir=homeDir + '/apps/std/asm', duplicate=0)
 
 # Kernel

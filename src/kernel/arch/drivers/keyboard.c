@@ -179,7 +179,7 @@ char get_character(char character) {
                 char currentCharacter = alphabet[character];
                 int chr_pos = -1;
                 while (stop_buffer[++chr_pos] != '\0') 
-                    if (stop_buffer[chr_pos] == currentCharacter) {
+                    if (stop_buffer[chr_pos] == currentCharacter || stop_buffer[chr_pos] == STOP_KEYBOARD) {
                         input[max(0, strlen(input))] = stop_buffer[chr_pos];
                         stop_buffer[0] = '\250';
 
