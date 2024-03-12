@@ -322,7 +322,7 @@ void vfprintf(uint32_t file, const char* fmt, va_list args, int color) {
 }
 
 int vsprintf_unsigned(char* buffer, unsigned long long number, int radix, int position) {
-    char hexChars[17] = "0123456789abcdef";
+    char hexChars[17] = "0123456789ABCDEF";
     char numBuffer[32];
     int pos = 0;
 

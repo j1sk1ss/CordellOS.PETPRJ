@@ -61,8 +61,8 @@
 //      7) Reboot outportb(0x64, 0xFE);                           [V]       12.1) UDP                                                | |
 //      8) Mouse support                                          [V]       12.2) ARP                                                | |
 //      9) Std lib for graphics                                   [V]       12.3) RLT8139 driver                                     | |
-//          8.0.0) Objects                                        [V]   13) Windows
-//          8.0.1) Click event                                    [V]
+//          8.0.0) Objects                                        [V]   13) Windows                                                  | |
+//          8.0.1) Click event                                    [V]   14) Enviroment variables                                     | |
 //      10) Mouse to int                                          [V]
 //      11) Loading BMP without malloc for fdata                  [V]
 //      12) Syscalls to std libs                                  [V]
@@ -273,6 +273,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
 
         VARS_init(); // Init env vars manager
+        if (VARS_exist("bconfig") == -1) VARS_add("bconfig", "boot\\boot.txt");
 
         uint32_t current_esp;
         asm ("mov %%esp, %0" : "=r"(current_esp));

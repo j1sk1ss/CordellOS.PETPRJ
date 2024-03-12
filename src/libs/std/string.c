@@ -311,22 +311,22 @@ size_t strspn(const char* s, const char* accept) {
 }
 
 static char* olds;
-char* strtok (char* s, const char* delim){
+char* strtok (char* string, const char* delim){
     char* token;
-    if (s == NULL) s = olds;
+    if (string == NULL) string = olds;
 
-    s += strspn (s, delim);
-    if (*s == '\0') {
-      olds = s;
-      return NULL;
+    string += strspn(string, delim);
+    if (*string == '\0') {
+        olds = string;
+        return NULL;
     }
 
-    token = s;
-    s = strpbrk(token, delim);
-    if (s == NULL) olds = __rawmemchr(token, '\0');
+    token = string;
+    string = strpbrk(token, delim);
+    if (string == NULL) olds = __rawmemchr(token, '\0');
     else {
-        *s = '\0';
-        olds = s + 1;
+        *string = '\0';
+        olds = string + 1;
     }
 
     return token;

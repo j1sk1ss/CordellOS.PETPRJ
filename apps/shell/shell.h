@@ -11,6 +11,9 @@
 #include <networking.h>
 #include <keyboard.h>
 #include <sysinfo.h>
+#include <memory.h>
+#include <assert.h>
+#include <hash.h>
 
 
 //   ____  _   _ _____ _     _     
@@ -53,6 +56,9 @@
         #define COMMAND_EXIT                            "uscita"
         #define COMMAND_REBOOT                          "riavviare"
 
+        #define COMMAND_SET_ENVAR                       "setvar"
+        #define COMMAND_DEL_ENVAR                       "delvar"
+
     //  COMMANDS
     /////////////////
 
@@ -62,5 +68,7 @@
 void main(int argc, char* argv[]);
 void shell_start_screen();
 void execute_command(char* command);
+
+int ulogin(char* login, char* password);
 
 #endif
