@@ -5,26 +5,6 @@ import os
 from SCons.Node.FS import Dir, File, Entry
 from SCons.Environment import Environment
 
-# Specify size for building
-def parse_size(size: str): 
-    size_match = re.match(r'([0-9\.]+)([kmg]?)', size, re.IGNORECASE)
-    if size_match is None:
-        raise ValueError(f'Error: Invalid size {size}')
-
-    result = Decimal(size_match.group(1))
-    multiplier = size_match.group(2).lower()
-
-    if multiplier == 'k':
-        result *= 1024
-
-    if multiplier == 'm':
-        result *= 1024 ** 2
-
-    if multiplier == 'g':
-        result *= 1024 ** 3
-
-    return int(result)
-
 
 def glob_recursive(env: Environment, pattern, node='.'):
     src = str(env.Dir(node).srcnode())

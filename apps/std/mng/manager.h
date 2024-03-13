@@ -33,4 +33,5 @@ int main(int argc, char* argv[]);
 int loop();
 void display_manager();
 
+void open_content();
 void file2display(Content* content);

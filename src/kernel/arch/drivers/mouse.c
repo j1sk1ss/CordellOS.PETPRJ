@@ -32,7 +32,7 @@ uint8_t i386_mouse_read() {
 	return i386_inb(MOUSE_PORT);
 }
 
-void i386_mouse_handler(Registers* regs) {
+void i386_mouse_handler(struct Registers* regs) {
     uint8_t status = i386_inb(MOUSE_STATUS);
     while (status & MOUSE_BBIT) {
         if (status & MOUSE_F_BIT) {

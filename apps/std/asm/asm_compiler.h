@@ -4,6 +4,7 @@
 #include <string.h>
 #include <fslib.h>
 #include <stdlib.h>
+#include <keyboard.h>
 
 #define STACK_SIZE              100
 #define MEMORY_SIZE             100
@@ -61,31 +62,56 @@
 //
 ////////////////////////////////////////
 
-struct intermediate_lang {
+typedef struct intermediate_lang {
 	int instruction_position;
 	int opcode;
 	int parameters[5];
 
 	char* string;
 	char* string_params[5];
-};
+} inlang;
 
 
-struct symbol_table {
+typedef struct symbol_table {
 	char variable_name[VARIABLE_LENGTH];
 	int address;
 	int size;
-};
+} symtable;
 
 
-struct blocks_table {
+typedef struct blocks_table {
 	char name[LABEL_LENGTH];
 	int instr_no;  // instruction number after start
-};
+} blctable;
 
-int asm_execute(char* file_data);
+int main(int args, char* argv[]);
+void const_func(char(*tokens)[10], int *memory, int *memory_index);
+void data_func(char (*tokens)[10], int *memory, int *memory_index);
+int generate_operation_code(char *instruction);
+int get_address(char *variable_name);
+
+void mov_func(char *param, int instruction_number);
+void bianryOperations_func(int opcode, char *param, int instruction_number);
+void read_func(char *param, int instruction_number);
+void print_func(char *param, int instruction_number);
+void prints_func(char *param, int instruction_number);
+void printl_func(char *param, int instruction_number);
+void clear_func(int instruction_number);
+void mkfile_func(char* param, int instruction_number);
+void rmfile_func(char* param, int instruction_number);
+void wfile_func(char* param, int instruction_number);
+void rfile_func(char *param, int instruction_number);
+void for_func(char *param, int instruction_number, int *stack, int *top);
+void endfor_func(int instruction_number, int *stack, int *top);
+void while_func(char *param, int instruction_number, int *stack, int *top);
+void endwhile_func(int instruction_number, int *stack, int *top);
+void if_func(char *param, int instruction_number, int *stack, int *top);
+void else_func(int instruction_number, int *stack, int *top);
+void endif_func(int instruction_number, int *stack, int *top);
+void jump_func(char *param, int instruction_number);
 
 void display_symbol_table();
 void display_intermediate_table();
 void display_block_table();
+int check_condition(int operand1, int operand2, int opcode);
 void asm_executor(int *memory_array, int memory_index, int start, int end);

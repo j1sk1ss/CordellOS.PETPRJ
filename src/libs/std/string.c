@@ -242,9 +242,6 @@ void* __rawmemchr (const void* s, int c_in) {
 
   longword_ptr = (unsigned long int *) char_ptr;
 
-  if (sizeof (longword) != 4 && sizeof (longword) != 8)
-    abort();
-
 #if LONG_MAX <= LONG_MAX_32_BITS
   magic_bits = 0x7efefeff;
 #else
@@ -508,9 +505,9 @@ char* itoa(int n) {
         n = -n;                /* make n positive */
     i = 0;
 
-    do {                       /* generate digits in reverse order */
+    do {                         /* generate digits in reverse order */
         str[i++] = n % 10 + '0'; /* get next digit */
-    } while ((n /= 10) > 0);   /* delete it */
+    } while ((n /= 10) > 0);     /* delete it */
 
     if (sign < 0)
         str[i++] = '-';

@@ -40,7 +40,7 @@
 #define SYS_PAGE_MAP    49
 
 // System managment (memory, tasks, vars)
-#define SYS_SLEEP       3 
+#define SYS_SLEEP       3 // FREE
 #define SYS_TIME        6
 #define SYS_MALLOC      7
 #define SYS_PAGE_MALLOC 35
@@ -96,7 +96,7 @@
 
 
 void i386_syscalls_init();
-void syscall(Registers* regs);
+void syscall(struct Registers* regs);
 
 
 #endif

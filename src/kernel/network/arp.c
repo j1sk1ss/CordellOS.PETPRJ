@@ -44,7 +44,7 @@ void ARP_handle_packet(arp_packet_t* arp_packet, int len) {
             arp_packet->protocol          = host2net16(ETHERNET_TYPE_IP);
 
             // Now send it with ethernet
-            ETH_send_packet(dst_hardware_addr, arp_packet, sizeof(arp_packet_t), ETHERNET_TYPE_ARP);
+            ETH_send_packet(dst_hardware_addr, (uint8_t*)arp_packet, sizeof(arp_packet_t), ETHERNET_TYPE_ARP);
         }
     }
 
@@ -60,7 +60,7 @@ void ARP_handle_packet(arp_packet_t* arp_packet, int len) {
 }
 
 void ARP_send_packet(uint8_t* dst_hardware_addr, uint8_t* dst_protocol_addr) {
-    arp_packet_t* arp_packet = calloc(sizeof(arp_packet_t), 1);
+    arp_packet_t* arp_packet = (arp_packet_t*)calloc(sizeof(arp_packet_t), 1);
 
     get_mac_addr(arp_packet->src_hardware_addr);
     if (is_ip_allocated == 1) DHCP_get_host_addr(arp_packet->src_protocol_addr);

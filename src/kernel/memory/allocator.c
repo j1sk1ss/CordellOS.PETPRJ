@@ -26,7 +26,7 @@
 
 		malloc_phys_address = (uint32_t)allocate_blocks(total_malloc_pages);
 		malloc_list_head    = (malloc_block_t*)malloc_virt_address;
-		if (malloc_phys_address == NULL) {
+		if (!malloc_phys_address) {
 			kprintf("\n[%s %i] Allocated error\n", __FILE__, __LINE__);
 			return;
 		}
@@ -186,11 +186,11 @@
 	}
 
 	void kfreep(void* v_addr) {
-		pt_entry* page = get_page(v_addr);
+		pt_entry* page = get_page((virtual_address)v_addr);
 		if (PAGE_PHYS_ADDRESS(page) && TEST_ATTRIBUTE(page, PTE_PRESENT)) {
 			free_page(page);
 			unmap_page((uint32_t*)v_addr);
-			flush_tlb_entry(v_addr);
+			flush_tlb_entry((virtual_address)v_addr);
 		}
 	}
 

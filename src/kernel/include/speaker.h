@@ -4,7 +4,8 @@
 
 #include "pic.h"
 #include "x86.h"
-#include "time.h"
+
+#include <time.h>
 
 #define PC_SPEAKER_PORT 0x61
 

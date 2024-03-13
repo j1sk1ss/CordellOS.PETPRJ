@@ -46,20 +46,6 @@ void tkill() {
 }
 
 //====================================================================
-//  Sleep function
-//  EDX - time
-void sleep(int milliseconds) {
-    __asm__ volatile(
-        "movl $3, %%eax\n"
-        "movl %0, %%edx\n"
-        "int %1\n"
-        :
-        : "r"(milliseconds), "i"(SYSCALL_INTERRUPT)
-        : "eax", "edx"
-    );
-}
-
-//====================================================================
 //  Return date time from cmos in short*
 //  ECX - pointer to array
 //

@@ -22,5 +22,5 @@ enum file_modes {
 
 
 int main(int argc, char *argv[]);
-void loop();
+int loop();
 void display_text();

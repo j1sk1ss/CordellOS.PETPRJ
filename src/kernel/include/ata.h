@@ -125,11 +125,17 @@ typedef struct ata_dev {
 
 
 void ATA_initialize();
-void ATA_handler(Registers* reg);
+void ATA_handler(struct Registers* reg);
 void ATA_device_switch(int device);
+
+void ATA_software_reset(ata_dev_t* dev);
+void ATA_device_detect(ata_dev_t* dev, int primary);
+void ATA_device_init(ata_dev_t* dev, int primary);
 
 bool ATA_is_sector_empty(const uint8_t* sector_data);
 bool ATA_is_current_sector_empty(uint32_t LBA);
+
+void ATA_ata_wait();
 
 uint8_t* ATA_read_sector(uint32_t lba);
 uint8_t* ATA_read_sectors(uint32_t lba, uint32_t sector_count);

@@ -47,7 +47,7 @@ void* allocate_page(pt_entry* page) {
 
 void free_page(pt_entry* page) {
     void* address = (void*)PAGE_PHYS_ADDRESS(page);
-    if (address) free_blocks(address, 1);
+    if (address) free_blocks((uint32_t*)address, 1);
 
     CLEAR_ATTRIBUTE(page, PTE_PRESENT);
 }
@@ -211,15 +211,15 @@ void free_page_directory(page_directory* pd) {
 
                 if (*page & PTE_PRESENT) {
                     void* phys_address = (void*)PAGE_PHYS_ADDRESS(page);
-                    free_blocks(phys_address, 1);
+                    free_blocks((uint32_t*)phys_address, 1);
                 }
             }
 
-            free_blocks(pt, 1);
+            free_blocks((uint32_t*)pt, 1);
         }
     }
 
-    free_blocks(pd, 3);
+    free_blocks((uint32_t*)pd, 3);
 }
 
 physical_address virtual2physical(void* virt_address) {
@@ -241,20 +241,20 @@ void copy_page_directory(page_directory* src, page_directory* dest) {
     if (!src || !dest) return;
     for (uint32_t i = 0; i < TABLES_PER_DIRECTORY; i++) {
         if (src->entries[i] & PDE_PRESENT) {
-            page_table *new_table = (page_table *)allocate_blocks(1);
+            page_table* new_table = (page_table*)allocate_blocks(1);
 
             if (!new_table) {
-                free_blocks(dest, 3);
-                return NULL;
+                free_blocks((uint32_t*)dest, 3);
+                return;
             }
 
-            memcpy(new_table, (page_table *)PAGE_PHYS_ADDRESS(&src->entries[i]), sizeof(page_table));
+            memcpy(new_table, (page_table*)PAGE_PHYS_ADDRESS(&src->entries[i]), sizeof(page_table));
             dest->entries[i] = (pd_entry)((uint32_t)new_table | PDE_PRESENT | PDE_READ_WRITE);
         }
     }
 }
 
-void page_fault(Registers* regs) {
+void page_fault(struct Registers* regs) {
 	uint32_t faulting_address;
 	asm ("mov %%cr2, %0" : "=r" (faulting_address));
 

@@ -4,7 +4,6 @@
 void* memcpy(void* destination, const void* source, uint16_t num) {
     uint8_t* u8Dst = (uint8_t*)destination;
     const uint8_t* u8Src = (const uint8_t*)source;
-
     for (uint16_t i = 0; i < num; i++)
         u8Dst[i] = u8Src[i];
 
@@ -14,7 +13,6 @@ void* memcpy(void* destination, const void* source, uint16_t num) {
 void* memcpy_off(void* destination, const void* source, uint16_t offset, uint16_t num) {
     uint8_t* u8Dst = (uint8_t*)destination;
     const uint8_t* u8Src = (const uint8_t*)source;
-
     for (uint16_t i = offset; i < offset + num; i++)
         u8Dst[i] = u8Src[i];
 
@@ -23,7 +21,6 @@ void* memcpy_off(void* destination, const void* source, uint16_t offset, uint16_
 
 void* memcpy32(void* dst, const void* src, const uint32_t len) {
     uint32_t i = 0;
-
     for (i = 0; i < len / 4; i++)
         ((uint32_t *)dst)[i] = ((uint32_t *)src)[i];
 
@@ -36,9 +33,16 @@ void* memcpy32(void* dst, const void* src, const uint32_t len) {
 
 void* memset(void* pointer, uint8_t value, uint16_t num) {
     uint8_t* u8Ptr = (uint8_t*)pointer;
-
     for (uint16_t i = 0; i < num; i++)
         u8Ptr[i] = value;
+
+    return pointer;
+}
+
+void* memset32(void* pointer, uint32_t value, uint32_t num) {
+    uint32_t* u32Ptr = (uint32_t*)pointer;
+    for (size_t i = 0; i < num; i++)
+        u32Ptr[i] = value;
 
     return pointer;
 }
@@ -46,7 +50,6 @@ void* memset(void* pointer, uint8_t value, uint16_t num) {
 int memcmp(const void* firstPointer, const void* secondPointer, uint16_t num) {
     const uint8_t* u8Ptr1 = (const uint8_t *)firstPointer;
     const uint8_t* u8Ptr2 = (const uint8_t *)secondPointer;
-
     for (uint16_t i = 0; i < num; i++)
         if (u8Ptr1[i] != u8Ptr2[i])
             return 1;
@@ -57,7 +60,6 @@ int memcmp(const void* firstPointer, const void* secondPointer, uint16_t num) {
 void* seg_offset_to_linear(void* address) {
     uint32_t offset = (uint32_t)(address) & 0xFFFF;
     uint32_t segment = (uint32_t)(address) >> 16;
-
     return (void*)(segment * 16 + offset);
 }
 

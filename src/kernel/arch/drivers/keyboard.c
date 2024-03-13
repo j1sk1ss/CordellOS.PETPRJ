@@ -22,34 +22,34 @@ unsigned char alphabet[128] = {
     '9', '0', '-', '=', '\b',	                                        /* Backspace */
     '\t',			                                                    /* Tab */
     'q', 'w', 'e', 'r',	                                                /* 19 */
-    't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',	                    /* Enter key */
+    't', 'y', 'u', 'i', 'o', 'p', '[', ']', ENTER_BUTTON,	            /* Enter key */
     0,			                                                        /* 29   - Control */
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',	                /* 39 */
-    '\'', '`', '\252',		                                            /* Left shift */
+    '\'', '`', LSHIFT_BUTTON,		                                    /* Left shift */
     '\\', 'z', 'x', 'c', 'v', 'b', 'n',			                        /* 49 */
-    'm', ',', '.', '/',  '\253',				                        /* Right shift */
+    'm', ',', '.', '/',  RSHIFT_BUTTON,				                    /* Right shift */
     '*',
     0,	                                                                /* Alt */
     ' ',	                                                            /* Space bar */
     '\5',	                                                            /* Caps lock */
-    '\6',	                                                            /* 59 - F1 key ... > */
-    '\7',   '\255',   '\254',   0,   0,   0,   0,   0,                       
+    F1_BUTTON,	                                                        /* 59 - F1 key ... > */
+    F2_BUTTON,   F3_BUTTON,   F4_BUTTON,   0,   0,   0,   0,   0,                       
     0,	                                                                /* < ... F10 */
     0,	                                                                /* 69 - Num lock*/
     0,	                                                                /* Scroll Lock */
     0,	                                                                /* Home key */
-    '\4',	                                                            /* Up Arrow */
+    UP_ARROW_BUTTON,	                                                /* Up Arrow */
     0,	                                                                /* Page Up */
     '-',                        
-    '\1',	                                                            /* Left Arrow */
+    LEFT_ARROW_BUTTON,	                                                /* Left Arrow */
     0,                      
-    '\2',	                                                            /* Right Arrow */
+    RIGHT_ARROW_BUTTON,	                                                /* Right Arrow */
     '+',                        
     0,	                                                                /* 79 - End key*/
-    '\3',	                                                            /* Down Arrow */
+    DOWN_ARROW_BUTTON,	                                                /* Down Arrow */
     0,	                                                                /* Page Down */
     0,	                                                                /* Insert Key */
-    '\251',	                                                            /* Delete Key */
+    DEL_BUTTON,	                                                        /* Delete Key */
     0,   0,   0,                        
     0,	                                                                /* F11 Key */
     0,	                                                                /* F12 Key */
@@ -61,34 +61,34 @@ unsigned char shift_alphabet[128] = {
     '(', ')', '_', '+', '\b',	                                        /* Backspace */
     '\t',			                                                    /* Tab */
     'Q', 'W', 'E', 'R',	                                                /* 19 */
-    'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',	                    /* Enter key */
+    'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', ENTER_BUTTON,	            /* Enter key */
     0,			                                                        /* 29   - Control */
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':',	                /* 39 */
-    '"', '~', '\252',		                                            /* Left shift */
+    '"', '~', LSHIFT_BUTTON,		                                    /* Left shift */
     '|', 'Z', 'X', 'C', 'V', 'B', 'N',			                        /* 49 */
-    'M', '<', '>', '?',  '\253',				                        /* Right shift */
+    'M', '<', '>', '?',  RSHIFT_BUTTON,				                    /* Right shift */
     '*',
     0,	                                                                /* Alt */
     ' ',	                                                            /* Space bar */
     '\5',	                                                            /* Caps lock */
-    '\6',	                                                            /* 59 - F1 key ... > */
-    '\7',   '\255',   '\254',   0,   0,   0,   0,   0,                       
+    F1_BUTTON,	                                                        /* 59 - F1 key ... > */
+    F2_BUTTON, F3_BUTTON, F4_BUTTON, 0, 0, 0, 0, 0,  
     0,	                                                                /* < ... F10 */
     0,	                                                                /* 69 - Num lock*/
     0,	                                                                /* Scroll Lock */
     0,	                                                                /* Home key */
-    '\4',	                                                            /* Up Arrow */
+    UP_ARROW_BUTTON,	                                                /* Up Arrow */
     0,	                                                                /* Page Up */
     '-',                        
-    '\1',	                                                            /* Left Arrow */
+    LEFT_ARROW_BUTTON,	                                                /* Left Arrow */
     0,                      
-    '\2',	                                                            /* Right Arrow */
+    RIGHT_ARROW_BUTTON,	                                                /* Right Arrow */
     '+',                        
     0,	                                                                /* 79 - End key*/
-    '\3',	                                                            /* Down Arrow */
+    DOWN_ARROW_BUTTON,	                                                /* Down Arrow */
     0,	                                                                /* Page Down */
     0,	                                                                /* Insert Key */
-    '\251',	                                                            /* Delete Key */
+    DEL_BUTTON,	                                                        /* Delete Key */
     0,   0,   0,                        
     0,	                                                                /* F11 Key */
     0,	                                                                /* F12 Key */
@@ -165,7 +165,7 @@ char get_character(char character) {
             pos   = 0;
         }
 
-        void i386_keyboard_handler(Registers* regs) {
+        void i386_keyboard_handler(struct Registers* regs) {
             char character = i386_inb(0x60);
             if (character < 0 || character >= 128) return;
             if (char_buffer == NULL || stop_buffer == NULL) return;
@@ -200,7 +200,7 @@ char get_character(char character) {
 
                     if (!is_vesa) {
                         VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
-                        VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), NULL);
+                        VGA_putchr(VGA_cursor_get_x(), VGA_cursor_get_y(), ' ');
                     } else VESA_backspace();
 
                     return;

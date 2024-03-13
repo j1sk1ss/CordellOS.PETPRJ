@@ -73,13 +73,13 @@ void disable_pc_speaker() {
 
 void play_note(const note_freq_t note, const uint32_t ms_duration) {
     set_pit_channel_mode_frequency(2, 3, note);
-    TIME_sleep_milliseconds(ms_duration);
+    sleep_ms(ms_duration);
 }
 
 // Rest for a given duration
 void rest(const uint32_t ms_duration) {
     set_pit_channel_mode_frequency(2, 3, 40);
-    TIME_sleep_milliseconds(ms_duration);
+    sleep_ms(ms_duration);
 }
 
 void set_bpm(const uint32_t bpm) {
@@ -97,6 +97,7 @@ void set_time_signature(const uint8_t beats_per_measure, const beat_type_t beat_
             sixteenth_note_duration = bpm_ms / 16;
             thirty2nd_note_duration = bpm_ms / 32;
             break;
+
         case HALF:
             whole_note_duration     = bpm_ms * 2;
             half_note_duration      = bpm_ms;
@@ -105,6 +106,7 @@ void set_time_signature(const uint8_t beats_per_measure, const beat_type_t beat_
             sixteenth_note_duration = bpm_ms / 8;
             thirty2nd_note_duration = bpm_ms / 16;
             break;
+
         case QUARTER:
             whole_note_duration     = bpm_ms * 4;
             half_note_duration      = bpm_ms * 2;
@@ -113,6 +115,7 @@ void set_time_signature(const uint8_t beats_per_measure, const beat_type_t beat_
             sixteenth_note_duration = bpm_ms / 4;
             thirty2nd_note_duration = bpm_ms / 8;
             break;
+
         case EIGTH:
             whole_note_duration     = bpm_ms * 8;
             half_note_duration      = bpm_ms * 4;
@@ -121,6 +124,7 @@ void set_time_signature(const uint8_t beats_per_measure, const beat_type_t beat_
             sixteenth_note_duration = bpm_ms / 2;
             thirty2nd_note_duration = bpm_ms / 4;
             break;
+
         case SIXTEENTH:
             whole_note_duration     = bpm_ms * 16;
             half_note_duration      = bpm_ms * 8;
@@ -129,6 +133,7 @@ void set_time_signature(const uint8_t beats_per_measure, const beat_type_t beat_
             sixteenth_note_duration = bpm_ms;
             thirty2nd_note_duration = bpm_ms / 2;
             break;
+            
         case THIRTY2ND:
             whole_note_duration     = bpm_ms * 32;
             half_note_duration      = bpm_ms * 16;

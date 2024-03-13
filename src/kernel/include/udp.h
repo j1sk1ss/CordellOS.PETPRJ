@@ -13,10 +13,10 @@
 #define PACKET_BUFFER_SIZE  100
 
 
-struct UDPpacket {
+typedef struct UDPpacket {
     uint8_t* data;
     int16_t data_size;
-};
+} udp_packet_body;
 
 typedef struct udp_packet {
     uint16_t src_port;

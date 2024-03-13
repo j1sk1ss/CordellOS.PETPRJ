@@ -5,7 +5,7 @@ void i386_syscalls_init() {
     i386_isr_registerHandler(0x80, syscall);
 }
  
-void syscall(Registers* regs) {
+void syscall(struct Registers* regs) {
 
     //=======================
     //  PRINT SYSCALLS
@@ -139,11 +139,6 @@ void syscall(Registers* regs) {
     //  SYSTEM SYSCALLS
     //=======================
 
-        else if (regs->eax == SYS_SLEEP) {
-            const int sleep = (const int)regs->edx;
-            TIME_sleep_milliseconds(sleep);
-        } 
-
         else if (regs->eax == SYS_TIME) {
             datetime_read_rtc();
             short* date_buffer = (short*)regs->ecx;
@@ -184,7 +179,7 @@ void syscall(Registers* regs) {
 
                 void* allocated_memory = kmalloc(size);
                 merge_free_blocks();
-                regs->eax = allocated_memory;
+                regs->eax = (uint32_t)allocated_memory;
             } 
             
             else if (regs->eax == SYS_PAGE_MALLOC) {
@@ -237,7 +232,7 @@ void syscall(Registers* regs) {
 
             else if (regs->eax == GET_VAR) {
                 char* name = (char*)regs->ebx;
-                regs->eax  = VARS_get(name);
+                regs->eax  = (uint32_t)VARS_get(name);
             }
 
             else if (regs->eax == DEL_VAR) {
@@ -272,19 +267,19 @@ void syscall(Registers* regs) {
         
         else if (regs->eax == SYS_OPENDIR) {
             char* path = (char*)regs->ebx;
-            regs->eax  = current_vfs->dir(GET_CLUSTER_FROM_ENTRY(current_vfs->getobj(path)->directory->directory_meta), NULL, FALSE);
+            regs->eax  = (uint32_t)current_vfs->dir(GET_CLUSTER_FROM_ENTRY(current_vfs->getobj(path)->directory->directory_meta), (char)0, FALSE);
         } 
         
         else if (regs->eax == SYS_GET_CONTENT) {
             char* content_path = (char*)regs->ebx;
-            regs->eax = current_vfs->getobj(content_path);
+            regs->eax = (uint32_t)current_vfs->getobj(content_path);
         } 
         
         else if (regs->eax == SYS_EXECUTE_FILE) {
             char* exec_path = (char*)regs->ebx;
             char** argv     = (char**)regs->edx;
             int args        = (int)regs->ecx;
-            regs->eax = current_vfs->objexec(exec_path, args, argv);
+            regs->eax = (uint32_t)current_vfs->objexec(exec_path, args, argv);
         } 
         
         else if (regs->eax == SYS_CEXISTS) {
@@ -303,7 +298,7 @@ void syscall(Registers* regs) {
             Content* mkfile_content = FAT_create_content(fname, FALSE, fexec);
 
             current_vfs->putobj(mkfile_path, mkfile_content);
-            FSLIB_unload_files_system(mkfile_content);
+            FSLIB_unload_content_system(mkfile_content);
         } 
         
         else if (regs->eax == SYS_DIRCREATE) {
@@ -313,7 +308,7 @@ void syscall(Registers* regs) {
             Content* mkdir_content = FAT_create_content(mkdir_name, TRUE, "");
 
             current_vfs->putobj(mkdir_path, mkdir_content);
-            FSLIB_unload_files_system(mkdir_content);
+            FSLIB_unload_content_system(mkdir_content);
         } 
         
         else if (regs->eax == SYS_CDELETE) {
@@ -324,7 +319,7 @@ void syscall(Registers* regs) {
         
         else if (regs->eax == SYS_CHANGE_META) {
             char* meta_path = (char*)regs->ebx;
-            directory_entry_t* meta = (char*)regs->ecx;
+            directory_entry_t* meta = (directory_entry_t*)regs->ecx;
             current_vfs->objmetachg(meta_path, meta);
         } 
 

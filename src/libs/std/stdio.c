@@ -407,7 +407,7 @@ void vsprintf(char* buffer, int len, const char* fmt, va_list args) {
             PRINTF_STATE_SPEC_:
             if (*fmt == 'c') buffer[pos] = (char)va_arg(args, int);
             else if (*fmt == 's') {
-                char* text = va_arg(args, const char*);
+                const char* text = va_arg(args, const char*);
                 while (*text) {
                     buffer[pos++] = *text;
                     text++;
@@ -489,24 +489,24 @@ void fprint_buffer(const void* buffer, uint32_t count) {
     for (uint16_t i = 0; i < count; i++) {
         fputc(hexChars[u8Buffer[i] >> 4], 0, -1);
         fputc(hexChars[u8Buffer[i] & 0xF], 0, -1);
-        fputc(" ", 0, -1);
+        fputc(' ', 0, -1);
     }
 
-    fputs("\n", 0, -1);
+    fputc('\n', 0, -1);
 }
 
 void putc(char c) {
-    fputc(c, NULL, 0);
+    fputc(c, 0, 0);
 }
 
 void puts(const char* str) {
-    fputs(str, NULL, 0);
+    fputs(str, 0, 0);
 }
 
 void printf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    vfprintf(NULL, fmt, args, 0);
+    vfprintf(0, fmt, args, 0);
     va_end(args);
 }
 

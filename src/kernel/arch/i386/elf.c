@@ -41,7 +41,7 @@ ELF32_program* ELF_read(const char* path) {
         current_vfs->readoff(content, program_header, ehdr->e_phoff, sizeof(Elf32_Phdr) * ehdr->e_phnum);
         Elf32_Phdr* phdr = (Elf32_Phdr*)program_header;
 
-        program->entry_point = ehdr->e_entry;
+        program->entry_point = (void*)ehdr->e_entry;
         uint32_t header_num  = ehdr->e_phnum;
 
         free(header);
@@ -52,7 +52,7 @@ ELF32_program* ELF_read(const char* path) {
     // Copy data to vELF location
     //==========================
 
-        program->pages       = calloc(header_num, sizeof(uint32_t));
+        program->pages = calloc(header_num, sizeof(uint32_t));
         program->pages_count = header_num;
         for (uint32_t i = 0; i < header_num; i++) {
             if (phdr[i].p_type != PT_LOAD) continue;
@@ -67,8 +67,8 @@ ELF32_program* ELF_read(const char* path) {
                 virtual_address += PAGE_SIZE;
             }
 
-            memset(phdr[i].p_vaddr, 0, phdr[i].p_memsz);
-            current_vfs->readoff(content, phdr[i].p_vaddr, phdr[i].p_offset, phdr[i].p_memsz);
+            memset((void*)phdr[i].p_vaddr, 0, phdr[i].p_memsz);
+            current_vfs->readoff(content, (uint8_t*)phdr[i].p_vaddr, phdr[i].p_offset, phdr[i].p_memsz);
         }
 
     //==========================
@@ -79,3 +79,5 @@ ELF32_program* ELF_read(const char* path) {
     FSLIB_unload_content_system(content);
     return program;
 }
+
+// NO PROBLEMS

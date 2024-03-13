@@ -18,7 +18,7 @@ void receive_packet() {
     t = t + 2;
     void* packet = calloc(packet_length, 1);
     memcpy(packet, t, packet_length);
-    ETH_handle_packet(packet, packet_length);
+    ETH_handle_packet((ethernet_frame_t*)packet, packet_length);
 
     current_packet_ptr = (current_packet_ptr + packet_length + 4 + 3) & RX_READ_POINTER_MASK;
     if (current_packet_ptr > RX_BUFFER_SIZE) current_packet_ptr -= RX_BUFFER_SIZE;
@@ -27,7 +27,7 @@ void receive_packet() {
     free(packet);
 }
 
-void rtl8139_handler(Registers* reg) {
+void rtl8139_handler(struct Registers* reg) {
     uint16_t status = i386_inw(rtl8139_device.io_base + IntrStatus);
     i386_outw(rtl8139_device.io_base + IntrStatus, 0x05);
 
@@ -41,7 +41,7 @@ void get_mac_addr(uint8_t* src_mac_addr) {
 
 void rtl8139_send_packet(void* data, uint32_t len) {
     void* transfer_data = calloc(len, 1);
-    void* phys_addr     = virtual2physical(transfer_data);
+    void* phys_addr     = (void*)virtual2physical(transfer_data);
     memcpy(transfer_data, data, len);
 
     i386_outl(rtl8139_device.io_base + TSAD_array[rtl8139_device.tx_cur], (uint32_t)phys_addr);

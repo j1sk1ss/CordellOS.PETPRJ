@@ -8,23 +8,26 @@
 Content* edit_content;
 File* edit_file;
 
+char* edit_path;
 int current_line = 0;
 
 
 int main(int argc, char *argv[]) {
-    if (argc != 0) edit_content = get_content(argv[0]);
+    if (argc != 0) edit_path = argv[0];
     else {
         mkfile("home", "tfile.txt");
-        edit_content = get_content("tfile.txt");
+        edit_path = "home\\tfile.txt";
     }
     
-    edit_file = edit_content->file;
     current_line = 0;
     display_text();
-    loop();
+
+    edit_content = get_content(edit_path);
+    
+    return loop();
 }
 
-void loop() {
+int loop() {
     while (1) {
         char action = get_char();
         if (action == DOWN_ARROW_BUTTON) {
@@ -43,11 +46,11 @@ void loop() {
             return 0;
         }
         else if (action == F2_BUTTON) {
-            fwrite(edit_content, NULL);
+            fwrite(edit_path, NULL);
             return 1;
         }
         else if (action == F1_BUTTON) {
-            fwrite(edit_content, NULL);
+            fwrite(edit_path, NULL);
         }
     }
 }

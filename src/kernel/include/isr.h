@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "pit.h"
 #include "idt.h"
@@ -14,14 +15,14 @@
 #include "../util/arrays.h"
 
 
-typedef struct RegsStruct {
+struct Registers {
     uint32_t ds;                                            // data segment pushed by us
     uint32_t edi, esi, ebp, kern_esp, ebx, edx, ecx, eax;   // pusha
     uint32_t interrupt, error;                              // we push interrupt and error code
     uint32_t eip, cs, eflag, esp, ss;                       // pushed auto by cpu
-} __attribute__((packed)) Registers;
+} __attribute__((packed));
 
-typedef void (*ISRHandler)(Registers* regs);
+typedef void (*ISRHandler)(struct Registers* regs);
 
 
 void i386_isr_initialize();

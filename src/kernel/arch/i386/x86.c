@@ -1,5 +1,6 @@
 #include "../../include/x86.h"
 
+
 void i386_reboot() {
     i386_outb(0x64, 0xFE);
 }

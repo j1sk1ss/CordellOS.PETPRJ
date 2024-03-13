@@ -43,7 +43,7 @@ extern int show_mouse;
 
 
 int i386_init_mouse();
-void i386_mouse_handler(Registers* regs);
+void i386_mouse_handler(struct Registers* regs);
 uint8_t i386_mouse_read();
 void i386_mouse_write(uint8_t write);
 void i386_mouse_wait(uint8_t a_type);

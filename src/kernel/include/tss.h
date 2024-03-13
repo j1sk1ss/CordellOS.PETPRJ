@@ -2,6 +2,7 @@
 #define TSS_H
 
 #include <stdint.h>
+#include <memory.h>
 
 #include "gdt.h"
 

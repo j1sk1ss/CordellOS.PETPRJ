@@ -1,7 +1,4 @@
 #include "../../include/idt.h"
-#include "../../util/binary.h"
-
-#include <stdint.h>
 
 
 typedef struct {

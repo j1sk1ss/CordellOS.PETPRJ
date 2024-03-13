@@ -6,6 +6,7 @@
 #include "pci.h"
 #include "x86.h"
 #include "virt_manager.h"
+#include "ethernet.h"
 
 #include <stdint.h>
 #include <memory.h>
@@ -92,7 +93,7 @@ typedef struct rtl8139_dev {
 
 
 void rtl8139_send_packet(void* data, uint32_t len);
-void rtl8139_handler(Registers* reg);
+void rtl8139_handler(struct Registers* reg);
 
 void i386_init_rtl8139();
 void receive_packet();

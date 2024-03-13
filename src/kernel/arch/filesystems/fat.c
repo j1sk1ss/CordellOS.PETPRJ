@@ -330,7 +330,7 @@
 		unsigned int start_sect = (clusterNum - 2) * (unsigned short)sectors_per_cluster + first_data_sector;
 		unsigned int data_size  = min(size, (sectors_per_cluster * SECTOR_SIZE) - offset);
 		uint8_t* cluster_data   = ATA_read_sectors(start_sect, sectors_per_cluster);
-		uint8_t* offset_data    = calloc(data_size, 1);
+		uint8_t* offset_data    = (uint8_t*)calloc(data_size, 1);
 
 		memcpy(offset_data, cluster_data + offset, data_size);
 		free(cluster_data);
@@ -410,7 +410,7 @@
 // returns: -1 is a general error
 
 	Directory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, BOOL exclusive) {
-		Directory* currentDirectory = calloc(sizeof(Directory), 1);
+		Directory* currentDirectory = (Directory*)calloc(sizeof(Directory), 1);
 
 		currentDirectory->name         = NULL;
 		currentDirectory->files        = NULL;
@@ -901,7 +901,7 @@
 		else {
 			kprintf("Function FAT_get_content: FAT16 and FAT12 are not supported!\n");
 			FSLIB_unload_content_system(fatContent);
-			return -1;
+			return NULL;
 		}
 		
 		directory_entry_t content_meta;
@@ -913,13 +913,13 @@
 				int retVal = FAT_directory_search(fileNamePart, active_cluster, &content_meta, NULL);
 				if (retVal == -2) {
 					FSLIB_unload_content_system(fatContent);
-					return -2;
+					return NULL;
 				}
 
 				else if (retVal == -1) {
 					kprintf("Function FAT_get_content: An error occurred in FAT_directory_search. Aborting...\n");
 					FSLIB_unload_content_system(fatContent);
-					return retVal;
+					return NULL;
 				}
 
 				start = iterator + 1;
@@ -941,7 +941,7 @@
 				uint32_t* new_content = (uint32_t*)realloc(content, (content_size + 1) * sizeof(uint32_t));
 				if (new_content == NULL) {
 					free(content);
-					return -1;
+					return NULL;
 				}
 
 				new_content[content_size] = cluster;
@@ -953,13 +953,13 @@
 				if (cluster == BAD_CLUSTER_32) {
 					kprintf("Function FAT_get_content: the cluster chain is corrupted with a bad cluster. Aborting...\n");
 					free(content);
-					return -1;
+					return NULL;
 				} 
 				
 				else if (cluster == -1) {
 					kprintf("Function FAT_get_content: an error occurred in FAT_read. Aborting...\n");
 					free(content);
-					return -1;
+					return NULL;
 				}
 			}
 			
@@ -1052,9 +1052,8 @@
 		if (programEntry == NULL) return 0;
 		
 		int result_code = programEntry(argc, argv);
-
 		for (uint32_t i = 0; i < program->pages_count; i++) 
-			freep(program->pages[i]);
+			freep((void*)program->pages[i]);
 
 		free(program->pages);
 		free(program);
@@ -1074,7 +1073,7 @@
 //========================================================================================
 // This function edit content in FAT content object
                                                                  
-	void FAT_write_content(Content* content, char* content_data) {
+	int FAT_write_content(Content* content, char* content_data) {
 
 		//=====================
 		// CONTENT META SAVING
@@ -1314,10 +1313,8 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		// CONTENT META SAVING
 
 			directory_entry_t content_meta;
-			if (content->directory != NULL)
-				content_meta = content->directory->directory_meta;
-			else if (content->file != NULL)
-				content_meta = content->file->file_meta;
+			if (content->directory != NULL) content_meta = content->directory->directory_meta;
+			else if (content->file != NULL) content_meta = content->file->file_meta;
 
 		// CONTENT META SAVING
 		//////////////////////
@@ -1344,11 +1341,11 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 			directory_entry_t file_info; //holds found directory info
 			if (strlen(filePath) == 0) { // Create main dir if it not created (root dir)
 				if (fat_type == 32) {
-					active_cluster 			= ext_root_cluster;
-					file_info.attributes 	= FILE_DIRECTORY | FILE_VOLUME_ID;
-					file_info.file_size 	= 0;
-					file_info.high_bits 	= GET_ENTRY_HIGH_BITS(active_cluster);
-					file_info.low_bits 		= GET_ENTRY_LOW_BITS(active_cluster);
+					active_cluster 	     = ext_root_cluster;
+					file_info.attributes = FILE_DIRECTORY | FILE_VOLUME_ID;
+					file_info.file_size  = 0;
+					file_info.high_bits  = GET_ENTRY_HIGH_BITS(active_cluster);
+					file_info.low_bits   = GET_ENTRY_LOW_BITS(active_cluster);
 				}
 				else {
 					kprintf("Function FAT_put_content: FAT16 and FAT12 are not supported!\n");
@@ -1692,7 +1689,7 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		return (data[2] << 11) | (data[1] << 5) | (data[0] / 2);
 	}
 
-	int FAT_name_check(char* input) {
+	int FAT_name_check(const char* input) {
 		short retVal = 0;
 		unsigned short iterator;
 		for (iterator = 0; iterator < 11; iterator++) {
@@ -1749,11 +1746,11 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 	directory_entry_t* FAT_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize) {
 		directory_entry_t* data = malloc(sizeof(directory_entry_t));
 
-		data->reserved0 				= 0; 
-		data->creation_time_tenths 		= 0;
-		data->creation_time 			= 0;
-		data->creation_date 			= 0;
-		data->last_modification_date 	= 0;
+		data->reserved0 			 = 0; 
+		data->creation_time_tenths 	 = 0;
+		data->creation_time 		 = 0;
+		data->creation_date 		 = 0;
+		data->last_modification_date = 0;
 
 		char* file_name = (char*)malloc(25);
 		strcpy(file_name, filename);
@@ -1765,12 +1762,12 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		data->low_bits 	= firstCluster;
 		data->high_bits = firstCluster >> 16;  
 
-		if(isDir == 1) {
-			data->file_size 	= 0;
-			data->attributes 	= FILE_DIRECTORY;
+		if(isDir == TRUE) {
+			data->file_size  = 0;
+			data->attributes = FILE_DIRECTORY;
 		} else {
-			data->file_size 	= filesize;
-			data->attributes 	= FILE_ARCHIVE;
+			data->file_size  = filesize;
+			data->attributes = FILE_ARCHIVE;
 		}
 
 		data->creation_date = FAT_current_date();
@@ -1792,15 +1789,15 @@ int FAT_change_meta(const char* filePath, directory_entry_t* newMeta) {
 		}
 		
 		if (directory == TRUE) {
-			content->directory = malloc(sizeof(Directory));
+			content->directory = (Directory*)malloc(sizeof(Directory));
 			strncpy(content->directory->name, name, 11);
-			content->directory->directory_meta = *FAT_create_entry(name, NULL, 1, NULL, NULL);
+			content->directory->directory_meta = *FAT_create_entry(name, NULL, TRUE, FAT_cluster_allocate(), 0);
 		}
 		else {
-			content->file = malloc(sizeof(File));
+			content->file = (File*)malloc(sizeof(File));
 			strncpy(content->file->name, name, 11);
 			strncpy(content->file->extension, extension, 4);
-			content->file->file_meta = *FAT_create_entry(name, extension, 0, NULL, 1);
+			content->file->file_meta = *FAT_create_entry(name, extension, FALSE, FAT_cluster_allocate(), 1);
 		}
 
 		return content;

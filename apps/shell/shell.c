@@ -7,6 +7,8 @@ int current_command = 0;
 
 
 void main(int argc, char* argv[]) {
+    clrscr();
+    shell_start_screen();
 
 #ifdef ENVARS
 
@@ -17,6 +19,7 @@ void main(int argc, char* argv[]) {
         if (envar_exists("mng") == -1) envar_add("mng", "home\\apps\\std\\mng\\mng.elf");
         if (envar_exists("edt") == -1) envar_add("edt", "home\\apps\\std\\editor\\editor.elf");
         if (envar_exists("asm") == -1) envar_add("asm", "home\\apps\\std\\asm\\asm.elf");
+        if (envar_exists("snake") == -1) envar_add("snake", "home\\apps\\games\\snake\\snake.elf");
 
     //  SET INIT ENVARS
      //====================
@@ -28,23 +31,27 @@ void main(int argc, char* argv[]) {
     //====================
     //  USER
 
-        // root - 128912459697260
-        // 28072003 - 8021060451797878646
         if (cexists("boot\\users.txt") != 0) {
             while (1) {
-                char stop[3] = { ENTER_BUTTON, '\0' };
-                char login[25] = { '\0' };
+                char stop[3]    = { ENTER_BUTTON, '\0' };
+                char stopass[3] = { ENTER_BUTTON, '\0' };
+
+                char login[25]    = { '\0' };
                 char password[25] = { '\0' };
 
-                printf("LOGIN:");
+                printf("\nLOGIN: ");
                 keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE, stop, login);
+                login[max(0, strlen(login) - 1)] = '\0';
 
-                printf("\nPASSWORD:");
-                keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE, stop, password);
+                printf("\nPASSWORD: ");
+                keyboard_read(HIDDEN_KEYBOARD, FOREGROUND_WHITE, stopass, password);
+                password[max(0, strlen(password) - 1)] = '\0';
 
                 if (ulogin(login, password) == 1) break;
-                printf("WRONG PASS OR LOGIN\n");
+                printf("\nWRONG PASS OR LOGIN\n");
             }
+
+            clrscr();
         }
 
     //  USER
@@ -54,10 +61,6 @@ void main(int argc, char* argv[]) {
 
     //====================
     //  PREPARE SCREEN & INPUT
-    //====================
-
-        clrscr();
-        shell_start_screen();
 
         while (exit) {
             printf("\n$%s> ", current_path);
@@ -65,14 +68,13 @@ void main(int argc, char* argv[]) {
             char stop_chars[3] = { ENTER_BUTTON, '\0' };
             char input[COMMAND_LENGHT] = { '\0' };
             keyboard_read(VISIBLE_KEYBOARD, FOREGROUND_WHITE, stop_chars, input);
-            
+
             int last_char = max(0, strlen(input) - 1);
             input[last_char] = '\0';
             
             execute_command(input);
         }
 
-    //====================
     //  PREPARE SCREEN & INPUT
     //====================
 
@@ -82,7 +84,7 @@ void main(int argc, char* argv[]) {
 
 void shell_start_screen() {
     printf("\n");
-    printf("Cordell Shell [ver. 0.5c | 12.03.2024]\n");
+    printf("Cordell Shell [ver. 0.5d | 13.03.2024]\n");
     printf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n");
 }
 
@@ -102,15 +104,19 @@ void shell_start_screen() {
             int tokenCount = 0;
             char* splitted = strtok(command, " ");
 
-            while (splitted) {
-                if (splitted[0] = "$") {
-                    memmove(splitted, splitted + 1, strlen(splitted));
-                    if (envar_exists(splitted) != -1) command_line[tokenCount++] = envar_get(splitted);
+            while (splitted && tokenCount < 100) {
+                char* token = (char*)calloc(strlen(splitted) + 1, 1);
+                strncpy(token, splitted, strlen(splitted));
+
+                if (token[0] == '$') {
+                    memmove(token, token + 1, strlen(token));
+                    if (envar_exists(token) != -1) command_line[tokenCount++] = envar_get(token);
                     else command_line[tokenCount++] = splitted;
                 }
                 else command_line[tokenCount++] = splitted;
 
                 splitted = strtok(NULL, " ");
+                free(token);
             }
 
         //====================
@@ -172,12 +178,22 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_SET_ENVAR) == 0) {
-                if (envar_exists(command_line[1]) == -1) envar_add(command_line[1], command_line[2]);
-                else envar_set(command_line[1], command_line[2]);
+                char* name  = (char*)calloc(strlen(command_line[1]) + 1, 1);
+                char* value = (char*)calloc(strlen(command_line[2]) + 1, 1);
+
+                strncpy(name, command_line[1], strlen(command_line[1]));
+                strncpy(value, command_line[2], strlen(command_line[2]));
+
+                if (envar_exists(command_line[1]) == -1) envar_add(name, value);
+                else {
+                    envar_set(name, value);
+                    free(name);
+                }
             }
 
-            else if (strstr(command_line[0], COMMAND_DEL_ENVAR) == 0) 
+            else if (strstr(command_line[0], COMMAND_DEL_ENVAR) == 0) {
                 if (envar_exists(command_line[1]) != -1) envar_delete(command_line[1]);
+            }
 
         //====================
         //  DEFAULT SHELL COMMANDS CLEAR, ECHO AND HELP
@@ -289,15 +305,12 @@ void shell_start_screen() {
                     pos++;
                 }
 
-                char* exec_path = FSLIB_change_path(current_path, command_line[1]);
-                if (cexists(exec_path) == 0) {
-                    printf("\nLA FILE [%s] NON ESISTE", exec_path);
-                    free(exec_path);
+                if (cexists(command_line[1]) == 0) {
+                    printf("\nLA FILE [%s] NON ESISTE", command_line[1]);
                     return;
                 }
 
-                printf("\nCODE: [%i]\n", fexec(exec_path, pos - 2, exe_argv));
-                free(exec_path);
+                printf("\nCODE: [%i]\n", fexec(command_line[1], pos - 2, exe_argv));
             }
 
             else if (strstr(command_line[0], COMMAND_CINFO) == 0) {
@@ -318,8 +331,8 @@ void shell_start_screen() {
                     printf("DIRECTORY\n");
                     printf("NAME:          [%s]\n", directory->name);
                     printf("SIZE:          [%iB]\n", directory->directory_meta.file_size);
-                    printf("CREATION DATE: [%i / %i / %i]\n", creation_date->day, creation_date->mounth, creation_date->year);
-                    printf("ACCESED DATE:  [%i / %i / %i]\n", accesed_date->day, accesed_date->mounth, accesed_date->year);
+                    printf("CREATION DATE: [%i/%i/%i]\n", creation_date->day, creation_date->mounth, creation_date->year);
+                    printf("ACCESED DATE:  [%i/%i/%i]\n", accesed_date->day, accesed_date->mounth, accesed_date->year);
 
                     free(creation_date);
                     free(accesed_date);
@@ -332,8 +345,8 @@ void shell_start_screen() {
                     printf("FILE\n");
                     printf("NAME:          [%s.%s]\n", file->name, file->extension);
                     printf("SIZE:          [%iB]\n", file->file_meta.file_size);
-                    printf("CREATION DATE: [%i / %i / %i]\n", creation_date->day, creation_date->mounth, creation_date->year);
-                    printf("ACCESED DATE:  [%i / %i / %i]\n", accesed_date->day, accesed_date->mounth, accesed_date->year);
+                    printf("CREATION DATE: [%i/%i/%i]\n", creation_date->day, creation_date->mounth, creation_date->year);
+                    printf("ACCESED DATE:  [%i/%i/%i]\n", accesed_date->day, accesed_date->mounth, accesed_date->year);
 
                     free(creation_date);
                     free(accesed_date);
@@ -359,7 +372,7 @@ void shell_start_screen() {
 
                 printf("\nUTILITA` KERNEL IPCONF VERSIONE 0.2b\n");
                 printf("\nIP ATTUALE:  [%i.%i.%i.%i]", ip[0], ip[1], ip[2], ip[3]);
-                printf("\nMAC ATTUALE: [%x.%x.%x.%x.%x.%x]", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+                printf("\nMAC ATTUALE: [%p:%p:%p:%p:%p:%p]", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
             }
 
             else if (strstr(command_line[0], COMMAND_SEND_UDP_PACKET) == 0) {
@@ -381,11 +394,11 @@ void shell_start_screen() {
                 pop_received_udp_packet(buffer);
 
                 printf("\n");
-                printf("RICEVUTO PACCHETTO UDP STR:       [%s]\n", (char*)buffer);
-                printf("RICEVUTO PACCHETTO UDP UINT:      [%u]\n", buffer);
-                printf("RICEVUTO PACCHETTO UDP INT:       [%i]\n", buffer);
-                printf("RICEVUTO PACCHETTO UDP HEX:       [%x]\n", buffer);
-                printf("RICEVUTO PACCHETTO UDP POINTER:   [%p]\n", buffer);
+                printf("RICEVUTO PACCHETTO UDP STR:     [%s]\n", (char*)buffer);
+                printf("RICEVUTO PACCHETTO UDP UINT:    [%u]\n", buffer);
+                printf("RICEVUTO PACCHETTO UDP INT:     [%i]\n", buffer);
+                printf("RICEVUTO PACCHETTO UDP HEX:     [%x]\n", buffer);
+                printf("RICEVUTO PACCHETTO UDP POINTER: [%p]\n", buffer);
             }
 
 #endif
@@ -406,13 +419,13 @@ void shell_start_screen() {
 // 0 - nlogin
 // 1 - login success
 int ulogin(char* login, char* password) {
-    char hashed_login[100];
-    char hashed_passw[100];
+    char hashed_login[100] = { '\0' };
+    char hashed_passw[100] = { '\0' };
 
-    sprintf(hashed_login, "%lu", str2hash(login));
-    sprintf(hashed_passw, "%lu", str2hash(password));
+    sprintf(hashed_login, 100, "%lu", str2hash(login));
+    sprintf(hashed_passw, 100, "%lu", str2hash(password));
 
-    char lines[40];
+    char* lines[40] = { NULL };
     int pos = 0;
 
     char* content_text = fread("boot\\users.txt");

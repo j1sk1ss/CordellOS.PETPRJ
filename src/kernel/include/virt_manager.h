@@ -96,7 +96,7 @@ physical_address virtual2physical(void* virt_address);
 void copy_page_directory(page_directory* src, page_directory* dest);
 
 void print_page_map(char arg);
-void page_fault(Registers* regs);
+void page_fault(struct Registers* regs);
 
 
 #endif

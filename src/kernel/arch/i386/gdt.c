@@ -1,7 +1,5 @@
 #include "../../include/gdt.h"
 
-#include <stdint.h>
-
 
 typedef struct {
     uint16_t LimitLow;                      // limit (bits 0 - 15) 
@@ -94,7 +92,7 @@ GDTEntry _gtd[] = {
     GDT_ENTRY(0, 0, 0, 0),
 };
 
-GDTDescriptor _GDTDescriptor = { sizeof(_gtd) - 1, &_gtd };
+GDTDescriptor _GDTDescriptor = { sizeof(_gtd) - 1, (GDTEntry*)&_gtd };
 
 void __attribute__((cdecl)) i386_gdt_load(GDTDescriptor* descriptor, uint16_t codeSegment, uint16_t dataSegment);
 

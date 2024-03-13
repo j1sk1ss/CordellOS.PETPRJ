@@ -13,27 +13,11 @@ int main(int argc, char* argv[]) {
         char op      = argv[1][0];
         int operand2 = atoi(argv[2]);
 
-        switch (op) {
-            case '+':
-                result = operand1 + operand2;
-            break;
-
-            case '-':
-                result = operand1 - operand2;
-            break;
-
-            case '*':
-                result = operand1 * operand2;
-            break;
-
-            case '^':
-                result = pow(operand1, operand2);
-            break;
-
-            case '/':
-                if (operand2 != 0) result = operand1 / operand2;
-            break;
-        }
+        if (op == '+') result = operand1 + operand2;
+        else if (op == '-') result = operand1 - operand2;
+        else if (op == '*') result = operand1 * operand2;
+        else if (op == '^') result = pow(operand1, operand2);
+        else if (op == '/') result = operand1 / operand2;
     }
 
     return result;

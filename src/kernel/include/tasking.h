@@ -23,7 +23,7 @@
 
 
 typedef struct {
-    Registers* cpuState;
+    struct Registers* cpuState;
     char* name;
     int state;
     int pid;
@@ -53,7 +53,7 @@ void TASK_continue_tasking();
 Task* TASK_create_task(char* pname, uint32_t address);
 int TASK_add_task(Task* task);
 
-void TASK_task_switch(Registers* state);
+void TASK_task_switch(struct Registers* state);
 
 void __kill();
 void _kill(int pid);

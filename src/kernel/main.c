@@ -26,15 +26,18 @@
 #include "multiboot.h"
 
 
-#define CONFIG_PATH     "boot\\boot.txt"
+
 #define CONFIG_KSHELL   0
 #define CONFIG_MOUSE    1
 #define CONFIG_NETWORK  2
+#define CONFIG_SPEAKER  3
+
 #define CONFIG_ENABLED  '1'
 #define CONFIG_DISABLED '0'
 
 #define MMAP_LOCATION   0x30000
 
+#define CONFIG_PATH     "boot\\boot.txt"
 #define SHELL_PATH      "home\\shell\\shell.elf"
 
 
@@ -63,13 +66,13 @@
 //      9) Std lib for graphics                                   [V]       12.3) RLT8139 driver                                     | |
 //          8.0.0) Objects                                        [V]   13) Windows                                                  | |
 //          8.0.1) Click event                                    [V]   14) Enviroment variables                                     | |
-//      10) Mouse to int                                          [V]
-//      11) Loading BMP without malloc for fdata                  [V]
+//      10) Mouse to int                                          [V]   15) Hash crypto libs (shell login with pass&login hashing)   | |
+//      11) Loading BMP without malloc for fdata                  [V]   16) Speaker driver                                           | |
 //      12) Syscalls to std libs                                  [V]
 //          12.0) Syscalls for content change                     [V]
 //          12.1) Syscalls for content delete                     [V]
 //          12.2) Syscalls for kmallocp and freep                 [V]
-//      13) VBE userland                                          [ ]
+//      13) VBE userland                                          [?]
 //          13.0) VBE file manager                                [?]
 //          13.1) VBE text editor                                 [?]
 //      14) Malloc optimization                                   [ ]
@@ -104,7 +107,7 @@
 
 void shell() {
     // i386_switch2user();
-    current_vfs->objexec(SHELL_PATH, NULL, NULL);
+    current_vfs->objexec(SHELL_PATH, 0, NULL);
 }
 
 void idle() {
@@ -129,10 +132,10 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         }
 
         if (mb_info->vbe_mode != TEXT_MODE) GFX_init(mb_info);
-        else _screenBuffer = mb_info->framebuffer_addr;
+        else _screenBuffer = (uint8_t*)(uintptr_t)mb_info->framebuffer_addr;
 
         kprintf("\n\t\t =    CORDELL  KERNEL    =");
-        kprintf("\n\t\t =     [ ver.   13 ]     = \n\n");
+        kprintf("\n\t\t =     [ ver.   14 ]     = \n\n");
         kprintf("\n\t\t = INFORMAZIONI GENERALI = \n\n");
         kprintf("\tMB FLAGS:        [0x%p]\n", mb_info->flags);
         kprintf("\tMEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
@@ -169,14 +172,14 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
                         kprintf("\tREGION |  LEN: [%u]  |  ADDR: [0x%p]  |  TYPE: [%u] \t", mmap_entry->len, mmap_entry->addr, mmap_entry->type);
                         const uint32_t pattern = 0xC08DE77;
 
-                        uint32_t* ptr = (uint32_t*)mmap_entry->addr;
-                        uint32_t* end = (uint32_t*)(mmap_entry->addr + mmap_entry->len);
+                        uint32_t* ptr = (uint32_t*)(uintptr_t)mmap_entry->addr;
+                        uint32_t* end = (uint32_t*)(uintptr_t)(mmap_entry->addr + mmap_entry->len);
                         while (ptr < end) {
                             *ptr = pattern;
                             ++ptr;
                         }
 
-                        ptr = (uint32_t*)mmap_entry->addr;
+                        ptr = (uint32_t*)(uintptr_t)mmap_entry->addr;
                         while (ptr < end) {
                             if (*ptr != pattern) {
                                 kprintf("MEM TEST FAILED AT [0x%p]\n", ptr);
@@ -273,17 +276,36 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
 
         VARS_init(); // Init env vars manager
-        if (VARS_exist("bconfig") == -1) VARS_add("bconfig", "boot\\boot.txt");
 
         uint32_t current_esp;
         asm ("mov %%esp, %0" : "=r"(current_esp));
         TSS_set_stack(0x10, current_esp);
-
+        
         if (current_vfs->objexist(CONFIG_PATH) == 1) {
             Content* boot_config = current_vfs->getobj(CONFIG_PATH);
             char* config = current_vfs->read(boot_config);
             FSLIB_unload_content_system(boot_config);
             
+            //===================
+            // Speaker test
+            //===================
+
+                if (config[CONFIG_SPEAKER] == CONFIG_ENABLED) {
+                    enable_pc_speaker();
+
+                    play_note(A4, 500);
+                    play_note(B4, 500);
+                    play_note(C5, 500);
+                    play_note(D5, 500);
+                    play_note(C5, 500);
+                    play_note(B4, 500);
+                    play_note(A4, 500);
+
+                    disable_pc_speaker();
+                }
+
+            //===================
+            // Speaker test
             //===================
             // Network initialization
             //===================
@@ -300,12 +322,12 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
             //===================
 
             if (config[CONFIG_MOUSE] == CONFIG_ENABLED) show_mouse = 1;
-            if (config[CONFIG_KSHELL] == CONFIG_ENABLED) START_PROCESS("shell", shell);
+            if (config[CONFIG_KSHELL] == CONFIG_ENABLED) START_PROCESS("shell", (uint32_t)shell);
 
             kfree(config);
-        } else START_PROCESS("shell", shell);
+        } else START_PROCESS("shell", (uint32_t)shell);
 
-        START_PROCESS("idle", idle);
+        START_PROCESS("idle", (uint32_t)idle);
         TASK_start_tasking();
     
     //===================

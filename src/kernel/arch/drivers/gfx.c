@@ -83,7 +83,7 @@ void GFX_fill_rect_solid(Point top_left, Point bottom_right, uint32_t color) {
 void GFX_put_char(int x, int y, int character, uint32_t foreground, uint32_t background) {
     uint32_t step = gfx_mode.pitch / 4;
     uint32_t* chardat = chars + CHAROFF(character);
-    uint32_t* abs_row = ((unsigned char*)gfx_mode.physical_base_pointer) + (y * gfx_mode.pitch);
+    uint32_t* abs_row = (uint32_t*)(((unsigned char*)gfx_mode.physical_base_pointer) + (y * gfx_mode.pitch));
     abs_row += x;
 
     for (int row = 0; row < CHAR_Y * 8; row += 8) {
@@ -98,7 +98,7 @@ void GFX_put_char(int x, int y, int character, uint32_t foreground, uint32_t bac
 
 int GFX_get_char(int x, int y) {
     uint32_t step = gfx_mode.pitch / 4;
-    uint32_t* abs_row = ((unsigned char*)gfx_mode.physical_base_pointer) + (y * gfx_mode.pitch);
+    uint32_t* abs_row = (uint32_t*)(((unsigned char*)gfx_mode.physical_base_pointer) + (y * gfx_mode.pitch));
     abs_row += x;
 
     uint32_t char_data[32];

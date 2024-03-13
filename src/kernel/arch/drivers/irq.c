@@ -8,10 +8,10 @@ IRQHandler _handler[16] = { NULL };
 static const PICDriver* _PICDriver = NULL; 
 
 
-void i386_irq_handler(Registers* regs) {
+void i386_irq_handler(struct Registers* regs) {
     int irq = regs->interrupt - PIC_REMAP_OFFSET;
-    uint8_t pic_isr = i8259_readIRQInServiceRegisters();
-    uint8_t pic_irr = i8259_readIRQRequestRegisters();
+    uint8_t pic_isr = (uint8_t)(uintptr_t)i8259_readIRQInServiceRegisters();
+    uint8_t pic_irr = (uint8_t)(uintptr_t)i8259_readIRQRequestRegisters();
     
     if (_handler[irq] != NULL) _handler[irq](regs);
     else kprintf("[%s %i] NO HANDLER FOR: %i\n", __FILE__, __LINE__, irq);

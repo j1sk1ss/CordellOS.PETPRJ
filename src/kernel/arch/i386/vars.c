@@ -10,9 +10,7 @@ void VARS_init() {
         // TODO: read vars from file
     }
     else {
-        Content* vars = FAT_create_content("vars", FALSE, "txt");
-        current_vfs->putobj("boot", vars);
-        FSLIB_unload_content_system(vars);
+        // TODO: create new file
     }
 }
 
@@ -41,10 +39,15 @@ void VARS_set(char* name, char* value) {
 
 void VARS_add(char* name, char* value) {
     int position = 0;
-    for (position = 0; position < VARS_COUNT && names_buffer[position++] != NULL;);
+    while (position < VARS_COUNT) {
+        if (names_buffer[position] == NULL && vars_buffer[position] == NULL) {
+            vars_buffer[position]  = value;
+            names_buffer[position] = name;
+            return;
+        }
 
-    vars_buffer[position]  = value;
-    names_buffer[position] = name;
+        position++;
+    }
 }
 
 void VARS_delete(char* name) {
@@ -59,5 +62,5 @@ void VARS_delete(char* name) {
 }
 
 void VARS_save() {
-    // save file
+    // TODO: save file
 }

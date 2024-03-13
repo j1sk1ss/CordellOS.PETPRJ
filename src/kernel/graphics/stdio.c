@@ -244,24 +244,24 @@ void kfprint_buffer(uint8_t file, const char* msg, const void* buffer, uint32_t 
     for (uint16_t i = 0; i < count; i++) {
         kfputc(_HexChars[u8Buffer[i] >> 4], file, 0);
         kfputc(_HexChars[u8Buffer[i] & 0xF], file, 0);
-        kfputc(" ", file, 0);
+        kfputc(' ', file, 0);
     }
 
-    kfputs("\n", file, 0);
+    kfputc('\n', file, 0);
 }
 
 void kputc(char c) {
-    kfputc(c, NULL, 0);
+    kfputc(c, 0, 0);
 }
 
 void kputs(const char* str) {
-    kfputs(str, NULL, 0);
+    kfputs(str, 0, 0);
 }
 
 void kprintf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    kvfprintf(NULL, fmt, args, 0);
+    kvfprintf(0, fmt, args, 0);
     va_end(args);
 }
 
@@ -273,7 +273,7 @@ void kcprintf(uint8_t color, const char* fmt, ...) {
 }
 
 void kprint_buffer(const char* msg, const void* buffer, uint32_t count) {
-    kfprint_buffer(NULL, msg, buffer, count);
+    kfprint_buffer(0, msg, buffer, count);
 }
 
 void kprint_hex_table(const char* data, size_t length) {

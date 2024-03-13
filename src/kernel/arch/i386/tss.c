@@ -7,7 +7,7 @@ tss_entry_t kernel_tss;
 void TSS_init(uint32_t idx, uint32_t kss, uint32_t kesp) {
     uint32_t base = (uint32_t)&kernel_tss;
     GDT_set_entry(idx, base, base + sizeof(tss_entry_t), 0xE9, 0);
-    memset(&kernel_tss, 0, sizeof(tss_entry_t));
+    memset((void*)&kernel_tss, 0, sizeof(tss_entry_t));
 
     kernel_tss.ss0  = kss;
     kernel_tss.esp0 = kesp;

@@ -7,23 +7,22 @@
 #include "graphics.h"
 
 
-#define KBD_DATA_PORT           0x60
-
 #define HIDDEN_KEYBOARD         0
 #define VISIBLE_KEYBOARD        1
 
-#define DEL_BUTTON              '\252'
-#define LSHIFT_BUTTON           '\252'
-#define RSHIFT_BUTTON           '\253'
-#define F4_BUTTON               '\254'
-#define F3_BUTTON               '\255'
+#define STOP_KEYBOARD           '\1'
+#define DEL_BUTTON              '\2'
+#define LSHIFT_BUTTON           '\3'
+#define RSHIFT_BUTTON           '\4'
+#define F4_BUTTON               '\5'
+#define F3_BUTTON               '\6'
 #define F2_BUTTON               '\7'
-#define F1_BUTTON               '\6'
+#define F1_BUTTON               '\10'
 
-#define UP_ARROW_BUTTON         '\4'
-#define DOWN_ARROW_BUTTON       '\3'
-#define LEFT_ARROW_BUTTON       '\1'
-#define RIGHT_ARROW_BUTTON      '\2'
+#define UP_ARROW_BUTTON         '\11'
+#define DOWN_ARROW_BUTTON       '\12'
+#define LEFT_ARROW_BUTTON       '\13'
+#define RIGHT_ARROW_BUTTON      '\14'
 
 #define ENTER_BUTTON            '\n'
 #define BACKSPACE_BUTTON        '\b'

@@ -4,15 +4,17 @@
 
 #include <stddef.h>
 
+#include "x86.h"
 #include "isr.h"
+#include "stdio.h"
 #include "pic.h"
 #include "i8259.h"
-#include "x86.h"
-#include "stdio.h"
+
 #include "../util/arrays.h"
 
 
-typedef void (*IRQHandler)(struct RegsStr* regs);
+struct Registers;
+typedef void (*IRQHandler)(struct Registers* regs);
 
 
 void i386_irq_initialize();

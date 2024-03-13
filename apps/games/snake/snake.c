@@ -1,29 +1,5 @@
-#include <stdio.h>
-#include <rand.h>
-#include <fslib.h>
-#include <string.h>
-#include <stdlib.h>
-#include <keyboard.h>
+#include "snake.h"
 
-
-#define V 21
-#define H 75
-#define N 100
-
-#define V 21
-#define H 75
-#define N 100
-
-
-typedef struct {
-	int x, y;
-	int movX, movY;
-	char imagen;
-} snake;
-
-typedef struct {
-	int x, y;
-} fruit;
 
 snake snk[N];
 fruit frt;
@@ -185,7 +161,7 @@ int input(char map[V][H]) {
 
 		if (key == F3_BUTTON) {
 			dead = 1;
-			return;
+			return -1;
 		}
 	}
 }

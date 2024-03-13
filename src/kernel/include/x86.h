@@ -9,7 +9,7 @@
 #define ASMCALL __attribute__((cdecl))
 #define asm __asm__ volatile
 #define UNUSED_PORT 0x80
-#define kernel_panic(data) kprintf(data);i386_panic();
+
 
 uint32_t i386_inl(uint16_t port);
 void i386_outl(uint16_t port, uint32_t data);
@@ -31,11 +31,14 @@ uint8_t __attribute__((cdecl)) i386_enableInterrupts();
 uint8_t __attribute__((cdecl)) i386_disableInterrupts();
 
 void __attribute__((cdecl)) i386_switch2user();
-
+void __attribute__((cdecl)) i386_panic();
 char __attribute__((cdecl)) i386_inputWait();
 
 void i386_io_wait();
 void i386_reboot();
+
+
+#define kernel_panic(data) kprintf(data); i386_panic();
 
 
 #endif

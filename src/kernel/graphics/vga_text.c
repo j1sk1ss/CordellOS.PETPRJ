@@ -26,7 +26,7 @@ char VGA_getchr(int x, int y) {
 }
 
 void VGA_cursor_place_to_line() {
-    while (VGA_getchr(VGA_cursor_get_x() - 1, VGA_cursor_get_y()) == NULL) 
+    while (VGA_getchr(VGA_cursor_get_x() - 1, VGA_cursor_get_y()) == (char)(uintptr_t)NULL) 
         VGA_setcursor(VGA_cursor_get_x() - 1, VGA_cursor_get_y());
 }
 
@@ -74,7 +74,7 @@ void VGA_setcursor(int x, int y) {
 void VGA_clrscr() {
     for (int y = 0; y < SCREEN_HEIGHT; y++)
         for (int x = 0; x < SCREEN_WIDTH; x++) {
-            VGA_putchr(x, y, NULL);
+            VGA_putchr(x, y, (char)(uintptr_t)NULL);
             VGA_putcolor(x, y, DEFAULT_COLOR);
         }
 

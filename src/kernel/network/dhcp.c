@@ -22,7 +22,7 @@ void DHCP_discover() {
     memset(request_ip, 0x0, 4); // 0.0.0.0:68
     memset(dst_ip, 0xFF, 4);    // 255.255.255.255:67
 
-    dhcp_packet_t* packet = calloc(sizeof(dhcp_packet_t), 1);
+    dhcp_packet_t* packet = (dhcp_packet_t*)calloc(sizeof(dhcp_packet_t), 1);
     DHCP_make_packet(packet, DHCPDISCOVER, request_ip);
     UDP_send_packet(dst_ip, 68, 67, packet, sizeof(dhcp_packet_t));
     free(packet);
@@ -33,7 +33,7 @@ void DHCP_request(uint8_t* request_ip) {
     uint8_t dst_ip[4];
     memset(dst_ip, 0xFF, 4);
 
-    dhcp_packet_t* packet = calloc(sizeof(dhcp_packet_t), 1);
+    dhcp_packet_t* packet = (dhcp_packet_t*)calloc(sizeof(dhcp_packet_t), 1);
     DHCP_make_packet(packet, DHCPREQUEST, request_ip);
     UDP_send_packet(dst_ip, 68, 67, packet, sizeof(dhcp_packet_t));
     free(packet);
@@ -45,7 +45,7 @@ void DHCP_handle_packet(dhcp_packet_t* packet) {
         uint8_t* type    = DHCP_options(packet, 53);
         uint8_t* pointer = type;
 
-        if (*type == 2) DHCP_request(&packet->your_ip);
+        if (*type == 2) DHCP_request((uint8_t*)&packet->your_ip);
         else if (*type == 5) {
             memcpy(ip_addr, &packet->your_ip, 4);
             is_ip_allocated = 1;

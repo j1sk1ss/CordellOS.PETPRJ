@@ -4,7 +4,8 @@ from SCons.Variables import *
 from SCons.Environment import *
 from SCons.Node import *
 
-from build_scripts.utility import parse_size, remove_suffix
+from build_scripts.utility import remove_suffix
+
 
 VARS = Variables('build_scripts/config.py', ARGUMENTS)
 VARS.AddVariables(
@@ -28,13 +29,6 @@ VARS.AddVariables(
                  default="fat32",
                  allowed_values=("fat12", "fat16", "fat32", "ext2"))    
     )
-
-VARS.Add("image_size", 
-         help="The size of the image, will be rounded up to the nearest multiple of 512. " +
-              "You can use suffixes (k/m/g). " +
-              "For floppies, the size is fixed to 1.44MB.",
-         default="250m",
-         converter=parse_size)
 
 VARS.Add("tool_chain", 
          help="Path to tool_chain directory.",

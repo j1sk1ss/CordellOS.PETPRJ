@@ -33,7 +33,7 @@ ata_dev_t secondary_slave  = {.slave = 1};
         VFS_initialize(&primary_master, FAT_FS);
     }
 
-    void ATA_handler(Registers* reg) {
+    void ATA_handler(struct Registers* reg) {
         i386_inb(primary_master.status);
         i386_inb(primary_master.BMR_STATUS);
         i386_outb(primary_master.BMR_COMMAND, BMR_COMMAND_DMA_STOP);
@@ -105,8 +105,8 @@ ata_dev_t secondary_slave  = {.slave = 1};
     }
 
     void ATA_device_init(ata_dev_t* dev, int primary) {
-        dev->prdt      = calloc(sizeof(prdt_t), 1);
-        dev->prdt_phys = virtual2physical(dev->prdt);
+        dev->prdt      = (prdt_t*)calloc(sizeof(prdt_t), 1);
+        dev->prdt_phys = (uint8_t*)virtual2physical(dev->prdt);
 
         uint8_t* mem_buffer = dev->mem_buffer;
         dev->prdt[0].buffer_phys   = (uint32_t)mem_buffer;

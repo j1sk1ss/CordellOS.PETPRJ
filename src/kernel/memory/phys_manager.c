@@ -39,11 +39,11 @@ int32_t find_first_free_blocks(const uint32_t num_blocks) {
 }
 
 void PMM_init(const uint32_t start_address, const uint32_t size) {
-    memory_map  = (uint8_t*)start_address;
+    memory_map  = (uint32_t*)start_address;
     max_blocks  = size / BLOCK_SIZE;
     used_blocks = max_blocks;
 
-    memset(memory_map, 0xFFFFFFFF, max_blocks / BLOCKS_PER_BYTE);
+    memset32(memory_map, 0xFFFFFFFF, max_blocks / BLOCKS_PER_BYTE);
 }
 
 void initialize_memory_region(const uint32_t base_address, const uint32_t size) {

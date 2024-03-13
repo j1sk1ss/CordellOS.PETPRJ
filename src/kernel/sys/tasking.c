@@ -76,7 +76,7 @@ uint32_t v_addr = 0x00C00000;
 
 			// Allocate memory for new task body
 			Task* task     = (Task*)calloc(sizeof(Task), 1);
-			task->cpuState = (Registers*)calloc(sizeof(Registers), 1);
+			task->cpuState = (struct Registers*)calloc(sizeof(struct Registers), 1);
 
 			//=============================
 			// Find new pid
@@ -118,10 +118,10 @@ uint32_t v_addr = 0x00C00000;
 				
 				// Allocate page in pd, link it to c_addr
 				mallocp(v_addr);
-                memset(v_addr, 0, PAGE_SIZE);
+                memset((void*)v_addr, 0, PAGE_SIZE);
                 
 				// Set stack pointer to allocated region
-				task->cpuState->esp     = virtual2physical(v_addr);
+				task->cpuState->esp     = virtual2physical((void*)v_addr);
 				task->virtual_address   = task->cpuState->esp;
 				uint32_t* stack_pointer = (uint32_t*)(task->cpuState->esp + PAGE_SIZE);
 
@@ -204,8 +204,8 @@ uint32_t v_addr = 0x00C00000;
 	}
 
 	void _kill(int pid) {
-		if (pid >= 0 && pid < taskManager.tasks) 
-			for (int task = 0; task < taskManager.tasks; task++) 
+		if (pid >= 0 && pid < taskManager.tasksCount) 
+			for (int task = 0; task < taskManager.tasksCount; task++) 
 				if (taskManager.tasks[task]->pid == pid) {
 					taskManager.tasks[task]->state = PROCESS_STATE_DEAD;
 					break;
@@ -227,7 +227,7 @@ uint32_t v_addr = 0x00C00000;
 		return task->pid;
 	}
 
-	void TASK_task_switch(Registers* regs) {
+	void TASK_task_switch(struct Registers* regs) {
 		if (tasking == false) return;
 		
         // Get current task
@@ -238,7 +238,7 @@ uint32_t v_addr = 0x00C00000;
 		i386_disableInterrupts();
 
         // Save current state and current page directory
-        memcpy(task->cpuState, regs, sizeof(Registers));
+        memcpy(task->cpuState, regs, sizeof(struct Registers));
         if (task->page_directory != current_page_directory)
             task->page_directory = current_page_directory;
 
@@ -255,7 +255,7 @@ uint32_t v_addr = 0x00C00000;
 
         // Load task CPU state and page directory
         if (new_task->cpuState == NULL) return;
-        memcpy(regs, new_task->cpuState, sizeof(Registers));
+        memcpy(regs, new_task->cpuState, sizeof(struct Registers));
         if (new_task->page_directory != NULL)
             if (new_task->page_directory != task->page_directory)
 		        set_page_directory(new_task->page_directory);

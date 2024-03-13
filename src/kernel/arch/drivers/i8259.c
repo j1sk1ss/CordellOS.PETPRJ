@@ -1,8 +1,5 @@
 #include "../../include/i8259.h"
-#include "../../include/x86.h"
 
-#include <stdint.h>
-#include <stdbool.h>
 
 #define PIC1_COMMAND_PORT           0x20
 #define PIC1_DATA_PORT              0x21
@@ -46,15 +43,16 @@ enum {
     PIC_ICW4_SFNM           = 0x10,
 } PIC_ICW4;
 
-
 enum {
     PIC_CMD_END_OF_INTERRUPT    = 0x20,
     PIC_CMD_READ_IRR            = 0x0A,
     PIC_CMD_READ_ISR            = 0x0B,
 } PIC_CMD;
 
+
 static uint16_t picMask = 0xFFFF;
 static bool _autoEoi    = false;
+
 
 void i8259_setMask(uint16_t newMask) {
     picMask = newMask;

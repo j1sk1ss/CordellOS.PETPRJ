@@ -2,7 +2,7 @@
 
 
 bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
-    bitmap_t* ret = malloc(sizeof(bitmap_t));
+    bitmap_t* ret = (bitmap_t*)calloc(sizeof(bitmap_t), 1);
     Content* content = get_content(file_path);
     if (content->file == NULL) {
         printf("File not found\n");
@@ -32,7 +32,6 @@ bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
     ret->y             = screen_y;
 
     free(info);
-    
     return ret;
 }
 

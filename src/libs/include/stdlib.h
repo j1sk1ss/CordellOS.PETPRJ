@@ -14,7 +14,6 @@ void tstart(char* name, uint32_t address);
 int tpid();
 void tkill();
 
-void sleep(int milliseconds);
 void get_datetime(short* data);
 
 void* malloc(uint32_t size);
