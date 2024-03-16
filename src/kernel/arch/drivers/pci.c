@@ -2,7 +2,7 @@
 
 
 uint32_t pci_size_map[100];
-pci_dev_t dev_zero= {0};
+pci_dev_t dev_zero = { 0 };
 
 
 /*

@@ -7,10 +7,10 @@
 #include "x86.h"
 #include "virt_manager.h"
 #include "ethernet.h"
+#include "allocator.h"
 
 #include <stdint.h>
 #include <memory.h>
-#include <stdlib.h>
 
 
 #define NETWORK_DEBUG         0

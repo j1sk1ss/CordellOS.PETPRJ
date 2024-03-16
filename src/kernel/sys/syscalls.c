@@ -159,7 +159,7 @@ void syscall(struct Registers* regs) {
             else if (regs->eax == SYS_START_PROCESS) {
                 char* process_name = (char*)regs->ebx;
                 uint32_t address   = (uint32_t)regs->ecx;
-                START_PROCESS(process_name, address);
+                START_PROCESS(process_name, address, USER);
             }
 
             else if (regs->eax == SES_GET_PID) {
@@ -172,19 +172,20 @@ void syscall(struct Registers* regs) {
         //  SYSTEM MEMMANAGER SYSCALLS
         //=======================
 
+#ifndef USERMODE
+
             else if (regs->eax == SYS_MALLOC) {
                 uint32_t size = regs->ebx;
-                if (!malloc_list_head)
-                    mm_init(size);
+                if (!kmalloc_list_head)
+                    kmm_init(size);
 
-                void* allocated_memory = kmalloc(size);
-                merge_free_blocks();
+                void* allocated_memory = kmalloc(size); // TODO: switch2user
                 regs->eax = (uint32_t)allocated_memory;
             } 
             
             else if (regs->eax == SYS_PAGE_MALLOC) {
                 uint32_t address = regs->ebx;
-                kmallocp(address);
+                kmallocp(address); // TODO: switch2user
                 regs->eax = address;
             } 
 
@@ -194,11 +195,37 @@ void syscall(struct Registers* regs) {
                     kfree(ptr_to_free);
             }
 
+#endif
             else if (regs->eax == SYS_PAGE_FREE) {
                 void* ptr_to_free = (void*)regs->ebx;
                 if (ptr_to_free != NULL)
                     kfreep(ptr_to_free);
             }
+
+#ifdef USERMODE
+
+            else if (regs->eax == SYS_MALLOC) {
+                uint32_t size = regs->ebx;
+                if (!kmalloc_list_head)
+                    umm_init(size);
+
+                void* allocated_memory = umalloc(size);
+                regs->eax = (uint32_t)allocated_memory;
+            } 
+            
+            else if (regs->eax == SYS_PAGE_MALLOC) {
+                uint32_t address = regs->ebx;
+                umallocp(address);
+                regs->eax = address;
+            } 
+
+            else if (regs->eax == SYS_FREE) {
+                void* ptr_to_free = (void*)regs->ebx;
+                if (ptr_to_free != NULL)
+                    ufree(ptr_to_free);
+            }
+
+#endif
 
             else if (regs->eax == SYS_KERN_PANIC) {
                 char* message = (char*)regs->ecx;
@@ -256,7 +283,16 @@ void syscall(struct Registers* regs) {
             regs->eax = (uint32_t)current_vfs->read(content);
             FSLIB_unload_content_system(content);
         } 
-        
+     
+        else if (regs->eax == SYS_READ_FILE_STP) {
+            char* rfile_path = (char*)regs->ebx;
+            uint8_t* stop    = (uint8_t*)regs->ecx;
+            Content* content = current_vfs->getobj(rfile_path);
+            regs->eax        = (uint32_t)current_vfs->read_stop(content, stop);
+            
+            FSLIB_unload_content_system(content);
+        } 
+
         else if (regs->eax == SYS_WRITE_FILE) {
             char* wfile_path = (char*)regs->ebx;
             Content* content = current_vfs->getobj(wfile_path);
@@ -279,7 +315,7 @@ void syscall(struct Registers* regs) {
             char* exec_path = (char*)regs->ebx;
             char** argv     = (char**)regs->edx;
             int args        = (int)regs->ecx;
-            regs->eax = (uint32_t)current_vfs->objexec(exec_path, args, argv);
+            regs->eax = (uint32_t)current_vfs->objexec(exec_path, args, argv, USER);
         } 
         
         else if (regs->eax == SYS_CEXISTS) {
@@ -330,6 +366,16 @@ void syscall(struct Registers* regs) {
             int offset_len   = (int)regs->esi;
             
             current_vfs->readoff(content, buffer, offset, offset_len);
+        }
+
+        else if (regs->eax == SYS_READ_FILE_OFF_STP) {
+            Content* content = (Content*)regs->ebx;
+            int offset       = (int)regs->ecx;
+            uint8_t* buffer  = (uint8_t*)regs->edx;
+            int offset_len   = (int)regs->esi;
+            uint8_t* stop    = (uint8_t*)regs->edi;
+            
+            current_vfs->readoff_stop(content, buffer, offset, offset_len, stop);
         }
 
         else if (regs->eax == SYS_WRITE_FILE_OFF) {

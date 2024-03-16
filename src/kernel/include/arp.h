@@ -8,6 +8,7 @@
 #include "ethernet.h"
 #include "rtl8139.h"
 #include "stdio.h"
+#include "allocator.h"
 
 
 #define ARP_REQUEST     1

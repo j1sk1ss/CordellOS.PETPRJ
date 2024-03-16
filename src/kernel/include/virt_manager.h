@@ -14,6 +14,10 @@
 #define TABLES_PER_DIRECTORY 1024
 #define PAGE_SIZE            4096
 
+#define USER_MEMORY_START   0xC0000000
+#define USER_PAGES          64
+#define USER_TABLE_INDEX    1024
+
 #define PD_INDEX(address)            ((address) >> 22)
 #define PT_INDEX(address)            (((address) >> 12) & 0x3FF) // Max index 1023 = 0x3FF
 #define PAGE_PHYS_ADDRESS(dir_entry) ((*dir_entry) & ~0xFFF)    // Clear lowest 12 bits, only return frame/address
@@ -29,6 +33,10 @@ typedef uint32_t pd_entry;  // Page directory entry
 typedef uint32_t physical_address; 
 typedef uint32_t virtual_address; 
 
+typedef enum {
+    KERNEL = 0,
+    USER   = 1
+} ADDRESS_SPACE;
 
 typedef enum {
     PTE_PRESENT       = 0x01,
@@ -73,8 +81,9 @@ extern page_directory* kernel_page_directory;
 
 
 bool VMM_init(uint32_t kernell_address);
-page_directory* create_page_directory();
-void free_page_directory(page_directory* pd);
+page_directory* mk_pdir();
+page_directory* mk_usdir();
+void free_pdir(page_directory* pd);
 
 pt_entry* get_pt_entry(page_table* pt, virtual_address address);
 pd_entry* get_pd_entry(page_table* pd, virtual_address address);
@@ -88,12 +97,13 @@ bool set_page_directory(page_directory* pd);
 void flush_tlb_entry(virtual_address address);
 
 bool map_page(void* phys_address, void* virt_address);
+bool map_page2user(void* phys_address, void* virt_address);
 bool map_page2dir(void* phys_address, void* virt_address, page_directory* dir);
 void unmap_page(void* virt_address);
 void unmap_page_in_dir(void* virt_address, page_directory* dir);
 
 physical_address virtual2physical(void* virt_address);
-void copy_page_directory(page_directory* src, page_directory* dest);
+void copy_dir2dir(page_directory* src, page_directory* dest);
 
 void print_page_map(char arg);
 void page_fault(struct Registers* regs);

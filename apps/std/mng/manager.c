@@ -60,27 +60,8 @@ void open_content() {
     }
 
     else if (choosed_content.file != NULL) {
-        if (strstr(choosed_content.file->extension, "txt") == 0) file2display(&choosed_content);
-        else file2display(&choosed_content);
-    }
-}
-
-void file2display(Content* content) {
-    int current_page = 0;
-    char display_buffer[512];
-
-    while (1) {
-        clrscr();
-        printf("F3 exit | <- previous part | -> next part\n"); 
-
-        char user_action = keyboard_wait();
-        if (user_action == F3_BUTTON) return;
-
-        else if (user_action == RIGHT_ARROW_BUTTON) current_page++;
-        else if (user_action == LEFT_ARROW_BUTTON) current_page = min(0, current_page - 1);
-
-        fread_off(content, current_page * 512, display_buffer, 512);
-        printf(display_buffer);
+        if (strstr(choosed_content.file->extension, "txt") == 0) fexec(envar_get("edt"), 1, current_path);
+        else fexec(envar_get("edt"), 1, current_path);
     }
 }
 

@@ -1,12 +1,13 @@
 #ifndef VFS_H_
 #define VFS_H_
 
-#include <stdlib.h>
+
 #include <memory.h>
 #include <fslib.h>
 
 #include "ata.h"
 #include "fat.h"
+#include "allocator.h"
 
 
 #define FAT_FS      0
@@ -14,7 +15,9 @@
 
 
 typedef char* (*file_read)(Content*);
+typedef char* (*file_read_stop)(Content*, uint8_t*);
 typedef void (*file_read_offset)(Content*, uint8_t*, uint32_t, uint32_t);
+typedef void (*file_read_offset_stop)(Content*, uint8_t*, uint32_t, uint32_t, uint8_t*);
 typedef int (*file_write)(Content*, char*);
 typedef void (*file_write_offset)(Content*, uint8_t*, uint32_t, uint32_t);
 typedef Directory* (*open_dir)(const unsigned int, unsigned char, short);
@@ -22,7 +25,7 @@ typedef Content* (*get_object)(const char*);
 typedef int (*object_exists)(const char*);
 typedef int (*put_object)(const char*, Content*);
 typedef int (*delete_object)(const char*, const char*);
-typedef int (*object_execute)(char*, int, char**);
+typedef int (*object_execute)(char*, int, char**, int);
 typedef int (*object_meta_change)(const char*, directory_entry_t*);
 
 typedef struct vfs_node {
@@ -34,10 +37,14 @@ typedef struct vfs_node {
     // Functions
     //===========
 
-        file_read           read;
-        file_read_offset    readoff;
+        file_read             read;
+        file_read_stop        read_stop;
+        file_read_offset      readoff;
+        file_read_offset_stop readoff_stop;
+
         file_write          write;
         file_write_offset   writeoff;
+
         open_dir            dir;
         get_object          getobj;
         object_exists       objexist;

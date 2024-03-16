@@ -4,10 +4,10 @@
 
 #include <memory.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <netutils.h>
 
 #include "ip.h"
+#include "allocator.h"
 
 
 #define PACKET_BUFFER_SIZE  100

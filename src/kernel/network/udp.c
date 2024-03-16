@@ -11,7 +11,7 @@ uint16_t UDP_calculate_checksum(udp_packet_t* packet) {
 
 void UDP_send_packet(uint8_t* dst_ip, uint16_t src_port, uint16_t dst_port, void* data, int len) {
     int length = sizeof(udp_packet_t) + len;
-    udp_packet_t* packet = (udp_packet_t*)calloc(length, 1);
+    udp_packet_t* packet = (udp_packet_t*)kmalloc(length);
 
     packet->src_port = host2net16(src_port);
     packet->dst_port = host2net16(dst_port);
@@ -37,7 +37,7 @@ void UDP_handle_packet(udp_packet_t* packet) {
         }
     }
 
-    packets[current_packet].data = (uint8_t*)calloc(data_len, 1);
+    packets[current_packet].data = (uint8_t*)clralloc(data_len);
     memcpy(packets[current_packet++].data, data_ptr, data_len);
     packets[current_packet].data_size = data_len;
     
@@ -49,13 +49,13 @@ udp_packet_body* UDP_pop_packet() {
     if (current_packet >= 0) {
         if (packets[current_packet].data_size == -1) return NULL;
         
-        udp_packet_body* packet = (udp_packet_body*)calloc(sizeof(udp_packet_body), 1);
-        packet->data = (uint8_t*)calloc(packets[current_packet].data_size, 1);
+        udp_packet_body* packet = (udp_packet_body*)kmalloc(sizeof(udp_packet_body));
+        packet->data = (uint8_t*)kmalloc(packets[current_packet].data_size);
         memcpy(packet->data, packets[current_packet].data, packets[current_packet].data_size);
 
         packet->data_size = packets[current_packet].data_size;
 
-        free(packets[current_packet].data);
+        kfree(packets[current_packet].data);
         packets[current_packet].data_size = -1;
 
         if (current_packet > 1) current_packet--;

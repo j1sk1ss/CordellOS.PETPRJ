@@ -93,6 +93,33 @@ bool map_page(void* phys_address, void* virt_address) {
     return true;
 }
 
+bool map_page2user(void* phys_address, void* virt_address) {
+    page_directory* pd = current_page_directory;
+    pd_entry* entry = &pd->entries[PD_INDEX((uint32_t)virt_address)];
+
+    if ((*entry & PTE_PRESENT) != PTE_PRESENT) {
+        page_table* table = (page_table*)allocate_blocks(1);
+        if (!table) return false;
+
+        memset(table, 0, sizeof(page_table));
+        pd_entry* entry = &pd->entries[PD_INDEX((uint32_t)virt_address)];
+
+        SET_ATTRIBUTE(entry, PDE_PRESENT);
+        SET_ATTRIBUTE(entry, PDE_USER);        // Set user mode permissions
+        SET_ATTRIBUTE(entry, PDE_READ_WRITE);  // Adjust permissions as needed
+        SET_FRAME(entry, (physical_address)table);
+    }
+
+    page_table* table = (page_table*)PAGE_PHYS_ADDRESS(entry);
+    pt_entry* page    = &table->entries[PT_INDEX((uint32_t)virt_address)];
+
+    SET_ATTRIBUTE(page, PTE_PRESENT);
+    SET_ATTRIBUTE(page, PTE_USER);            // Set user mode permissions
+    SET_FRAME(page, (uint32_t)phys_address);
+
+    return true;
+}
+
 bool map_page2dir(void* phys_address, void* virt_address, page_directory* dir) {
     pd_entry* entry = &dir->entries[PD_INDEX((uint32_t)virt_address)];
     if ((*entry & PTE_PRESENT) != PTE_PRESENT) {
@@ -180,7 +207,7 @@ bool VMM_init(uint32_t memory_start) {
     return true;
 }
 
-page_directory* create_page_directory() {
+page_directory* mk_pdir() {
     page_directory* dir = (page_directory*)allocate_blocks(3);
     if (dir == NULL) {
         kprintf("[%s %i] Failed to allocate memory for page directory\n",  __FILE__, __LINE__);
@@ -194,7 +221,38 @@ page_directory* create_page_directory() {
     return dir;
 }
 
-void free_page_directory(page_directory* pd) {
+page_directory* mk_usdir() {
+    page_directory* user_page_directory = mk_pdir();
+    copy_dir2dir(kernel_page_directory, user_page_directory);
+
+    page_table* user_table = (page_table*)allocate_blocks(1);
+    if (user_table == NULL) {
+        kprintf("[%s %i] Failed to allocate memory for user page table\n",  __FILE__, __LINE__);
+        free_blocks((uint32_t*)user_page_directory, 3);
+        return NULL;
+    }
+
+    memset(user_table, 0, sizeof(page_table));
+    for (uint32_t i = 0, frame = USER_MEMORY_START; i < USER_PAGES; i++, frame += PAGE_SIZE) {
+        pt_entry page = 0;
+        SET_ATTRIBUTE(&page, PTE_PRESENT);
+        SET_ATTRIBUTE(&page, PTE_USER);
+        SET_ATTRIBUTE(&page, PTE_READ_WRITE);
+        SET_FRAME(&page, frame);
+
+        user_table->entries[PT_INDEX(frame)] = page;
+    }
+
+    pd_entry* user_entry = &user_page_directory->entries[USER_TABLE_INDEX];
+    SET_ATTRIBUTE(user_entry, PDE_PRESENT);
+    SET_ATTRIBUTE(user_entry, PDE_USER);
+    SET_ATTRIBUTE(user_entry, PDE_READ_WRITE);
+    SET_FRAME(user_entry, (uint32_t)user_table);
+
+    return user_page_directory;
+}
+
+void free_pdir(page_directory* pd) {
     if (pd == NULL) {
         kprintf("[%s %i] Error: Attempting to free a NULL page directory.\n", __FILE__, __LINE__);
         return;
@@ -237,7 +295,7 @@ physical_address virtual2physical(void* virt_address) {
     return phys_address;
 }
 
-void copy_page_directory(page_directory* src, page_directory* dest) {
+void copy_dir2dir(page_directory* src, page_directory* dest) {
     if (!src || !dest) return;
     for (uint32_t i = 0; i < TABLES_PER_DIRECTORY; i++) {
         if (src->entries[i] & PDE_PRESENT) {

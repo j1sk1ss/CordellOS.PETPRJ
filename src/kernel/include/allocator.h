@@ -25,7 +25,9 @@ typedef struct malloc_block {
 } malloc_block_t;
 
 
-extern malloc_block_t *malloc_list_head;
+extern malloc_block_t *kmalloc_list_head;
+extern malloc_block_t *umalloc_list_head;
+
 extern uint32_t malloc_virt_address;
 extern uint32_t malloc_phys_address;
 extern uint32_t total_malloc_pages;
@@ -35,14 +37,19 @@ uint32_t kmalloc_total_free();
 uint32_t kmalloc_total_avaliable();
 void print_kmalloc_map();
 
-void mm_init(const uint32_t bytes);
+void kmm_init(const uint32_t bytes);
+void umm_init(const uint32_t bytes);
 
-void kmalloc_split(malloc_block_t *node, const uint32_t size);
+void block_split(malloc_block_t *node, const uint32_t size);
 void* kmalloc(const uint32_t size);
+void* krealloc(void* ptr, size_t size);
+void* umalloc(const uint32_t size);
 void* kmallocp(uint32_t v_addr);
+void* umallocp(uint32_t v_addr);
 
-void merge_free_blocks();
+void merge_free_blocks(malloc_block_t* block);
 void kfree(void *ptr);
+void ufree(void* ptr);
 void kfreep(void* v_addr);
 
 #endif

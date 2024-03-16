@@ -3,13 +3,13 @@
 
 
 #include <memory.h>
-#include <stdlib.h>
 #include <netutils.h>
 
 #include "arp.h"
 #include "udp.h"
 #include "rtl8139.h"
 #include "ethernet.h"
+#include "allocator.h"
 
 
 #define DHCP_REQUEST            1

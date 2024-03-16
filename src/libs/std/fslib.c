@@ -114,6 +114,26 @@ char* fread(const char* path) {
 }
 
 //====================================================================
+//  Read file content by path
+//  ECX - path
+//  EAX - returned data
+char* fread_stop(const char* path, char* stop) {
+    void* pointed_data;
+    __asm__ volatile(
+        "movl $59, %%eax\n"
+        "movl %1, %%ebx\n"
+        "movl %2, %%ecx\n"
+        "int %3\n"
+        "movl %%eax, %0\n"
+        : "=r"(pointed_data)
+        : "r"((uint32_t)path), "r"(stop), "i"(SYSCALL_INTERRUPT)
+        : "eax", "ebx", "ecx", "edx"
+    );
+
+    return pointed_data;
+}
+
+//====================================================================
 // Function read content data to buffer with file seeking
 // EBX - content pointer
 // ECX - data offset (file seek)
@@ -130,6 +150,27 @@ void fread_off(Content* content, int offset, uint8_t* buffer, int len) {
         :
         : "g"(content), "g"(offset), "g"(buffer), "g"(len)
         : "eax", "ebx", "ecx", "edx", "esi"
+    );
+}
+
+//====================================================================
+// Function read content data to buffer with file seeking
+// EBX - content pointer
+// ECX - data offset (file seek)
+// EDX - buffer pointer
+// ESI - buffer len / data len
+void fread_off_stop(Content* content, int offset, uint8_t* buffer, int len, char* stop) {
+    __asm__ volatile(
+        "movl $58, %%eax\n"
+        "movl %0, %%ebx\n"
+        "movl %1, %%ecx\n"
+        "movl %2, %%edx\n"
+        "movl %3, %%esi\n"
+        "movl %3, %%edi\n"
+        "int $0x80\n"
+        :
+        : "g"(content), "g"(offset), "g"(buffer), "g"(len), "g"(stop)
+        : "eax", "ebx", "ecx", "edx", "esi", "edi"
     );
 }
 

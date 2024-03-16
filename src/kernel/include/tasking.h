@@ -11,6 +11,9 @@
 #include "stdio.h"
 #include "irq.h"
 #include "virt_manager.h"
+#include "allocator.h"
+
+#include "../util/binary.h"
 
 
 #define TASKS_MAX             10
@@ -19,7 +22,7 @@
 #define PROCESS_STATE_STRANGE 1
 #define PROCESS_STATE_DEAD    2
 
-#define START_PROCESS(name, address)    TASK_add_task(TASK_create_task(name, address))
+#define START_PROCESS(name, address, type)    TASK_add_task(TASK_create_task(name, address, type))
 
 
 typedef struct {
@@ -50,7 +53,7 @@ void TASK_start_tasking();
 void TASK_stop_tasking();
 void TASK_continue_tasking();
 
-Task* TASK_create_task(char* pname, uint32_t address);
+Task* TASK_create_task(char* pname, uint32_t address, int type);
 int TASK_add_task(Task* task);
 
 void TASK_task_switch(struct Registers* state);

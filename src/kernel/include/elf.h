@@ -6,7 +6,6 @@
 #include <stdbool.h>
 #include <memory.h>
 #include <math.h>
-#include <stdlib.h>
 #include <fslib.h>
 
 #include "elf.h"
@@ -14,6 +13,7 @@
 #include "stdio.h"
 #include "virt_manager.h"
 #include "phys_manager.h"
+#include "allocator.h"
 
 
 #define EI_NIDENT (16)
@@ -103,7 +103,7 @@ enum ShT_Attributes {
 };
 
 
-ELF32_program* ELF_read(const char* path);
+ELF32_program* ELF_read(const char* path, int type);
 
 
 #endif

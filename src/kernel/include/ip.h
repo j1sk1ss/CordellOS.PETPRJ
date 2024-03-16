@@ -2,7 +2,6 @@
 #define IP_H
 
 
-#include <stdlib.h>
 #include <memory.h>
 #include <netutils.h>
 
@@ -10,6 +9,7 @@
 #include "ethernet.h"
 #include "dhcp.h"
 #include "udp.h"
+#include "allocator.h"
 
 
 #define IP_IPV4 4

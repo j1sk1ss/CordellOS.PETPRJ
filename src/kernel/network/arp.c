@@ -60,7 +60,7 @@ void ARP_handle_packet(arp_packet_t* arp_packet, int len) {
 }
 
 void ARP_send_packet(uint8_t* dst_hardware_addr, uint8_t* dst_protocol_addr) {
-    arp_packet_t* arp_packet = (arp_packet_t*)calloc(sizeof(arp_packet_t), 1);
+    arp_packet_t* arp_packet = (arp_packet_t*)kmalloc(sizeof(arp_packet_t));
 
     get_mac_addr(arp_packet->src_hardware_addr);
     if (is_ip_allocated == 1) DHCP_get_host_addr(arp_packet->src_protocol_addr);
@@ -84,7 +84,7 @@ void ARP_send_packet(uint8_t* dst_hardware_addr, uint8_t* dst_protocol_addr) {
 
     // Now send it with ethernet
     ETH_send_packet(broadcast_mac_address, (uint8_t*)arp_packet, sizeof(arp_packet_t), ETHERNET_TYPE_ARP);
-    free(arp_packet);
+    kfree(arp_packet);
 }
 
 void ARP_lookup_add(uint8_t* ret_hardware_addr, uint8_t* ip_addr) {
@@ -112,5 +112,6 @@ void ARP_init() {
 
     memset(broadcast_ip, 0xff, 4);
     memset(broadcast_mac, 0xff, 6);
+    
     ARP_lookup_add(broadcast_mac, broadcast_ip);
 }

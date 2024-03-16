@@ -6,12 +6,25 @@ char* vars_buffer[VARS_COUNT]  = { NULL };
 
 
 void VARS_init() {
+#ifdef ENVARS_SAVE
     if (current_vfs->objexist("boot\\vars.txt") == 1) {
-        // TODO: read vars from file
+        int current_position = 0;
+        Content* content = current_vfs->getobj("boot\\vars.txt");
+
+        while (current_position < content->file->file_meta.file_size) {
+            uint8_t buffer[SECTOR_SIZE] = { '\0' };
+            char stop[1] = { '\n' };
+            fread_off_stop(content, current_position, buffer, SECTOR_SIZE, stop);
+
+            current_position += min(SECTOR_SIZE, strlen(buffer));
+        }
     }
     else {
-        // TODO: create new file
+        Content* content = FAT_create_content("vars", FALSE, "txt");
+        current_vfs->putobj("boot", content);
+        FSLIB_unload_content_system(content);
     }
+#endif
 }
 
 // -1 - nexists
@@ -62,5 +75,6 @@ void VARS_delete(char* name) {
 }
 
 void VARS_save() {
-    // TODO: save file
+#ifdef ENVARS_SAVE
+#endif
 }

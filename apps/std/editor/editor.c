@@ -62,6 +62,7 @@ void display_text() {
     int current_height = 0;
     for (int i = current_line; i < SCREEN_HEIGHT + current_line && current_height < SCREEN_HEIGHT; i++) {
         char text2display[CHARS_ON_LINE] = { '\0' };
+
         fread_off(edit_content, i * CHARS_ON_LINE, text2display, min(CHARS_ON_LINE, edit_file->file_meta.file_size));
         int lines = chars_in_string(text2display, '\n');
 

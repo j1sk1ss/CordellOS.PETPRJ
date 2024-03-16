@@ -83,7 +83,7 @@ void rest(const uint32_t ms_duration) {
 }
 
 void set_bpm(const uint32_t bpm) {
-    bpm_ms = 60000/bpm;
+    bpm_ms = 60000 / bpm;
 }
 
 void set_time_signature(const uint8_t beats_per_measure, const beat_type_t beat_type) {

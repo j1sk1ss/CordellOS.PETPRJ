@@ -199,6 +199,7 @@ extern unsigned int ext_root_cluster;
 	unsigned int FAT_cluster_allocate();
 	int FAT_cluster_deallocate(const unsigned int cluster);
 	uint8_t* FAT_cluster_read(unsigned int clusterNum);
+	uint8_t* FAT_cluster_read_stop(unsigned int clusterNum, uint8_t* stop);
 	uint8_t* FAT_cluster_readoff(unsigned int clusterNum, uint32_t offset, uint32_t size);
 	int FAT_cluster_write(void* contentsToWrite, unsigned int clusterNum);
 	int FAT_cluster_writeoff(void* contentsToWrite, unsigned int clusterNum, uint32_t offset, uint32_t size);
@@ -235,12 +236,14 @@ extern unsigned int ext_root_cluster;
 	int FAT_content_exists(const char* filePath);
 	Content* FAT_get_content(const char* filePath);
 	char* FAT_read_content(Content* data);
+	char* FAT_read_content_stop(Content* data, uint8_t* stop);
 	void FAT_read_content2buffer(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size);
+	void FAT_read_content2buffer_stop(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size, uint8_t* stop);
 	int FAT_put_content(const char* filePath, Content* content);
 	int FAT_delete_content(const char* filePath, const char* name);
 	int FAT_write_content(Content* content, char* content_data);
 	void FAT_write_buffer2content(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size);
-	int FAT_ELF_execute_content(char* path, int argc, char* argv[]);
+	int FAT_ELF_execute_content(char* path, int argc, char* argv[], int type);
 	int FAT_change_meta(const char* filePath, directory_entry_t* newMeta);
 
 //===================================

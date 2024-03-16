@@ -16,8 +16,13 @@
 
 
 enum file_modes {
-    NEW_FILE    = 1,
-    UPDATE_FILE = 2
+    NEW_FILE  = 0,
+    EDIT_FILE = 1
+};
+
+enum editor_modes {
+    EDIT = 0,
+    VIEW = 1
 };
 
 

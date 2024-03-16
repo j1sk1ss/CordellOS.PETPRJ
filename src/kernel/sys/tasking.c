@@ -68,15 +68,15 @@ uint32_t v_addr = 0x00C00000;
 		i386_irq_registerHandler(0, TASK_task_switch);
 	}
 
-	Task* TASK_create_task(char* pname, uint32_t address) {
+	Task* TASK_create_task(char* pname, uint32_t address, int type) {
 
 		//=============================
 		// Allocate memory for new task
 		//=============================
 
 			// Allocate memory for new task body
-			Task* task     = (Task*)calloc(sizeof(Task), 1);
-			task->cpuState = (struct Registers*)calloc(sizeof(struct Registers), 1);
+			Task* task     = (Task*)kmalloc(sizeof(Task));
+			task->cpuState = (struct Registers*)kmalloc(sizeof(struct Registers));
 
 			//=============================
 			// Find new pid
@@ -111,13 +111,17 @@ uint32_t v_addr = 0x00C00000;
 			//=============================
 
 				// Create empty pd and fill it by tables from kernel pd
-				task->page_directory = create_page_directory();
-				copy_page_directory(kernel_page_directory, task->page_directory);
+				if (type == USER) task->page_directory = mk_usdir();
+				else if (type == KERNEL) {
+					task->page_directory = mk_pdir();
+					copy_dir2dir(kernel_page_directory, task->page_directory);
+				}
+
                 set_page_directory(task->page_directory);
                 // task->page_directory = current_page_directory;
 				
-				// Allocate page in pd, link it to c_addr
-				mallocp(v_addr);
+				// Allocate page in pd, link it to v_addr
+				type == USER ? umallocp(v_addr) : kmallocp(v_addr);
                 memset((void*)v_addr, 0, PAGE_SIZE);
                 
 				// Set stack pointer to allocated region
@@ -178,6 +182,7 @@ uint32_t v_addr = 0x00C00000;
 		//=============================
 
 		set_page_directory(kernel_page_directory);
+
         // v_addr += PAGE_SIZE * 2;
 		return task;
 	}
@@ -185,7 +190,7 @@ uint32_t v_addr = 0x00C00000;
 	void destroy_task(Task* task) {
 		page_directory* task_pagedir = (page_directory*)virtual2physical(task->page_directory);
 		set_page_directory(kernel_page_directory);
-		free_page_directory(task_pagedir);
+		free_pdir(task_pagedir);
 		free(task->cpuState);
 		free(task);
 	}

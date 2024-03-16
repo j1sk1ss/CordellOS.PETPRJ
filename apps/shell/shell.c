@@ -15,11 +15,10 @@ void main(int argc, char* argv[]) {
     //====================
     //  SET INIT ENVARS
 
-        if (envar_exists("clc") == -1) envar_add("clc", "home\\apps\\std\\calc\\calc.elf");
-        if (envar_exists("mng") == -1) envar_add("mng", "home\\apps\\std\\mng\\mng.elf");
-        if (envar_exists("edt") == -1) envar_add("edt", "home\\apps\\std\\editor\\editor.elf");
-        if (envar_exists("asm") == -1) envar_add("asm", "home\\apps\\std\\asm\\asm.elf");
-        if (envar_exists("snake") == -1) envar_add("snake", "home\\apps\\games\\snake\\snake.elf");
+        if (envar_exists("clc") == -1) envar_add("clc", "HOME\\APPS\\STD\\CALC\\CALC.ELF");
+        if (envar_exists("mng") == -1) envar_add("mng", "HOME\\APPS\\STD\\MNG\\MNG.ELF");
+        if (envar_exists("edt") == -1) envar_add("edt", "HOME\\APPS\\STD\\EDITOR\\EDITOR.ELF");
+        if (envar_exists("asm") == -1) envar_add("asm", "HOME\\APPS\\STD\\ASM\\ASM.ELF");
 
     //  SET INIT ENVARS
      //====================
@@ -105,7 +104,7 @@ void shell_start_screen() {
             char* splitted = strtok(command, " ");
 
             while (splitted && tokenCount < 100) {
-                char* token = (char*)calloc(strlen(splitted) + 1, 1);
+                char* token = (char*)clralloc(strlen(splitted) + 1);
                 strncpy(token, splitted, strlen(splitted));
 
                 if (token[0] == '$') {
@@ -178,8 +177,8 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_SET_ENVAR) == 0) {
-                char* name  = (char*)calloc(strlen(command_line[1]) + 1, 1);
-                char* value = (char*)calloc(strlen(command_line[2]) + 1, 1);
+                char* name  = (char*)clralloc(strlen(command_line[1]) + 1);
+                char* value = (char*)clralloc(strlen(command_line[2]) + 1);
 
                 strncpy(name, command_line[1], strlen(command_line[1]));
                 strncpy(value, command_line[2], strlen(command_line[2]));
@@ -269,7 +268,7 @@ void shell_start_screen() {
                 int data_size = 0;
                 while (data_size < content->file->file_meta.file_size) {
                     int copy_size = min(content->file->file_meta.file_size - data_size, 128);
-                    char* data = (char*)calloc(copy_size, 1);
+                    char* data = (char*)clralloc(copy_size);
 
                     fread_off(content, data_size, data, copy_size);
                     printf("%s", data);

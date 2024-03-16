@@ -127,6 +127,14 @@ void* calloc(size_t nelem, size_t elsize) {
     return tgt;
 }
 
+void* clralloc(size_t size) {
+    void* tgt = malloc(size);
+    if (tgt != NULL) 
+        memset(tgt, 0, size);
+
+    return tgt;
+}
+
 //====================================================================
 //  Free alocated memory
 //  EBX - pointer to allocated memory

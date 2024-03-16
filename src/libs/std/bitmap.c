@@ -2,7 +2,7 @@
 
 
 bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
-    bitmap_t* ret = (bitmap_t*)calloc(sizeof(bitmap_t), 1);
+    bitmap_t* ret = (bitmap_t*)clralloc(sizeof(bitmap_t));
     Content* content = get_content(file_path);
     if (content->file == NULL) {
         printf("File not found\n");
@@ -11,7 +11,7 @@ bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
         return NULL;
     }
 
-    uint8_t* header = calloc(sizeof(bmp_fileheader_t), 1);
+    uint8_t* header = clralloc(sizeof(bmp_fileheader_t));
     fread_off(content, 0, header, sizeof(bmp_fileheader_t));
 
     bmp_fileheader_t* h = (bmp_fileheader_t*)header;
@@ -19,7 +19,7 @@ bitmap_t* BMP_create(char* file_path, int screen_x, int screen_y) {
 
     free(header);
 
-    uint8_t* info = calloc(sizeof(bmp_infoheader_t), 1);
+    uint8_t* info = clralloc(sizeof(bmp_infoheader_t));
     fread_off(content, sizeof(bmp_fileheader_t), info, sizeof(bmp_infoheader_t));
 
     bmp_infoheader_t* inf = (bmp_infoheader_t*)info;
@@ -56,7 +56,7 @@ void BMP_display(bitmap_t* bmp) {
         uint32_t line_part  = 0;
 
         while (image_part < line_size) {
-            uint8_t* bytes = calloc(load_size, 1);
+            uint8_t* bytes = clralloc(load_size);
             fread_off(bmp->file, offset + image_part, bytes, load_size);
 
             for (int x = 0; x < LOAD_PART; x++) {

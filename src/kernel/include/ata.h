@@ -59,11 +59,14 @@
 #define ATAPI_CMD_EJECT             0x1B
 
 // Bus Master Reg Command
-#define BMR_COMMAND_DMA_START 0x1
-#define BMR_COMMAND_DMA_STOP 0x0
-#define BMR_COMMAND_READ 0x8
-#define BMR_STATUS_INT 0x4
-#define BMR_STATUS_ERR 0x2
+#define BMR_COMMAND_DMA_START 	0x1
+#define BMR_COMMAND_DMA_STOP 	0x0
+#define BMR_COMMAND_READ 		0x8
+#define BMR_STATUS_INT 			0x4
+#define BMR_STATUS_ERR 			0x2
+
+#define STOP_SYMBOL		'\20'
+#define ERROR_SYMBOL	'\21'
 
 
 typedef struct prdt {
@@ -138,7 +141,9 @@ bool ATA_is_current_sector_empty(uint32_t LBA);
 void ATA_ata_wait();
 
 uint8_t* ATA_read_sector(uint32_t lba);
+uint8_t* ATA_read_sector_stop(uint32_t lba, uint8_t* stop);
 uint8_t* ATA_read_sectors(uint32_t lba, uint32_t sector_count);
+uint8_t* ATA_read_sectors_stop(uint32_t lba, uint32_t sector_count, uint8_t* stop);
 
 int ATA_write_sector(uint32_t lba, const uint8_t* buffer);
 int ATA_writeoff_sector(uint32_t lba, const uint8_t* buffer, uint32_t offset, uint32_t size);

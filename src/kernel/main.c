@@ -22,6 +22,7 @@
 #include "include/udp.h"
 #include "include/tss.h"
 #include "include/vars.h"
+#include "include/elf.h"
 
 #include "multiboot.h"
 
@@ -100,14 +101,18 @@
 //      18) User mode switch                                      [?]
 //      19) Keyboard in kernel by syscall that cause mt problems  [V]
 //      20) Tasking problems (again)                              [V]
-//          20.0) Page directory cloning                          [?]
+//          20.0) Page directory cloning                          [V]
+//          20.1) User page directory                             [ ]
 //      21) DOOM?                                                 [?]
 //======================================================================================================================================
 
 
 void shell() {
-    // i386_switch2user();
-    current_vfs->objexec(SHELL_PATH, 0, NULL);
+#ifdef USERMODE
+    i386_switch2user();
+#endif
+
+    current_vfs->objexec(SHELL_PATH, 0, NULL, KERNEL);
 }
 
 void idle() {
@@ -135,7 +140,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         else _screenBuffer = (uint8_t*)(uintptr_t)mb_info->framebuffer_addr;
 
         kprintf("\n\t\t =    CORDELL  KERNEL    =");
-        kprintf("\n\t\t =     [ ver.   14 ]     = \n\n");
+        kprintf("\n\t\t =     [ ver.   15 ]     = \n\n");
         kprintf("\n\t\t = INFORMAZIONI GENERALI = \n\n");
         kprintf("\tMB FLAGS:        [0x%p]\n", mb_info->flags);
         kprintf("\tMEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
@@ -280,7 +285,8 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         uint32_t current_esp;
         asm ("mov %%esp, %0" : "=r"(current_esp));
         TSS_set_stack(0x10, current_esp);
-        
+
+        START_PROCESS("idle", (uint32_t)idle, KERNEL);
         if (current_vfs->objexist(CONFIG_PATH) == 1) {
             Content* boot_config = current_vfs->getobj(CONFIG_PATH);
             char* config = current_vfs->read(boot_config);
@@ -322,12 +328,11 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
             //===================
 
             if (config[CONFIG_MOUSE] == CONFIG_ENABLED) show_mouse = 1;
-            if (config[CONFIG_KSHELL] == CONFIG_ENABLED) START_PROCESS("shell", (uint32_t)shell);
+            if (config[CONFIG_KSHELL] == CONFIG_ENABLED) START_PROCESS("shell", (uint32_t)shell, KERNEL);
 
             kfree(config);
-        } else START_PROCESS("shell", (uint32_t)shell);
+        } else START_PROCESS("shell", (uint32_t)shell, KERNEL);
 
-        START_PROCESS("idle", (uint32_t)idle);
         TASK_start_tasking();
     
     //===================

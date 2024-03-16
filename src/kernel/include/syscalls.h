@@ -52,22 +52,24 @@
 #define SET_VAR         54
 #define GET_VAR         55
 #define DEL_VAR         56
-#define EXST_VAR        57 // LAST
+#define EXST_VAR        57
 
 // FS managment
-#define SYS_READ_FILE      9
-#define SYS_READ_FILE_OFF  33
-#define SYS_WRITE_FILE     10
-#define SYS_WRITE_FILE_OFF 50
-#define SYS_OPENDIR        11
-#define SYS_GET_CONTENT    30
-#define SYS_EXECUTE_FILE   12
-#define SYS_CEXISTS        15
-#define SYS_FCREATE        16
-#define SYS_DIRCREATE      17
-#define SYS_CDELETE        18
-#define SYS_CHANGE_META    25
-#define SYS_GET_FS_INFO    45
+#define SYS_READ_FILE          9
+#define SYS_READ_FILE_STP      59 // LAST
+#define SYS_READ_FILE_OFF      33
+#define SYS_READ_FILE_OFF_STP  58
+#define SYS_WRITE_FILE         10
+#define SYS_WRITE_FILE_OFF     50
+#define SYS_OPENDIR            11
+#define SYS_GET_CONTENT        30
+#define SYS_EXECUTE_FILE       12
+#define SYS_CEXISTS            15
+#define SYS_FCREATE            16
+#define SYS_DIRCREATE          17
+#define SYS_CDELETE            18
+#define SYS_CHANGE_META        25
+#define SYS_GET_FS_INFO        45
 
 // Multitasking 
 #define SYS_START_PROCESS 26

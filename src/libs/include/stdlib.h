@@ -20,6 +20,7 @@ void* malloc(uint32_t size);
 void* mallocp(uint32_t v_addr);
 void* realloc(void* ptr, size_t size);
 void* calloc(size_t nelem, size_t elsize);
+void* clralloc(size_t size);
 void free(void* ptr);
 void freep(void* ptr);
 
