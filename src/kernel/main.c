@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <fslib.h>
 
 #include "include/hal.h"
@@ -12,6 +11,7 @@
 #include "include/virt_manager.h"
 #include "include/mouse.h"
 #include "include/keyboard.h"
+#include "include/date_time.h"
 #include "include/allocator.h"
 #include "include/syscalls.h"
 #include "include/speaker.h"
@@ -80,7 +80,7 @@
 //          14.0) Free pages when they are unused                 [ ]
 //      15) Bugs                                                  [?]
 //          15.0) Tasking page fault (In case when we use more    [?]
-//                then one task)                                  | |
+//                then one task)                                  |||
 //          15.1) Mouse page fault                                [?]
 //          15.2) Tasking with page allocator                     [V]
 //      16) Ethernet                                              [?]
@@ -103,21 +103,35 @@
 //      20) Tasking problems (again)                              [V]
 //          20.0) Page directory cloning                          [V]
 //          20.1) User page directory                             [ ]
-//      21) DOOM?                                                 [?]
+//      21) Data append \ modify FAT                              [ ]
+//      22) DOOM?                                                 [?]
 //======================================================================================================================================
 
 
+#pragma region [Default tasks]
+
 void shell() {
+
 #ifdef USERMODE
+
     i386_switch2user();
+    fexec(SHELL_PATH, 0, NULL);
+
 #endif
+    
+#ifndef USERMODE
 
     current_vfs->objexec(SHELL_PATH, 0, NULL, KERNEL);
+
+#endif
+
 }
 
 void idle() {
-    while(1) { continue; };
+    tick();
 }
+
+#pragma endregion
 
 
 void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t esp) {
@@ -131,6 +145,8 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - VBE data
     //===================
 
+#pragma region [Basic kernel info]
+
         if (mb_magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
             kprintf("[%s %i] MB HEADER ERROR (MAGIC IS WRONG [%u]).\n", __FILE__, __LINE__, mb_magic);
             goto end;
@@ -140,7 +156,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         else _screenBuffer = (uint8_t*)(uintptr_t)mb_info->framebuffer_addr;
 
         kprintf("\n\t\t =    CORDELL  KERNEL    =");
-        kprintf("\n\t\t =     [ ver.   15 ]     = \n\n");
+        kprintf("\n\t\t =     [ ver.   16 ]     = \n\n");
         kprintf("\n\t\t = INFORMAZIONI GENERALI = \n\n");
         kprintf("\tMB FLAGS:        [0x%p]\n", mb_info->flags);
         kprintf("\tMEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);
@@ -148,11 +164,13 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         kprintf("\tCMD LINE:        [%s]\n", mb_info->cmdline);
         kprintf("\tVBE MODE:        [%u]\n", mb_info->vbe_mode);
 
-        kprintf("\n\t\t =       VBE  INFO       = \n\n");
+        kprintf("\n\n\t\t =       VBE  INFO       = \n\n");
         kprintf("\tVBE FRAMEBUFFER: [0x%p]\n", mb_info->framebuffer_addr);
         kprintf("\tVBE Y:           [%upx]\n", mb_info->framebuffer_height);
         kprintf("\tVBE X:           [%upx]\n", mb_info->framebuffer_width);
         kprintf("\tVBE BPP:         [%uB]\n", mb_info->framebuffer_bpp);
+
+#pragma endregion
 
     //===================
     // Phys & Virt memory manager initialization
@@ -160,6 +178,8 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - Virt pages
     //===================
     
+#pragma region [Memory info & memory testing]
+
         uint32_t total_memory = mb_info->mem_upper + (mb_info->mem_lower << 10);
         PMM_init(MMAP_LOCATION, total_memory);
 
@@ -170,7 +190,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         //===================
 
             if (mb_info->flags & (1 << 1)) {
-                kprintf("\n\t\t =     MEMORY   INFO     = \n\n");
+                kprintf("\n\n\t\t =     MEMORY   INFO     = \n\n");
                 multiboot_memory_map_t* mmap_entry = (multiboot_memory_map_t*)mb_info->mmap_addr;
                 while ((uint32_t)mmap_entry < mb_info->mmap_addr + mb_info->mmap_length) {
                     if (mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
@@ -215,9 +235,13 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
             goto end;
         }
 
+#pragma endregion
+
         //===================
         // Map framebuffer to his original phys address
         //===================
+
+#pragma region  [Video memory info & reserving]
 
             uint32_t framebuffer_pages = gfx_mode.buffer_size / PAGE_SIZE;
             if (framebuffer_pages % PAGE_SIZE > 0) framebuffer_pages++;
@@ -229,6 +253,8 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
 
             deinitialize_memory_region(gfx_mode.physical_base_pointer, framebuffer_pages * BLOCK_SIZE);
             // gfx_mode.virtual_second_buffer = (uint32_t)kmalloc(gfx_mode.buffer_size);
+
+#pragma endregion
 
         //===================
         // Map framebuffer to his original phys address
@@ -249,6 +275,8 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     // - IDT initialization
     // - ISR initialization
     //===================
+
+#pragma region [Drivers initialization]
 
         HAL_initialize();
         i386_pci_init();
@@ -272,13 +300,21 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         ATA_initialize();
         FAT_initialize();
 
+#pragma endregion
+
     //===================
     
     kprintf("DRIVER FAT INIZIALIZZATO\nTC:[%uC]\tSPC:[%uS]\tBPS:[%uB]\n\n", total_clusters, sectors_per_cluster, bytes_per_sector);
 
     //===================
-    // Kernel shell part
+    // Kernel2user part
     //===================
+    
+    char* argv[1] = { "BOOT\\BOOT.TXT" };
+    current_vfs->objexec("HOME\\APPS\\STD\\EDITOR\\EDITOR.ELF", 1, argv, KERNEL);
+    for(;;);
+
+#pragma region [Preparations for user land]
 
         VARS_init(); // Init env vars manager
 
@@ -335,8 +371,10 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
 
         TASK_start_tasking();
     
+#pragma endregion
+
     //===================
-    // Kernel shell part
+    // Kernel2user part
     //===================
 
 end:

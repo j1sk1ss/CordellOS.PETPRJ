@@ -19,6 +19,8 @@ ata_dev_t secondary_slave  = {.slave = 1};
 //  - Find secondary slave drive
 //====================
 
+#pragma region [initialization]
+
     void ATA_initialize() {
         ata_device = pci_get_device(ATA_VENDOR_ID, ATA_DEVICE_ID, -1);
 
@@ -139,6 +141,8 @@ ata_dev_t secondary_slave  = {.slave = 1};
         dev->mountpoint[strlen(dev->mountpoint)] = 'a' + (((!primary) << 1) | dev->slave);
     }
 
+#pragma endregion
+
 //====================
 //  ATA init (found devices)
 //====================
@@ -159,11 +163,9 @@ ata_dev_t secondary_slave  = {.slave = 1};
 //  READ SECTOR FROM DISK BY LBA ADRESS
 //====================
 
-    uint8_t* ATA_read_sector(uint32_t lba) {
-        ATA_ata_wait();
-        uint8_t* buffer = (uint8_t*)kmalloc(SECTOR_SIZE);
-        if (buffer == NULL) return NULL;
+#pragma region [Read operations]
 
+    void ATA_prepare4reading(uint32_t lba) {
         i386_outb(current_ata_device->drive, 0xE0 | (current_ata_device->slave << 4) | ((lba >> 24) & 0x0F));
         i386_outb(FEATURES_REGISTER, 0x00);
         i386_outb(current_ata_device->sector_count, 1);
@@ -171,6 +173,14 @@ ata_dev_t secondary_slave  = {.slave = 1};
         i386_outb(current_ata_device->lba_mid, (uint8_t)((lba >> 8) & 0xFF));
         i386_outb(current_ata_device->lba_high, (uint8_t)((lba >> 16) & 0xFF));
         i386_outb(STATUS_REGISTER, ATA_CMD_READ_PIO);
+    }
+
+    uint8_t* ATA_read_sector(uint32_t lba) {
+        ATA_ata_wait();
+        uint8_t* buffer = (uint8_t*)kmalloc(SECTOR_SIZE);
+        if (buffer == NULL) return NULL;
+
+        ATA_prepare4reading(lba);
 
         int timeout = 9000000;
         while ((i386_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
@@ -197,13 +207,7 @@ ata_dev_t secondary_slave  = {.slave = 1};
         uint8_t* buffer = (uint8_t*)kmalloc(SECTOR_SIZE);
         memset(buffer, 0, SECTOR_SIZE);
         
-        i386_outb(current_ata_device->drive, 0xE0 | (current_ata_device->slave << 4) | ((lba >> 24) & 0x0F));
-        i386_outb(FEATURES_REGISTER, 0x00);
-        i386_outb(current_ata_device->sector_count, 1);
-        i386_outb(current_ata_device->lba_lo, (uint8_t)(lba & 0xFF));
-        i386_outb(current_ata_device->lba_mid, (uint8_t)((lba >> 8) & 0xFF));
-        i386_outb(current_ata_device->lba_high, (uint8_t)((lba >> 16) & 0xFF));
-        i386_outb(STATUS_REGISTER, ATA_CMD_READ_PIO);
+        ATA_prepare4reading(lba);
 
         int timeout = 9000000;
         while ((i386_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
@@ -234,6 +238,43 @@ ata_dev_t secondary_slave  = {.slave = 1};
         return buffer;
     }
 
+    // TODO: issue with pointer moving 
+    uint8_t* ATA_read_sector_stopoff(uint32_t lba, uint32_t offset, uint8_t* stop) {
+        ATA_ata_wait();
+        uint8_t* buffer = (uint8_t*)kmalloc(SECTOR_SIZE);
+        memset(buffer, 0, SECTOR_SIZE);
+        
+        ATA_prepare4reading(lba);
+
+        int timeout = 9000000;
+        while ((i386_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
+            if (--timeout < 0) {
+                kfree(buffer);
+                stop[0] = ERROR_SYMBOL;
+                return NULL;
+            }
+            else continue;
+
+        for (int n = 0; n < SECTOR_SIZE / 2; n++) {
+            uint16_t value = i386_inw(DATA_REGISTER);
+            uint8_t first = (uint8_t)(value & 0xFF);
+            buffer[n * 2] = first;
+            if (first == stop[0] && n * 2 >= offset) {
+                stop[0] = STOP_SYMBOL;
+                break;
+            }
+
+            uint8_t second = (uint8_t)(value >> 8);
+            buffer[n * 2 + 1] = second;
+            if (second == stop[0] && n * 2 + 1 >= offset) {
+                stop[0] = STOP_SYMBOL;
+                break;
+            }
+        }
+
+        return buffer;
+    }
+
     // Function to read a sectors from the disk.
     uint8_t* ATA_read_sectors(uint32_t lba, uint32_t sector_count) {
         ATA_ata_wait();
@@ -248,6 +289,31 @@ ata_dev_t secondary_slave  = {.slave = 1};
             
             memcpy(buffer + i * SECTOR_SIZE, sector_data, SECTOR_SIZE);
             kfree(sector_data);
+        }
+
+        return buffer;
+    }
+
+    uint8_t* ATA_readoff_sectors(uint32_t lba, uint32_t offset, uint32_t sector_count) {
+        ATA_ata_wait();
+
+        uint32_t sectors_seek = offset / SECTOR_SIZE;
+        uint32_t data_seek    = offset % SECTOR_SIZE;
+        uint32_t size         = (SECTOR_SIZE * (sector_count - 1)) + (SECTOR_SIZE - data_seek);
+
+        uint8_t* buffer = (uint8_t*)kmalloc(size);
+        if (buffer == NULL) 
+            return NULL;
+
+        memset(buffer, 0, size);
+        for (uint32_t i = sectors_seek; i < sector_count; i++) {
+            uint8_t* sector_data = ATA_read_sector(lba + i);
+            if (sector_data == NULL) return NULL;
+            
+            memcpy(buffer + i * (SECTOR_SIZE - data_seek), sector_data + data_seek, SECTOR_SIZE - data_seek);
+            kfree(sector_data);
+
+            data_seek = 0;
         }
 
         return buffer;
@@ -277,16 +343,46 @@ ata_dev_t secondary_slave  = {.slave = 1};
         return buffer;
     }
 
+    // Read sectors with start seek
+    // Stop reading when meet stop value
+    uint8_t* ATA_readoff_sectors_stop(uint32_t lba, uint32_t offset, uint32_t sector_count, uint8_t* stop) {
+        ATA_ata_wait();
+
+        uint32_t sectors_seek = offset / SECTOR_SIZE;
+        uint32_t data_seek    = offset % SECTOR_SIZE;
+        uint32_t size         = (SECTOR_SIZE * (sector_count - 1)) + (SECTOR_SIZE - data_seek);
+
+        uint8_t* buffer = (uint8_t*)kmalloc(size);
+        if (buffer == NULL) 
+            return NULL;
+
+        memset(buffer, 0, size);
+        for (uint32_t i = sectors_seek; i < sector_count; i++) {
+            uint8_t* sector_data = ATA_read_sector_stopoff(lba + i, data_seek, stop);
+            if (sector_data == NULL) return NULL;
+            
+            memcpy(buffer + i * (SECTOR_SIZE - data_seek), sector_data + data_seek, SECTOR_SIZE - data_seek);
+            kfree(sector_data);
+
+            data_seek = 0;
+
+            if (stop[0] == STOP_SYMBOL) break;
+        }
+
+        return buffer;
+    }
+
+#pragma endregion
+
 //====================
 //  READ SECTOR FROM DISK BY LBA ADRESS
 //====================
 //  WRITE DATA TO SECTOR ON DISK BY LBA ADDRESS
 //====================
 
-    int ATA_write_sector(uint32_t lba, const uint8_t* buffer) {
-        if (lba == BOOT_SECTOR) return -1;
+#pragma region [Write operations]
 
-        ATA_ata_wait();
+    void ATA_prepare4writing(uint32_t lba) {
         i386_outb(current_ata_device->drive, 0xE0 | (current_ata_device->slave << 4) | ((lba >> 24) & 0x0F));
         i386_outb(FEATURES_REGISTER, 0x00);
         i386_outb(current_ata_device->sector_count, 1);
@@ -294,6 +390,13 @@ ata_dev_t secondary_slave  = {.slave = 1};
         i386_outb(current_ata_device->lba_mid, (uint8_t)(lba >> 8));
         i386_outb(current_ata_device->lba_high, (uint8_t)(lba >> 16));
         i386_outb(STATUS_REGISTER, ATA_CMD_WRITE_PIO);
+    }
+
+    int ATA_write_sector(uint32_t lba, const uint8_t* buffer) {
+        if (lba == BOOT_SECTOR) return -1;
+
+        ATA_ata_wait();
+        ATA_prepare4writing(lba);
 
         int timeout = 9000000;
         while ((i386_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
@@ -312,13 +415,7 @@ ata_dev_t secondary_slave  = {.slave = 1};
         if (lba == BOOT_SECTOR) return -1;
 
         ATA_ata_wait();
-        i386_outb(current_ata_device->drive, 0xE0 | (current_ata_device->slave << 4) | ((lba >> 24) & 0x0F));
-        i386_outb(FEATURES_REGISTER, 0x00);
-        i386_outb(current_ata_device->sector_count, 1);
-        i386_outb(current_ata_device->lba_lo, (uint8_t)lba);
-        i386_outb(current_ata_device->lba_mid, (uint8_t)(lba >> 8));
-        i386_outb(current_ata_device->lba_high, (uint8_t)(lba >> 16));
-        i386_outb(STATUS_REGISTER, ATA_CMD_WRITE_PIO);
+        ATA_prepare4writing(lba);
 
         int timeout = 9000000;
         while ((i386_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
@@ -366,14 +463,18 @@ ata_dev_t secondary_slave  = {.slave = 1};
         return 1;
     }
 
+#pragma endregion
+
 //====================
 //  WRITE DATA TO SECTOR ON DISK BY LBA ADRESS
 //====================
 //  OTHER FUNCTIONS
 //====================
 
+#pragma region [Other]
+
     // Function that add data to sector
-    void ATA_append_sector(uint32_t lba, char* append_data) {
+    void ATA_append_sector(uint32_t lba, char* append_data) { // TODO: Rewrite other functions
         char* previous_data = ATA_read_sector(lba);
 
         strcat(previous_data, append_data);
@@ -470,6 +571,8 @@ ata_dev_t secondary_slave  = {.slave = 1};
 
         return sectors;
     }
+
+#pragma endregion
 
 //====================
 //  OTHER FUNCTIONS

@@ -166,7 +166,7 @@ void fread_off_stop(Content* content, int offset, uint8_t* buffer, int len, char
         "movl %1, %%ecx\n"
         "movl %2, %%edx\n"
         "movl %3, %%esi\n"
-        "movl %3, %%edi\n"
+        "movl %4, %%edi\n"
         "int $0x80\n"
         :
         : "g"(content), "g"(offset), "g"(buffer), "g"(len), "g"(stop)

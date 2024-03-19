@@ -14,6 +14,7 @@
 #include <memory.h>
 #include <assert.h>
 #include <hash.h>
+#include <time.h>
 
 
 //   ____  _   _ _____ _     _     
@@ -43,6 +44,7 @@
         #define COMMAND_CLEAR                           "pulito" 
         #define COMMAND_TIME                            "data"
         #define COMMAND_ECHO                            "eco"
+        #define COMMAND_TICKS                           "ticks"
 
         #define COMMAND_IN_DIR                          "cd"
         #define COMMAND_OUT_DIR                         ".."

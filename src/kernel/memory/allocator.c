@@ -272,24 +272,6 @@
 
 				break;
 			}
-
-		for (malloc_block_t* cur = kmalloc_list_head; cur->next; cur = cur->next) {
-			if ((void*)cur + sizeof(malloc_block_t) == ptr && cur->free == false) {
-				uint32_t num_pages = cur->pcount;
-				for (uint32_t i = 0; i < num_pages; i++) {
-					uint32_t v_addr = cur->v_addr + i * PAGE_SIZE;
-					kfreep((void*)v_addr);
-				}
-
-				// Mark the block as free and clear memory content
-				cur->free = true;
-				memset(ptr, 0, cur->size);
-
-				// Merge adjacent free blocks
-				merge_free_blocks(kmalloc_list_head);
-				break;
-			}
-		}
 	}
 
 	void ufree(void* ptr) {

@@ -49,9 +49,7 @@ void datetime_read_rtc() {
     datetime_month  = get_RTC_register(0x08);
     datetime_year   = get_RTC_register(0x09);
 
-    if (century_register != 0) 
-        century = get_RTC_register(century_register);
-
+    if (century_register != 0) century = get_RTC_register(century_register);
     do {
         last_second     = datetime_second;
         last_minute     = datetime_minute;
@@ -96,4 +94,21 @@ void datetime_read_rtc() {
         datetime_year += (CURRENT_YEAR / 100) * 100;
         if (datetime_year < CURRENT_YEAR) datetime_year += 100;
     }
+}
+
+int ticks = 0;
+
+void tick() {
+    int temp_ticks = 0;
+    
+    while (1) {
+        if (++temp_ticks > TICK_DELAY) {
+            temp_ticks = 0;
+            ticks++;
+        }
+    }
+}
+
+int get_ticks() {
+    return ticks;
 }

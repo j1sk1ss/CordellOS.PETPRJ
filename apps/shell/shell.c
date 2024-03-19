@@ -168,6 +168,10 @@ void shell_start_screen() {
                 printf("SETTORI PER CLUSTER:             [%i]\n", fs_data[6]);
                 printf("DIMENSIONE DELLA TABELLA GRASSO: [%i]\n", fs_data[7]);
             }
+            
+            else if (strstr(command_line[0], COMMAND_TICKS) == 0) {
+                printf("\nCurrent tick: %i\n", get_tick());
+            }
 
             else if (strstr(command_line[0], COMMAND_TIME) == 0) {
                 short time[6];

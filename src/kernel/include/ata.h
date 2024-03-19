@@ -140,11 +140,16 @@ bool ATA_is_current_sector_empty(uint32_t LBA);
 
 void ATA_ata_wait();
 
+void ATA_prepare4reading(uint32_t lba);
 uint8_t* ATA_read_sector(uint32_t lba);
 uint8_t* ATA_read_sector_stop(uint32_t lba, uint8_t* stop);
+uint8_t* ATA_read_sector_stopoff(uint32_t lba, uint32_t offset, uint8_t* stop);
 uint8_t* ATA_read_sectors(uint32_t lba, uint32_t sector_count);
+uint8_t* ATA_readoff_sectors(uint32_t lba, uint32_t offset, uint32_t sector_count);
 uint8_t* ATA_read_sectors_stop(uint32_t lba, uint32_t sector_count, uint8_t* stop);
+uint8_t* ATA_readoff_sectors_stop(uint32_t lba, uint32_t offset, uint32_t sector_count, uint8_t* stop);
 
+void ATA_prepare4writing(uint32_t lba);
 int ATA_write_sector(uint32_t lba, const uint8_t* buffer);
 int ATA_writeoff_sector(uint32_t lba, const uint8_t* buffer, uint32_t offset, uint32_t size);
 int ATA_write_sectors(uint32_t lba, const uint8_t* buffer, uint32_t sector_count);

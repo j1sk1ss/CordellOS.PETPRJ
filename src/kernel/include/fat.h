@@ -11,6 +11,7 @@
 #include <string.h>
 #include <fslib.h>
 #include <ctype.h>
+#include <assert.h>
 
 
 #define SECTOR_OFFSET		23000
@@ -200,7 +201,8 @@ extern unsigned int ext_root_cluster;
 	int FAT_cluster_deallocate(const unsigned int cluster);
 	uint8_t* FAT_cluster_read(unsigned int clusterNum);
 	uint8_t* FAT_cluster_read_stop(unsigned int clusterNum, uint8_t* stop);
-	uint8_t* FAT_cluster_readoff(unsigned int clusterNum, uint32_t offset, uint32_t size);
+	uint8_t* FAT_cluster_readoff(unsigned int clusterNum, uint32_t offset);
+	uint8_t* FAT_cluster_readoff_stop(unsigned int clusterNum, uint32_t offset, uint8_t* stop);
 	int FAT_cluster_write(void* contentsToWrite, unsigned int clusterNum);
 	int FAT_cluster_writeoff(void* contentsToWrite, unsigned int clusterNum, uint32_t offset, uint32_t size);
 	int FAT_cluster_clear(unsigned int clusterNum);

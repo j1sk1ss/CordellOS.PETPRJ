@@ -40,19 +40,19 @@
 #define SYS_PAGE_MAP    49
 
 // System managment (memory, tasks, vars)
-#define SYS_SLEEP       3 // FREE
 #define SYS_TIME        6
 #define SYS_MALLOC      7
 #define SYS_PAGE_MALLOC 35
 #define SYS_FREE        8
 #define SYS_PAGE_FREE   34
 #define SYS_KERN_PANIC  51
-#define SES_GET_PID     52
-#define ADD_VAR         53
-#define SET_VAR         54
-#define GET_VAR         55
-#define DEL_VAR         56
-#define EXST_VAR        57
+#define SYS_GET_PID     52
+#define SYS_ADD_VAR     53
+#define SYS_SET_VAR     54
+#define SYS_GET_VAR     55
+#define SYS_DEL_VAR     56
+#define SYS_EXST_VAR    57
+#define SYS_GET_TICKS   3
 
 // FS managment
 #define SYS_READ_FILE          9

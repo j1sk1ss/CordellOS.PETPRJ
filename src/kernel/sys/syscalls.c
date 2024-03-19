@@ -150,6 +150,10 @@ void syscall(struct Registers* regs) {
             date_buffer[5] = datetime_year;
         } 
 
+        else if (regs->eax == SYS_GET_TICKS) {
+            regs->eax = get_ticks();
+        }
+
         //=======================
         //  SYSTEM TASKING SYSCALLS
         //=======================
@@ -162,7 +166,7 @@ void syscall(struct Registers* regs) {
                 START_PROCESS(process_name, address, USER);
             }
 
-            else if (regs->eax == SES_GET_PID) {
+            else if (regs->eax == SYS_GET_PID) {
                 regs->eax = taskManager.tasks[taskManager.currentTask]->pid;
             }
 
@@ -179,13 +183,13 @@ void syscall(struct Registers* regs) {
                 if (!kmalloc_list_head)
                     kmm_init(size);
 
-                void* allocated_memory = kmalloc(size); // TODO: switch2user
+                void* allocated_memory = kmalloc(size);
                 regs->eax = (uint32_t)allocated_memory;
             } 
             
             else if (regs->eax == SYS_PAGE_MALLOC) {
                 uint32_t address = regs->ebx;
-                kmallocp(address); // TODO: switch2user
+                kmallocp(address);
                 regs->eax = address;
             } 
 
@@ -196,6 +200,7 @@ void syscall(struct Registers* regs) {
             }
 
 #endif
+
             else if (regs->eax == SYS_PAGE_FREE) {
                 void* ptr_to_free = (void*)regs->ebx;
                 if (ptr_to_free != NULL)
@@ -238,31 +243,31 @@ void syscall(struct Registers* regs) {
         //  SYSTEM VARS SYSCALLS
         //=======================
 
-            else if (regs->eax == ADD_VAR) {
+            else if (regs->eax == SYS_ADD_VAR) {
                 char* name  = (char*)regs->ebx;
                 char* value = (char*)regs->ecx;
 
                 VARS_add(name, value);
             }
 
-            else if (regs->eax == EXST_VAR) {
+            else if (regs->eax == SYS_EXST_VAR) {
                 char* name = (char*)regs->ebx;
                 regs->eax  = VARS_exist(name);
             }
 
-            else if (regs->eax == SET_VAR) {
+            else if (regs->eax == SYS_SET_VAR) {
                 char* name  = (char*)regs->ebx;
                 char* value = (char*)regs->ecx;
 
                 VARS_set(name, value);
             }
 
-            else if (regs->eax == GET_VAR) {
+            else if (regs->eax == SYS_GET_VAR) {
                 char* name = (char*)regs->ebx;
                 regs->eax  = (uint32_t)VARS_get(name);
             }
 
-            else if (regs->eax == DEL_VAR) {
+            else if (regs->eax == SYS_DEL_VAR) {
                 char* name = (char*)regs->ebx;
                 VARS_delete(name);
             }
@@ -315,7 +320,15 @@ void syscall(struct Registers* regs) {
             char* exec_path = (char*)regs->ebx;
             char** argv     = (char**)regs->edx;
             int args        = (int)regs->ecx;
+
+#ifdef USERMODE
             regs->eax = (uint32_t)current_vfs->objexec(exec_path, args, argv, USER);
+#endif
+
+#ifndef USERMODE
+            regs->eax = (uint32_t)current_vfs->objexec(exec_path, args, argv, KERNEL);
+#endif
+
         } 
         
         else if (regs->eax == SYS_CEXISTS) {
