@@ -84,9 +84,9 @@ void i8259_configure(uint8_t offsetPic1, uint8_t offsetPic2, bool autoEoi) {
     i386_io_wait();
 
     // initialization control word 3
-    i386_outb(PIC1_DATA_PORT, 0x4);             // tell PIC1 that it has a slave at IRQ2 (0000 0100)
+    i386_outb(PIC1_DATA_PORT, 0x4); // tell PIC1 that it has a slave at IRQ2 (0000 0100)
     i386_io_wait();
-    i386_outb(PIC2_DATA_PORT, 0x2);             // tell PIC2 its cascade identity (0000 0010)
+    i386_outb(PIC2_DATA_PORT, 0x2); // tell PIC2 its cascade identity (0000 0010)
     i386_io_wait();
 
     // initialization control word 4
@@ -112,11 +112,13 @@ void i8259_disable() {
     i8259_setMask(0xFFFF);
 }
 
-void i8259_mask(int irq) {                                               // irq = interrupt request number
+// irq = interrupt request number
+void i8259_mask(int irq) {                                               
     i8259_setMask(picMask | (1 << irq));
 }
 
-void i8259_unmask(int irq) {                                             // irq = interrupt request number
+// irq = interrupt request number
+void i8259_unmask(int irq) {                                             
      i8259_setMask(picMask & ~(1 << irq));
 }
 
@@ -141,6 +143,7 @@ bool i8259_probe() {
     return i8259_getMask() == 0x1488;
 }
 
+
 static const PICDriver _PICDriver = {
     .Name                   = "8259 PIC",
     .Probe                  = &i8259_probe,
@@ -150,6 +153,7 @@ static const PICDriver _PICDriver = {
     .Mask                   = &i8259_mask,
     .Unmask                 = &i8259_unmask
 };
+
 
 const PICDriver* i8259_getDriver() {
     return &_PICDriver;

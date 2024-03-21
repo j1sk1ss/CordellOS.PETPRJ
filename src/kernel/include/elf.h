@@ -104,6 +104,7 @@ enum ShT_Attributes {
 
 
 ELF32_program* ELF_read(const char* path, int type);
+void ELF_free_program(ELF32_program* program);
 
 
 #endif

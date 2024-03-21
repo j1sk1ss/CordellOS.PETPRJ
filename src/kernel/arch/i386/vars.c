@@ -6,7 +6,9 @@ char* vars_buffer[VARS_COUNT]  = { NULL };
 
 
 void VARS_init() {
-#ifdef ENVARS_SAVE
+
+#if defined(ENVARS_SAVE)
+
     if (current_vfs->objexist("boot\\vars.txt") == 1) {
         int current_position = 0;
         Content* content = current_vfs->getobj("boot\\vars.txt");
@@ -24,7 +26,9 @@ void VARS_init() {
         current_vfs->putobj("boot", content);
         FSLIB_unload_content_system(content);
     }
+
 #endif
+
 }
 
 // -1 - nexists
@@ -75,6 +79,8 @@ void VARS_delete(char* name) {
 }
 
 void VARS_save() {
-#ifdef ENVARS_SAVE
+
+#if defined(ENVARS_SAVE)
 #endif
+
 }

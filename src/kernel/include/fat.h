@@ -206,6 +206,7 @@ extern unsigned int ext_root_cluster;
 	int FAT_cluster_write(void* contentsToWrite, unsigned int clusterNum);
 	int FAT_cluster_writeoff(void* contentsToWrite, unsigned int clusterNum, uint32_t offset, uint32_t size);
 	int FAT_cluster_clear(unsigned int clusterNum);
+	void FAT_cluster2content(Content* content);
 
 //===================================
 

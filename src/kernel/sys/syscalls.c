@@ -94,12 +94,6 @@ void syscall(struct Registers* regs) {
         //=======================
         //  KEYBOARD SYSCALLS
         //=======================
-
-            else if (regs->eax == SYS_READ_KEYBOARD) {
-                char* buffer    = (char*)regs->ecx;
-                uint8_t stop[2] = { STOP_KEYBOARD, '\0' };
-                enable_keyboard(buffer, HIDDEN_KEYBOARD, -1, stop);
-            } 
             
             else if (regs->eax == SYS_GET_KEY_KEYBOARD) {
                 char* key_buffer = (char*)regs->ecx;
@@ -176,6 +170,12 @@ void syscall(struct Registers* regs) {
         //  SYSTEM MEMMANAGER SYSCALLS
         //=======================
 
+            else if (regs->eax == SYS_PAGE_FREE) {
+                void* ptr_to_free = (void*)regs->ebx;
+                if (ptr_to_free != NULL)
+                    kfreep(ptr_to_free);
+            }
+
 #ifndef USERMODE
 
             else if (regs->eax == SYS_MALLOC) {
@@ -199,15 +199,7 @@ void syscall(struct Registers* regs) {
                     kfree(ptr_to_free);
             }
 
-#endif
-
-            else if (regs->eax == SYS_PAGE_FREE) {
-                void* ptr_to_free = (void*)regs->ebx;
-                if (ptr_to_free != NULL)
-                    kfreep(ptr_to_free);
-            }
-
-#ifdef USERMODE
+#elif defined(USERMODE)
 
             else if (regs->eax == SYS_MALLOC) {
                 uint32_t size = regs->ebx;
@@ -316,21 +308,6 @@ void syscall(struct Registers* regs) {
             regs->eax = (uint32_t)current_vfs->getobj(content_path);
         } 
         
-        else if (regs->eax == SYS_EXECUTE_FILE) {
-            char* exec_path = (char*)regs->ebx;
-            char** argv     = (char**)regs->edx;
-            int args        = (int)regs->ecx;
-
-#ifdef USERMODE
-            regs->eax = (uint32_t)current_vfs->objexec(exec_path, args, argv, USER);
-#endif
-
-#ifndef USERMODE
-            regs->eax = (uint32_t)current_vfs->objexec(exec_path, args, argv, KERNEL);
-#endif
-
-        } 
-        
         else if (regs->eax == SYS_CEXISTS) {
             int* result = (int*)regs->ecx;
             char* path  = (char *)regs->ebx;
@@ -398,6 +375,17 @@ void syscall(struct Registers* regs) {
             int offset_len   = (int)regs->esi;
             
             current_vfs->writeoff(content, buffer, offset, offset_len);
+        }
+
+        else if (regs->eax == SYS_READ_ELF) {
+            char* path = (char*)regs->ebx;
+
+#ifdef USERMODE
+		    regs->eax = ELF_read(path, USER);
+#else
+		    regs->eax = ELF_read(path, KERNEL);
+#endif
+
         }
 
     //=======================

@@ -37,21 +37,56 @@ typedef struct vfs_node {
     // Functions
     //===========
 
-        file_read             read;
-        file_read_stop        read_stop;
-        file_read_offset      readoff;
+        // Read content and return char*
+        // Content
+        file_read read;
+
+        // Read content and return char* (stop reading when meets stop symbols)
+        // Content, stop
+        file_read_stop read_stop;
+
+        // Read content to buffer with file seek
+        // Content, buffer, seek, size
+        file_read_offset readoff;
+
+        // Read content to buffer with file seek (stop reading when meets stop symbols)
+        // Content, buffer, seek, size, stop
         file_read_offset_stop readoff_stop;
 
-        file_write          write;
-        file_write_offset   writeoff;
+        // Write data to content (Change FAT table for allocate \ deallocate clusters)
+        // Content, data
+        file_write write;
 
-        open_dir            dir;
-        get_object          getobj;
-        object_exists       objexist;
-        put_object          putobj;
-        delete_object       delobj;
-        object_execute      objexec;
-        object_meta_change  objmetachg;
+        // Write data to content with offset (Change FAT table for allocate \ deallocate clusters)
+        // Content, buffer, seek, size
+        file_write_offset writeoff;
+
+        // Return Directory of current cluster
+        open_dir dir;
+
+        // Get Content by path
+        // Path
+        get_object getobj;
+
+        // Check if content exists (0 - nexists)
+        // Path
+        object_exists objexist;
+
+        // Put content to directory by path
+        // Path, content
+        put_object putobj;
+
+        // Delete content from directory by path
+        // Path, name
+        delete_object delobj;
+
+        // Execute content in specified address space (this function don`t create new page directory)
+        // Path, argc, argv, address space
+        object_execute objexec;
+
+        // Change meta of content
+        // Path, new meta
+        object_meta_change objmetachg;
 
     //===========
     // Functions

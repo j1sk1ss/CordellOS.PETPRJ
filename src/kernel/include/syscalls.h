@@ -30,7 +30,7 @@
 #define SYS_GET_SCRCHAR        22
 #define SYS_SET_SCRCHAR        23
 #define SYS_SET_SCRCOLOR       24
-#define SYS_READ_KEYBOARD      4
+#define SYS_READ_ELF           4
 #define SYS_GET_KEY_KEYBOARD   5
 #define SYS_AREAD_KEYBOARD     19
 #define SYS_AREAD_KEYBOARD_STP 46
@@ -63,7 +63,7 @@
 #define SYS_WRITE_FILE_OFF     50
 #define SYS_OPENDIR            11
 #define SYS_GET_CONTENT        30
-#define SYS_EXECUTE_FILE       12
+#define SYS_EXECUTE_FILE       12 // FREE
 #define SYS_CEXISTS            15
 #define SYS_FCREATE            16
 #define SYS_DIRCREATE          17

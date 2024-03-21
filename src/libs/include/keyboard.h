@@ -38,6 +38,6 @@ void input_read_stop(int mode, uint8_t color, char* stop_list, char* buffer);
 char get_char();
 
 char keyboard_wait();
-char wait_char(char* keys);
+char wait_char();
 
 #endif

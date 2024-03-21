@@ -80,4 +80,10 @@ ELF32_program* ELF_read(const char* path, int type) {
     return program;
 }
 
-// NO PROBLEMS
+void ELF_free_program(ELF32_program* program) {
+    for (uint32_t i = 0; i < program->pages_count; i++) 
+        freep((void*)program->pages[i]);
+
+    kfree(program->pages);
+    kfree(program);
+}

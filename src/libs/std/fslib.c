@@ -340,18 +340,9 @@ void chgcontent(const char* path, directory_entry_t* meta) {
 //  ECX - args (count)
 //  EDX - argv (array of args)
 int fexec(char* path, int argc, char** argv) {
-    int result = 0;
-    __asm__ volatile(
-        "movl $12, %%eax\n"
-        "movl %1, %%ebx\n"
-        "movl %2, %%ecx\n"
-        "movl %3, %%edx\n"
-        "int $0x80\n"
-        "movl %%eax, %0\n"
-        : "=r"(result)
-        : "m"((uint32_t)path), "r"(argc), "m"(argv)
-        : "eax", "ebx", "ecx", "edx"
-    );
+    struct ELF_program* program = get_entry_point(path);
+    int result = execute(program, argc, argv);
+    free_program(program);
 
     return result;
 }

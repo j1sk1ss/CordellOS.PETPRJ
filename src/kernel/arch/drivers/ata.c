@@ -205,6 +205,9 @@ ata_dev_t secondary_slave  = {.slave = 1};
         ATA_ata_wait();
 
         uint8_t* buffer = (uint8_t*)kmalloc(SECTOR_SIZE);
+        uint8_t dummy_buffer[SECTOR_SIZE] = { NULL };
+
+        uint8_t* buffer_pointer = buffer;
         memset(buffer, 0, SECTOR_SIZE);
         
         ATA_prepare4reading(lba);
@@ -221,17 +224,17 @@ ata_dev_t secondary_slave  = {.slave = 1};
         for (int n = 0; n < SECTOR_SIZE / 2; n++) {
             uint16_t value = i386_inw(DATA_REGISTER);
             uint8_t first = (uint8_t)(value & 0xFF);
-            buffer[n * 2] = first;
+            buffer_pointer[n * 2] = first;
             if (first == stop[0]) {
                 stop[0] = STOP_SYMBOL;
-                break;
+                buffer_pointer = dummy_buffer;
             }
 
             uint8_t second = (uint8_t)(value >> 8);
-            buffer[n * 2 + 1] = second;
+            buffer_pointer[n * 2 + 1] = second;
             if (second == stop[0]) {
                 stop[0] = STOP_SYMBOL;
-                break;
+                buffer_pointer = dummy_buffer;
             }
         }
 
@@ -242,6 +245,9 @@ ata_dev_t secondary_slave  = {.slave = 1};
     uint8_t* ATA_read_sector_stopoff(uint32_t lba, uint32_t offset, uint8_t* stop) {
         ATA_ata_wait();
         uint8_t* buffer = (uint8_t*)kmalloc(SECTOR_SIZE);
+        uint8_t dummy_buffer[SECTOR_SIZE] = { NULL };
+
+        uint8_t* buffer_pointer = buffer;
         memset(buffer, 0, SECTOR_SIZE);
         
         ATA_prepare4reading(lba);
@@ -254,24 +260,24 @@ ata_dev_t secondary_slave  = {.slave = 1};
                 return NULL;
             }
             else continue;
-
+        
         for (int n = 0; n < SECTOR_SIZE / 2; n++) {
             uint16_t value = i386_inw(DATA_REGISTER);
             uint8_t first = (uint8_t)(value & 0xFF);
-            buffer[n * 2] = first;
+            buffer_pointer[n * 2] = first;
             if (first == stop[0] && n * 2 >= offset) {
                 stop[0] = STOP_SYMBOL;
-                break;
+                buffer_pointer = dummy_buffer;
             }
 
             uint8_t second = (uint8_t)(value >> 8);
-            buffer[n * 2 + 1] = second;
+            buffer_pointer[n * 2 + 1] = second;
             if (second == stop[0] && n * 2 + 1 >= offset) {
                 stop[0] = STOP_SYMBOL;
-                break;
+                buffer_pointer = dummy_buffer;
             }
         }
-
+        
         return buffer;
     }
 

@@ -83,13 +83,12 @@ char get_char() {
 //====================================================================
 //  This function waits an any button pressing from user
 //  ECX - pointer to character
-char wait_char(char* keys) {
-    __asm__ volatile(
-        "movl $4, %%eax\n"
-        "movl %0, %%ecx\n"
-        "int %1\n"
-        :
-        : "r"(keys), "i"(SYSCALL_INTERRUPT)
-        : "eax", "ebx", "ecx", "edx"
-    );
+char wait_char() {
+    char buffer[10];
+    char stop[2] = { STOP_KEYBOARD, '\0' };
+
+    input_read_stop(HIDDEN_KEYBOARD, -1, stop, buffer);
+    while (stop[0] != '\250') { continue; }
+    
+    return buffer[0];
 }

@@ -18,6 +18,7 @@ void VFS_initialize(ata_dev_t* dev, uint32_t fs_type) {
 
         vfs_list->write      = FAT_write_content;
         vfs_list->writeoff   = FAT_write_buffer2content;
+
         vfs_list->dir        = FAT_directory_list;
         vfs_list->getobj     = FAT_get_content;
         vfs_list->objexist   = FAT_content_exists;
@@ -45,6 +46,7 @@ void VFS_add_node(ata_dev_t* dev, uint32_t fs_type) {
 
         new_node->write      = FAT_write_content;
         new_node->writeoff   = FAT_write_buffer2content;
+        
         new_node->dir        = FAT_directory_list;
         new_node->getobj     = FAT_get_content;
         new_node->objexist   = FAT_content_exists;

@@ -177,10 +177,14 @@ char get_character(char character) {
             if (!(character & 0x80)) {
                 key_pressed[character] = true;
                 char currentCharacter = alphabet[character];
-                int chr_pos = -1;
-                while (stop_buffer[++chr_pos] != '\0') 
+
+                //==============
+                //  Work with stop symbols
+
+                int chr_pos = 0;
+                while (stop_buffer[chr_pos] != '\0') {
                     if (stop_buffer[chr_pos] == currentCharacter || stop_buffer[chr_pos] == STOP_KEYBOARD) {
-                        input[max(0, strlen(input))] = stop_buffer[chr_pos];
+                        input[max(0, strlen(input))] = stop_buffer[chr_pos] == STOP_KEYBOARD ? currentCharacter : stop_buffer[chr_pos];
                         stop_buffer[0] = '\250';
 
                         char_buffer = NULL;
@@ -191,6 +195,12 @@ char get_character(char character) {
 
                         return;
                     }
+                
+                    chr_pos++;
+                }
+                
+                //  Work with stop symbols
+                //==============
 
                 if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) currentCharacter = shift_alphabet[character];
                 if (currentCharacter == LSHIFT_BUTTON || currentCharacter == RSHIFT_BUTTON) return;
@@ -211,6 +221,8 @@ char get_character(char character) {
                     else kprintf("%c", currentCharacter);
 
                 input[pos++] = currentCharacter;
+
+
             }
 
             if (key_pressed[LSHIFT] || key_pressed[RSHIFT]) {

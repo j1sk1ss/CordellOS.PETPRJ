@@ -309,10 +309,6 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
     //===================
     // Kernel2user part
     //===================
-    
-    char* argv[1] = { "BOOT\\BOOT.TXT" };
-    current_vfs->objexec("HOME\\APPS\\STD\\EDITOR\\EDITOR.ELF", 1, argv, KERNEL);
-    for(;;);
 
 #pragma region [Preparations for user land]
 
