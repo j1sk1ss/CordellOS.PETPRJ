@@ -3,7 +3,7 @@ Simple OS based on .asm / .c double stage boot loader, and .c / .cpp based kerne
 </br>
 For building you can download image in packages, then run container with next commands:</br>
 
-    docker run -it -v [path to your project]:/home/os-dev/project --privileged=true --rm ghcr.io/j1sk1ss/os-dev-env:v02</br>
+    docker run -it -v [path to your project]:/home/os-dev/project --privileged=true --rm ghcr.io/j1sk1ss/os-dev-env:v02
 
                     
 Where:</br>
