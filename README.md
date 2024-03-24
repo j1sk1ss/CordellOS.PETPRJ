@@ -1,19 +1,25 @@
 # CordellOS.MPRJ
 Simple OS based on .asm / .c double stage boot loader, and .c / .cpp based kernel with GCC .c / .cpp compiler. 
 </br>
-For building you can download image in packages, then run container with next commands:
-    docker run -it -v [path to your project]:/home/os-dev/project --privileged=true --rm ghcr.io/j1sk1ss/os-dev-env:v02
-    Where:
-      -it - means that when you run this container you will get command line (fedora 38)
-      -v [path]:[path] - means that we connect your project with container directory
-      --privileged=true - needs for working with dev loop (Optional for creating images of OS)
-      --rm - delete container after use (Optional)
+For building you can download image in packages, then run container with next commands:</br>
 
-    Before compile be sure that your script has right link to tool_chain. In this container tool_chain placed in /home/os-dev/tool_chain
-    Used GSS 11.2.0
-    And used binutils 2.37
+    docker run -it -v [path to your project]:/home/os-dev/project --privileged=true --rm ghcr.io/j1sk1ss/os-dev-env:v02</br>
 
-    Also this container contains fedora 38, python3, scons, pyparted, nasm, ... and grub tools.
+                    
+Where:</br>
+-it - means that when you run this container you will get command line (fedora 38)</br>
+-v [path]:[path] - means that we connect your project with container directory</br>
+--privileged=true - needs for working with dev loop (Optional for creating images of OS)</br>
+--rm - delete container after use (Optional)</br>
+</br></br>
+Before compile be sure that your script has right link to tool_chain. In this container tool_chain placed in 
+
+    /home/os-dev/tool_chain</br>
+
+Used GSS 11.2.0</br>
+And used binutils 2.37</br>
+
+Also this container contains fedora 38, python3, scons, pyparted, nasm, ... and grub tools.</br>
     
 </br>
 
