@@ -14,7 +14,7 @@ Where:</br>
 </br></br>
 Before compile be sure that your script has right link to tool_chain. In this container tool_chain placed in 
 
-    /home/os-dev/tool_chain</br>
+    /home/os-dev/tool_chain
 
 Used GSS 11.2.0</br>
 And used binutils 2.37</br>
