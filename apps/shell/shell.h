@@ -49,7 +49,10 @@
 
         #define COMMAND_IN_DIR                          "cd"
         #define COMMAND_OUT_DIR                         ".."
-        #define COMMAND_LIST_DIR                        "dir"
+        #define COMMAND_LIST_DIR                        "ls"
+        #define COMMAND_DELETE_CONTENT                  "rm"
+        #define COMMAND_MAKE_FILE                       "mkfile"
+        #define COMMAND_MAKE_DIR                        "mkdir"
 
         #define COMMAND_IPCONFIG                        "ipconf"
         #define COMMAND_SEND_UDP_PACKET                 "udp-spacc"
@@ -77,5 +80,6 @@ void shell_start_screen();
 void execute_command(char* command);
 
 int ulogin(char* login, char* password);
+char* get_path(char* path);
 
 #endif

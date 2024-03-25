@@ -15,10 +15,10 @@ void main(int argc, char* argv[]) {
     //====================
     //  SET INIT ENVARS
 
-        if (envar_exists("clc") == -1) envar_add("clc", "HOME\\APPS\\STD\\CALC\\CALC.ELF");
-        if (envar_exists("mng") == -1) envar_add("mng", "HOME\\APPS\\STD\\MNG\\MNG.ELF");
-        if (envar_exists("edt") == -1) envar_add("edt", "HOME\\APPS\\STD\\EDITOR\\EDITOR.ELF");
-        if (envar_exists("asm") == -1) envar_add("asm", "HOME\\APPS\\STD\\ASM\\ASM.ELF");
+        if (envar_exists("clc") == -1) envar_add("clc", "\\HOME\\APPS\\STD\\CALC\\CALC.ELF");
+        if (envar_exists("mng") == -1) envar_add("mng", "\\HOME\\APPS\\STD\\MNG\\MNG.ELF");
+        if (envar_exists("edt") == -1) envar_add("edt", "\\HOME\\APPS\\STD\\EDITOR\\EDITOR.ELF");
+        if (envar_exists("asm") == -1) envar_add("asm", "\\HOME\\APPS\\STD\\ASM\\ASM.ELF");
 
     //  SET INIT ENVARS
      //====================
@@ -52,6 +52,7 @@ void main(int argc, char* argv[]) {
 
             clrscr();
         }
+        else printf("\n[WARNING!] BOOT\\USERS.TXT NOT EXISTS. YOUR SYSTEM NOT PROTECTED!\n");
 
     //  USER
     //====================
@@ -83,7 +84,7 @@ void main(int argc, char* argv[]) {
 
 void shell_start_screen() {
     printf("\n");
-    printf("Cordell Shell [ver. 0.5d | 13.03.2024]\n");
+    printf("Cordell Shell [ver. 0.6a | 25.03.2024]\n");
     printf("Stai entrando nella shell del kernel leggero. Usa [aiuto] per ottenere aiuto.\n\n");
 }
 
@@ -217,7 +218,14 @@ void shell_start_screen() {
                     current_path = up_path;         
                 }
                 else {
-                    char* dir_path = FSLIB_change_path(current_path, command_line[1]);
+                    char* path = command_line[1];
+                    char* dir_path = NULL;
+
+                    if (path[0] == '\\') {
+                        memmove(path, path + 1, strlen(path));
+                        dir_path = path;
+                    } else dir_path = FSLIB_change_path(current_path, path);
+
                     if (cexists(current_path) == 0) {
                         free(dir_path);
                         printf("\nLA DIRECTORY NON ESISTE");
@@ -236,6 +244,20 @@ void shell_start_screen() {
                     free(current_path);
                     current_path = dir_path;
                 }
+            }
+
+            else if (strstr(command_line[0], COMMAND_MAKE_FILE) == 0) mkfile(current_path, command_line[1]);
+            else if (strstr(command_line[0], COMMAND_MAKE_DIR) == 0) mkdir(current_path, command_line[1]);
+
+            else if (strstr(command_line[0], COMMAND_DELETE_CONTENT) == 0) {
+                char* path = get_path(command_line[1]); 
+                if (cexists(path) == 0) {
+                    printf("\nLA CONTENT NON ESISTE");
+                    free(path);
+                    return;
+                }
+
+                rmcontent(path);         
             }
 
             else if (strstr(command_line[0], COMMAND_LIST_DIR) == 0) {
@@ -259,7 +281,7 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_FILE_VIEW) == 0) {
-                char* file_path = FSLIB_change_path(current_path, command_line[1]);
+                char* file_path = get_path(command_line[1]);
                 if (cexists(file_path) == 0) {
                     printf("\nLA FILE NON ESISTE");
                     free(file_path);
@@ -286,7 +308,7 @@ void shell_start_screen() {
             }
 
             else if (strstr(command_line[0], COMMAND_BMP_SHOW) == 0) {
-                char* file_path = FSLIB_change_path(current_path, command_line[1]);
+                char* file_path = get_path(command_line[1]);
                 if (cexists(file_path) == 0) {
                     printf("\nLA FILE NON ESISTE");
                     free(file_path);
@@ -308,16 +330,17 @@ void shell_start_screen() {
                     pos++;
                 }
 
-                if (cexists(command_line[1]) == 0) {
-                    printf("\nLA FILE [%s] NON ESISTE", command_line[1]);
+                char* file_path = get_path(command_line[1]);
+                if (cexists(file_path) == 0) {
+                    printf("\nLA FILE [%s] NON ESISTE", file_path);
                     return;
                 }
 
-                printf("\nCODE: [%i]\n", fexec(command_line[1], pos - 2, exe_argv));
+                printf("\nCODE: [%i]\n", fexec(file_path, pos - 2, exe_argv));
             }
 
             else if (strstr(command_line[0], COMMAND_CINFO) == 0) {
-                char* info_file = FSLIB_change_path(current_path, command_line[1]);
+                char* info_file = get_path(command_line[1]);
                 if (cexists(info_file) == 0) {
                     printf("\nLA CONTENT NON ESISTE");
                     free(info_file);
@@ -356,6 +379,7 @@ void shell_start_screen() {
                 }
 
                 FSLIB_unload_content_system(content);
+                free(info_file);
             }
 
         //====================
@@ -446,4 +470,15 @@ int ulogin(char* login, char* password) {
 
     free(content_text);
     return 0;
+}
+
+char* get_path(char* path) {
+    char* file_path = NULL;
+
+    if (path[0] == '\\') {
+        memmove(path, path + 1, strlen(path));
+        file_path = path;
+    } else file_path = FSLIB_change_path(current_path, path);
+
+    return file_path;
 }

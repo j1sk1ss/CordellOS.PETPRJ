@@ -808,7 +808,7 @@ void asm_executor(int *memory_array, int memory_index, int start, int end) {
 
 			case RMFILE_INSTRUCTION:
 				if (cexists(intermediate_table[i]->string) == 1)
-					rmcontent(intermediate_table[i]->string_params[1], intermediate_table[i]->string_params[0]);
+					rmcontent(intermediate_table[i]->string_params[1]);
 			break;
 
 			case WFILE_INSTRUCTION:

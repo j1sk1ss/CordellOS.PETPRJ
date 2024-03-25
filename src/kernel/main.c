@@ -113,16 +113,10 @@
 void shell() {
 
 #ifdef USERMODE
-
     i386_switch2user();
     fexec(SHELL_PATH, 0, NULL);
-
-#endif
-    
-#ifndef USERMODE
-
+#else
     current_vfs->objexec(SHELL_PATH, 0, NULL, KERNEL);
-
 #endif
 
 }
@@ -156,7 +150,8 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         else _screenBuffer = (uint8_t*)(uintptr_t)mb_info->framebuffer_addr;
 
         kprintf("\n\t\t =    CORDELL  KERNEL    =");
-        kprintf("\n\t\t =     [ ver.   16 ]     = \n\n");
+        kprintf("\n\t\t =     [ ver.   17 ]     = \n");
+        kprintf("\n\t\t =     [ 25.03  24 ]     = \n\n");
         kprintf("\n\t\t = INFORMAZIONI GENERALI = \n\n");
         kprintf("\tMB FLAGS:        [0x%p]\n", mb_info->flags);
         kprintf("\tMEM LOW:         [%uKB] => MEM UP: [%uKB]\n", mb_info->mem_lower, mb_info->mem_upper);

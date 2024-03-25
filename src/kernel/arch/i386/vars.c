@@ -78,6 +78,14 @@ void VARS_delete(char* name) {
     vars_buffer[position]  = NULL;
 }
 
+char** VARS_get_names() {
+    return names_buffer;
+}
+
+char** VARS_get_vars() {
+    return vars_buffer;
+}
+
 void VARS_save() {
 
 #if defined(ENVARS_SAVE)

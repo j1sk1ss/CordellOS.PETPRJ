@@ -243,7 +243,7 @@ extern unsigned int ext_root_cluster;
 	void FAT_read_content2buffer(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size);
 	void FAT_read_content2buffer_stop(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size, uint8_t* stop);
 	int FAT_put_content(const char* filePath, Content* content);
-	int FAT_delete_content(const char* filePath, const char* name);
+	int FAT_delete_content(const char* path);
 	int FAT_write_content(Content* content, char* content_data);
 	void FAT_write_buffer2content(Content* data, uint8_t* buffer, uint32_t offset, uint32_t size);
 	int FAT_ELF_execute_content(char* path, int argc, char* argv[], int type);
@@ -267,7 +267,7 @@ extern unsigned int ext_root_cluster;
 	int FAT_name_check(const char* input);
 	unsigned char FAT_check_sum(unsigned char *pFcbName);
 
-	directory_entry_t* FAT_create_entry(const char* filename, const char* ext, int isDir, uint32_t firstCluster, uint32_t filesize);
+	directory_entry_t* FAT_create_entry(const char* name, const char* ext, BOOL isDir, uint32_t firstCluster, uint32_t filesize);
 	Content* FAT_create_content(char* name, BOOL directory, char* extension);
 
 //===================================

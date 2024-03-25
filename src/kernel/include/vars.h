@@ -18,4 +18,7 @@ void VARS_set(char* name, char* value);
 void VARS_add(char* name, char* value);
 void VARS_delete(char* name);
 
+char** VARS_get_names();
+char** VARS_get_vars();
+
 #endif

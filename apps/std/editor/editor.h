@@ -28,4 +28,4 @@ enum editor_modes {
 
 int main(int argc, char *argv[]);
 int loop();
-void display_text();
+int display_text();

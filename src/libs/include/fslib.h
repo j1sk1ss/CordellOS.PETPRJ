@@ -30,7 +30,7 @@
 typedef struct directory_entry {
 	uint8_t file_name[11];
 	uint8_t attributes;
-	uint8_t reserved0;
+	uint8_t reserved0; // Here place access
 	uint8_t creation_time_tenths;
 	unsigned short creation_time;
 	unsigned short creation_date;
@@ -73,6 +73,8 @@ typedef struct FATDate {
 typedef struct FATContent {
 	Directory* directory;
 	File* file;
+
+	uint32_t parent_cluster;
 } Content;
 
 
@@ -85,7 +87,7 @@ char* FSLIB_change_path(const char* currentPath, const char* content);
 Date* FSLIB_get_date(short data, int type);
 
 int cexists(const char* path);
-void rmcontent(const char* path, const char* name);
+void rmcontent(const char* path);
 void chgcontent(const char* path, directory_entry_t* meta);
 
 char* fread(const char* path);

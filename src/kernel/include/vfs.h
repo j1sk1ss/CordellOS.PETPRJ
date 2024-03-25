@@ -24,7 +24,7 @@ typedef Directory* (*open_dir)(const unsigned int, unsigned char, short);
 typedef Content* (*get_object)(const char*);
 typedef int (*object_exists)(const char*);
 typedef int (*put_object)(const char*, Content*);
-typedef int (*delete_object)(const char*, const char*);
+typedef int (*delete_object)(const char*);
 typedef int (*object_execute)(char*, int, char**, int);
 typedef int (*object_meta_change)(const char*, directory_entry_t*);
 

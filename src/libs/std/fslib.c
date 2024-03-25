@@ -305,15 +305,14 @@ void mkdir(const char* path, const char* name) {
 //  This function remove content
 //  EBX - path
 //  ECX - name (if file - with extention)
-void rmcontent(const char* path, const char* name) {
+void rmcontent(const char* path) {
     __asm__ volatile(
         "movl $18, %%eax\n"
         "movl %0, %%ebx\n"
-        "movl %1, %%ecx\n"
         "int $0x80\n"
         :
-        : "r"((uint32_t)path), "r"((uint32_t)name)
-        : "eax", "ebx", "ecx"
+        : "r"((uint32_t)path)
+        : "eax", "ebx"
     );
 }
 

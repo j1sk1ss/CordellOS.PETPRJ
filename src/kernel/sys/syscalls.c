@@ -322,7 +322,6 @@ void syscall(struct Registers* regs) {
             char* fexec = strtok(NULL, "."); 
 
             Content* mkfile_content = FAT_create_content(fname, FALSE, fexec);
-
             current_vfs->putobj(mkfile_path, mkfile_content);
             FSLIB_unload_content_system(mkfile_content);
         } 
@@ -331,16 +330,14 @@ void syscall(struct Registers* regs) {
             char* mkdir_path = (char*)regs->ebx;
             char* mkdir_name = (char*)regs->ecx;
 
-            Content* mkdir_content = FAT_create_content(mkdir_name, TRUE, "");
-
+            Content* mkdir_content = FAT_create_content(mkdir_name, TRUE, "\0");
             current_vfs->putobj(mkdir_path, mkdir_content);
             FSLIB_unload_content_system(mkdir_content);
         } 
         
         else if (regs->eax == SYS_CDELETE) {
             char* delete_path = (char*)regs->ebx;
-            char* delete_name = (char*)regs->ecx;
-            current_vfs->delobj(delete_path, delete_name);
+            current_vfs->delobj(delete_path);
         } 
         
         else if (regs->eax == SYS_CHANGE_META) {
@@ -381,9 +378,9 @@ void syscall(struct Registers* regs) {
             char* path = (char*)regs->ebx;
 
 #ifdef USERMODE
-		    regs->eax = ELF_read(path, USER);
+		    regs->eax = (uint32_t)ELF_read(path, USER);
 #else
-		    regs->eax = ELF_read(path, KERNEL);
+		    regs->eax = (uint32_t)ELF_read(path, KERNEL);
 #endif
 
         }

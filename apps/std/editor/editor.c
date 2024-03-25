@@ -5,10 +5,11 @@
 // - Cursor show
 // - Text edit
 
-Content* edit_content;
-File* edit_file;
 
-char* edit_path;
+Content* edit_content = NULL;
+File* edit_file = NULL;
+
+char* edit_path = NULL;
 int current_line = 0;
 
 int mode = VIEW;
@@ -20,12 +21,13 @@ int main(int argc, char *argv[]) {
         mode = atoi(argv[1]);
     }
     else {
-        mkfile("home", "tfile.txt");
+        mkfile("home\\std\\editor", "newf.txt");
         edit_path = "home\\tfile.txt";
     }
     
     current_line = 0;
     edit_content = get_content(edit_path);
+    edit_file    = edit_content->file;
 
     display_text();
     return loop();
@@ -66,12 +68,15 @@ int loop() {
 }
 
 // Save text to editor buffer (prefer static buffer allocation)
-void display_text() {
+int display_text() {
     clrscr();
 
-    int current_height = 0;
-    int offset = 0;
+    printf("FILE: %s.%s | MODE: %s\n", edit_file->name, edit_file->extension, 
+        mode == EDIT ? "EDIT" : "VIEW"
+    );
 
+    int offset = 0;
+    int current_height = 0;
     while (current_height++ < current_line) {
         char buffer[CHARS_ON_LINE] = { '\0' };
         char stop[1] = { '\n' };
@@ -80,7 +85,7 @@ void display_text() {
         offset += strlen(buffer);
     }
 
-    for (int i = 0; i < SCREEN_HEIGHT; i++) {
+    for (int i = 1; i < SCREEN_HEIGHT; i++) {
         char text2display[CHARS_ON_LINE] = { '\0' };
         char stop[1] = { '\n' };
 
@@ -92,5 +97,7 @@ void display_text() {
     
     cursor_set(0, SCREEN_HEIGHT);
     printf("| F3 - EXIT | F1 - SAVE & EXIT | F2 - SAVE |");
+
     cursor_set(0, 1);
+    return offset;
 }
