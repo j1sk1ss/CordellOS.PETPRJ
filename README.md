@@ -19,8 +19,8 @@ Before compile be sure that your script has right link to tool_chain. In this co
 Used GSS 11.2.0</br>
 And used binutils 2.37</br>
 
-Also this container contains fedora 38, gcc gcc-c++ make bison flex gmp-devel libmpc-devel mpfr-devel texinfo nasm mtools qemu-system-x86 and grub tools.</br>
-This container tested in MacOS 10.15, Windows 10 and Fedora 38</br> 
+Also this container contains fedora 38, gcc, gcc-c++, make, bison, flex, gmp-devel, libmpc-devel, mpfr-devel, texinfo, nasm, mtools, qemu-system-x86, and grub tools.</br>
+This container tested in MacOS 10.15, Windows 10 (On win10 can be problems with image building. But compiling works fine) and Fedora 38</br> 
     
 </br>
 
