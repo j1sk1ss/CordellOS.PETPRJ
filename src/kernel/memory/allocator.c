@@ -8,10 +8,15 @@
 	malloc_block_t* kmalloc_list_head = NULL;
 	malloc_block_t* umalloc_list_head = NULL;
 
-	uint32_t malloc_virt_address     = 0x300000;
-	uint32_t malloc_phys_address     = 0;
-	uint32_t total_malloc_pages      = 0;
-	page_directory* malloc_dir		 = 0;
+	uint32_t malloc_virt_address  = 0x300000;
+	uint32_t kmalloc_phys_address = 0;
+	uint32_t umalloc_phys_address = 0;
+
+	uint32_t total_kmalloc_pages = 0;
+	uint32_t total_umalloc_pages = 0;
+
+	page_directory* kmalloc_dir	= 0;
+	page_directory* umalloc_dir = 0;
 
 //===========================
 //	GLOBAL VARS
@@ -22,54 +27,48 @@
 //===========================
 
 	void kmm_init(const uint32_t bytes) {
-		malloc_dir = current_page_directory;
-		total_malloc_pages = bytes / PAGE_SIZE;
-		if (bytes % PAGE_SIZE > 0) total_malloc_pages++;
+		kmalloc_dir = current_page_directory;
+		total_kmalloc_pages = bytes / PAGE_SIZE;
+		if (bytes % PAGE_SIZE > 0) total_kmalloc_pages++;
 
-		malloc_phys_address = (uint32_t)allocate_blocks(total_malloc_pages);
+		kmalloc_phys_address = (uint32_t)allocate_blocks(total_kmalloc_pages);
 		kmalloc_list_head    = (malloc_block_t*)malloc_virt_address;
-		if (!malloc_phys_address) {
-			kprintf("\n[%s %i] Allocated error\n", __FILE__, __LINE__);
-			return;
-		}
+		assert(kmalloc_phys_address);
 
-		for (uint32_t i = 0, virt = malloc_virt_address; i < total_malloc_pages; i++, virt += PAGE_SIZE) {
-			map_page((void*)(malloc_phys_address + i * PAGE_SIZE), (void*)virt);
+		for (uint32_t i = 0, virt = malloc_virt_address; i < total_kmalloc_pages; i++, virt += PAGE_SIZE) {
+			map_page2kernel((void*)(kmalloc_phys_address + i * PAGE_SIZE), (void*)virt);
 			pt_entry* page = get_page(virt);
 			SET_ATTRIBUTE(page, PTE_READ_WRITE);
 		}
 
 		if (kmalloc_list_head != NULL) {
 			kmalloc_list_head->v_addr = malloc_virt_address;
-			kmalloc_list_head->pcount = total_malloc_pages;
-			kmalloc_list_head->size   = (total_malloc_pages * PAGE_SIZE) - sizeof(malloc_block_t);
+			kmalloc_list_head->pcount = total_kmalloc_pages;
+			kmalloc_list_head->size   = (total_kmalloc_pages * PAGE_SIZE) - sizeof(malloc_block_t);
 			kmalloc_list_head->free   = true;
 			kmalloc_list_head->next   = NULL;
 		}
 	}
 
 	void umm_init(const uint32_t bytes) {
-		malloc_dir = current_page_directory;
-		total_malloc_pages = bytes / PAGE_SIZE;
-		if (bytes % PAGE_SIZE > 0) total_malloc_pages++;
+		umalloc_dir = current_page_directory;
+		total_umalloc_pages = bytes / PAGE_SIZE;
+		if (bytes % PAGE_SIZE > 0) total_umalloc_pages++;
 
-		malloc_phys_address  = (uint32_t)allocate_blocks(total_malloc_pages);
+		umalloc_phys_address = (uint32_t)allocate_blocks(total_umalloc_pages);
 		umalloc_list_head    = (malloc_block_t*)malloc_virt_address;
-		if (!malloc_phys_address) {
-			kprintf("\n[%s %i] Allocated error\n", __FILE__, __LINE__);
-			return;
-		}
+		assert(umalloc_phys_address);
 
-		for (uint32_t i = 0, virt = malloc_virt_address; i < total_malloc_pages; i++, virt += PAGE_SIZE) {
-			map_page2user((void*)(malloc_phys_address + i * PAGE_SIZE), (void*)virt);
+		for (uint32_t i = 0, virt = malloc_virt_address; i < total_umalloc_pages; i++, virt += PAGE_SIZE) {
+			map_page2user((void*)(umalloc_phys_address + i * PAGE_SIZE), (void*)virt);
 			pt_entry* page = get_page(virt);
 			SET_ATTRIBUTE(page, PTE_READ_WRITE);
 		}
 
 		if (umalloc_list_head != NULL) {
 			umalloc_list_head->v_addr = malloc_virt_address;
-			umalloc_list_head->pcount = total_malloc_pages;
-			umalloc_list_head->size   = (total_malloc_pages * PAGE_SIZE) - sizeof(malloc_block_t);
+			umalloc_list_head->pcount = total_umalloc_pages;
+			umalloc_list_head->size   = (total_umalloc_pages * PAGE_SIZE) - sizeof(malloc_block_t);
 			umalloc_list_head->free   = true;
 			umalloc_list_head->next   = NULL;
 		}
@@ -101,7 +100,7 @@
 	void* kmallocp(uint32_t v_addr) {
 		pt_entry page  = 0;
 		uint32_t* temp = allocate_page(&page);
-		map_page((void*)temp, (void*)v_addr);
+		map_page2kernel((void*)temp, (void*)v_addr);
 		SET_ATTRIBUTE(&page, PTE_READ_WRITE);	
 	}
 
@@ -149,13 +148,13 @@
 					while (cur->size + num_pages * PAGE_SIZE < size + sizeof(malloc_block_t))
 						num_pages++;
 
-					uint32_t virt = malloc_virt_address + total_malloc_pages * PAGE_SIZE; // TODO: new pages to new blocks. Don`t mix them to avoid pagedir errors in contswitch
+					uint32_t virt = malloc_virt_address + total_kmalloc_pages * PAGE_SIZE; // TODO: new pages to new blocks. Don`t mix them to avoid pagedir errors in contswitch
 					for (uint8_t i = 0; i < num_pages; i++) {
 						kmallocp(virt);
 
 						virt += PAGE_SIZE;
 						cur->size += PAGE_SIZE;
-						total_malloc_pages++;
+						total_kmalloc_pages++;
 					}
 
 					block_split(cur, size);
@@ -223,13 +222,13 @@
 					while (cur->size + num_pages * PAGE_SIZE < size + sizeof(malloc_block_t))
 						num_pages++;
 
-					uint32_t virt = malloc_virt_address + total_malloc_pages * PAGE_SIZE; // TODO: new pages to new blocks. Don`t mix them to avoid pagedir errors in contswitch
+					uint32_t virt = malloc_virt_address + total_umalloc_pages * PAGE_SIZE; // TODO: new pages to new blocks. Don`t mix them to avoid pagedir errors in contswitch
 					for (uint8_t i = 0; i < num_pages; i++) {
 						umallocp(virt);
 
 						virt += PAGE_SIZE;
 						cur->size += PAGE_SIZE;
-						total_malloc_pages++;
+						total_umalloc_pages++;
 					}
 
 					block_split(cur, size);
@@ -338,7 +337,18 @@
 		return total_free;
 	}
 
-	void print_kmalloc_map() {
+	uint32_t umalloc_total_avaliable() {
+		uint32_t total_free = umalloc_list_head->size + sizeof(malloc_block_t);
+		for (malloc_block_t* cur = umalloc_list_head; cur->next; cur = cur->next)
+			if (cur->next != NULL)
+				total_free += cur->next->size + sizeof(malloc_block_t);
+		
+		return total_free;
+	}
+
+	void print_malloc_map() {
+#ifndef USERMODE 
+
 		kprintf(
 			"\n|%i(%c)|",
 			kmalloc_list_head->size + sizeof(malloc_block_t),
@@ -354,6 +364,26 @@
 				);
 
 		kprintf(" TOTAL: [%iB]\n", kmalloc_total_avaliable());
+
+#elif defined(USERMODE)
+
+		kprintf(
+			"\n|%i(%c)|",
+			umalloc_list_head->size + sizeof(malloc_block_t),
+			umalloc_list_head->free == true ? 'F' : 'O'
+		);
+
+		for (malloc_block_t* cur = umalloc_list_head; cur->next; cur = cur->next)
+			if (cur->next != NULL)
+				kprintf(
+					"%i(%c)|",
+					cur->next->size + sizeof(malloc_block_t),
+					cur->next->free == true ? 'F' : 'O'
+				);
+
+		kprintf(" TOTAL: [%iB]\n", umalloc_total_avaliable());
+
+#endif
 	}
 
 //===========================

@@ -78,6 +78,10 @@ typedef struct FATContent {
 } Content;
 
 
+Content* FSLIB_create_content();
+Directory* FSLIB_create_directory();
+File* FSLIB_create_file();
+
 void FSLIB_unload_directories_system(Directory* directory);
 void FSLIB_unload_files_system(File* file);
 void FSLIB_unload_content_system(Content* content);

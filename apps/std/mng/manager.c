@@ -60,8 +60,10 @@ void open_content() {
     }
 
     else if (choosed_content.file != NULL) {
-        if (strstr(choosed_content.file->extension, "txt") == 0) fexec(envar_get("edt"), 1, current_path);
-        else fexec(envar_get("edt"), 1, current_path);
+        char* argv[1] = { current_path };
+
+        if (strstr(choosed_content.file->extension, "txt") == 0) fexec(envar_get("edt"), 1, argv);
+        else fexec(envar_get("edt"), 1, argv);
     }
 }
 

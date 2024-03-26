@@ -1,6 +1,40 @@
 #include "../include/fslib.h"
 
 
+Content* FSLIB_create_content() {
+    Content* content = (Content*)clralloc(sizeof(Content));
+
+    content->directory      = NULL;
+    content->file           = NULL;
+    content->parent_cluster = -1;
+
+    return content;
+}
+
+Directory* FSLIB_create_directory() {
+    Directory* directory = (Directory*)clralloc(sizeof(Directory));
+
+    directory->name         = NULL;
+    directory->files        = NULL;
+    directory->subDirectory = NULL;
+    directory->next         = NULL;
+    directory->data_pointer = NULL;
+
+    return directory;
+}
+
+File* FSLIB_create_file() {
+    File* file = (File*)clralloc(sizeof(File));
+
+    file->name         = NULL;
+    file->extension    = NULL;
+    file->next         = NULL;
+    file->data         = NULL;
+    file->data_pointer = NULL;
+
+    return file;
+}
+
 void FSLIB_unload_directories_system(Directory* directory) {
     if (directory == NULL) return;
     if (directory->files != NULL) FSLIB_unload_files_system(directory->files);

@@ -150,7 +150,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
         else _screenBuffer = (uint8_t*)(uintptr_t)mb_info->framebuffer_addr;
 
         kprintf("\n\t\t =    CORDELL  KERNEL    =");
-        kprintf("\n\t\t =     [ ver.   17 ]     = \n");
+        kprintf("\n\t\t =     [ ver.   17 ]     =");
         kprintf("\n\t\t =     [ 25.03  24 ]     = \n\n");
         kprintf("\n\t\t = INFORMAZIONI GENERALI = \n\n");
         kprintf("\tMB FLAGS:        [0x%p]\n", mb_info->flags);
@@ -244,7 +244,7 @@ void kernel_main(struct multiboot_info* mb_info, uint32_t mb_magic, uintptr_t es
             // multiplication 2 for hardware
             framebuffer_pages *= 2;
             for (uint32_t i = 0, fb_start = gfx_mode.physical_base_pointer; i < framebuffer_pages; i++, fb_start += PAGE_SIZE)
-                map_page((void*)fb_start, (void*)fb_start);
+                map_page2kernel((void*)fb_start, (void*)fb_start);
 
             deinitialize_memory_region(gfx_mode.physical_base_pointer, framebuffer_pages * BLOCK_SIZE);
             // gfx_mode.virtual_second_buffer = (uint32_t)kmalloc(gfx_mode.buffer_size);

@@ -47,8 +47,8 @@
 		total_clusters    = data_sectors / bootstruct->sectors_per_cluster;
 		first_data_sector = bootstruct->reserved_sector_count + bootstruct->table_count * bootstruct->table_size_16 + (bootstruct->root_entry_count * 32 + bootstruct->bytes_per_sector - 1) / bootstruct->bytes_per_sector;
 
-		if (total_clusters == 0) total_clusters = bootstruct->total_sectors_32 / bootstruct->sectors_per_cluster;
-		else if (total_clusters < 4085) fat_type = 12;
+		if (total_clusters == 0) total_clusters   = bootstruct->total_sectors_32 / bootstruct->sectors_per_cluster;
+		else if (total_clusters < 4085) fat_type  = 12;
 		else if (total_clusters < 65525) fat_type = 16;
 		else {
 			fat_type = 32;
@@ -133,10 +133,10 @@
 		assert(clusterNum >= 2 && clusterNum < total_clusters);
 
 		if (fat_type == 32 || fat_type == 16) {
-			unsigned int cluster_size 	= bytes_per_sector * sectors_per_cluster;
-			unsigned int fat_offset 	= clusterNum * (fat_type == 16 ? 2 : 4);
-			unsigned int fat_sector 	= first_fat_sector + (fat_offset / cluster_size);
-			unsigned int ent_offset 	= fat_offset % cluster_size;
+			unsigned int cluster_size = bytes_per_sector * sectors_per_cluster;
+			unsigned int fat_offset   = clusterNum * (fat_type == 16 ? 2 : 4);
+			unsigned int fat_sector   = first_fat_sector + (fat_offset / cluster_size);
+			unsigned int ent_offset   = fat_offset % cluster_size;
 			
 			uint8_t* cluster_data = ATA_read_sectors(fat_sector, sectors_per_cluster);
 			if (cluster_data == NULL) {
@@ -151,10 +151,8 @@
 			return table_value;
 		}
 		
-		else {
-			kprintf("[%s %i] Function FAT_read: Invalid fat_type value. The value was: %i\n", __FILE__, __LINE__, fat_type);
-			return -1;
-		}
+		kprintf("[%s %i] Function FAT_read: Invalid fat_type value. The value was: %i\n", __FILE__, __LINE__, fat_type);
+		return -1;
 	}
 
 //========================================================================================
@@ -173,10 +171,10 @@
 		assert(clusterNum >= 2 && clusterNum < total_clusters);
 
 		if (fat_type == 32 || fat_type == 16) {
-			unsigned int cluster_size 	= bytes_per_sector * sectors_per_cluster;
-			unsigned int fat_offset 	= clusterNum * (fat_type == 16 ? 2 : 4);
-			unsigned int fat_sector 	= first_fat_sector + (fat_offset / cluster_size);
-			unsigned int ent_offset 	= fat_offset % cluster_size;
+			unsigned int cluster_size = bytes_per_sector * sectors_per_cluster;
+			unsigned int fat_offset   = clusterNum * (fat_type == 16 ? 2 : 4);
+			unsigned int fat_sector   = first_fat_sector + (fat_offset / cluster_size);
+			unsigned int ent_offset   = fat_offset % cluster_size;
 
 			uint8_t* sector_data = ATA_read_sectors(fat_sector, sectors_per_cluster);
 			if (sector_data == NULL) {
@@ -194,10 +192,8 @@
 			return 0;
 		}
 
-		else {
-			kprintf("Function FAT_write: Invalid fat_type value. The value was: %i\n", fat_type);
-			return -1;
-		}
+		kprintf("Function FAT_write: Invalid fat_type value. The value was: %i\n", fat_type);
+		return -1;
 	}
 
 //========================================================================================
@@ -295,6 +291,7 @@
 // Reads one cluster
 // This function deals in absolute data clusters
 
+	// Read cluster data
 	uint8_t* FAT_cluster_read(unsigned int clusterNum) {
 		assert(clusterNum >= 2 && clusterNum < total_clusters);
 
@@ -305,6 +302,7 @@
 		return cluster_data;
 	}
 
+	// Read cluster data and stop reading when script meets one of stop values
 	uint8_t* FAT_cluster_read_stop(unsigned int clusterNum, uint8_t* stop) {
 		assert(clusterNum >= 2 && clusterNum < total_clusters);
 
@@ -315,6 +313,7 @@
 		return response;
 	}
 
+	// Read cluster with seek
 	uint8_t* FAT_cluster_readoff(unsigned int clusterNum, uint32_t offset) {
 		assert(clusterNum >= 2 && clusterNum < total_clusters);
 
@@ -324,6 +323,7 @@
 		return cluster_data;
 	}
 
+	// Read cluster data and stop reading when script meets one of stop values with seek
 	uint8_t* FAT_cluster_readoff_stop(unsigned int clusterNum, uint32_t offset, uint8_t* stop) {
 		assert(clusterNum >= 2 && clusterNum < total_clusters);
 
@@ -364,6 +364,18 @@
 		
 		return 0;
 	}
+
+//========================================================================================
+
+
+//========================================================================================
+//   ____ _    _   _ ____ _____ _____ ____     ___ _____ _   _ _____ ____  
+//  / ___| |  | | | / ___|_   _| ____|  _ \   / _ \_   _| | | | ____|  _ \ 
+// | |   | |  | | | \___ \ | | |  _| | |_) | | | | || | | |_| |  _| | |_) |
+// | |___| |__| |_| |___) || | | |___|  _ <  | |_| || | |  _  | |___|  _ < 
+//  \____|_____\___/|____/ |_| |_____|_| \_\  \___/ |_| |_| |_|_____|_| \_\
+//========================================================================================
+//	Other functions for working with clusters
 
 	int FAT_cluster_clear(unsigned int clusterNum) {
 		assert(clusterNum >= 2 && clusterNum < total_clusters);
@@ -413,18 +425,11 @@
 // returns: -1 is a general error
 
 	Directory* FAT_directory_list(const unsigned int cluster, unsigned char attributesToAdd, BOOL exclusive) {
-		Directory* currentDirectory = (Directory*)kmalloc(sizeof(Directory));
-
-		currentDirectory->name         = NULL;
-		currentDirectory->files        = NULL;
-		currentDirectory->subDirectory = NULL;
-		currentDirectory->next         = NULL;
-		currentDirectory->data_pointer = NULL;
-
+		Directory* currentDirectory = FSLIB_create_directory();
 		assert(cluster >= 2 && cluster < total_clusters);
 		
-		const unsigned char default_hidden_attributes = (FILE_HIDDEN | FILE_SYSTEM);
-		unsigned char attributes_to_hide = default_hidden_attributes;
+		const uint8_t default_hidden_attributes = (FILE_HIDDEN | FILE_SYSTEM);
+		uint8_t attributes_to_hide = default_hidden_attributes;
 		if (exclusive == FALSE) attributes_to_hide &= (~attributesToAdd);
 		else if (exclusive == TRUE) attributes_to_hide = (~attributesToAdd);
 
@@ -468,14 +473,11 @@
 
 			else {
 				if ((file_metadata->attributes & FILE_DIRECTORY) != FILE_DIRECTORY) {			
-					File* file = kmalloc(sizeof(File));
+					File* file = FSLIB_create_file();
 
-					file->file_meta    = *file_metadata;
-					file->name         = kmalloc(8);
-					file->extension    = kmalloc(4);
-					file->next         = NULL;
-					file->data         = NULL;
-					file->data_pointer = NULL;
+					file->file_meta = *file_metadata;
+					file->name      = kmalloc(8);
+					file->extension = kmalloc(4);
 
 					char* name = kmalloc(13);
 					char* name_pointer = name;
@@ -496,14 +498,10 @@
 
 				else {
 					if ((file_metadata->attributes & FILE_DIRECTORY) == FILE_DIRECTORY) {
-						Directory* upperDir = kmalloc(sizeof(Directory));
+						Directory* upperDir = FSLIB_create_directory();
 
 						upperDir->directory_meta = *file_metadata;
-						upperDir->name           = kmalloc(11);
-						upperDir->subDirectory   = NULL;
-						upperDir->files          = NULL;
-						upperDir->next           = NULL;
-						upperDir->data_pointer   = NULL;
+						upperDir->name = kmalloc(11);
 
 						char* name = kmalloc(13);
 						char* name_pointer = name;

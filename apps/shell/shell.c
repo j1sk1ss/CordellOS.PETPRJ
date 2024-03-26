@@ -109,9 +109,9 @@ void shell_start_screen() {
                 strncpy(token, splitted, strlen(splitted));
 
                 if (token[0] == '$') {
-                    memmove(token, token + 1, strlen(token));
-                    if (envar_exists(token) != -1) command_line[tokenCount++] = envar_get(token);
-                    else command_line[tokenCount++] = splitted;
+                    memmove(splitted, splitted + 1, strlen(splitted));
+                    if (envar_exists(splitted) != -1) command_line[tokenCount++] = envar_get(splitted);
+                    else command_line[tokenCount++] = token;
                 }
                 else command_line[tokenCount++] = splitted;
 
@@ -337,6 +337,7 @@ void shell_start_screen() {
                 }
 
                 printf("\nCODE: [%i]\n", fexec(file_path, pos - 2, exe_argv));
+                free(file_path);
             }
 
             else if (strstr(command_line[0], COMMAND_CINFO) == 0) {
@@ -473,12 +474,10 @@ int ulogin(char* login, char* password) {
 }
 
 char* get_path(char* path) {
-    char* file_path = NULL;
-
     if (path[0] == '\\') {
         memmove(path, path + 1, strlen(path));
-        file_path = path;
-    } else file_path = FSLIB_change_path(current_path, path);
+        return path;
+    } 
 
-    return file_path;
+    return FSLIB_change_path(current_path, path);
 }

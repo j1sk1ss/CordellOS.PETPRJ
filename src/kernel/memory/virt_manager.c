@@ -68,7 +68,7 @@ void flush_tlb_entry(virtual_address address) {
     asm ("cli; invlpg (%0); sti" : : "r"(address) );
 }
 
-bool map_page(void* phys_address, void* virt_address) {
+bool map_page2kernel(void* phys_address, void* virt_address) {
     page_directory* pd = current_page_directory;
     pd_entry* entry = &pd->entries[PD_INDEX((uint32_t)virt_address)];
 

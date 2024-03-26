@@ -139,6 +139,7 @@ bool ATA_is_sector_empty(const uint8_t* sector_data);
 bool ATA_is_current_sector_empty(uint32_t LBA);
 
 void ATA_ata_wait();
+int ATA_ata_ready();
 
 void ATA_prepare4reading(uint32_t lba);
 uint8_t* ATA_read_sector(uint32_t lba);
@@ -155,7 +156,7 @@ int ATA_writeoff_sector(uint32_t lba, const uint8_t* buffer, uint32_t offset, ui
 int ATA_write_sectors(uint32_t lba, const uint8_t* buffer, uint32_t sector_count);
 int ATA_writeoff_sectors(uint32_t lba, const uint8_t* buffer, uint32_t sector_count, uint32_t offset, uint32_t size);
 
-void ATA_append_sector(uint32_t lba, char* append_data);
+void ATA_append_sector(uint32_t lba, uint8_t* data, uint32_t len, uint32_t offset);
 int ATA_clear_sector(uint32_t LBA);
 
 uint32_t ATA_find_empty_sector(uint32_t offset);

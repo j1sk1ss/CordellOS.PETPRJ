@@ -81,7 +81,7 @@ ata_dev_t secondary_slave  = {.slave = 1};
             drq = i386_inb(dev->status) & ATA_STATUS_DRQ;
             err = i386_inb(dev->status) & ATA_STATUS_ERR;
             if (--delay < 0) {
-                kprintf("Drive [%i] not found / attached\n");
+                kprintf("DRIVE [%i] NOT FOUND / ATTACHED\n");
                 kfree(dev->prdt);
                 kfree(dev->mem_buffer);
                 return;
@@ -103,7 +103,7 @@ ata_dev_t secondary_slave  = {.slave = 1};
             pci_write(ata_device, PCI_COMMAND, pci_command_reg);
         }
 
-        kprintf("Drive [%i] found\n");
+        kprintf("DRIVE [%i] FOUND\n");
     }
 
     void ATA_device_init(ata_dev_t* dev, int primary) {
@@ -136,7 +136,7 @@ ata_dev_t secondary_slave  = {.slave = 1};
         dev->BMR_prdt    = dev->bar4 + 4;
 
         memset(dev->mountpoint, 0, 32);
-        strncpy(dev->mountpoint, "/dev/hd", 7);
+        strncpy(dev->mountpoint, "/DEV/HD", 7);
         
         dev->mountpoint[strlen(dev->mountpoint)] = 'a' + (((!primary) << 1) | dev->slave);
     }
@@ -152,9 +152,9 @@ ata_dev_t secondary_slave  = {.slave = 1};
 
     void ATA_device_switch(int device) {
         if (device == 1) current_ata_device = &primary_master;
-        if (device == 2) current_ata_device = &primary_slave;
-        if (device == 3) current_ata_device = &secondary_master;
-        if (device == 4) current_ata_device = &secondary_slave;
+        else if (device == 2) current_ata_device = &primary_slave;
+        else if (device == 3) current_ata_device = &secondary_master;
+        else if (device == 4) current_ata_device = &secondary_slave;
     }
 
 //====================
@@ -181,14 +181,10 @@ ata_dev_t secondary_slave  = {.slave = 1};
         if (buffer == NULL) return NULL;
 
         ATA_prepare4reading(lba);
-
-        int timeout = 9000000;
-        while ((i386_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
-            if (--timeout < 0) {
-                kfree(buffer);
-                return NULL;
-            }
-            else continue;
+        if (ATA_ata_ready() == -1) {
+            kfree(buffer);
+            return NULL;
+        }
 
         for (int n = 0; n < SECTOR_SIZE / 2; n++) {
             uint16_t value = i386_inw(DATA_REGISTER);
@@ -205,21 +201,16 @@ ata_dev_t secondary_slave  = {.slave = 1};
         ATA_ata_wait();
 
         uint8_t* buffer = (uint8_t*)kmalloc(SECTOR_SIZE);
-        uint8_t dummy_buffer[SECTOR_SIZE] = { NULL };
+        uint8_t dummy_buffer[SECTOR_SIZE] = { 0 };
 
         uint8_t* buffer_pointer = buffer;
         memset(buffer, 0, SECTOR_SIZE);
         
         ATA_prepare4reading(lba);
-
-        int timeout = 9000000;
-        while ((i386_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
-            if (--timeout < 0) {
-                kfree(buffer);
-                stop[0] = ERROR_SYMBOL;
-                return NULL;
-            }
-            else continue;
+        if (ATA_ata_ready() == -1) {
+            kfree(buffer);
+            return NULL;
+        }
 
         for (int n = 0; n < SECTOR_SIZE / 2; n++) {
             uint16_t value = i386_inw(DATA_REGISTER);
@@ -245,21 +236,16 @@ ata_dev_t secondary_slave  = {.slave = 1};
     uint8_t* ATA_read_sector_stopoff(uint32_t lba, uint32_t offset, uint8_t* stop) {
         ATA_ata_wait();
         uint8_t* buffer = (uint8_t*)kmalloc(SECTOR_SIZE);
-        uint8_t dummy_buffer[SECTOR_SIZE] = { NULL };
+        uint8_t dummy_buffer[SECTOR_SIZE] = { 0 };
 
         uint8_t* buffer_pointer = buffer;
         memset(buffer, 0, SECTOR_SIZE);
         
         ATA_prepare4reading(lba);
-
-        int timeout = 9000000;
-        while ((i386_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
-            if (--timeout < 0) {
-                kfree(buffer);
-                stop[0] = ERROR_SYMBOL;
-                return NULL;
-            }
-            else continue;
+        if (ATA_ata_ready() == -1) {
+            kfree(buffer);
+            return NULL;
+        }
         
         for (int n = 0; n < SECTOR_SIZE / 2; n++) {
             uint16_t value = i386_inw(DATA_REGISTER);
@@ -480,13 +466,14 @@ ata_dev_t secondary_slave  = {.slave = 1};
 #pragma region [Other]
 
     // Function that add data to sector
-    void ATA_append_sector(uint32_t lba, char* append_data) { // TODO: Rewrite other functions
-        char* previous_data = ATA_read_sector(lba);
+    void ATA_append_sector(uint32_t lba, uint8_t* data, uint32_t len, uint32_t offset) {
+        uint8_t buffer[SECTOR_SIZE] = { '\0' };
+        uint8_t* sector_data = ATA_read_sector(lba);
+        
+        uint8_t* buffer_pointer = buffer;
+        memcpy(buffer_pointer + offset, data, len);
 
-        strcat(previous_data, append_data);
-        ATA_write_sector(lba, previous_data);
-
-        kfree(previous_data);
+        ATA_write_sector(lba, buffer);
     }
 
     // Function that clear sector
@@ -496,7 +483,7 @@ ata_dev_t secondary_slave  = {.slave = 1};
 
         // Write the buffer to the specified sector
         if (ATA_write_sector(lba, buffer) == -1) {
-            kprintf("\n\rPulizia del settore non completata!");
+            kprintf("\nPulizia del settore non completata!");
             return -1;
         }
 
@@ -546,6 +533,16 @@ ata_dev_t secondary_slave  = {.slave = 1};
         int delay = 150000;
         while (--delay > 0)
             continue;
+    }
+
+    int ATA_ata_ready() {
+        int timeout = 9000000;
+        while ((i386_inb(STATUS_REGISTER) & ATA_SR_BSY) == 0) 
+            if (--timeout < 0) {
+                return -1;
+            } else continue;
+
+        return 1;
     }
 
     // Function for getting avaliable sector count in disk

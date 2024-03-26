@@ -96,7 +96,7 @@ void free_page(pt_entry* page);
 bool set_page_directory(page_directory* pd);
 void flush_tlb_entry(virtual_address address);
 
-bool map_page(void* phys_address, void* virt_address);
+bool map_page2kernel(void* phys_address, void* virt_address);
 bool map_page2user(void* phys_address, void* virt_address);
 bool map_page2dir(void* phys_address, void* virt_address, page_directory* dir);
 void unmap_page(void* virt_address);

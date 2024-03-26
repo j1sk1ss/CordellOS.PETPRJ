@@ -492,7 +492,7 @@ void syscall(struct Registers* regs) {
     //=======================
 
         else if (regs->eax == SYS_MALLOC_MAP) {
-            print_kmalloc_map();
+            print_malloc_map();
         }
 
         else if (regs->eax == SYS_PAGE_MAP) {

@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <memory.h>
+#include <assert.h>
 
 #include "phys_manager.h"
 #include "virt_manager.h"
@@ -29,13 +30,14 @@ extern malloc_block_t *kmalloc_list_head;
 extern malloc_block_t *umalloc_list_head;
 
 extern uint32_t malloc_virt_address;
-extern uint32_t malloc_phys_address;
+extern uint32_t kmalloc_phys_addresss;
 extern uint32_t total_malloc_pages;
 
 
 uint32_t kmalloc_total_free();
 uint32_t kmalloc_total_avaliable();
-void print_kmalloc_map();
+uint32_t umalloc_total_avaliable();
+void print_malloc_map();
 
 void kmm_init(const uint32_t bytes);
 void umm_init(const uint32_t bytes);
