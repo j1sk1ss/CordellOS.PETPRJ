@@ -1,6 +1,7 @@
 #include "x86_h.cpl"
 
-glob function HAL_initialize() -> i0 {
+@[abi] @[vname("HAL_initialize")]
+glob function hal_initialize() -> i0 {
     kprintf(ref "HAL: (");
     i386_gdt_initialize();
     kprintf(ref "GDT\t");

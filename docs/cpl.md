@@ -10,12 +10,12 @@ The current compiler is available in the development environment as:
 build/cplc
 ```
 
-It reports itself as `ccpl 3.5`. The useful options for CordellOS are:
+It reports itself as `cplc 3.8.2`. The useful options for CordellOS are:
 
 - Input files such as `*.cpl`.
 - Include directories with `-I <dir>`.
 - Assembly output with `--emit-asm`.
-- Stopping after assembly output with `--no-compile`.
+- Stopping after assembly output with `-no` / `--no-object`.
 - Assembly output naming with `--asm-output <file>`.
 - i386 target selection with `--arch i386 --sys-type i386`.
 - Output naming with `--output <file>` for compile/link outputs.
@@ -23,7 +23,7 @@ It reports itself as `ccpl 3.5`. The useful options for CordellOS are:
 - Assembler format selection with `--asm-format elf32`.
 - Linker selection with `--linker <tool>`.
 
-The SCons integration uses `--emit-asm --no-compile --asm-output <target>` for kernel CPL sources.
+The SCons integration uses `--emit-asm -no --asm-output <target>` for kernel CPL sources.
 
 ## SCons Integration
 

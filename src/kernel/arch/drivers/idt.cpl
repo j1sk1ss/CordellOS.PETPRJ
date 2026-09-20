@@ -4,7 +4,7 @@
 @[section(".bss")] glob idt_descriptor _idt_descriptor;
 
 function idt_entry::set(ptr idt_entry self, ptr i0 base, u16 seg_des, u8 flags) -> i0 {
-    self.reserved  = 0;
+    self.reserved  = 0 as u8;
     self.flags     = flags;
     self.segm_sel  = seg_des;
     self.base_low  = ((base as u32) & 0xFFFF) as u16;
@@ -16,11 +16,12 @@ function idt_descriptor::init(ptr idt_descriptor self, ptr idt_entry entry, u16 
     self.pointer = entry;
 }
 
-glob function i386_idt_setGate(i32 int, ptr i0 base, u16 seg_des, u8 flags) -> i0 {
+glob function i386_idt_set_gate(i32 int, ptr i0 base, u16 seg_des, u8 flags) -> i0 {
     _idt[int].set(base, seg_des, flags);
 }
 
-glob function i386_idt_enableGate(i32 int) -> i0 {
+@[abi] @[vname("i386_idt_enableGate")]
+glob function i386_idt_enable_gate(i32 int) -> i0 {
     _idt[int].flags |= IDT_FLAG_PRESENT;
 }
 

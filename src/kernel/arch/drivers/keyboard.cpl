@@ -206,7 +206,7 @@ glob function i386_init_keyboard() -> i0 {
     _keyboard_write_command(KBD_CMD_ENABLE_PORT1);
     _keyboard_flush_output();
 
-    i386_irq_registerHandler(1, i386_keyboard_handler);
+    i386_irq_register_handler(1 as i32, i386_keyboard_handler);
 }
 
 glob function enable_keyboard() -> i0 {

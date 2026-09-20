@@ -6,10 +6,12 @@
 extern function i386_inb(u16 port) -> i8;
 extern function i386_outb(u16 port, u8 data) -> i0;
 @[abi] extern function kprintf(ptr i8 fmt, ...) -> i0;
-extern function i386_irq_registerHandler(i32 irq, ptr i0 handler) -> i0;
+@[abi] @[vname("i386_irq_registerHandler")]
+glob function i386_irq_register_handler(i32 irq, ptr i0 handler) -> i0;
 extern function i386_gdt_initialize() -> i0;
 extern function i386_isr_initialize() -> i0;
-extern function i386_irq_initialize() -> i32;
+@[abi] @[vname("i386_irq_initialize")]
+glob function i386_irq_initialize() -> i32;
 extern function TSS_init(u32 idx, u32 kss, u32 kesp) -> i0;
 
 #endif

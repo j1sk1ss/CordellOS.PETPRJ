@@ -9,7 +9,12 @@ from SCons.Environment import Environment
 def _split(env: Environment, value):
     if value is None:
         return []
-    return [env.subst(str(item)) for item in env.Split(value) if env.subst(str(item))]
+    result = []
+    for item in env.Split(value):
+        item = env.subst(str(item))
+        if item:
+            result.append(item)
+    return result
 
 
 def _flatten(value):
@@ -28,6 +33,13 @@ def _append_option(args, option, value):
         args.extend([option, value])
 
 
+def _append_mode_flags(env: Environment, args, *flags):
+    for flag in _flatten(flags):
+        mode = env.subst(flag)
+        if mode:
+            args.extend(_split(env, mode))
+
+
 def _include_flags(env: Environment):
     prefix = env.subst('$CPLINCPREFIX')
     suffix = env.subst('$CPLINCSUFFIX')
@@ -38,7 +50,10 @@ def _include_flags(env: Environment):
         if include_dir in seen:
             continue
         seen.add(include_dir)
-        includes.append(f'{prefix}{include_dir}{suffix}')
+        if prefix and not suffix:
+            includes.extend([prefix, include_dir])
+        else:
+            includes.append(f'{prefix}{include_dir}{suffix}')
 
     return includes
 
@@ -78,13 +93,7 @@ def _cpl_command(
     if use_tool_flags:
         args.extend(_tool_flags(env))
 
-    mode = env.subst(mode_flag)
-    if mode:
-        args.extend(_split(env, mode))
-    for extra_mode_flag in _flatten(extra_mode_flags):
-        mode = env.subst(extra_mode_flag)
-        if mode:
-            args.extend(_split(env, mode))
+    _append_mode_flags(env, args, mode_flag, extra_mode_flags)
 
     output = env.subst(output_flag)
     if output:
@@ -108,7 +117,7 @@ def _cpl_emit_asm_action(target, source, env):
         target,
         source,
         output_flag='$CPLASMOUTPUTFLAG',
-        use_include_flags=False,
+        use_include_flags=True,
         use_tool_flags=True,
         extra_mode_flags='$CPLCOMPILEFLAG',
     )
@@ -141,13 +150,13 @@ def _cpl_target_name(env: Environment, src, suffix):
 
 def _cpl_object(env: Environment, source):
     sources = _flatten(source)
+    objects = []
+
     if env.subst('$CPL_OBJECT_MODE') == 'object':
-        objects = []
         for src in sources:
             objects.extend(_flatten(env.CPLDirectObject(_cpl_target_name(env, src, '.o'), src)))
         return objects
 
-    objects = []
     for src in sources:
         asm_sources = env.CPLAsm(_cpl_target_name(env, src, '.asm'), src)
         objects.extend(_flatten(env.Object(_cpl_target_name(env, src, '.o'), asm_sources)))
@@ -161,7 +170,7 @@ def setup_cpl_builders(env: Environment):
         CPLPATH=[],
         CPLLINKFLAGS=[],
         CPL_OBJECT_MODE='asm',
-        CPLEMITASMFLAGS=['--emit-asm', '-c'],
+        CPLEMITASMFLAGS=['--emit-asm', '-no'],
         CPLCOMPILEFLAG='-O3',
         CPLLINKFLAG='',
         CPLOUTPUTFLAG='--output',

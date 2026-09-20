@@ -70,4 +70,3 @@ glob function TSS_set_stack(u32 kss, u32 kesp) -> i0 {
     _kernel_tss.ss0  = kss;
     _kernel_tss.esp0 = kesp;
 }
-

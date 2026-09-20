@@ -38,6 +38,7 @@ container idt_descriptor {
 }
 
 glob function i386_idt_initialize() -> i0;
-glob function i386_idt_setGate(i32 int, ptr i0 base, u16 seg_des, u8 flags) -> i0;
+@[abi] @[vname("i386_idt_setGate")]
+glob function i386_idt_set_gate(i32 int, ptr i0 base, u16 seg_des, u8 flags) -> i0;
 
 #endif

@@ -1,0 +1,119 @@
+#include "x86_h.cpl"
+#include "pic_h.cpl"
+
+#define PIC1_COMMAND_PORT        0x20
+#define PIC1_DATA_PORT           0x21
+#define PIC2_COMMAND_PORT        0xA0
+#define PIC2_DATA_PORT           0xA1
+#define PIC_ICW1_ICW4            0x01
+#define PIC_ICW1_INITIALIZE      0x10
+#define PIC_ICW4_8086            0x01
+#define PIC_ICW4_AUTO_EOI        0x02
+#define PIC_CMD_END_OF_INTERRUPT 0x20
+#define PIC_CMD_READ_IRR         0x0A
+#define PIC_CMD_READ_ISR         0x0B
+
+extern function i386_io_wait() -> i0;
+glob u16 _i8259_pic_mask = 0xFFFF;
+
+function _i8259_set_mask(u16 new_mask) -> i0 {
+    _i8259_pic_mask = new_mask;
+    i386_outb(PIC1_DATA_PORT, (_i8259_pic_mask & 0xFF) as u8);
+    i386_io_wait();
+    i386_outb(PIC2_DATA_PORT, (_i8259_pic_mask >> 8) as u8);
+    i386_io_wait();
+}
+
+function _i8259_get_mask() -> u16 {
+    return ((i386_inb(PIC1_DATA_PORT) as u8) as u16) |
+        (((i386_inb(PIC2_DATA_PORT) as u8) as u16) << 8);
+}
+
+@[abi] @[vname("i8259_read_IRQ_request_registers")]
+glob function i8259_read_irq_request_registers() -> u16 {
+    i386_outb(PIC1_COMMAND_PORT, PIC_CMD_READ_IRR as u8);
+    i386_outb(PIC2_COMMAND_PORT, PIC_CMD_READ_IRR as u8);
+    return ((i386_inb(PIC1_COMMAND_PORT) as u8) as u16) |
+        (((i386_inb(PIC2_COMMAND_PORT) as u8) as u16) << 8);
+}
+
+@[abi] @[vname("i8259_read_IRQ_in_service_registers")]
+glob function i8259_read_irq_in_service_registers() -> u16 {
+    i386_outb(PIC1_COMMAND_PORT, PIC_CMD_READ_ISR as u8);
+    i386_outb(PIC2_COMMAND_PORT, PIC_CMD_READ_ISR as u8);
+    return ((i386_inb(PIC1_COMMAND_PORT) as u8) as u16) |
+        (((i386_inb(PIC2_COMMAND_PORT) as u8) as u16) << 8);
+}
+
+container i8259_pic implements pic_driver {
+    @[override] function pic_probe(ptr i8259_pic self) -> i8;
+    @[override] function pic_initialize(ptr i8259_pic self, u8 offset_pic1, u8 offset_pic2, i8 auto_eoi) -> i32;
+    @[override] function pic_disable(ptr i8259_pic self) -> i32;
+    @[override] function pic_send_end_of_interrupt(ptr i8259_pic self, i32 irq) -> i32;
+    @[override] function pic_mask(ptr i8259_pic self, i32 irq) -> i32;
+    @[override] function pic_unmask(ptr i8259_pic self, i32 irq) -> i32;
+}
+
+glob i8259_pic _i8259_driver;
+
+function i8259_pic::pic_probe(ptr i8259_pic self) -> i8 {
+    _i8259_set_mask(0xFFFF as u16);
+    _i8259_set_mask(0x1488 as u16);
+    return (_i8259_get_mask() == (0x1488 as u16)) as i8;
+}
+
+function i8259_pic::pic_initialize(ptr i8259_pic self, u8 offset_pic1, u8 offset_pic2, i8 auto_eoi) -> i32 {
+    _i8259_set_mask(0xFFFF as u16);
+
+    i386_outb(PIC1_COMMAND_PORT, (PIC_ICW1_ICW4 | PIC_ICW1_INITIALIZE) as u8);
+    i386_io_wait();
+    i386_outb(PIC2_COMMAND_PORT, (PIC_ICW1_ICW4 | PIC_ICW1_INITIALIZE) as u8);
+    i386_io_wait();
+
+    i386_outb(PIC1_DATA_PORT, offset_pic1);
+    i386_io_wait();
+    i386_outb(PIC2_DATA_PORT, offset_pic2);
+    i386_io_wait();
+
+    i386_outb(PIC1_DATA_PORT, 0x04 as u8);
+    i386_io_wait();
+    i386_outb(PIC2_DATA_PORT, 0x02 as u8);
+    i386_io_wait();
+
+    u8 icw4 = PIC_ICW4_8086 as u8;
+    if auto_eoi; icw4 |= PIC_ICW4_AUTO_EOI as u8;
+
+    i386_outb(PIC1_DATA_PORT, icw4);
+    i386_io_wait();
+    i386_outb(PIC2_DATA_PORT, icw4);
+    i386_io_wait();
+
+    _i8259_set_mask(0xFFFF as u16);
+    return 1;
+}
+
+function i8259_pic::pic_disable(ptr i8259_pic self) -> i32 {
+    _i8259_set_mask(0xFFFF as u16);
+    return 1;
+}
+
+function i8259_pic::pic_send_end_of_interrupt(ptr i8259_pic self, i32 irq) -> i32 {
+    if irq >= 8; i386_outb(PIC2_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT as u8);
+    i386_outb(PIC1_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT as u8);
+    return 1;
+}
+
+function i8259_pic::pic_mask(ptr i8259_pic self, i32 irq) -> i32 {
+    _i8259_set_mask(_i8259_pic_mask | ((1 << irq) as u16));
+    return 1;
+}
+
+function i8259_pic::pic_unmask(ptr i8259_pic self, i32 irq) -> i32 {
+    _i8259_set_mask(_i8259_pic_mask & (neg ((1 << irq) as u16)));
+    return 1;
+}
+
+@[abi] @[vname("i8259_get_driver")]
+glob function i8259_get_driver() -> ptr pic_driver {
+    return ref _i8259_driver;
+}

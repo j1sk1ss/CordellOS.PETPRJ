@@ -1,0 +1,24 @@
+#ifndef PIC_H_CPL_
+#define PIC_H_CPL_ 1
+
+interface pic_driver {
+    @[self]
+    function pic_probe(ptr pic_driver self) -> i8;
+
+    @[self]
+    function pic_initialize(ptr pic_driver self, u8 offset_pic1, u8 offset_pic2, i8 auto_eoi) -> i32;
+
+    @[self]
+    function pic_disable(ptr pic_driver self) -> i32;
+
+    @[self]
+    function pic_send_end_of_interrupt(ptr pic_driver self, i32 irq) -> i32;
+
+    @[self]
+    function pic_mask(ptr pic_driver self, i32 irq) -> i32;
+
+    @[self]
+    function pic_unmask(ptr pic_driver self, i32 irq) -> i32;
+}
+
+#endif

@@ -1,0 +1,85 @@
+#include "x86_h.cpl"
+#include "pic_h.cpl"
+
+#define PIC_REMAP_OFFSET 0x20
+
+container registers {
+    u32 ds;
+    u32 edi;
+    u32 esi;
+    u32 ebp;
+    u32 kern_esp;
+    u32 ebx;
+    u32 edx;
+    u32 ecx;
+    u32 eax;
+    u32 interrupt;
+    u32 error;
+    u32 eip;
+    u32 cs;
+    u32 eflag;
+    u32 esp;
+    u32 ss;
+}
+
+extern function i386_isr_register_handler(i32 interrupt, ptr i0 handler) -> i0;
+extern function i386_enable_interrupts() -> i0;
+@[abi] @[vname("i8259_get_driver")]
+glob function i8259_get_driver() -> ptr pic_driver;
+@[abi] @[vname("i8259_read_IRQ_request_registers")]
+glob function i8259_read_irq_request_registers() -> u16;
+@[abi] @[vname("i8259_read_IRQ_in_service_registers")]
+glob function i8259_read_irq_in_service_registers() -> u16;
+
+glob arr _irq_handlers[16, ptr i0] = { 0 };
+glob ptr pic_driver _pic_driver = 0;
+
+@[abi]
+@[vname("i386_irq_handler")]
+glob function i386_irq_handler(ptr registers regs) -> i0 {
+    i32 irq = (regs.interrupt as i32) - PIC_REMAP_OFFSET;
+    if irq < 0 || irq >= 16; return;
+
+    u8 pic_isr = i8259_read_irq_in_service_registers() as u8;
+    u8 pic_irr = i8259_read_irq_request_registers() as u8;
+
+    if _irq_handlers[irq]; _irq_handlers[irq](regs);
+    else kprintf(ref "NO HANDLER FOR: %i | %i %i\n", irq, pic_isr, pic_irr);
+
+    ptr pic_driver driver = _pic_driver;
+    driver.pic_send_end_of_interrupt(irq);
+}
+
+glob function i386_irq_initialize() -> i32 {
+    _pic_driver = i8259_get_driver();
+    ptr pic_driver driver = _pic_driver;
+    if driver && not driver.pic_probe(); {
+        _pic_driver = 0 as ptr pic_driver;
+        driver = 0 as ptr pic_driver;
+    }
+
+    if not driver; {
+        kprintf(ref "WARN: NO PIC!\n");
+        return 0 as i32;
+    }
+
+    kprintf(ref "PIC %s FOUND!\n", ref "8259 PIC");
+    driver.pic_initialize(PIC_REMAP_OFFSET as u8, (PIC_REMAP_OFFSET + 8) as u8, 0 as i8);
+
+    i32 i = 0 as i32;
+    while i < 16; {
+        i386_isr_register_handler(PIC_REMAP_OFFSET + i, i386_irq_handler);
+        i += 1;
+    }
+
+    i386_enable_interrupts();
+    driver.pic_unmask(2 as i32);
+    1
+}
+
+glob function i386_irq_register_handler(i32 irq, ptr i0 handler) -> i0 {
+    ptr pic_driver driver = _pic_driver;
+    if irq < 0 || irq >= 16 || not driver; return;
+    _irq_handlers[irq] = handler;
+    driver.pic_unmask(irq);
+}
