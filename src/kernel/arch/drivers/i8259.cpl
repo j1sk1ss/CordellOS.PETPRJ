@@ -25,24 +25,24 @@ function _i8259_set_mask(u16 new_mask) -> i0 {
 }
 
 function _i8259_get_mask() -> u16 {
-    return ((i386_inb(PIC1_DATA_PORT) as u8) as u16) |
-        (((i386_inb(PIC2_DATA_PORT) as u8) as u16) << 8);
+    ((i386_inb(PIC1_DATA_PORT) as u8) as u16) |
+        (((i386_inb(PIC2_DATA_PORT) as u8) as u16) << 8)
 }
 
 @[abi] @[vname("i8259_read_IRQ_request_registers")]
 glob function i8259_read_irq_request_registers() -> u16 {
     i386_outb(PIC1_COMMAND_PORT, PIC_CMD_READ_IRR as u8);
     i386_outb(PIC2_COMMAND_PORT, PIC_CMD_READ_IRR as u8);
-    return ((i386_inb(PIC1_COMMAND_PORT) as u8) as u16) |
-        (((i386_inb(PIC2_COMMAND_PORT) as u8) as u16) << 8);
+    ((i386_inb(PIC1_COMMAND_PORT) as u8) as u16) |
+        (((i386_inb(PIC2_COMMAND_PORT) as u8) as u16) << 8)
 }
 
 @[abi] @[vname("i8259_read_IRQ_in_service_registers")]
 glob function i8259_read_irq_in_service_registers() -> u16 {
     i386_outb(PIC1_COMMAND_PORT, PIC_CMD_READ_ISR as u8);
     i386_outb(PIC2_COMMAND_PORT, PIC_CMD_READ_ISR as u8);
-    return ((i386_inb(PIC1_COMMAND_PORT) as u8) as u16) |
-        (((i386_inb(PIC2_COMMAND_PORT) as u8) as u16) << 8);
+    ((i386_inb(PIC1_COMMAND_PORT) as u8) as u16) |
+        (((i386_inb(PIC2_COMMAND_PORT) as u8) as u16) << 8)
 }
 
 container i8259_pic implements pic_driver {
@@ -59,7 +59,7 @@ glob i8259_pic _i8259_driver;
 function i8259_pic::pic_probe(ptr i8259_pic self) -> i8 {
     _i8259_set_mask(0xFFFF as u16);
     _i8259_set_mask(0x1488 as u16);
-    return (_i8259_get_mask() == (0x1488 as u16)) as i8;
+    (_i8259_get_mask() == (0x1488 as u16)) as i8
 }
 
 function i8259_pic::pic_initialize(ptr i8259_pic self, u8 offset_pic1, u8 offset_pic2, i8 auto_eoi) -> i32 {
@@ -89,31 +89,31 @@ function i8259_pic::pic_initialize(ptr i8259_pic self, u8 offset_pic1, u8 offset
     i386_io_wait();
 
     _i8259_set_mask(0xFFFF as u16);
-    return 1;
+    1
 }
 
 function i8259_pic::pic_disable(ptr i8259_pic self) -> i32 {
     _i8259_set_mask(0xFFFF as u16);
-    return 1;
+    1
 }
 
 function i8259_pic::pic_send_end_of_interrupt(ptr i8259_pic self, i32 irq) -> i32 {
     if irq >= 8; i386_outb(PIC2_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT as u8);
     i386_outb(PIC1_COMMAND_PORT, PIC_CMD_END_OF_INTERRUPT as u8);
-    return 1;
+    1
 }
 
 function i8259_pic::pic_mask(ptr i8259_pic self, i32 irq) -> i32 {
     _i8259_set_mask(_i8259_pic_mask | ((1 << irq) as u16));
-    return 1;
+    1
 }
 
 function i8259_pic::pic_unmask(ptr i8259_pic self, i32 irq) -> i32 {
     _i8259_set_mask(_i8259_pic_mask & (neg ((1 << irq) as u16)));
-    return 1;
+    1
 }
 
 @[abi] @[vname("i8259_get_driver")]
 glob function i8259_get_driver() -> ptr pic_driver {
-    return ref _i8259_driver;
+    ref _i8259_driver
 }
